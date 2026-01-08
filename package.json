@@ -2,6 +2,7 @@
   "name": "royaltymeds-prescription-platform",
   "version": "1.0.0",
   "description": "Online prescription ordering and management platform",
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
