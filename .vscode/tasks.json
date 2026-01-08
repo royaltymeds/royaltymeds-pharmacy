@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Initialize Next.js 15 project",
+			"type": "shell",
+			"command": "cd /d c:\\websites\\royaltymeds_prescript && npx create-next-app@latest . --typescript --tailwind --app --no-src-dir --no-git --eslint --import-alias '@/*' --skip-install"
+		}
+	]
+}
