@@ -360,7 +360,7 @@ CREATE OR REPLACE FUNCTION current_user_id() RETURNS TEXT AS $$
     nullif(current_setting('request.jwt.claims', true)::json->>'sub', ''),
     ''
   );
-$$ LANGUAGE SQL STABLE;
+$$ LANGUAGE SQL STABLE SET search_path = public;
 
 -- Get current user role (from JWT claim)
 CREATE OR REPLACE FUNCTION current_user_role() RETURNS TEXT AS $$
@@ -368,7 +368,7 @@ CREATE OR REPLACE FUNCTION current_user_role() RETURNS TEXT AS $$
     nullif(current_setting('request.jwt.claims', true)::json->>'role', ''),
     'patient'
   );
-$$ LANGUAGE SQL STABLE;
+$$ LANGUAGE SQL STABLE SET search_path = public;
 
 -- Update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -377,7 +377,7 @@ BEGIN
   NEW.updated_at = CURRENT_TIMESTAMP;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- Create audit log entry
 CREATE OR REPLACE FUNCTION audit_log_action(
@@ -396,7 +396,7 @@ BEGIN
   RETURNING id INTO v_log_id;
   RETURN v_log_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- =====================
 -- TRIGGERS
