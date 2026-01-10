@@ -103,7 +103,7 @@
 
 ---
 
-### Phase 4: CLI Authentication & Security Fixes (Day 3-4)
+### Phase 4: CLI Authentication & Security Fixes (Day 4)
 **Objective:** Authenticate Supabase CLI and fix security vulnerabilities
 
 **Key Actions:**
@@ -122,11 +122,49 @@
    - Combined multiple permissive policies into single efficient policies
    - Reduced policy evaluation overhead
    - All 9 affected tables optimized
+6. Fixed unindexed foreign key
+   - Added `idx_testimonials_patient_id` index to testimonials table
+   - Resolved Supabase Advisor performance warning
 
 **Migrations Pushed:**
 1. ✅ `20260110000000_fix_function_search_path.sql` - Security fixes
 2. ✅ `20260110000001_add_missing_rls_policies.sql` - Complete coverage
 3. ✅ `20260110000002_optimize_rls_policies.sql` - Performance optimization
+4. ✅ `20260110000003_add_testimonials_index.sql` - Foreign key indexing
+
+### Phase 5: RLS Policy Expansion for Better UX (Day 4)
+**Objective:** Expand RLS policies to enable full CRUD operations while maintaining security
+
+**Key Actions:**
+1. Reviewed all existing RLS policies for permissiveness
+2. Identified operations blocked for application UX:
+   - Users couldn't insert their own profiles
+   - Patients couldn't update orders or prescriptions
+   - Doctors couldn't approve refills
+   - Couriers couldn't update deliveries
+   - Payment creation not allowed
+   - Message editing/deletion not allowed
+3. Created comprehensive expansion migration
+   - Added INSERT policies: user_profiles, prescription_items, payments, testimonials, messages
+   - Added UPDATE policies: all major tables with ownership checks
+   - Added DELETE policies: orders, payments, deliveries, messages, testimonials
+   - Maintained security via ownership verification and role checks
+4. Deployed expansion migration successfully
+
+**Migration Pushed:**
+5. ✅ `20260110000004_expand_rls_permissiveness.sql` - Full CRUD enablement
+
+**Policy Additions Summary (30+ new policies):**
+- ✅ User Profiles: INSERT, UPDATE (admin), DELETE (admin)
+- ✅ Prescriptions: UPDATE (owner), DELETE (admin)
+- ✅ Orders: UPDATE (patient + admin), DELETE (admin)
+- ✅ Prescription Items: INSERT, UPDATE (owner), DELETE (admin)
+- ✅ Refills: UPDATE (doctor, patient, admin)
+- ✅ Deliveries: UPDATE (courier), DELETE (admin)
+- ✅ Payments: INSERT (patient), UPDATE (admin), DELETE (admin)
+- ✅ Messages: UPDATE, DELETE (owner)
+- ✅ Testimonials: INSERT (any), UPDATE (admin), DELETE (owner)
+- ✅ Audit Logs: INSERT (admin)
 
 **Issues Resolved:**
 1. **Function Search Path Mutable** (SECURITY WARNING)
@@ -149,9 +187,9 @@
 
 ## Current Project State
 
-### ✅ PHASE 1 COMPLETE - ENHANCED
+### ✅ PHASE 1 COMPLETE - FULLY OPTIMIZED & PERMISSIVE
 
-**All foundational infrastructure is now in place with security and performance optimization:**
+**All foundational infrastructure is now in place with security, performance, and UX optimization:**
 
 1. **Project Structure** - Organized folder layout with route groups
 2. **Frontend Framework** - Next.js 15 with React 19
@@ -160,10 +198,11 @@
 5. **Supabase Integration** - Connected to production instance (kpwhwhtjspdbbqzfbptv)
 6. **Database** - 12-table schema with RLS and security functions
 7. **Security** - Function search paths locked, all tables have RLS policies
-8. **Performance** - Optimized RLS policies for efficient query evaluation
-9. **Documentation** - Comprehensive guides and checklists
-10. **Build Pipeline** - Production build tested and optimized
-11. **Development Environment** - All dependencies installed, dev server ready
+8. **Performance** - Optimized RLS policies for efficient query evaluation, all foreign keys indexed
+9. **Permissiveness** - Full CRUD operations enabled with ownership-based and role-based access control
+10. **Documentation** - Comprehensive guides and checklists
+11. **Build Pipeline** - Production build tested and optimized
+12. **Development Environment** - All dependencies installed, dev server ready
 
 ### Database Tables Created (12 total):
 1. `users` - User accounts and authentication
@@ -477,7 +516,7 @@ node verify-migration.js
 
 ## Migration Inventory
 
-### Deployed Migrations (3 total)
+### Migration Inventory (5 total)
 1. **20260108000000_create_prescription_platform.sql**
    - 12 tables with indexes
    - RLS policies with role-based access
@@ -500,6 +539,17 @@ node verify-migration.js
    - Reduced query evaluation overhead
    - Status: ✅ Deployed
 
+5. **20260110000003_add_testimonials_index.sql**
+   - Added idx_testimonials_patient_id index
+   - Fixed unindexed foreign key warning
+   - Status: ✅ Deployed
+
+6. **20260110000004_expand_rls_permissiveness.sql**
+   - 30+ new CRUD policies across all tables
+   - Full application UX support
+   - Ownership-based and role-based access control
+   - Status: ✅ Deployed
+
 ---
 
 ## Conclusion
@@ -512,7 +562,7 @@ node verify-migration.js
 
 **Performance Status:** ✅ **Optimized RLS Policies**
 
-**Last Updated:** January 10, 2026, 11:15 AM
+**Last Updated:** January 10, 2026, 11:45 AM
 
 
 ### Phase 1: Initial Project Setup (Days 1-2)
