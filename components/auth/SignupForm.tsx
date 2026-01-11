@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
@@ -28,51 +27,86 @@ export default function SignupForm() {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+    // Log form data
+    console.log("[SignupForm] ========== FORM SUBMISSION ==========");
+    console.log("[SignupForm] Form data:", { email, password, fullName, role });
 
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            role,
-            full_name: fullName,
-          },
+    try {
+      console.log("[SignupForm] Step 1: Calling /api/auth/signup");
+
+      // Step 1: Create auth user via server API (using REST API directly)
+      const signupResponse = await fetch("/api/auth/signup-rest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
 
-      if (authError) {
-        setError(authError.message || "Failed to sign up");
+      console.log("[SignupForm] Step 1 response status:", signupResponse.status);
+      console.log("[SignupForm] Step 1 response ok:", signupResponse.ok);
+
+      const signupText = await signupResponse.text();
+      console.log("[SignupForm] Step 1 response text:", signupText);
+
+      let signupData;
+      try {
+        signupData = JSON.parse(signupText);
+      } catch (e) {
+        console.error("[SignupForm] Failed to parse signup response:", e);
+        setError("Invalid response from signup API");
         return;
       }
 
-      if (authData.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from("user_profiles")
-          .insert([
-            {
-              user_id: authData.user.id,
-              full_name: fullName,
-            },
-          ]);
-
-        if (profileError) {
-          setError("Failed to create profile");
-          return;
-        }
-
-        router.push("/onboarding");
-        router.refresh();
+      if (!signupResponse.ok) {
+        console.error("[SignupForm] Signup error:", signupData);
+        setError(signupData.error || "Failed to sign up");
+        return;
       }
+
+      const userId = signupData.user?.id;
+      console.log("[SignupForm] Auth user ID:", userId);
+
+      if (!userId) {
+        console.error("[SignupForm] No user ID in response:", signupData);
+        setError("Signup failed: No user data returned");
+        return;
+      }
+
+      console.log("[SignupForm] Step 2: Calling /api/auth/create-profile");
+
+      // Step 2: Create user profile via API endpoint
+      const profileResponse = await fetch("/api/auth/create-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          fullName,
+          email,
+          role,
+        }),
+      });
+
+      console.log("[SignupForm] Step 2 response status:", profileResponse.status);
+
+      if (!profileResponse.ok) {
+        const profileError = await profileResponse.json();
+        console.error("[SignupForm] Profile creation error:", profileError);
+        setError(profileError.error || "Failed to create profile");
+        return;
+      }
+
+      console.log("[SignupForm] SUCCESS: Signup complete, redirecting to login");
+      router.push("/login");
+      router.refresh();
     } catch (err) {
+      console.error("[SignupForm] EXCEPTION:", err);
       setError("An unexpected error occurred");
-      console.error(err);
     } finally {
       setIsLoading(false);
     }

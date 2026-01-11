@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseClient } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
@@ -25,28 +25,35 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
+
+      console.log("[LoginForm] Starting login for:", email);
 
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log("[LoginForm] Auth response:", { user: data.user, error: authError });
+
       if (authError) {
+        console.error("[LoginForm] Auth error:", authError);
         setError(authError.message || "Failed to sign in");
         return;
       }
 
-      if (data.user) {
-        router.push("/dashboard");
-        router.refresh();
+      if (!data.user) {
+        console.error("[LoginForm] No user returned from login");
+        setError("Login failed: No user data returned");
+        return;
       }
+
+      console.log("[LoginForm] Login successful, redirecting to dashboard");
+      router.push("/dashboard");
+      router.refresh();
     } catch (err) {
+      console.error("[LoginForm] Unexpected error:", err);
       setError("An unexpected error occurred");
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
