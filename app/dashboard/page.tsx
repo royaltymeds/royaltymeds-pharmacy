@@ -100,7 +100,13 @@ export default async function DashboardPage() {
               {role === "patient" && (
                 <>
                   <Link
-                    href="/patient/prescriptions/upload"
+                    href="/patient/home"
+                    className="block px-4 py-2 bg-green-50 text-green-600 rounded hover:bg-green-100 transition text-sm font-medium font-bold"
+                  >
+                    Patient Portal
+                  </Link>
+                  <Link
+                    href="/patient/prescriptions"
                     className="block px-4 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition text-sm font-medium"
                   >
                     Upload Prescription
