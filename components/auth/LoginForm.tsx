@@ -48,8 +48,30 @@ export default function LoginForm() {
         return;
       }
 
-      console.log("[LoginForm] Login successful, redirecting to dashboard");
-      router.push("/dashboard");
+      // Check user role and redirect accordingly
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (userError || !userData?.role) {
+        console.warn("[LoginForm] Could not determine user role, redirecting to dashboard");
+        router.push("/dashboard");
+      } else if (userData.role === "patient") {
+        console.log("[LoginForm] Patient login, redirecting to patient portal");
+        router.push("/patient/home");
+      } else if (userData.role === "doctor") {
+        console.log("[LoginForm] Doctor login, redirecting to doctor dashboard");
+        router.push("/doctor/dashboard");
+      } else if (userData.role === "admin") {
+        console.log("[LoginForm] Admin login, redirecting to admin dashboard");
+        router.push("/admin/dashboard");
+      } else {
+        console.log("[LoginForm] Unknown role, redirecting to dashboard");
+        router.push("/dashboard");
+      }
+      
       router.refresh();
     } catch (err) {
       console.error("[LoginForm] Unexpected error:", err);
