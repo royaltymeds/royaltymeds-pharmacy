@@ -64,16 +64,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = adminData.user?.id;
+    // The admin API returns user object at top level (not nested)
+    const userId = adminData.id;
     console.log("[signup-rest API] CONFIRMED user created successfully:", userId);
-    console.log("[signup-rest API] Email confirmed status:", adminData.user?.email_confirmed_at);
+    console.log("[signup-rest API] Email confirmed status:", adminData.email_confirmed_at);
 
     return NextResponse.json({
       success: true,
       user: {
         id: userId,
-        email: adminData.user?.email,
-        confirmed: !!adminData.user?.email_confirmed_at,
+        email: adminData.email,
+        confirmed: !!adminData.email_confirmed_at,
       },
     });
   } catch (error) {
