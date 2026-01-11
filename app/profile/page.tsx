@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -10,19 +10,23 @@ export const metadata = {
 
 export default async function ProfilePage() {
   const cookieStore = await cookies();
-  const authToken = cookieStore.get("sb-auth-token");
 
-  if (!authToken) {
-    redirect("/login");
-  }
-
-  const supabase = createClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      global: {
-        headers: {
-          Authorization: `Bearer ${authToken.value}`,
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options as CookieOptions);
+            });
+          } catch {
+            // Handle error in cookie setting
+          }
         },
       },
     }

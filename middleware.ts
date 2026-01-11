@@ -1,8 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 export async function middleware(req: NextRequest) {
-  // Check if user has auth token
-  const authToken = req.cookies.get("sb-auth-token");
+  let response = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  });
+
+  // Create Supabase server client with cookie-based auth
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options as CookieOptions);
+          });
+        },
+      },
+    }
+  );
+
+  // Refresh session if exists
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   const isAuthRoute =
     req.nextUrl.pathname.startsWith("/login") ||
     req.nextUrl.pathname.startsWith("/signup");
@@ -14,19 +42,19 @@ export async function middleware(req: NextRequest) {
     "/admin",
   ].some((route) => req.nextUrl.pathname.startsWith(route));
 
-  // Redirect to login if accessing protected routes without auth
-  if (!authToken && isProtectedRoute) {
+  // Redirect to login if accessing protected routes without session
+  if (!session && isProtectedRoute) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("next", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // Redirect to dashboard if already logged in and trying to access auth pages
-  if (authToken && isAuthRoute) {
+  if (session && isAuthRoute) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

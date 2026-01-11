@@ -115,16 +115,16 @@ export default function SignupForm() {
   if (!mounted) return null;
 
   return (
-    <form onSubmit={handleSignup} className="space-y-4 w-full">
+    <form onSubmit={handleSignup} className="space-y-3 w-full">
       {error && (
-        <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-red-600" />
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="flex items-center gap-3 p-2 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+          <p className="text-xs text-red-700">{error}</p>
         </div>
       )}
 
       <div>
-        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="fullName" className="block text-xs font-medium text-gray-700 mb-1">
           Full Name
         </label>
         <input
@@ -134,12 +134,12 @@ export default function SignupForm() {
           onChange={(e) => setFullName(e.target.value)}
           placeholder="John Doe"
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
           Email Address
         </label>
         <input
@@ -149,12 +149,12 @@ export default function SignupForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
           Password
         </label>
         <input
@@ -165,20 +165,20 @@ export default function SignupForm() {
           placeholder="••••••••"
           required
           minLength={6}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+        <p className="text-xs text-gray-500 mt-0.5">Minimum 6 characters</p>
       </div>
 
       <div>
-        <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="role" className="block text-xs font-medium text-gray-700 mb-1">
           I am a...
         </label>
         <select
           id="role"
           value={role}
           onChange={(e) => setRole(e.target.value as UserRole)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="patient">Patient</option>
           <option value="doctor">Doctor</option>
@@ -188,11 +188,11 @@ export default function SignupForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition flex items-center justify-center gap-2"
+        className="w-full bg-blue-600 text-white py-1.5 text-sm rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>
-            <Loader className="w-4 h-4 animate-spin" />
+            <Loader className="w-3 h-3 animate-spin" />
             Creating account...
           </>
         ) : (
@@ -200,7 +200,7 @@ export default function SignupForm() {
         )}
       </button>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-xs text-gray-600">
         Already have an account?{" "}
         <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
           Sign in
