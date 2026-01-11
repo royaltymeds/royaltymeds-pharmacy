@@ -11,9 +11,27 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    await supabase.auth.exchangeCodeForSession(code);
+    const { data } = await supabase.auth.exchangeCodeForSession(code);
+
+    // Get the user's role from the users table
+    if (data?.user?.id) {
+      const { data: userData } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      // Redirect based on user role
+      if (userData?.role === "patient") {
+        return NextResponse.redirect(new URL("/patient/home", request.url));
+      } else if (userData?.role === "doctor") {
+        return NextResponse.redirect(new URL("/doctor/dashboard", request.url));
+      } else if (userData?.role === "admin") {
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      }
+    }
   }
 
-  // URL to redirect to after sign in process completes
+  // Default redirect to dashboard if no role found
   return NextResponse.redirect(new URL("/dashboard", request.url));
 }
