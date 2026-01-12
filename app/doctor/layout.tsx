@@ -64,7 +64,7 @@ export default async function DoctorLayout({
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <Link href="/doctor/dashboard" className="font-semibold text-lg text-white">
-                RoyaltyMeds Doctor Portal
+                <span className="text-blue-300">R</span>oyaltyMeds Doctor Portal
               </Link>
               <div className="hidden md:flex space-x-1">
                 <Link
