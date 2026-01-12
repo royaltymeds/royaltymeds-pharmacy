@@ -78,6 +78,11 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      {/* Back to Homepage */}
+      <Link href="/" className="absolute top-4 left-4 text-green-600 hover:text-green-700 font-medium text-sm">
+        ← Back to Homepage
+      </Link>
+
       {/* Admin Badge */}
       <div className="absolute top-4 right-4">
         <span className="px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">

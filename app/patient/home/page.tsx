@@ -69,13 +69,20 @@ export default async function PatientHomePage() {
     .limit(3);
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-600">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome, {profile?.full_name?.split(" ")[0] || "Customer"}!
-        </h1>
-        <p className="text-gray-600 mt-2">Manage your prescriptions and orders</p>
+    <div className="space-y-6">
+      {/* Header with Navigation */}
+      <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 border-l-4 border-green-600">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
+              Welcome, {profile?.full_name?.split(" ")[0] || "Customer"}!
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 mt-2">Manage your prescriptions and orders</p>
+          </div>
+          <Link href="/" className="flex-shrink-0 text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap">
+            ← Home
+          </Link>
+        </div>
       </div>
 
       {/* Statistics Cards */}

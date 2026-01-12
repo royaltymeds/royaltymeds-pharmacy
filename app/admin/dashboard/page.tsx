@@ -78,11 +78,16 @@ export default async function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Pharmacy Dashboard</h1>
-        <p className="text-gray-600 mt-1">Manage prescriptions, orders, and refills</p>
+    <div className="space-y-6">
+      {/* Page Header with Navigation */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">Pharmacy Dashboard</h1>
+          <p className="text-sm md:text-base text-gray-600 mt-1">Manage prescriptions, orders, and refills</p>
+        </div>
+        <Link href="/" className="flex-shrink-0 text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap">
+          ← Home
+        </Link>
       </div>
 
       {/* Statistics Cards */}
