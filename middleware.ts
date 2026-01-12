@@ -58,20 +58,21 @@ export async function middleware(req: NextRequest) {
   // If authenticated user tries to access /admin routes, verify they are admin
   if (session && (isAdminRoute || req.nextUrl.pathname === "/admin-login")) {
     try {
-      const { data: userData } = await supabase
+      const { data: userData, error } = await supabase
         .from("users")
         .select("role")
         .eq("id", session.user.id)
         .single();
 
-      // If user is not admin, redirect to admin-login
-      if (userData?.role !== "admin") {
+      // If user is not admin (regardless of error), redirect to admin-login
+      if (error || userData?.role !== "admin") {
         const adminLoginUrl = new URL("/admin-login", req.nextUrl.origin);
         adminLoginUrl.searchParams.set("next", req.nextUrl.pathname);
         return NextResponse.redirect(adminLoginUrl);
       }
     } catch (error) {
       // If we can't fetch user role, redirect to admin-login to be safe
+      // This prevents any errors from bubbling up to the user
       const adminLoginUrl = new URL("/admin-login", req.nextUrl.origin);
       adminLoginUrl.searchParams.set("next", req.nextUrl.pathname);
       return NextResponse.redirect(adminLoginUrl);

@@ -272,11 +272,24 @@ CREATE POLICY "select_access" ON table FOR SELECT USING (
   - UI: "Doctor" / Backend: `role: 'doctor'`
 **Lesson**: Separate UI terminology from database schema
 
-### Problem 12: Admin Account Creation Endpoint Errors
-**Symptom**: Trying to insert into non-existent columns
-**Root Cause**: user_profiles table doesn't have `email` or `role` columns
-**Solution**: Only insert existing columns: `user_id`, `full_name`, `specialty`
-**Lesson**: Know your schema; verify column names before inserting
+### Problem 13: Admin Route Errors When Non-Admin User Logs Out
+**Symptom**: After a customer or doctor logs out, navigating to `/admin` or `/admin-login` shows errors
+**Root Cause**: Middleware was trying to query the users table with a stale/invalid session, causing database errors
+**Solution**: 
+- Enhanced error handling in middleware to gracefully catch any errors during role verification
+- Now checks both error response AND role value before allowing access
+- Catches try/catch block and silently redirects to `/admin-login` instead of exposing errors
+**Lesson**: Always handle database query errors gracefully in middleware, especially with stale sessions
+
+### Problem 14: Logout Not Clearing Session Properly
+**Symptom**: After logout, session still appears to be cached locally; user not fully signed out
+**Root Cause**: Logout endpoint was using wrong Supabase client and not properly clearing all auth cookies
+**Solution**:
+- Changed logout to use `createServerClient` with anon key (not service role key)
+- Properly clears ALL auth-related cookies (those containing "auth" or "sb" in name)
+- Uses Supabase's `signOut()` method which properly manages session state
+- Redirects to `/login` after logout
+**Lesson**: Use correct Supabase client for logout and explicitly clear all auth cookies to prevent session caching
 
 ---
 
