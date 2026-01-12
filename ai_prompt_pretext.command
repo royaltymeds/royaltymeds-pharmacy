@@ -437,13 +437,62 @@ RoyaltyMeds uses a professional green, blue, and white theme:
 - `/signup`: White background, green primary buttons
 - Focus states: `focus:ring-green-500` (green) or `focus:ring-blue-500` (blue)
 
+### Theme Application Rules in Components
+
+**When to Use Green (Primary - Customer & Pharmacist Portal)**
+- All primary action buttons: `bg-green-600 hover:bg-green-700`
+- Focus states: `focus:ring-green-500`
+- Primary links: `text-green-600 hover:text-green-700`
+- Borders for primary sections: `border-green-600`
+- Icon colors for positive actions: `text-green-600`
+- Stat cards with positive sentiment (Approved, Completed): Green icons and borders
+- Badges for success: `bg-green-100 text-green-800`
+
+**When to Use Blue (Secondary - Doctor Portal)**
+- Navigation background: `bg-blue-600` or `bg-blue-700`
+- Doctor-specific secondary actions: `bg-blue-600 hover:bg-blue-700`
+- Doctor focus states: `focus:ring-blue-500`
+- Doctor links: `text-blue-600 hover:text-blue-700`
+- Processing/In-Progress status: Blue icons and borders (`text-blue-500`, `border-blue-500`)
+- Stat cards showing processing states: Blue icons
+
+**Stat Card Color Scheme (Dashboard Cards)**
+- **Pending/Alert states**: Yellow border and icon (`border-yellow-500`, `text-yellow-500`)
+- **Processing states**: Blue (`border-blue-500`, `text-blue-500`)
+- **Approved/Success states**: Green (`border-green-500`, `text-green-500`)
+- **Rejected/Error states**: Red (`border-red-500`, `text-red-500`)
+- **Neutral stats**: Gray (`border-gray-300`, `text-gray-600`)
+
+**Links in Dashboards**
+- Customer portal links: `text-green-600 hover:text-green-700`
+- Doctor portal links: `text-blue-600 hover:text-blue-700`
+- Pharmacist portal links: `text-green-600 hover:text-green-700`
+
+**Headers and Section Titles**
+- Page title: `text-gray-900` (consistent across all portals)
+- Section headers: `text-gray-900` with light `text-gray-600` description text
+- Header badges/borders: Color by portal (green for customer/pharma, blue for doctor)
+
+**Quick Action Cards**
+- Card background: `bg-white` with `shadow-sm`
+- Icon background on customer portal: `bg-green-50 text-green-600`
+- Icon background on doctor portal: `bg-blue-50 text-blue-600`
+- Icon background on pharmacist portal: `bg-green-50 text-green-600`
+
+**Form Elements in Dashboards**
+- Input focus rings: Green on customer/pharma (`focus:ring-green-500`), Blue on doctor (`focus:ring-blue-500`)
+- Submit buttons: Match portal theme (green or blue)
+
 ### Never Do This
-- ❌ Use indigo, slate, or amber colors
-- ❌ Use gradient backgrounds on main pages (except CTA sections)
-- ❌ Mix green and blue in the same component
+- ❌ Use indigo, slate, amber, yellow, or purple colors in themed sections
+- ❌ Use gradient backgrounds on dashboard sections (except CTA sections)
+- ❌ Mix green and blue in the same component (portal-specific theming)
 - ❌ Use dark themes for main portals (white background standard)
 - ❌ Change logo color from green
 - ❌ Use HIPAA compliance in UI footer
+- ❌ Use yellow for stat card borders (use for warning/alert icons only)
+- ❌ Use purple for any interactive elements
+- ❌ Apply stat card borders without matching icon color (consistency)
 
 ---
 

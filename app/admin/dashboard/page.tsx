@@ -144,11 +144,11 @@ export default async function AdminDashboard() {
               <p className="text-gray-600 text-sm font-medium">Pending Refills</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{refillStats.pending}</p>
             </div>
-            <TrendingUp className="w-10 h-10 text-purple-500" />
+            <TrendingUp className="w-10 h-10 text-yellow-600" />
           </div>
           <Link
             href="/admin/refills"
-            className="text-blue-600 text-sm font-medium mt-4 hover:text-blue-700 inline-block"
+            className="text-green-600 text-sm font-medium mt-4 hover:text-green-700 inline-block"
           >
             View all →
           </Link>
@@ -187,7 +187,7 @@ export default async function AdminDashboard() {
           )}
           <Link
             href="/admin/prescriptions"
-            className="text-blue-600 text-sm font-medium mt-4 hover:text-blue-700 inline-block"
+            className="text-green-600 text-sm font-medium mt-4 hover:text-green-700 inline-block"
           >
             View all pending prescriptions →
           </Link>
@@ -247,11 +247,11 @@ export default async function AdminDashboard() {
 
         <Link
           href="/admin/refills"
-          className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow p-6 hover:shadow-lg transition"
+          className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow p-6 hover:shadow-lg transition"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Process Refills</h3>
           <p className="text-gray-600 text-sm mb-4">Approve or reject refill requests</p>
-          <span className="text-purple-600 font-medium">Go to Refills →</span>
+          <span className="text-green-600 font-medium">Go to Refills →</span>
         </Link>
       </div>
     </div>

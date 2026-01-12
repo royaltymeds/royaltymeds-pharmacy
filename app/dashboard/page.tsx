@@ -68,7 +68,7 @@ export default async function DashboardPage() {
               </span>
               <Link
                 href="/profile"
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                className="text-green-600 hover:text-green-700 text-sm font-medium"
               >
                 Profile
               </Link>
@@ -83,7 +83,7 @@ export default async function DashboardPage() {
             </div>
           </div>
           <div className="mt-2">
-            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+            <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
               {role.charAt(0).toUpperCase() + role.slice(1)}
             </span>
           </div>
@@ -139,13 +139,13 @@ export default async function DashboardPage() {
                 <>
                   <Link
                     href="/admin/prescriptions"
-                    className="block px-4 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition text-sm font-medium"
+                    className="block px-4 py-2 bg-green-50 text-green-600 rounded hover:bg-green-100 transition text-sm font-medium"
                   >
                     Review Prescriptions
                   </Link>
                   <Link
                     href="/admin/orders"
-                    className="block px-4 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition text-sm font-medium"
+                    className="block px-4 py-2 bg-green-50 text-green-600 rounded hover:bg-green-100 transition text-sm font-medium"
                   >
                     Manage Orders
                   </Link>
@@ -180,17 +180,17 @@ export default async function DashboardPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Resources</h2>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                <a href="#" className="text-green-600 hover:text-green-700 font-medium">
                   Help Center
                 </a>
               </li>
               <li>
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                <a href="#" className="text-green-600 hover:text-green-700 font-medium">
                   Contact Support
                 </a>
               </li>
               <li>
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                <a href="#" className="text-green-600 hover:text-green-700 font-medium">
                   Documentation
                 </a>
               </li>
