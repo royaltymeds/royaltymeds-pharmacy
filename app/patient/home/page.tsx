@@ -69,181 +69,189 @@ export default async function PatientHomePage() {
     .limit(3);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
+      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-600">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Welcome, {profile?.full_name?.split(" ")[0] || "Patient"}!
+        </h1>
+        <p className="text-gray-600 mt-2">Manage your prescriptions and orders</p>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Prescriptions */}
+        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-blue-500">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Welcome, {profile?.full_name?.split(" ")[0] || "Patient"}!
-              </h1>
-              <p className="text-gray-600 mt-1">Manage your prescriptions and orders</p>
+              <p className="text-gray-500 text-sm font-medium">Prescriptions</p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">
+                {prescriptions?.length || 0}
+              </p>
             </div>
-            <Link
-              href="/profile"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-            >
-              Profile
-            </Link>
+            <UploadIcon className="h-10 w-10 text-blue-500" />
+          </div>
+        </div>
+
+        {/* Orders */}
+        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-green-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm font-medium">Orders</p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">
+                {orders?.length || 0}
+              </p>
+            </div>
+            <ShoppingCartIcon className="h-10 w-10 text-green-500" />
+          </div>
+        </div>
+
+        {/* Refills */}
+        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-purple-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm font-medium">Pending Refills</p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">
+                {refills?.length || 0}
+              </p>
+            </div>
+            <RefreshCwIcon className="h-10 w-10 text-purple-500" />
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-orange-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm font-medium">Messages</p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">0</p>
+            </div>
+            <MessageSquareIcon className="h-10 w-10 text-orange-500" />
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      {/* Quick Actions */}
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             href="/patient/prescriptions"
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer border-l-4 border-blue-500"
+            className="bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg p-4 text-center font-medium transition cursor-pointer"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Upload Prescription</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {prescriptions?.length || 0}
-                </p>
-              </div>
-              <UploadIcon className="w-10 h-10 text-blue-500 opacity-50" />
-            </div>
+            Upload Prescription
           </Link>
 
           <Link
             href="/patient/orders"
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer border-l-4 border-green-500"
+            className="bg-green-50 text-green-600 hover:bg-green-100 rounded-lg p-4 text-center font-medium transition cursor-pointer"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">My Orders</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {orders?.length || 0}
-                </p>
-              </div>
-              <ShoppingCartIcon className="w-10 h-10 text-green-500 opacity-50" />
-            </div>
+            View Orders
           </Link>
 
           <Link
             href="/patient/refills"
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer border-l-4 border-purple-500"
+            className="bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg p-4 text-center font-medium transition cursor-pointer"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Refill Requests</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {refills?.length || 0}
-                </p>
-              </div>
-              <RefreshCwIcon className="w-10 h-10 text-purple-500 opacity-50" />
-            </div>
+            Request Refill
           </Link>
 
           <Link
             href="/patient/messages"
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer border-l-4 border-orange-500"
+            className="bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg p-4 text-center font-medium transition cursor-pointer"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Messages</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">0</p>
-              </div>
-              <MessageSquareIcon className="w-10 h-10 text-orange-500 opacity-50" />
+            Messages
+          </Link>
+        </div>
+      </div>
+
+      {/* Recent Prescriptions & Orders */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Prescriptions */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Prescriptions</h2>
+          {prescriptions && prescriptions.length > 0 ? (
+            <div className="space-y-3">
+              {prescriptions.map((prescription) => (
+                <div
+                  key={prescription.id}
+                  className="border rounded-lg p-4 hover:bg-gray-50 transition flex items-center justify-between"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {prescription.medication_name || "Prescription"}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(prescription.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                      prescription.status === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : prescription.status === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {prescription.status}
+                  </span>
+                </div>
+              ))}
             </div>
+          ) : (
+            <p className="text-gray-600 text-center py-8">
+              No prescriptions yet.{" "}
+              <Link href="/patient/prescriptions" className="text-indigo-600 hover:underline font-medium">
+                Upload one
+              </Link>
+            </p>
+          )}
+          <Link
+            href="/patient/prescriptions"
+            className="block mt-4 text-center text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+          >
+            View All →
           </Link>
         </div>
 
-        {/* Recent Prescriptions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Prescriptions</h2>
-            {prescriptions && prescriptions.length > 0 ? (
-              <div className="space-y-4">
-                {prescriptions.map((prescription) => (
-                  <div
-                    key={prescription.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {prescription.medication_name || "Prescription"}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Status:{" "}
-                          <span
-                            className={`font-medium ${
-                              prescription.status === "approved"
-                                ? "text-green-600"
-                                : prescription.status === "rejected"
-                                  ? "text-red-600"
-                                  : "text-yellow-600"
-                            }`}
-                          >
-                            {prescription.status}
-                          </span>
-                        </p>
-                      </div>
-                      <Link
-                        href={`/patient/prescriptions/${prescription.id}`}
-                        className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
-                      >
-                        View
-                      </Link>
-                    </div>
+        {/* Recent Orders */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Orders</h2>
+          {orders && orders.length > 0 ? (
+            <div className="space-y-3">
+              {orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="border rounded-lg p-4 hover:bg-gray-50 transition flex items-center justify-between"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-900">Order #{order.id.slice(0, 8)}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      ${order.total_amount?.toFixed(2) || "0.00"}
+                    </p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600 text-center py-8">
-                No prescriptions yet.{" "}
-                <Link href="/patient/prescriptions" className="text-indigo-600 hover:underline">
-                  Upload one now
-                </Link>
-              </p>
-            )}
-          </div>
-
-          {/* Recent Orders */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Orders</h2>
-            {orders && orders.length > 0 ? (
-              <div className="space-y-4">
-                {orders.map((order) => (
-                  <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50 transition">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-gray-900">Order #{order.id.slice(0, 8)}</p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Status:{" "}
-                          <span className="font-medium text-blue-600 capitalize">
-                            {order.status}
-                          </span>
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          ${order.total_amount?.toFixed(2) || "0.00"}
-                        </p>
-                      </div>
-                      <Link
-                        href={`/patient/orders/${order.id}`}
-                        className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
-                      >
-                        Track
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600 text-center py-8">
-                No orders yet. Start by{" "}
-                <Link href="/patient/prescriptions" className="text-indigo-600 hover:underline">
-                  uploading a prescription
-                </Link>
-                .
-              </p>
-            )}
-          </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-blue-100 text-blue-800 capitalize">
+                    {order.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 text-center py-8">
+              No orders yet. Start by{" "}
+              <Link href="/patient/prescriptions" className="text-indigo-600 hover:underline font-medium">
+                uploading a prescription
+              </Link>
+              .
+            </p>
+          )}
+          <Link
+            href="/patient/orders"
+            className="block mt-4 text-center text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+          >
+            View All →
+          </Link>
         </div>
       </div>
     </div>

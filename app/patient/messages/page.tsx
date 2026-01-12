@@ -1,8 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeftIcon, MessageSquareIcon } from "lucide-react";
+import { MessageSquareIcon } from "lucide-react";
 
 export default async function MessagesPage() {
   const cookieStore = await cookies();
@@ -45,53 +44,44 @@ export default async function MessagesPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-rose-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/patient/home"
-            className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 mb-4"
-          >
-            <ArrowLeftIcon className="w-4 h-4" />
-            Back to Home
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
-          <p className="text-gray-600 mt-2">Communication with pharmacy and support team</p>
-        </div>
-
-        {/* Messages List */}
-        {messages && messages.length > 0 ? (
-          <div className="space-y-3">
-            {messages.map((message: any) => (
-              <div key={message.id} className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">
-                      {message.sender_id === user.id ? "You" : "Pharmacy Support"}
-                    </p>
-                    <p className="text-gray-700 mt-2">{message.message_text}</p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {new Date(message.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  {message.sender_id === user.id && (
-                    <span className="text-xs font-medium text-blue-600 ml-4">Sent</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <MessageSquareIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Messages Yet</h3>
-            <p className="text-gray-600">
-              Messages between you and the pharmacy will appear here.
-            </p>
-          </div>
-        )}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-600">
+        <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
+        <p className="text-gray-600 mt-2">Communication with pharmacy and support team</p>
       </div>
+
+      {/* Messages List */}
+      {messages && messages.length > 0 ? (
+        <div className="space-y-3">
+          {messages.map((message: any) => (
+            <div key={message.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition border-t-4 border-indigo-500">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-900">
+                    {message.sender_id === user.id ? "You" : "Pharmacy Support"}
+                  </p>
+                  <p className="text-gray-700 mt-2">{message.message_text}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {new Date(message.created_at).toLocaleString()}
+                  </p>
+                </div>
+                {message.sender_id === user.id && (
+                  <span className="text-xs font-medium text-indigo-600 ml-4">Sent</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <MessageSquareIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Messages Yet</h3>
+          <p className="text-gray-600">
+            Messages between you and the pharmacy will appear here.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

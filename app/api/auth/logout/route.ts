@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+async function handleLogout(req: NextRequest) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -17,4 +17,12 @@ export async function POST(req: NextRequest) {
   return NextResponse.redirect(new URL("/login", req.url), {
     status: 302,
   });
+}
+
+export async function GET(req: NextRequest) {
+  return handleLogout(req);
+}
+
+export async function POST(req: NextRequest) {
+  return handleLogout(req);
 }

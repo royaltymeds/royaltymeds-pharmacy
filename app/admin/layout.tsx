@@ -92,6 +92,12 @@ export default async function AdminLayout({
                   Refills
                 </Link>
                 <Link
+                  href="/admin/doctors"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                >
+                  Doctors
+                </Link>
+                <Link
                   href="/admin/users"
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
                 >

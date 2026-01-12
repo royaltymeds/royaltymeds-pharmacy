@@ -126,164 +126,163 @@ export default function UploadPrescriptionPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Prescription Uploaded!</h2>
-          <p className="text-gray-600 mb-6">
-            Your prescription has been uploaded successfully. Our pharmacists will review it shortly.
-          </p>
-          <Link
-            href="/patient/home"
-            className="inline-block px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            Return to Home
-          </Link>
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-600">
+          <div className="flex items-center gap-4">
+            <CheckCircle className="w-12 h-12 text-green-600 flex-shrink-0" />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Prescription Uploaded!</h2>
+              <p className="text-gray-600 mt-2">
+                Your prescription has been uploaded successfully. Our pharmacists will review it shortly.
+              </p>
+            </div>
+          </div>
         </div>
+
+        <Link
+          href="/patient/home"
+          className="block text-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium max-w-xs mx-auto"
+        >
+          Return to Home
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Upload Prescription</h1>
-          <p className="text-gray-600 mb-8">
-            Upload a clear image or PDF of your prescription for pharmacy review
-          </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-600">
+        <h1 className="text-3xl font-bold text-gray-900">Upload Prescription</h1>
+        <p className="text-gray-600 mt-2">
+          Upload a clear image or PDF of your prescription for pharmacy review
+        </p>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* File Upload */}
-            <div className="border-2 border-dashed border-indigo-300 rounded-lg p-8">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                accept=".pdf,.jpg,.jpeg,.png"
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full text-center"
-              >
-                <Upload className="w-12 h-12 text-indigo-600 mx-auto mb-3" />
-                <p className="font-medium text-gray-900">
-                  {fileName || "Click to upload or drag file"}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">PDF, JPG, or PNG (Max 10MB)</p>
-              </button>
-            </div>
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* File Upload */}
+          <div className="border-2 border-dashed border-indigo-300 rounded-lg p-8">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept=".pdf,.jpg,.jpeg,.png"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full text-center"
+            >
+              <Upload className="w-12 h-12 text-indigo-600 mx-auto mb-3" />
+              <p className="font-medium text-gray-900">
+                {fileName || "Click to upload or drag file"}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">PDF, JPG, or PNG (Max 10MB)</p>
+            </button>
+          </div>
 
-            {/* Prescription Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Medication Name (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={medication}
-                  onChange={(e) => setMedication(e.target.value)}
-                  placeholder="e.g., Metformin"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dosage (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={dosage}
-                  onChange={(e) => setDosage(e.target.value)}
-                  placeholder="e.g., 500mg"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantity (Optional)
-                </label>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="e.g., 30"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Brand / Generic
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setBrandChoice("brand")}
-                    className={`flex-1 py-2 px-3 rounded-lg font-medium transition ${
-                      brandChoice === "brand"
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    Brand
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBrandChoice("generic")}
-                    className={`flex-1 py-2 px-3 rounded-lg font-medium transition ${
-                      brandChoice === "generic"
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    Generic
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Notes */}
+          {/* Prescription Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Additional Notes (Optional)
+                Medication Name (Optional)
               </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any special instructions or notes..."
-                rows={3}
+              <input
+                type="text"
+                value={medication}
+                onChange={(e) => setMedication(e.target.value)}
+                placeholder="e.g., Metformin"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
               />
             </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dosage (Optional)
+              </label>
+              <input
+                type="text"
+                value={dosage}
+                onChange={(e) => setDosage(e.target.value)}
+                placeholder="e.g., 500mg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantity (Optional)
+              </label>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="e.g., 30"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Brand / Generic
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBrandChoice("brand")}
+                  className={`flex-1 py-2 px-3 rounded-lg font-medium transition ${
+                    brandChoice === "brand"
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Brand
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBrandChoice("generic")}
+                  className={`flex-1 py-2 px-3 rounded-lg font-medium transition ${
+                    brandChoice === "generic"
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Generic
+                </button>
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isLoading || !file}
-              className="w-full py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {isLoading ? "Uploading..." : "Upload Prescription"}
-            </button>
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Additional Notes (Optional)
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any special instructions or notes..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            />
+          </div>
 
-            <Link
-              href="/patient/home"
-              className="block text-center text-indigo-600 hover:underline text-sm"
-            >
-              Back to Dashboard
-            </Link>
-          </form>
-        </div>
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={isLoading || !file}
+            className="w-full py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {isLoading ? "Uploading..." : "Upload Prescription"}
+          </button>
+        </form>
       </div>
     </div>
   );

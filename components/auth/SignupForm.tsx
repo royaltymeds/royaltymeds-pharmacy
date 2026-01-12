@@ -5,13 +5,10 @@ import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
 import Link from "next/link";
 
-type UserRole = "patient" | "doctor" | "admin";
-
 export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<UserRole>("patient");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -29,10 +26,10 @@ export default function SignupForm() {
 
     // Log form data
     console.log("[SignupForm] ========== FORM SUBMISSION ==========");
-    console.log("[SignupForm] Form data:", { email, password, fullName, role });
+    console.log("[SignupForm] Form data:", { email, password, fullName, role: "patient" });
 
     try {
-      console.log("[SignupForm] Step 1: Calling /api/auth/signup");
+      console.log("[SignupForm] Step 1: Calling /api/auth/signup-rest");
 
       // Step 1: Create auth user via server API (using REST API directly)
       const signupResponse = await fetch("/api/auth/signup-rest", {
@@ -88,7 +85,7 @@ export default function SignupForm() {
           userId,
           fullName,
           email,
-          role,
+          role: "patient",
         }),
       });
 
@@ -168,21 +165,6 @@ export default function SignupForm() {
           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p className="text-xs text-gray-500 mt-0.5">Minimum 6 characters</p>
-      </div>
-
-      <div>
-        <label htmlFor="role" className="block text-xs font-medium text-gray-700 mb-1">
-          I am a...
-        </label>
-        <select
-          id="role"
-          value={role}
-          onChange={(e) => setRole(e.target.value as UserRole)}
-          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="patient">Patient</option>
-          <option value="doctor">Doctor</option>
-        </select>
       </div>
 
       <button
