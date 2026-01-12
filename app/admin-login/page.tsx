@@ -1,5 +1,6 @@
 "use client";
 
+import { getSupabaseClient } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
@@ -24,22 +25,43 @@ export default function AdminLoginPage() {
     setError(null);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const supabase = getSupabaseClient();
+
+      // Sign in with Supabase Auth (this sets the session cookie)
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Login failed");
+      if (authError) {
+        setError(authError.message || "Login failed");
         return;
       }
 
+      if (!data.user) {
+        setError("Login failed: No user data returned");
+        return;
+      }
+
+      // Check if user is admin by reading from users table
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (userError || !userData) {
+        setError("Failed to verify admin status");
+        return;
+      }
+
+      const userRole = (userData as any)?.role;
+
       // Check if user is admin
-      if (data.role !== "admin") {
+      if (userRole !== "admin") {
         setError("Only administrators can access this area");
+        // Sign out the non-admin user
+        await supabase.auth.signOut();
         return;
       }
 

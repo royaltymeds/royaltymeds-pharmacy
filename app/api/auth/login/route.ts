@@ -1,11 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
@@ -17,8 +12,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use anon key for signing in
+    const anonClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     // Sign in with Supabase Auth
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await anonClient.auth.signInWithPassword({
       email,
       password,
     });
@@ -37,23 +38,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user role from public.users table
-    const { data: userData, error: userError } = await supabase
+    // Get role from auth user metadata (set during account creation)
+    const role = data.user.user_metadata?.role || "patient";
+
+    // Use service role key to verify role in users table as a backup
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: userData } = await adminClient
       .from("users")
       .select("role")
       .eq("id", data.user.id)
       .single();
 
-    if (userError) {
-      return NextResponse.json(
-        { error: "Failed to fetch user role" },
-        { status: 500 }
-      );
-    }
+    // Use database role if available, otherwise use metadata role
+    const finalRole = userData?.role || role;
 
     return NextResponse.json({
       success: true,
-      role: userData?.role || "patient",
+      role: finalRole,
     });
   } catch (error: any) {
     return NextResponse.json(
