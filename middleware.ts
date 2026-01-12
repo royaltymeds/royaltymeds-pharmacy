@@ -33,16 +33,26 @@ export async function middleware(req: NextRequest) {
 
   const isAuthRoute =
     req.nextUrl.pathname.startsWith("/login") ||
-    req.nextUrl.pathname.startsWith("/signup");
+    req.nextUrl.pathname.startsWith("/signup") ||
+    req.nextUrl.pathname === "/admin-login";
+  const isAdminRoute = req.nextUrl.pathname.startsWith("/admin") && req.nextUrl.pathname !== "/admin-login";
   const isProtectedRoute = [
     "/dashboard",
     "/profile",
     "/patient",
     "/doctor",
     "/admin",
-  ].some((route) => req.nextUrl.pathname.startsWith(route));
+  ].some((route) => req.nextUrl.pathname.startsWith(route)) &&
+    req.nextUrl.pathname !== "/admin-login";
 
-  // Redirect to login if accessing protected routes without session
+  // Redirect to admin-login if accessing admin routes without session
+  if (!session && isAdminRoute) {
+    const adminLoginUrl = new URL("/admin-login", req.nextUrl.origin);
+    adminLoginUrl.searchParams.set("next", req.nextUrl.pathname);
+    return NextResponse.redirect(adminLoginUrl);
+  }
+
+  // Redirect to login if accessing other protected routes without session
   if (!session && isProtectedRoute) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("next", req.nextUrl.pathname);
