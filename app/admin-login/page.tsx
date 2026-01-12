@@ -59,7 +59,7 @@ export default function AdminLoginPage() {
 
       // Check if user is admin
       if (userRole !== "admin") {
-        setError("Only administrators can access this area");
+        setError("Only pharmacists can access this area");
         // Sign out the non-admin user
         await supabase.auth.signOut();
         return;
@@ -81,7 +81,7 @@ export default function AdminLoginPage() {
       {/* Admin Badge */}
       <div className="absolute top-4 right-4">
         <span className="px-4 py-2 bg-slate-700 text-slate-100 text-xs font-bold rounded-full uppercase tracking-wider">
-          Admin Only
+          Pharmacist Only
         </span>
       </div>
 
@@ -94,8 +94,8 @@ export default function AdminLoginPage() {
                 <path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v12.5A2.25 2.25 0 003.75 18.5h12.5a2.25 2.25 0 002.25-2.25V9.5m-15-4h10m-10 3h10m-10 3h10M17 1.5v6m-3-3h6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-slate-100">Administrator</h1>
-            <p className="text-slate-400 mt-2">RoyaltyMeds Admin Portal</p>
+            <h1 className="text-3xl font-bold text-slate-100">Pharmacist Portal</h1>
+            <p className="text-slate-400 mt-2">RoyaltyMeds Pharmacy Management</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -115,7 +115,7 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@royaltymeds.com"
+                placeholder="pharmacist@royaltymeds.com"
                 required
                 className="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -154,7 +154,7 @@ export default function AdminLoginPage() {
 
           <div className="mt-8 pt-6 border-t border-slate-700">
             <p className="text-center text-sm text-slate-400">
-              Not an administrator?{" "}
+              Not a pharmacist?{" "}
               <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium">
                 User Login
               </Link>

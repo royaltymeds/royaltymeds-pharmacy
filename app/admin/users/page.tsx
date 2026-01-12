@@ -113,8 +113,8 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-indigo-600 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Users</h1>
-          <p className="text-gray-600 mt-2">Manage administrator accounts</p>
+          <h1 className="text-3xl font-bold text-gray-900">Pharmacist Accounts</h1>
+          <p className="text-gray-600 mt-2">Manage pharmacist accounts</p>
         </div>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}

@@ -60,14 +60,14 @@ export default function DevToolsPage() {
             <Wrench className="w-8 h-8 text-amber-600" />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Developer Tools</h1>
-              <p className="text-gray-600 mt-1">Create admin accounts for development</p>
+              <p className="text-gray-600 mt-1">Create pharmacist accounts for development</p>
             </div>
           </div>
         </div>
 
         {/* Create Admin Form */}
         <div className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-amber-500">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Create Admin Account</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Create Pharmacist Account</h2>
 
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
@@ -84,7 +84,7 @@ export default function DevToolsPage() {
               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-green-800">Success</p>
-                <p className="text-sm text-green-700 mt-1">Admin account created successfully!</p>
+                <p className="text-sm text-green-700 mt-1">Pharmacist account created successfully!</p>
               </div>
             </div>
           )}
@@ -98,7 +98,7 @@ export default function DevToolsPage() {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Admin Name"
+                placeholder="Pharmacist Name"
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
@@ -112,7 +112,7 @@ export default function DevToolsPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
+                placeholder="pharmacist@example.com"
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
@@ -139,7 +139,7 @@ export default function DevToolsPage() {
               disabled={isLoading}
               className="w-full py-3 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-              {isLoading ? "Creating account..." : "Create Admin Account"}
+              {isLoading ? "Creating account..." : "Create Pharmacist Account"}
             </button>
           </form>
         </div>
@@ -147,7 +147,7 @@ export default function DevToolsPage() {
         {/* Warning Box */}
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-6">
           <p className="text-sm text-amber-800">
-            <strong>⚠️ Developer Tools:</strong> This page is for development purposes only. Use it to create initial admin accounts or test the authentication system. In production, admin accounts should be created through secure channels.
+            <strong>⚠️ Developer Tools:</strong> This page is for development purposes only. Use it to create initial pharmacist accounts or test the authentication system. In production, pharmacist accounts should be created through secure channels.
           </p>
         </div>
       </div>

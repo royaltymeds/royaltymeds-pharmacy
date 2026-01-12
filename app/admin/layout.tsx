@@ -64,7 +64,7 @@ export default async function AdminLayout({
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <Link href="/admin/dashboard" className="font-semibold text-lg text-white">
-                RoyaltyMeds Admin
+                RoyaltyMeds Pharmacy
               </Link>
               <div className="hidden md:flex space-x-1">
                 <Link
@@ -101,7 +101,7 @@ export default async function AdminLayout({
                   href="/admin/users"
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
                 >
-                  Admin Users
+                  Pharmacists
                 </Link>
               </div>
             </div>

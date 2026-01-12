@@ -169,7 +169,7 @@ export default function AdminDoctorsPage() {
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
-          <strong>Note:</strong> Doctor accounts can only be created by administrators. Once created, doctors can log in with their email and password.
+          <strong>Note:</strong> Doctor accounts can only be created by pharmacists. Once created, doctors can log in with their email and password.
         </p>
       </div>
     </div>
