@@ -77,37 +77,37 @@ export default function AdminLoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
       {/* Admin Badge */}
       <div className="absolute top-4 right-4">
-        <span className="px-4 py-2 bg-slate-700 text-slate-100 text-xs font-bold rounded-full uppercase tracking-wider">
+        <span className="px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">
           Pharmacist Only
         </span>
       </div>
 
       <div className="w-full max-w-md">
-        <div className="bg-gradient-to-b from-slate-900 to-slate-800 border border-slate-700 rounded-xl shadow-2xl p-8">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-xl p-8">
           {/* Admin Header */}
           <div className="text-center mb-8">
-            <div className="inline-block mb-4 p-3 bg-slate-700 rounded-lg">
-              <svg className="w-8 h-8 text-slate-100" fill="currentColor" viewBox="0 0 20 20">
+            <div className="inline-block mb-4 p-3 bg-green-100 rounded-lg">
+              <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v12.5A2.25 2.25 0 003.75 18.5h12.5a2.25 2.25 0 002.25-2.25V9.5m-15-4h10m-10 3h10m-10 3h10M17 1.5v6m-3-3h6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-slate-100">Pharmacist Portal</h1>
-            <p className="text-slate-400 mt-2">RoyaltyMeds Pharmacy Management</p>
+            <h1 className="text-3xl font-bold text-gray-900">Pharmacist Portal</h1>
+            <p className="text-gray-600 mt-2">RoyaltyMeds Pharmacy Management</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
-              <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                <p className="text-sm text-red-300">{error}</p>
+              <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
               </label>
               <input
@@ -117,12 +117,12 @@ export default function AdminLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="pharmacist@royaltymeds.com"
                 required
-                className="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <input
@@ -132,14 +132,14 @@ export default function AdminLoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 transition flex items-center justify-center gap-2 mt-6"
+              className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-600 transition flex items-center justify-center gap-2 mt-6"
             >
               {isLoading ? (
                 <>
@@ -152,18 +152,18 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-700">
-            <p className="text-center text-sm text-slate-400">
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <p className="text-center text-sm text-gray-600">
               Not a pharmacist?{" "}
-              <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium">
+              <Link href="/login" className="text-green-600 hover:text-green-700 font-medium">
                 User Login
               </Link>
             </p>
           </div>
 
           {/* Security Notice */}
-          <div className="mt-6 p-3 bg-slate-900/50 border border-slate-700 rounded-lg">
-            <p className="text-xs text-slate-400 text-center">
+          <div className="mt-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <p className="text-xs text-gray-600 text-center">
               This is a restricted area. Unauthorized access is prohibited.
             </p>
           </div>

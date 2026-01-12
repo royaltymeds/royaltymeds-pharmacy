@@ -103,7 +103,7 @@ export default function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
 
@@ -118,14 +118,14 @@ export default function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition flex items-center justify-center gap-2"
+        className="w-full bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 transition flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>
@@ -138,12 +138,12 @@ export default function LoginForm() {
       </button>
 
       <div className="flex items-center justify-between text-sm">
-        <Link href="/forgot-password" className="text-blue-600 hover:text-blue-700">
+        <Link href="/forgot-password" className="text-green-600 hover:text-green-700">
           Forgot password?
         </Link>
         <span className="text-gray-600">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+          <Link href="/signup" className="text-green-600 hover:text-green-700 font-medium">
             Sign up
           </Link>
         </span>

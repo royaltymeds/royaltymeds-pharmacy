@@ -57,9 +57,9 @@ export default async function DoctorLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-white">
       {/* Doctor Navigation */}
-      <nav className="bg-indigo-900 border-b border-indigo-800 shadow-lg">
+      <nav className="bg-blue-600 border-b border-blue-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
@@ -69,35 +69,35 @@ export default async function DoctorLayout({
               <div className="hidden md:flex space-x-1">
                 <Link
                   href="/doctor/dashboard"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-indigo-100 hover:text-white hover:bg-indigo-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/doctor/submit-prescription"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-indigo-100 hover:text-white hover:bg-indigo-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700"
                 >
                   Submit Prescription
                 </Link>
                 <Link
                   href="/doctor/my-prescriptions"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-indigo-100 hover:text-white hover:bg-indigo-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700"
                 >
                   My Prescriptions
                 </Link>
                 <Link
                   href="/doctor/patients"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-indigo-100 hover:text-white hover:bg-indigo-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700"
                 >
                   Patients
                 </Link>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-indigo-100">{user.email}</span>
+              <span className="text-sm text-blue-100">{user.email}</span>
               <Link
                 href="/api/auth/logout"
-                className="text-sm text-indigo-100 hover:text-white font-medium"
+                className="text-sm text-blue-100 hover:text-white font-medium"
               >
                 Logout
               </Link>

@@ -7,9 +7,10 @@
 ## PROJECT OVERVIEW
 - **Name:** RoyaltyMeds Prescription Platform
 - **Stack:** Next.js 15 (App Router) + Supabase + Tailwind CSS
-- **Status:** Phase 5.5 Complete (62.5% of 8 phases)
-- **Build:** 44 routes, 0 TypeScript errors, 0 ESLint warnings
+- **Status:** Phase 5.5 Complete, Landing Page & Theme Complete (62.5% of 8 phases)
+- **Build:** 43 routes, 0 TypeScript errors, 0 ESLint warnings
 - **Database:** PostgreSQL 14+ with Row-Level Security (RLS)
+- **Theme:** Green (primary), Blue (secondary), White background - January 12, 2026
 
 ---
 
@@ -387,27 +388,62 @@ export async function POST(req: NextRequest) {
 
 ## STYLING CONVENTIONS
 
+### Color Palette
+RoyaltyMeds uses a professional green, blue, and white theme:
+- **Primary Green**: `#15803d` (green-600), `#16a34a` (green-700) - Main actions and brand
+- **Secondary Blue**: `#0284c7` (blue-600), `#06b6d4` (cyan) - Secondary actions and doctor portal
+- **White**: `#ffffff` - Backgrounds and text on dark backgrounds
+- **Gray**: `gray-50` to `gray-900` - Neutral elements and text
+
 ### Tailwind CSS Rules
-- Use Tailwind v4.0 CSS variable system
+- Use Tailwind v4.0 with green primary, blue secondary
 - Mobile-first approach: `mobile → sm: → md: → lg:`
-- Color scheme: Indigo primary, slate for admin, amber for devtools
 - Consistent spacing: Use `gap-`, `px-`, `py-` consistently
-- Dark mode support (not required, but structure for future)
+- All interactive elements (buttons, links) use green primary or blue secondary
+- Never use indigo, slate, or amber colors (legacy theme)
 
-### Admin Portal Theme
-- Background: `bg-slate-950` (dark)
-- Text: `text-slate-100` (light)
-- Accents: `border-slate-700`
+### Component Themes
 
-### Customer Portal Theme
-- Background: `from-blue-50 to-indigo-100`
-- Cards: `bg-white` with `shadow-lg`
-- Primary: `text-indigo-600`
+**Landing Page (Public)**
+- Background: `bg-white` with section alternates (`bg-gray-50`)
+- Header: `bg-white border-b border-gray-200`
+- Logo: Green R (`bg-green-600`)
+- Buttons: `bg-green-600 hover:bg-green-700`
+- CTAs: Green or blue gradients (`from-green-600 to-blue-600`)
+- Footer: `bg-gray-900 text-gray-300`
 
-### Doctor Portal Theme
-- Background: `from-slate-50 to-slate-100`
-- Cards: `border-l-4 border-indigo-600`
-- Consistent with patient/customer
+**Customer Portal** (`/patient/*`)
+- Navigation: `bg-white border-b border-gray-200`
+- Portal title: `text-green-600` ("RoyaltyMeds Customer Portal")
+- Main background: `bg-white`
+- Buttons: `bg-green-600 hover:bg-green-700`
+
+**Doctor Portal** (`/doctor/*`)
+- Navigation: `bg-blue-600 border-b border-blue-700` (darker than customer)
+- Portal title: `text-white` ("RoyaltyMeds Doctor Portal")
+- Main background: `bg-white`
+- Buttons: `bg-blue-600 hover:bg-blue-700`
+- Active links: `hover:bg-blue-700`
+
+**Pharmacist Portal** (`/admin/*`)
+- Navigation: Green or dark theme for pharmacy branding
+- Portal title: "Pharmacy" terminology
+- Login page: White background with green accents
+- Buttons: `bg-green-600 hover:bg-green-700`
+
+**Authentication Pages**
+- `/login`: White background, green primary buttons
+- `/admin-login`: White background, green primary buttons
+- `/signup`: White background, green primary buttons
+- Focus states: `focus:ring-green-500` (green) or `focus:ring-blue-500` (blue)
+
+### Never Do This
+- ❌ Use indigo, slate, or amber colors
+- ❌ Use gradient backgrounds on main pages (except CTA sections)
+- ❌ Mix green and blue in the same component
+- ❌ Use dark themes for main portals (white background standard)
+- ❌ Change logo color from green
+- ❌ Use HIPAA compliance in UI footer
 
 ---
 

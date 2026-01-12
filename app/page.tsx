@@ -1,162 +1,358 @@
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import {
+  ShieldCheckIcon,
+  ClockIcon,
+  CreditCardIcon,
+  PhoneIcon,
+  MailIcon,
+  MapPinIcon,
+  CheckCircleIcon,
+} from "lucide-react";
 
-export default async function Home() {
-  const cookieStore = await cookies();
-  const authToken = cookieStore.get("sb-auth-token");
+// Color palette: Green (primary), Blue (secondary), White (background/text)
+// Green: #15803d to #16a34a
+// Blue: #0284c7 to #06b6d4
+// White: #ffffff
 
-  let session = null;
-  if (authToken) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${authToken.value}`,
-          },
-        },
-      }
-    );
-
-    const { data } = await supabase.auth.getUser();
-    if (data.user) {
-      session = { user: data.user };
-    }
-  }
-
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">RoyaltyMeds</h1>
-          <p className="text-xl text-gray-700 mb-6">
-            The modern prescription fulfillment platform
-          </p>
-          {!session ? (
-            <div className="flex gap-4 justify-center">
-              <Link
-                href="/login"
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/signup"
-                className="px-6 py-3 bg-white text-blue-600 border-2 border-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition"
-              >
-                Create Account
-              </Link>
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">R</span>
             </div>
-          ) : (
-            <Link
-              href="/dashboard"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+            <span className="text-2xl font-bold text-gray-900">RoyaltyMeds</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a
+              href="#features"
+              className="hidden md:block text-gray-700 hover:text-green-600 transition"
             >
-              Go to Dashboard
+              Features
+            </a>
+            <a
+              href="#how-it-works"
+              className="hidden md:block text-gray-700 hover:text-green-600 transition"
+            >
+              How It Works
+            </a>
+            <Link
+              href="/login"
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+            >
+              Portal Login
             </Link>
-          )}
+          </div>
         </div>
+      </header>
 
-        {/* Phase 2 Status */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
-          <h2 className="text-3xl font-bold text-green-600 mb-6">
-            ✅ Phase 2 Complete!
-          </h2>
-          <p className="text-gray-700 mb-6 text-lg">
-            Authentication & User Management is complete. Users can now sign up, log in, and
-            manage their profiles.
+      {/* Hero Section */}
+      <section className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-16 sm:py-24 flex flex-col justify-center">
+        <div className="text-center space-y-8">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+            Your Trusted Online{" "}
+            <span className="text-green-600">Pharmacy</span>
+          </h1>
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+            Fast, affordable prescription delivery with licensed pharmacists
+            available to answer your questions. Get your medications delivered
+            right to your door.
           </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">✓ Authentication</h3>
-              <ul className="space-y-2 text-gray-700">
-                <li>✓ Email/password signup</li>
-                <li>✓ Email/password login</li>
-                <li>✓ Session management</li>
-                <li>✓ Protected routes</li>
-              </ul>
-            </div>
-
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">✓ User Management</h3>
-              <ul className="space-y-2 text-gray-700">
-                <li>✓ User profiles</li>
-                <li>✓ Role-based access (patient/doctor/admin)</li>
-                <li>✓ Dashboard for each role</li>
-                <li>✓ Profile viewing & editing</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-2">✓ Database</h2>
-              <p className="text-gray-600">
-                Supabase with 12 tables and RLS security
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-2">✓ Frontend</h2>
-              <p className="text-gray-600">
-                Next.js 15 with TypeScript and React 19
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-2">✓ Styling</h2>
-              <p className="text-gray-600">
-                Tailwind CSS 4.0 with responsive design
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-2">✓ Authentication</h2>
-              <p className="text-gray-600">
-                Supabase Auth with JWT and session management
-              </p>
-            </div>
-          </div>
-
-          {!session ? (
-            <div className="bg-blue-100 border-2 border-blue-500 rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-blue-900 mb-3">Try It Out</h3>
-              <p className="text-blue-800 mb-4">
-                Create an account or sign in to see the authentication system in action.
-              </p>
-              <div className="flex gap-4">
-                <Link
-                  href="/signup"
-                  className="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition"
-                >
-                  Sign Up
-                </Link>
-                <Link
-                  href="/login"
-                  className="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded font-medium hover:bg-blue-50 transition"
-                >
-                  Sign In
-                </Link>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="mt-12 bg-indigo-50 p-6 rounded-lg border border-indigo-200">
-            <h2 className="text-2xl font-bold mb-4 text-indigo-900">Next Steps</h2>
-            <ol className="list-decimal list-inside space-y-2 text-indigo-900">
-              <li>✓ Phase 1: Project Setup & Architecture</li>
-              <li>✓ Phase 2: Authentication & User Management</li>
-              <li>⏳ Phase 3: Patient Portal (prescriptions, orders)</li>
-              <li>⏳ Phase 4: Admin Dashboard (management, analytics)</li>
-              <li>⏳ Phase 5: Doctor Interface (prescription submission)</li>
-            </ol>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/login"
+              className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-lg"
+            >
+              Get Started
+            </Link>
+            <button className="px-8 py-4 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-lg">
+              Learn More
+            </button>
           </div>
         </div>
-      </div>
-    </main>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="bg-gray-50 py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-12">
+            Why Choose RoyaltyMeds?
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Feature 1 */}
+            <div className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
+              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
+                <ShieldCheckIcon className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Licensed Pharmacists
+              </h3>
+              <p className="text-gray-600">
+                All our pharmacists are fully licensed and verified for your
+                safety and peace of mind.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
+              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
+                <ClockIcon className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Fast Delivery
+              </h3>
+              <p className="text-gray-600">
+                Most prescriptions delivered within 24-48 hours to your home or
+                preferred location.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
+              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
+                <CreditCardIcon className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Affordable Pricing
+              </h3>
+              <p className="text-gray-600">
+                Competitive prices and transparent billing with insurance
+                integration available.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
+              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
+                <PhoneIcon className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                24/7 Support
+              </h3>
+              <p className="text-gray-600">
+                Our customer service team is available round-the-clock to help
+                you.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-16 sm:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-12">
+            How It Works
+          </h2>
+          <div className="grid md:grid-cols-4 gap-8">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl">
+                1
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Create Account
+              </h3>
+              <p className="text-gray-600">
+                Sign up in minutes with your personal information and medical
+                history.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl">
+                2
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Upload Prescription
+              </h3>
+              <p className="text-gray-600">
+                Submit your prescription from your doctor via upload or have
+                them send it directly.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl">
+                3
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Review & Checkout
+              </h3>
+              <p className="text-gray-600">
+                Our pharmacists review your prescription and you pay securely
+                through our platform.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl">
+                4
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Receive Medication
+              </h3>
+              <p className="text-gray-600">
+                Your medications are carefully prepared and delivered to your
+                door.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="bg-gray-50 py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-12">
+            What Our Customers Love
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            {[
+              "Easy prescription uploads and tracking",
+              "Secure platform with trusted pharmacists",
+              "Expert pharmacist consultations",
+              "Automatic refill reminders",
+              "Multiple payment options",
+              "Discreet and confidential service",
+            ].map((benefit, idx) => (
+              <div key={idx} className="flex items-start gap-4">
+                <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+                <p className="text-lg text-gray-700">{benefit}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews Section - Dynamic, shows only when reviews exist */}
+      {/* This section will be populated dynamically when customers submit reviews through the portal */}
+      {/* TODO: Connect to database reviews table and render scrolling carousel */}
+
+      {/* CTA Section */}
+      <section className="bg-gradient-to-r from-green-600 to-blue-600 py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white">
+            Ready to Get Started?
+          </h2>
+          <p className="text-lg text-green-50 max-w-2xl mx-auto">
+            Join thousands of satisfied customers who trust RoyaltyMeds for
+            their prescription needs.
+          </p>
+          <Link
+            href="/login"
+            className="inline-block px-8 py-4 bg-white text-green-600 rounded-lg hover:bg-gray-100 transition font-semibold text-lg"
+          >
+            Create Your Account Today
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">R</span>
+                </div>
+                <span className="text-xl font-bold text-white">RoyaltyMeds</span>
+              </div>
+              <p className="text-sm text-gray-400">
+                Your trusted online pharmacy partner.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h4 className="font-semibold text-white mb-4">Quick Links</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="#features" className="hover:text-green-400 transition">
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a href="#how-it-works" className="hover:text-green-400 transition">
+                    How It Works
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-green-400 transition">
+                    About Us
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div>
+              <h4 className="font-semibold text-white mb-4">Support</h4>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-center gap-2">
+                  <MailIcon className="w-4 h-4" />
+                  <a
+                    href="mailto:support@royaltymeds.com"
+                    className="hover:text-green-400 transition"
+                  >
+                    support@royaltymeds.com
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <PhoneIcon className="w-4 h-4" />
+                  <a href="tel:1-800-ROYALTY" className="hover:text-green-400 transition">
+                    1-800-ROYALTY
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <MapPinIcon className="w-4 h-4" />
+                  <span>Available 24/7</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Pharmacist Access */}
+            <div>
+              <h4 className="font-semibold text-white mb-4">For Pharmacists</h4>
+              <Link
+                href="/admin-login"
+                className="block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-center text-sm"
+              >
+                Pharmacist Portal
+              </Link>
+              <p className="text-xs text-gray-400 mt-4">
+                Licensed pharmacists only
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
+            <p>
+              &copy; 2026 RoyaltyMeds. All rights reserved.
+            </p>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-green-400 transition">
+                Privacy Policy
+              </a>
+              <a href="#" className="hover:text-green-400 transition">
+                Terms of Service
+              </a>
+              <a href="#" className="hover:text-green-400 transition">
+                Contact
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
