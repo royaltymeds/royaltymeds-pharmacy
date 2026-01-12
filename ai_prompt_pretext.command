@@ -521,6 +521,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyxxx... # Server-side only
 - ✅ Phase 4: Patient Portal
 - ✅ Phase 5: Doctor Interface (Dashboard, prescriptions, patient search)
 - ✅ Phase 5.5: Pharmacist Authentication & Account Management
+- ✅ Landing Page & Theme Complete: Green/Blue/White theme, all dashboards updated
 
 ### Build Status
 - Routes: 44 total
@@ -528,6 +529,12 @@ SUPABASE_SERVICE_ROLE_KEY=eyxxx... # Server-side only
 - ESLint: 0 errors
 - Build time: 6-7 seconds
 - Bundle size: 106 kB (first load JS)
+
+### Authentication & Routing Updates
+- `/dashboard`: Now deprecated, redirects users with unavailable page + green "Back to Homepage" button
+- `/admin` routes: Now require admin role verification in middleware, non-admin users redirected to `/admin-login`
+- `/admin-login`: Only admins allowed; non-admin authenticated users redirected to `/admin-login` for re-authentication
+- Authenticated users at `/login` or `/signup`: Redirected to homepage `/` instead of `/dashboard`
 
 ### Default Credentials
 - **Pharmacist Login**: `/admin-login`

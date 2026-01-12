@@ -31,10 +31,6 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const isAuthRoute =
-    req.nextUrl.pathname.startsWith("/login") ||
-    req.nextUrl.pathname.startsWith("/signup") ||
-    req.nextUrl.pathname === "/admin-login";
   const isAdminRoute = req.nextUrl.pathname.startsWith("/admin") && req.nextUrl.pathname !== "/admin-login";
   const isProtectedRoute = [
     "/dashboard",
@@ -59,9 +55,32 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // If authenticated user tries to access /admin routes, verify they are admin
+  if (session && (isAdminRoute || req.nextUrl.pathname === "/admin-login")) {
+    try {
+      const { data: userData } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+
+      // If user is not admin, redirect to admin-login
+      if (userData?.role !== "admin") {
+        const adminLoginUrl = new URL("/admin-login", req.nextUrl.origin);
+        adminLoginUrl.searchParams.set("next", req.nextUrl.pathname);
+        return NextResponse.redirect(adminLoginUrl);
+      }
+    } catch (error) {
+      // If we can't fetch user role, redirect to admin-login to be safe
+      const adminLoginUrl = new URL("/admin-login", req.nextUrl.origin);
+      adminLoginUrl.searchParams.set("next", req.nextUrl.pathname);
+      return NextResponse.redirect(adminLoginUrl);
+    }
+  }
+
   // Redirect to dashboard if already logged in and trying to access auth pages
-  if (session && isAuthRoute) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
+  if (session && (req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/signup"))) {
+    return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
 
   return response;
