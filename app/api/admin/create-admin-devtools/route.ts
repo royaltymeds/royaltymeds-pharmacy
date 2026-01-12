@@ -52,24 +52,7 @@ export async function POST(req: NextRequest) {
 
     const adminId = authData.user.id;
 
-    // Create user record
-    const { error: userInsertError } = await adminClient
-      .from("users")
-      .insert({
-        id: adminId,
-        email,
-        role: "admin",
-      });
-
-    if (userInsertError) {
-      console.error("User insert error:", userInsertError);
-      return NextResponse.json(
-        { error: "Failed to create user record: " + userInsertError.message },
-        { status: 400 }
-      );
-    }
-
-    console.log(`Created user ${adminId} with role admin`);
+    console.log(`Auth user created: ${adminId}, trigger should create users record with role: admin`);
 
     // Create user profile
     const { error: profileError } = await adminClient

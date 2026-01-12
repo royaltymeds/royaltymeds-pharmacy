@@ -85,22 +85,6 @@ export async function POST(req: NextRequest) {
 
     const doctorId = authData.user.id;
 
-    // Create user record
-    const { error: userInsertError } = await adminClient
-      .from("users")
-      .insert({
-        id: doctorId,
-        email,
-        role: "doctor",
-      });
-
-    if (userInsertError) {
-      return NextResponse.json(
-        { error: "Failed to create user record" },
-        { status: 400 }
-      );
-    }
-
     // Create user profile
     const { error: profileError } = await adminClient
       .from("user_profiles")
