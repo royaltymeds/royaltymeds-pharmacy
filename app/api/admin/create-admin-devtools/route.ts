@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         password,
         email_confirm: true,
         user_metadata: {
-          admin: true,
+          role: "admin",
         },
       });
 
@@ -62,11 +62,14 @@ export async function POST(req: NextRequest) {
       });
 
     if (userInsertError) {
+      console.error("User insert error:", userInsertError);
       return NextResponse.json(
-        { error: "Failed to create user record" },
+        { error: "Failed to create user record: " + userInsertError.message },
         { status: 400 }
       );
     }
+
+    console.log(`Created user ${adminId} with role admin`);
 
     // Create user profile
     const { error: profileError } = await adminClient
@@ -74,16 +77,17 @@ export async function POST(req: NextRequest) {
       .insert({
         user_id: adminId,
         full_name: fullName,
-        email,
-        role: "admin",
       });
 
     if (profileError) {
+      console.error("Profile insert error:", profileError);
       return NextResponse.json(
-        { error: "Failed to create user profile" },
+        { error: "Failed to create user profile: " + profileError.message },
         { status: 400 }
       );
     }
+
+    console.log(`Created profile for user ${adminId}`);
 
     return NextResponse.json(
       {

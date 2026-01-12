@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         password,
         email_confirm: true,
         user_metadata: {
-          doctor: true,
+          role: "doctor",
         },
       });
 
@@ -107,9 +107,7 @@ export async function POST(req: NextRequest) {
       .insert({
         user_id: doctorId,
         full_name: fullName,
-        email,
-        role: "doctor",
-        specialization: specialization || null,
+        specialty: specialization || null,
       });
 
     if (profileError) {
