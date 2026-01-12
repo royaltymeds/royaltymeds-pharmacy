@@ -4,6 +4,9 @@
 # It should be consulted BEFORE executing any code modifications from user prompts.
 # Treat this as a "loaded context file" that applies to every interaction.
 
+
+# ALL DOCS SHOULD BE CREATED IN THE DOCS/ FOLDER
+
 ## PROJECT OVERVIEW
 - **Name:** RoyaltyMeds Prescription Platform
 - **Stack:** Next.js 15 (App Router) + Supabase + Tailwind CSS
@@ -35,9 +38,18 @@
 - **Doctors**
   - UI terminology: "Doctor"
   - Backend role: `doctor`
-  - Access: Own prescriptions, patient searches, dashboard stats
+  - Primary Focus: **Doctor ↔ Pharmacist workflow** (prescription submission, status tracking, communication)
+  - Secondary Focus: Patient management (patient search, patient records)
+  - Access: Own prescriptions, patient searches, dashboard stats, pharmacist communication
   - Login route: `/login` (shared with customers)
-  - Distinct portal: `/doctor/dashboard`
+  - Distinct portal: `/doctor/dashboard` with blue theme
+  - Key Workflows:
+    - Submit prescriptions to pharmacy for processing
+    - Track prescription status (pending, approved, dispensing, completed, rejected)
+    - Receive pharmacist responses and modification requests
+    - View prescription fulfillment history
+    - Search patient records and medical history
+    - Communicate with pharmacy staff about prescription issues
 
 - **Pharmacists** (formerly "admins" - backend still uses `role: 'admin'`)
   - UI terminology: "Pharmacist", "Pharmacy", "Pharmacy Dashboard"
@@ -432,11 +444,19 @@ RoyaltyMeds uses a professional green, blue, and white theme:
 - Buttons: `bg-green-600 hover:bg-green-700`
 
 **Doctor Portal** (`/doctor/*`)
+- **Primary Purpose**: Manage doctor ↔ pharmacist workflow (prescription submission and tracking)
+- **Key Features**:
+  - Submit new prescriptions to pharmacy for processing
+  - Track real-time prescription status (pending approval, dispensing, completed)
+  - Receive pharmacist feedback and modification requests
+  - View rejection reasons and resubmit if needed
+  - Communicate with pharmacy about urgent or special cases
 - Navigation: `bg-blue-600 border-b border-blue-700` (darker than customer)
 - Portal title: `text-white` ("RoyaltyMeds Doctor Portal")
 - Main background: `bg-white`
 - Buttons: `bg-blue-600 hover:bg-blue-700`
-- Active links: `hover:bg-blue-700`
+- Dashboard Stats: Show prescription workflow metrics (pending, approved, dispensed, rejected)
+- Quick Actions: Submit prescription, view pending prescriptions, message pharmacy
 
 **Pharmacist Portal** (`/admin/*`)
 - Navigation: Green or dark theme for pharmacy branding
@@ -577,6 +597,56 @@ SUPABASE_SERVICE_ROLE_KEY=eyxxx... # Server-side only
 8. ☑ Are proper error messages logged (not exposing sensitive data)?
 9. ☑ Have edge cases been considered (missing data, auth failures)?
 10. ☑ Will this build without errors?
+
+---
+
+## DOCTOR ↔ PHARMACIST WORKFLOW (CORE BUSINESS FLOW)
+
+### Primary Workflow: Prescription Submission & Approval
+The doctor portal is centered around **prescription management with pharmacist approval**, not direct patient interaction.
+
+**Workflow Steps:**
+1. **Doctor Submits Prescription**: Doctor creates and submits prescription via `/doctor/submit-prescription`
+   - Patient name, medication details, dosage, quantity
+   - Routing to specific pharmacy location (if applicable)
+   - Notes for pharmacist about special handling, urgency, etc.
+
+2. **Prescription Status Tracking**: Doctor sees prescription in pending status on dashboard
+   - Real-time updates on prescription status (pending → approved → dispensing → completed)
+   - Rejection reasons if pharmacist denies prescription
+   - Estimated time to completion from pharmacy
+
+3. **Pharmacist Review**: Pharmacist reviews prescription for:
+   - Medication interactions
+   - Dosage appropriateness
+   - Insurance coverage verification
+   - Patient allergy checks
+
+4. **Approval or Rejection**: Pharmacist approves or rejects
+   - If approved: Prescription moves to dispensing
+   - If rejected: Doctor receives notification with reason, can modify and resubmit
+   - If modification needed: Pharmacist can request dosage/medication change
+
+5. **Doctor Communication**: If needed, doctor can message pharmacy about:
+   - Urgent prescriptions needing expedited processing
+   - Special instructions not captured in form
+   - Questions about rejection reasons
+   - Follow-up on patient compliance issues
+
+### Dashboard Metrics (Doctor Portal)
+The doctor dashboard should show pharmacist workflow metrics:
+- **Total Prescriptions Submitted**: Cumulative count
+- **Pending Approval**: Waiting for pharmacist decision
+- **Approved**: Ready for dispensing
+- **Dispensed**: Pharmacy has fulfilled order
+- **Rejected**: Pharmacy declined, awaiting doctor action
+- **Completed**: Patient has received medication
+
+### NOT Primary Focus:
+- ❌ Direct doctor-patient messaging (handled by separate messages portal)
+- ❌ Patient record keeping (secondary feature, not workflow-driving)
+- ❌ Insurance claims (handled by pharmacy/billing)
+- ❌ Patient follow-up (handled by doctor's own systems, not this portal)
 
 ---
 
