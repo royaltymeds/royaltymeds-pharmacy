@@ -55,16 +55,16 @@ export default function LoginForm() {
         .eq("id", data.user.id)
         .single();
 
-      if (userError || !userData?.role) {
+      if (userError || !userData || !(userData as any)?.role) {
         console.warn("[LoginForm] Could not determine user role, redirecting to dashboard");
         router.push("/dashboard");
-      } else if (userData.role === "patient") {
+      } else if ((userData as any).role === "patient") {
         console.log("[LoginForm] Patient login, redirecting to patient portal");
         router.push("/patient/home");
-      } else if (userData.role === "doctor") {
+      } else if ((userData as any).role === "doctor") {
         console.log("[LoginForm] Doctor login, redirecting to doctor dashboard");
         router.push("/doctor/dashboard");
-      } else if (userData.role === "admin") {
+      } else if ((userData as any).role === "admin") {
         console.log("[LoginForm] Admin login, redirecting to admin dashboard");
         router.push("/admin/dashboard");
       } else {
