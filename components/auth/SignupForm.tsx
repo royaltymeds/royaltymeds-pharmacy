@@ -131,7 +131,7 @@ export default function SignupForm() {
           onChange={(e) => setFullName(e.target.value)}
           placeholder="John Doe"
           required
-          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
 
@@ -146,7 +146,7 @@ export default function SignupForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
 
@@ -162,7 +162,7 @@ export default function SignupForm() {
           placeholder="••••••••"
           required
           minLength={6}
-          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
         <p className="text-xs text-gray-500 mt-0.5">Minimum 6 characters</p>
       </div>
@@ -170,7 +170,7 @@ export default function SignupForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-blue-600 text-white py-1.5 text-sm rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition flex items-center justify-center gap-2"
+        className="w-full bg-green-600 text-white py-1.5 text-sm rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 transition flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>
@@ -184,7 +184,7 @@ export default function SignupForm() {
 
       <p className="text-center text-xs text-gray-600">
         Already have an account?{" "}
-        <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+        <Link href="/login" className="text-green-600 hover:text-green-700 font-medium">
           Sign in
         </Link>
       </p>
