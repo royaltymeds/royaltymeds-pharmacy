@@ -73,7 +73,7 @@ export default async function PatientHomePage() {
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-600">
         <h1 className="text-3xl font-bold text-gray-900">
-          Welcome, {profile?.full_name?.split(" ")[0] || "Patient"}!
+          Welcome, {profile?.full_name?.split(" ")[0] || "Customer"}!
         </h1>
         <p className="text-gray-600 mt-2">Manage your prescriptions and orders</p>
       </div>

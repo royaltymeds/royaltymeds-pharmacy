@@ -59,7 +59,7 @@ export default function LoginForm() {
         console.warn("[LoginForm] Could not determine user role, redirecting to dashboard");
         router.push("/dashboard");
       } else if ((userData as any).role === "patient") {
-        console.log("[LoginForm] Patient login, redirecting to patient portal");
+        console.log("[LoginForm] Customer login, redirecting to customer portal");
         router.push("/patient/home");
       } else if ((userData as any).role === "doctor") {
         console.log("[LoginForm] Doctor login, redirecting to doctor dashboard");

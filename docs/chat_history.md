@@ -1,7 +1,8 @@
 # Chat History & Project Analysis
 
-**Date:** January 10, 2026 (Updated)
+**Date:** January 12, 2026 (Final Update - Phase 5.5 Complete)
 **Project:** RoyaltyMeds Prescription Platform
+**Status:** 62.5% Complete (5 of 8 phases), Production Ready
 
 ---
 
@@ -1101,11 +1102,198 @@ Verified Phase 2 complete, implemented and completed Phase 3, ran comprehensive 
 - ? All tests passed
 
 ### Phase Progression
-- Phase 1: ? Complete (Project Setup)
-- Phase 2: ? Complete (Authentication)
-- Phase 3: ? Complete (Patient Portal)
-- Overall: 37.5% complete (3 of 8 phases)
+- Phase 1: ✅ Complete (Project Setup)
+- Phase 2: ✅ Complete (Authentication)
+- Phase 3: ✅ Complete (Patient Portal)
+- Phase 4: ✅ Complete (Patient Frontend)
+- Phase 5: ✅ Complete (Doctor Interface)
+- Phase 5.5: ✅ Complete (Pharmacist Authentication)
+- Overall: 62.5% complete (5 of 8 phases)
 
-**Status:** ? PHASE 3 PRODUCTION READY
-**Last Updated:** January 11, 2026
+**Status:** ✅ PHASE 5.5 PRODUCTION READY - All Admin/Pharmacist Features Working
+**Last Updated:** January 12, 2026
+
+---
+
+## Phase 5.5: Pharmacist (Admin) Authentication & Account Management (January 12)
+**Objective:** Complete admin system with separate login, role-based account creation, and RLS optimization
+
+### Key Accomplishments
+
+#### 1. Fixed Admin Authentication Flow
+**Problem**: Admin login page was redirecting to regular login instead of admin dashboard
+**Solution**: Updated `/admin-login` to use Supabase client directly (not API endpoint)
+**Impact**: Sessions now properly established before redirects
+
+**Changes Made**:
+- Modified `app/admin-login/page.tsx` to call `getSupabaseClient()` and `signInWithPassword()`
+- Role verification now reads from `users` table instead of API response
+- Non-admin users are automatically signed out if trying admin login
+
+#### 2. Fixed Account Creation Role Assignment
+**Problem**: Admin accounts created with role='patient' instead of role='admin'
+**Root Cause**: Not setting role in user_metadata during auth user creation
+**Solution**: Set `user_metadata: { role: "admin" }` during account creation
+**Database Pattern**: Trigger `handle_new_user()` reads from metadata and syncs to users table
+
+**Changes Made**:
+- Updated `app/api/admin/create-admin-devtools/route.ts` to set role in metadata
+- Updated `app/api/admin/create-doctor/route.ts` to set role in metadata
+- Removed duplicate manual users table inserts (trigger already creates them)
+- Removed invalid columns from user_profiles insert (only insert existing columns)
+
+#### 3. Fixed Admin Login Routing
+**Problem**: Unauthenticated users accessing `/admin` were redirected to `/login`
+**Solution**: Updated middleware to redirect admin routes to `/admin-login`
+
+**Changes Made**:
+- Modified `middleware.ts` to distinguish admin routes from other protected routes
+- `/admin/*` without session → redirects to `/admin-login`
+- Other `/patient/*`, `/doctor/*` without session → redirects to `/login`
+- `/admin-login` excluded from protected routes
+
+#### 4. Optimized Database RLS Policies
+**Problem**: Supabase Advisor showed performance warnings on doctor_prescriptions table
+**Issues**: 
+- Auth functions re-evaluated per row
+- Multiple permissive policies causing evaluation overhead
+
+**Solution**: Created optimized migration with:
+- Wrapped `auth.uid()` with `(SELECT auth.uid())` to cache value
+- Combined 6 SELECT policies (doctor/admin/patient access) into 1 with OR conditions
+- Optimized INSERT, UPDATE, DELETE policies
+
+**Changes Made**:
+- Created `20260112135000_optimize_doctor_prescriptions_rls.sql`
+- Deployed via `npx supabase migration up --linked`
+- Reduced policy evaluation overhead significantly
+
+#### 5. Updated UI Terminology Throughout
+**Business Decision**: Admins are now called "Pharmacists" in UI, but role stays 'admin' in backend
+
+**Admin Pages Updated**:
+- `/admin-login` → "Pharmacist Only" badge, "Pharmacist Portal" title
+- `/admin/dashboard` → "Pharmacy Dashboard"
+- `/admin/users` → "Pharmacist Accounts"
+- Navigation → "RoyaltyMeds Pharmacy", "Pharmacists" link
+- `/devtools` → "Create Pharmacist Account" form
+
+**Customer Pages Updated**:
+- `/login` → Added subtitle "For Customers & Doctors"
+- `/patient` layout → "RoyaltyMeds Customer Portal"
+- Welcome message → "Welcome, {Customer Name}!"
+- LoginForm logs → "Customer login"
+
+### Technical Details
+
+#### Account Creation Flow (Correct Pattern)
+```
+1. User submits: email, password, fullName, role
+2. Create auth user with user_metadata: { role: "admin" }
+3. Trigger fires: INSERT into users table with role from metadata
+4. API creates user_profiles record with just user_id and full_name
+5. Result: Auth user + users record + user_profiles record all synced
+```
+
+#### Login Flow (Correct Pattern)
+```
+1. User submits credentials at /admin-login
+2. Client calls supabase.auth.signInWithPassword()
+3. Session cookies automatically set by Supabase
+4. Fetch user role from users table (service role key)
+5. Verify role === 'admin'
+6. Redirect to /admin/dashboard
+7. Middleware allows access because session exists
+```
+
+#### Default Pharmacist Credentials
+```
+Email: royaltymedsadmin@royaltymeds.com
+Password: Options123$
+Created via: SQL migration + database trigger
+```
+
+### Build & Validation Results
+```
+✅ Build successful in 6.4-6.8 seconds
+✅ 44 routes total
+✅ 0 TypeScript errors
+✅ 0 ESLint errors
+✅ Production ready
+```
+
+### Problems Solved in This Phase
+
+| # | Problem | Root Cause | Solution | Lesson |
+|---|---------|-----------|----------|--------|
+| 1 | Admin login loops to itself | Session not set before redirect | Use Supabase client directly | Always establish session first |
+| 2 | Admin role becomes 'patient' | No role in user_metadata | Set `user_metadata: { role: "admin" }` | Trigger depends on metadata |
+| 3 | Duplicate key in users table | Manually inserting + trigger both insert | Remove manual insert | Understand trigger side effects |
+| 4 | Can't read users table in API | Using anon key with RLS | Use service role key | Server APIs need higher privileges |
+| 5 | User profiles insert fails | Invalid columns in insert | Only insert existing columns | Verify schema before writing |
+| 6 | /admin redirects to /login | Middleware treats all routes same | Separate admin/other routes | Distinguish auth from protected |
+| 7 | RLS advisor warnings | Auth functions re-evaluated | Wrap in (SELECT auth.uid()) | Optimize database queries |
+| 8 | Multiple policies slow down queries | PostgreSQL evaluates each one | Combine with OR conditions | One smart policy beats many |
+
+### Remaining Issues (Fixed in This Session)
+- ✅ Admin account creation now creates user_profiles
+- ✅ Admin accounts have correct role = 'admin'
+- ✅ Admin can login and see dashboard
+- ✅ Logout button works (302 redirect is correct)
+- ✅ RLS policies optimized for performance
+- ✅ UI terminology consistent (Pharmacist, Customer, Doctor)
+
+### File Changes Summary
+**Pages:**
+- `app/admin-login/page.tsx` - Updated auth flow, terminology
+- `app/(auth)/login/page.tsx` - Added "For Customers & Doctors" subtitle
+- `app/patient/layout.tsx` - Changed to "Customer Portal"
+- `app/patient/home/page.tsx` - Changed welcome to "Customer"
+- `app/admin/dashboard/page.tsx` - Changed title to "Pharmacy Dashboard"
+- `app/admin/users/page.tsx` - Changed title to "Pharmacist Accounts"
+- `app/admin/doctors/page.tsx` - Updated note to say "pharmacists"
+- `app/admin/layout.tsx` - Changed to "RoyaltyMeds Pharmacy", "Pharmacists"
+- `app/devtools/page.tsx` - Changed to "Create Pharmacist Account"
+
+**APIs:**
+- `app/api/auth/login/route.ts` - Get role from metadata, fall back to database
+- `app/api/admin/create-admin-devtools/route.ts` - Set role in metadata, remove user insert
+- `app/api/admin/create-doctor/route.ts` - Set role in metadata, remove user insert, fix columns
+
+**Middleware:**
+- `middleware.ts` - Separate admin/other protected routes, redirect to appropriate login
+
+**Database:**
+- `supabase/migrations/20260112135000_optimize_doctor_prescriptions_rls.sql` - RLS optimization
+
+**Components:**
+- `components/auth/LoginForm.tsx` - Updated console logs to say "Customer"
+
+### Key Architectural Patterns Established
+
+#### 1. Role-Based Access Control
+- Backend roles: patient, doctor, admin (in database)
+- UI terminology: customer, doctor, pharmacist (in interface)
+- Separate login pages: `/login` for customers/doctors, `/admin-login` for pharmacists
+- Middleware routing: Different redirect paths based on route type
+
+#### 2. Account Creation Pattern
+- Set role in `user_metadata` during auth user creation
+- Trigger syncs metadata → users table
+- Only create user_profiles with basic fields
+- No duplicate inserts
+
+#### 3. RLS Policy Optimization
+- Wrap all `auth.uid()` calls with `(SELECT auth.uid())`
+- Combine multiple permissive policies with OR conditions
+- Single policy is more efficient than multiple policies
+- Test with Supabase Advisor for warnings
+
+#### 4. Authentication Flow
+- Server-side: Use `createServerClient()` from @supabase/ssr
+- Client-side: Use `getSupabaseClient()` for sign-in, set cookies automatically
+- APIs: Get user from session, verify role, use service role for database access
+- Session: Always established before redirects
+
+---
 

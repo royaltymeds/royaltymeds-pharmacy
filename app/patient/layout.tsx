@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Patient Portal - RoyaltyMeds",
-  description: "Your RoyaltyMeds patient portal",
+  title: "Customer Portal - RoyaltyMeds",
+  description: "Your RoyaltyMeds customer portal",
 };
 
 export default async function PatientLayout({
@@ -53,7 +53,7 @@ export default async function PatientLayout({
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <Link href="/patient/home" className="font-semibold text-lg text-indigo-600">
-                RoyaltyMeds Patient Portal
+                RoyaltyMeds Customer Portal
               </Link>
               <div className="hidden md:flex space-x-1">
                 <Link

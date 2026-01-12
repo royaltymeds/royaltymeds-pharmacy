@@ -13,6 +13,7 @@ export default function LoginPage() {
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
             <p className="text-gray-600">Sign in to your RoyaltyMeds account</p>
+            <p className="text-xs text-gray-500 mt-2">For Customers & Doctors</p>
           </div>
 
           <LoginForm />
