@@ -57,47 +57,33 @@ export default async function DoctorLayout({
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Doctor Navigation */}
-      <nav className="bg-blue-600 border-b border-blue-700 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <Link href="/doctor/dashboard" className="font-semibold text-lg text-white">
-                <span className="text-blue-300">R</span>oyaltyMeds Doctor Portal
+      <nav className="bg-blue-600 border-b border-blue-700 shadow-lg sticky top-0 z-40">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 md:gap-8 min-w-0 flex-1">
+              <Link href="/doctor/dashboard" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap truncate flex-shrink-0">
+                <span className="text-blue-300">R</span><span className="hidden sm:inline">oyaltyMeds</span>
               </Link>
-              <div className="hidden md:flex space-x-1">
-                <Link
-                  href="/doctor/dashboard"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700"
-                >
+              <div className="hidden lg:flex space-x-1">
+                <Link href="/doctor/dashboard" className="px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700">
                   Dashboard
                 </Link>
-                <Link
-                  href="/doctor/submit-prescription"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700"
-                >
-                  Submit Prescription
+                <Link href="/doctor/submit-prescription" className="px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700">
+                  Submit
                 </Link>
-                <Link
-                  href="/doctor/my-prescriptions"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700"
-                >
-                  My Prescriptions
+                <Link href="/doctor/my-prescriptions" className="px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700">
+                  Prescriptions
                 </Link>
-                <Link
-                  href="/doctor/patients"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700"
-                >
+                <Link href="/doctor/patients" className="px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700">
                   Patients
                 </Link>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-blue-100">{user.email}</span>
-              <Link
-                href="/api/auth/logout"
-                className="text-sm text-blue-100 hover:text-white font-medium"
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+              <span className="hidden sm:inline text-xs md:text-sm text-blue-100 truncate max-w-[150px]">{user.email}</span>
+              <Link href="/api/auth/logout" className="text-xs md:text-sm text-blue-100 hover:text-white font-medium whitespace-nowrap"
               >
                 Logout
               </Link>
@@ -107,8 +93,10 @@ export default async function DoctorLayout({
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+      <main className="flex-1 w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -25,7 +25,7 @@ supabase
 *.swo
 *~
 .DS_Store
-app/devtools/
+/app/devtools/
 
 # Logs
 logs/

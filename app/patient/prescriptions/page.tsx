@@ -126,13 +126,13 @@ export default function UploadPrescriptionPage() {
 
   if (success) {
     return (
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-600">
-          <div className="flex items-center gap-4">
-            <CheckCircle className="w-12 h-12 text-green-600 flex-shrink-0" />
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Prescription Uploaded!</h2>
-              <p className="text-gray-600 mt-2">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border-l-4 border-green-600">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <CheckCircle className="w-8 sm:w-12 h-8 sm:h-12 text-green-600 flex-shrink-0 mt-1" />
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-900">Prescription Uploaded!</h2>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">
                 Your prescription has been uploaded successfully. Our pharmacists will review it shortly.
               </p>
             </div>
@@ -141,7 +141,7 @@ export default function UploadPrescriptionPage() {
 
         <Link
           href="/patient/home"
-          className="block text-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium max-w-xs mx-auto"
+          className="block text-center px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
         >
           Return to Home
         </Link>
@@ -150,19 +150,19 @@ export default function UploadPrescriptionPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-600">
-        <h1 className="text-3xl font-bold text-gray-900">Upload Prescription</h1>
-        <p className="text-gray-600 mt-2">
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border-l-4 border-green-600">
+        <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Upload Prescription</h1>
+        <p className="text-xs sm:text-sm text-gray-600 mt-2">
           Upload a clear image or PDF of your prescription for pharmacy review
         </p>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* File Upload */}
-          <div className="border-2 border-dashed border-green-300 rounded-lg p-8">
+          <div className="border-2 border-dashed border-green-300 rounded-lg p-6 sm:p-8">
             <input
               type="file"
               ref={fileInputRef}
@@ -175,18 +175,18 @@ export default function UploadPrescriptionPage() {
               onClick={() => fileInputRef.current?.click()}
               className="w-full text-center"
             >
-              <Upload className="w-12 h-12 text-green-600 mx-auto mb-3" />
-              <p className="font-medium text-gray-900">
+              <Upload className="w-8 sm:w-12 h-8 sm:h-12 text-green-600 mx-auto mb-3" />
+              <p className="font-medium text-gray-900 text-sm sm:text-base">
                 {fileName || "Click to upload or drag file"}
               </p>
-              <p className="text-sm text-gray-600 mt-1">PDF, JPG, or PNG (Max 10MB)</p>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">PDF, JPG, or PNG (Max 10MB)</p>
             </button>
           </div>
 
           {/* Prescription Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Medication Name (Optional)
               </label>
               <input
@@ -194,11 +194,11 @@ export default function UploadPrescriptionPage() {
                 value={medication}
                 onChange={(e) => setMedication(e.target.value)}
                 placeholder="e.g., Metformin"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Dosage (Optional)
               </label>
               <input
@@ -206,11 +206,11 @@ export default function UploadPrescriptionPage() {
                 value={dosage}
                 onChange={(e) => setDosage(e.target.value)}
                 placeholder="e.g., 500mg"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Quantity (Optional)
               </label>
               <input
@@ -218,18 +218,18 @@ export default function UploadPrescriptionPage() {
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 placeholder="e.g., 30"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Brand / Generic
               </label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setBrandChoice("brand")}
-                  className={`flex-1 py-2 px-3 rounded-lg font-medium transition ${
+                  className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg font-medium transition ${
                     brandChoice === "brand"
                       ? "bg-green-600 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -240,7 +240,7 @@ export default function UploadPrescriptionPage() {
                 <button
                   type="button"
                   onClick={() => setBrandChoice("generic")}
-                  className={`flex-1 py-2 px-3 rounded-lg font-medium transition ${
+                  className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg font-medium transition ${
                     brandChoice === "generic"
                       ? "bg-green-600 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -254,23 +254,23 @@ export default function UploadPrescriptionPage() {
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
               Additional Notes (Optional)
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any special instructions or notes..."
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+              rows={2}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 resize-none"
             />
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-xs sm:text-sm text-red-700">{error}</p>
             </div>
           )}
 
@@ -278,7 +278,7 @@ export default function UploadPrescriptionPage() {
           <button
             type="submit"
             disabled={isLoading || !file}
-            className="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="w-full py-2 sm:py-3 text-sm sm:text-base bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             {isLoading ? "Uploading..." : "Upload Prescription"}
           </button>

@@ -92,28 +92,28 @@ export default async function OrdersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-600">
-        <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-        <p className="text-gray-600 mt-2">Track your prescriptions and deliveries</p>
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border-l-4 border-green-600">
+        <h1 className="text-lg sm:text-3xl font-bold text-gray-900">My Orders</h1>
+        <p className="text-xs sm:text-sm text-gray-600 mt-2">Track your prescriptions and deliveries</p>
       </div>
 
       {/* Orders List */}
       {orders && orders.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {orders.map((order: any) => (
             <Link key={order.id} href={`/patient/orders/${order.id}`}>
-              <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition cursor-pointer border-t-4 border-green-500">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
+              <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition cursor-pointer border-t-4 border-green-500">
+                <div className="flex items-start justify-between gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {getStatusIcon(order.status)}
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           Order #{order.id.slice(0, 8).toUpperCase()}
                         </h3>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">
                           {order.prescriptions?.medication_name || "Prescription Order"}
                         </p>
                       </div>
@@ -121,16 +121,16 @@ export default async function OrdersPage() {
                   </div>
 
                   <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className="text-lg sm:text-xl font-bold text-gray-900">
                       ${order.total_amount?.toFixed(2) || "0.00"}
                     </p>
-                    <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(order.status)}`}>
+                    <span className={`inline-block mt-2 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(order.status)}`}>
                       {order.status.replace("_", " ")}
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                <div className="mt-3 sm:mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                   <div>
                     <p className="text-xs font-medium">Payment</p>
                     <p className="font-medium text-gray-900 capitalize mt-1">
@@ -138,7 +138,7 @@ export default async function OrdersPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium">Delivery Type</p>
+                    <p className="text-xs font-medium">Delivery</p>
                     <p className="font-medium text-gray-900 capitalize mt-1">
                       {order.delivery_type}
                     </p>
@@ -146,7 +146,7 @@ export default async function OrdersPage() {
                   {order.estimated_delivery_date && (
                     <div>
                       <p className="text-xs font-medium">Est. Delivery</p>
-                      <p className="font-medium text-gray-900 mt-1">
+                      <p className="font-medium text-gray-900 mt-1 text-xs">
                         {new Date(order.estimated_delivery_date).toLocaleDateString()}
                       </p>
                     </div>
@@ -154,14 +154,14 @@ export default async function OrdersPage() {
                   {order.tracking_number && (
                     <div>
                       <p className="text-xs font-medium">Tracking</p>
-                      <p className="font-medium text-gray-900 mt-1 truncate">
+                      <p className="font-medium text-gray-900 mt-1 truncate text-xs">
                         {order.tracking_number}
                       </p>
                     </div>
                   )}
                 </div>
 
-                <p className="text-xs text-gray-500 mt-4">
+                <p className="text-xs text-gray-500 mt-3 sm:mt-4">
                   Ordered on {new Date(order.created_at).toLocaleDateString()}
                 </p>
               </div>
@@ -169,15 +169,15 @@ export default async function OrdersPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-          <PackageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Orders Yet</h3>
-          <p className="text-gray-600 mb-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 sm:p-12 text-center">
+          <PackageIcon className="w-10 sm:w-12 h-10 sm:h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-base sm:text-xl font-semibold text-gray-900 mb-2">No Orders Yet</h3>
+          <p className="text-xs sm:text-sm text-gray-600 mb-6">
             Start by uploading a prescription to place your first order.
           </p>
           <Link
             href="/patient/prescriptions"
-            className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+            className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
           >
             Upload Prescription
           </Link>
