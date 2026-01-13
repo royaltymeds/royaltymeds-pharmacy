@@ -63,20 +63,11 @@ export default function LoginForm() {
       const userRole = (userData as any)?.role || "patient";
       console.log("[LoginForm] User authenticated with role:", userRole);
 
-      // Step 3: Redirect based on role
-      if (userRole === "patient") {
-        console.log("[LoginForm] Patient login, redirecting to patient home");
-        router.push("/patient/home");
-      } else if (userRole === "doctor") {
-        console.log("[LoginForm] Doctor login, redirecting to doctor dashboard");
-        router.push("/doctor/dashboard");
-      } else if (userRole === "admin") {
-        console.log("[LoginForm] Admin login, redirecting to admin dashboard");
-        router.push("/admin/dashboard");
-      } else {
-        console.log("[LoginForm] Unknown role, defaulting to patient home");
-        router.push("/patient/home");
-      }
+      // Step 3: Redirect to success page (no prefetching)
+      // This allows the client-side Supabase library to process tokens from URL fragment
+      // See: https://supabase.com/docs/guides/auth/server-side-rendering#no-session-on-the-server-side-with-nextjs-route-prefetching
+      console.log("[LoginForm] Redirecting to success page");
+      router.push(`/auth/success?role=${userRole}`);
       
       router.refresh();
     } catch (err) {
