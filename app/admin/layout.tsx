@@ -57,59 +57,59 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Admin Navigation */}
-      <nav className="bg-slate-900 border-b border-slate-700 shadow-lg">
+      <nav className="bg-green-600 border-b border-green-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <Link href="/admin/dashboard" className="font-semibold text-lg text-white">
-                RoyaltyMeds Pharmacy
+                <span className="text-green-300">R</span>oyaltyMeds Pharmacy
               </Link>
               <div className="hidden md:flex space-x-1">
                 <Link
                   href="/admin/dashboard"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/admin/prescriptions"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
                 >
                   Prescriptions
                 </Link>
                 <Link
                   href="/admin/orders"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
                 >
                   Orders
                 </Link>
                 <Link
                   href="/admin/refills"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
                 >
                   Refills
                 </Link>
                 <Link
                   href="/admin/doctors"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
                 >
                   Doctors
                 </Link>
                 <Link
                   href="/admin/users"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
                 >
                   Pharmacists
                 </Link>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-300">{user.email}</span>
+              <span className="text-sm text-green-100">{user.email}</span>
               <Link
                 href="/api/auth/logout"
-                className="text-sm text-gray-300 hover:text-white font-medium"
+                className="text-sm text-green-100 hover:text-white font-medium"
               >
                 Logout
               </Link>

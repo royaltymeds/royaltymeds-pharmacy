@@ -233,32 +233,32 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Link
           href="/admin/prescriptions"
-          className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow p-6 hover:shadow-lg transition"
+          className="bg-white rounded-lg shadow p-4 md:p-6 border-l-4 border-green-600 hover:shadow-lg transition"
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Manage Prescriptions</h3>
-          <p className="text-gray-600 text-sm mb-4">Review and approve patient prescriptions</p>
-          <span className="text-yellow-600 font-medium">Go to Prescriptions →</span>
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Manage Prescriptions</h3>
+          <p className="text-gray-600 text-xs md:text-sm mb-4">Review and approve patient prescriptions</p>
+          <span className="text-green-600 font-medium text-sm">Go to Prescriptions →</span>
         </Link>
 
         <Link
           href="/admin/orders"
-          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow p-6 hover:shadow-lg transition"
+          className="bg-white rounded-lg shadow p-4 md:p-6 border-l-4 border-blue-600 hover:shadow-lg transition"
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Manage Orders</h3>
-          <p className="text-gray-600 text-sm mb-4">Update order status and tracking</p>
-          <span className="text-blue-600 font-medium">Go to Orders →</span>
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Manage Orders</h3>
+          <p className="text-gray-600 text-xs md:text-sm mb-4">Update order status and tracking</p>
+          <span className="text-blue-600 font-medium text-sm">Go to Orders →</span>
         </Link>
 
         <Link
           href="/admin/refills"
-          className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow p-6 hover:shadow-lg transition"
+          className="bg-white rounded-lg shadow p-4 md:p-6 border-l-4 border-green-600 hover:shadow-lg transition"
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Process Refills</h3>
-          <p className="text-gray-600 text-sm mb-4">Approve or reject refill requests</p>
-          <span className="text-green-600 font-medium">Go to Refills →</span>
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Process Refills</h3>
+          <p className="text-gray-600 text-xs md:text-sm mb-4">Approve or reject refill requests</p>
+          <span className="text-green-600 font-medium text-sm">Go to Refills →</span>
         </Link>
       </div>
     </div>

@@ -41,23 +41,23 @@ export default function DoctorDashboard() {
   const quickActions = [
     {
       title: "Submit Prescription",
-      description: "Create a new prescription for a patient",
+      description: "Send a prescription to pharmacy for processing",
       href: "/doctor/submit-prescription",
       icon: FileText,
       color: "bg-blue-50 text-blue-600",
     },
     {
-      title: "View Patients",
-      description: "Browse and manage your patients",
-      href: "/doctor/patients",
-      icon: Users,
+      title: "Track Status",
+      description: "Check prescription approval and dispensing status",
+      href: "/doctor/my-prescriptions",
+      icon: CheckCircle,
       color: "bg-blue-50 text-blue-600",
     },
     {
-      title: "My Prescriptions",
-      description: "Review all prescriptions you've submitted",
-      href: "/doctor/my-prescriptions",
-      icon: FileText,
+      title: "Patient Search",
+      description: "Look up patient records and history",
+      href: "/doctor/patients",
+      icon: Users,
       color: "bg-blue-50 text-blue-600",
     },
   ];
@@ -80,79 +80,79 @@ export default function DoctorDashboard() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-blue-600">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-blue-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium">
-                Total Prescriptions
+              <p className="text-gray-500 text-xs md:text-sm font-medium">
+                Total
               </p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
                 {loading ? "-" : stats.totalPrescriptions}
               </p>
             </div>
-            <FileText className="h-10 w-10 text-blue-600" />
+            <FileText className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Pending Approval */}
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-yellow-500">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-yellow-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium">
-                Pending Review
+              <p className="text-gray-500 text-xs md:text-sm font-medium">
+                Pending
               </p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
                 {loading ? "-" : stats.pendingApproval}
               </p>
             </div>
-            <Clock className="h-10 w-10 text-yellow-600" />
+            <Clock className="h-8 w-8 md:h-10 md:w-10 text-yellow-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Approved */}
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-green-600">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-green-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium">Approved</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">
+              <p className="text-gray-500 text-xs md:text-sm font-medium">Approved</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
                 {loading ? "-" : stats.approved}
               </p>
             </div>
-            <CheckCircle className="h-10 w-10 text-green-600" />
+            <CheckCircle className="h-8 w-8 md:h-10 md:w-10 text-green-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Rejected */}
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-red-600">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-red-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium">Rejected</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">
+              <p className="text-gray-500 text-xs md:text-sm font-medium">Rejected</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
                 {loading ? "-" : stats.rejected}
               </p>
             </div>
-            <AlertCircle className="h-10 w-10 text-red-600" />
+            <AlertCircle className="h-8 w-8 md:h-10 md:w-10 text-red-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Total Patients */}
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-blue-500">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-blue-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium">Patients</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">
+              <p className="text-gray-500 text-xs md:text-sm font-medium">Patients</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
                 {loading ? "-" : stats.totalPatients}
               </p>
             </div>
-            <Users className="h-10 w-10 text-blue-600" />
+            <Users className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {quickActions.map((action) => {
@@ -179,7 +179,7 @@ export default function DoctorDashboard() {
       </div>
 
       {/* Workflow Guide */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Pharmacy Workflow</h2>
         <div className="space-y-4">
           <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg">

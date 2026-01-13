@@ -209,14 +209,14 @@ export default async function PatientHomePage() {
           ) : (
             <p className="text-gray-600 text-center py-8">
               No prescriptions yet.{" "}
-              <Link href="/patient/prescriptions" className="text-indigo-600 hover:underline font-medium">
+              <Link href="/patient/prescriptions" className="text-green-600 hover:underline font-medium">
                 Upload one
               </Link>
             </p>
           )}
           <Link
             href="/patient/prescriptions"
-            className="block mt-4 text-center text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+            className="block mt-4 text-center text-green-600 hover:text-green-700 font-medium text-sm"
           >
             View All →
           </Link>
@@ -247,7 +247,7 @@ export default async function PatientHomePage() {
           ) : (
             <p className="text-gray-600 text-center py-8">
               No orders yet. Start by{" "}
-              <Link href="/patient/prescriptions" className="text-indigo-600 hover:underline font-medium">
+              <Link href="/patient/prescriptions" className="text-green-600 hover:underline font-medium">
                 uploading a prescription
               </Link>
               .
@@ -255,7 +255,7 @@ export default async function PatientHomePage() {
           )}
           <Link
             href="/patient/orders"
-            className="block mt-4 text-center text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+            className="block mt-4 text-center text-green-600 hover:text-green-700 font-medium text-sm"
           >
             View All →
           </Link>
