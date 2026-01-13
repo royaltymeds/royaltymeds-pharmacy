@@ -68,38 +68,38 @@ export default function AdminDoctorsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-600">
-        <div className="flex items-center gap-3">
-          <Users className="w-8 h-8 text-green-600" />
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 border-l-4 border-green-600">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <Users className="w-6 sm:w-8 h-6 sm:h-8 text-green-600 flex-shrink-0" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Manage Doctors</h1>
-            <p className="text-gray-600 mt-2">Create and manage doctor accounts</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Manage Doctors</h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Create and manage doctor accounts</p>
           </div>
         </div>
       </div>
 
       {/* Create Doctor Form */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Create New Doctor Account</h2>
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Create New Doctor Account</h2>
 
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{error}</p>
+            <p className="text-xs sm:text-sm text-red-700">{error}</p>
           </div>
         )}
 
         {success && (
           <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-green-700">Doctor account created successfully!</p>
+            <p className="text-xs sm:text-sm text-green-700">Doctor account created successfully!</p>
           </div>
         )}
 
         <form onSubmit={handleCreateDoctor} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Full Name *
               </label>
               <input
@@ -108,12 +108,12 @@ export default function AdminDoctorsPage() {
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Dr. John Smith"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Email Address *
               </label>
               <input
@@ -122,12 +122,12 @@ export default function AdminDoctorsPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="doctor@example.com"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Password *
               </label>
               <input
@@ -137,13 +137,13 @@ export default function AdminDoctorsPage() {
                 placeholder="••••••••"
                 required
                 minLength={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
               />
               <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Specialization (Optional)
               </label>
               <input
@@ -151,7 +151,7 @@ export default function AdminDoctorsPage() {
                 value={specialization}
                 onChange={(e) => setSpecialization(e.target.value)}
                 placeholder="e.g., Cardiology, Pediatrics"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
               />
             </div>
           </div>
@@ -159,7 +159,7 @@ export default function AdminDoctorsPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="w-full py-2 sm:py-3 bg-green-600 text-white text-sm sm:text-base font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             {isLoading ? "Creating account..." : "Create Doctor Account"}
           </button>
@@ -167,8 +167,8 @@ export default function AdminDoctorsPage() {
       </div>
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+        <p className="text-xs sm:text-sm text-blue-800">
           <strong>Note:</strong> Doctor accounts can only be created by pharmacists. Once created, doctors can log in with their email and password.
         </p>
       </div>

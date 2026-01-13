@@ -72,14 +72,14 @@ export default async function AdminPrescriptions() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Prescription Management</h1>
-          <p className="text-gray-600 mt-1">Review and approve patient prescriptions</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Prescription Management</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">Review and approve patient prescriptions</p>
         </div>
         <Link
           href="/admin/dashboard"
-          className="text-green-600 hover:text-green-700 font-medium"
+          className="text-green-600 hover:text-green-700 font-medium text-sm whitespace-nowrap"
         >
           ← Back to Dashboard
         </Link>
@@ -88,22 +88,22 @@ export default async function AdminPrescriptions() {
       {/* Prescriptions Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Prescription ID
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Patient
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Submitted
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -112,40 +112,40 @@ export default async function AdminPrescriptions() {
               {prescriptions && prescriptions.length > 0 ? (
                 (prescriptions as any[]).map((rx) => (
                   <tr key={rx.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                       {rx.id.slice(0, 8)}...
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
                       {(rx.user_profiles as any)?.full_name || "Unknown"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                        className={`inline-flex items-center gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(
                           rx.status
                         )}`}
                       >
                         {getStatusIcon(rx.status)}
-                        {rx.status.charAt(0).toUpperCase() + rx.status.slice(1)}
+                        <span className="hidden sm:inline">{rx.status.charAt(0).toUpperCase() + rx.status.slice(1)}</span>
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
                       {new Date(rx.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm space-x-1 sm:space-x-2">
                       <Link
                         href={`/admin/prescriptions/${rx.id}`}
-                        className="text-blue-600 hover:text-blue-700 font-medium"
+                        className="text-blue-600 hover:text-blue-700 font-medium text-xs"
                       >
                         View
                       </Link>
                       {rx.status === "pending" && (
                         <>
-                          <span className="text-gray-300">|</span>
-                          <button className="text-green-600 hover:text-green-700 font-medium">
+                          <span className="text-gray-300 hidden sm:inline">|</span>
+                          <button className="text-green-600 hover:text-green-700 font-medium text-xs hidden sm:inline">
                             Approve
                           </button>
-                          <span className="text-gray-300">|</span>
-                          <button className="text-red-600 hover:text-red-700 font-medium">
+                          <span className="text-gray-300 hidden sm:inline">|</span>
+                          <button className="text-red-600 hover:text-red-700 font-medium text-xs hidden sm:inline">
                             Reject
                           </button>
                         </>
@@ -155,7 +155,7 @@ export default async function AdminPrescriptions() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-600">
+                  <td colSpan={5} className="px-3 sm:px-6 py-8 text-center text-xs sm:text-sm text-gray-600">
                     No prescriptions found
                   </td>
                 </tr>
@@ -167,22 +167,22 @@ export default async function AdminPrescriptions() {
 
       {/* Stats */}
       {prescriptions && prescriptions.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-600 text-sm">Pending</p>
-            <p className="text-3xl font-bold text-yellow-600 mt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
+          <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+            <p className="text-xs sm:text-sm text-gray-600">Pending</p>
+            <p className="text-xl sm:text-3xl font-bold text-yellow-600 mt-1 sm:mt-2">
               {(prescriptions as any[]).filter((p) => p.status === "pending").length}
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-600 text-sm">Approved</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">
+          <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+            <p className="text-xs sm:text-sm text-gray-600">Approved</p>
+            <p className="text-xl sm:text-3xl font-bold text-green-600 mt-1 sm:mt-2">
               {(prescriptions as any[]).filter((p) => p.status === "approved").length}
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-600 text-sm">Rejected</p>
-            <p className="text-3xl font-bold text-red-600 mt-2">
+          <div className="bg-white rounded-lg shadow p-3 sm:p-6 sm:col-span-1 col-span-2">
+            <p className="text-xs sm:text-sm text-gray-600">Rejected</p>
+            <p className="text-xl sm:text-3xl font-bold text-red-600 mt-1 sm:mt-2">
               {(prescriptions as any[]).filter((p) => p.status === "rejected").length}
             </p>
           </div>

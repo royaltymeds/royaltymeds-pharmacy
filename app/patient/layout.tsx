@@ -59,7 +59,7 @@ export default function PatientLayout({
           <div className="flex justify-between items-center h-16 gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-4 md:gap-8 min-w-0 flex-1">
               <Link href="/patient/home" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap truncate flex-shrink-0">
-                <span className="text-green-300">R</span><span className="hidden sm:inline">oyaltyMeds</span>
+                <span className="text-green-300">R</span><span>oyaltyMeds</span>
               </Link>
               <div className="hidden lg:flex space-x-1">
                 {navLinks.map((link) => (

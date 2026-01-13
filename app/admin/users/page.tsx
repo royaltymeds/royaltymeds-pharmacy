@@ -111,14 +111,14 @@ export default function AdminUsersPage() {
   return (
     <div>
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-green-600 flex justify-between items-center">
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 mb-6 border-l-4 border-green-600 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Pharmacist Accounts</h1>
-          <p className="text-gray-600 mt-2">Manage pharmacist accounts</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Pharmacist Accounts</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Manage pharmacist accounts</p>
         </div>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+          className="bg-green-600 text-white text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 whitespace-nowrap"
         >
           <UserPlus className="h-4 w-4" />
           Create Admin
@@ -127,27 +127,27 @@ export default function AdminUsersPage() {
 
       {/* Messages */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+        <div className="mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-red-700">{error}</p>
+          <p className="text-xs sm:text-sm text-red-700">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+        <div className="mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
           <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <p className="text-green-700">{success}</p>
+          <p className="text-xs sm:text-sm text-green-700">{success}</p>
         </div>
       )}
 
       {/* Create Form */}
       {showCreateForm && (
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Create New Admin Account</h2>
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 mb-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Create New Admin Account</h2>
           
           <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Full Name
               </label>
               <input
@@ -156,13 +156,13 @@ export default function AdminUsersPage() {
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="John Doe"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Email Address
               </label>
               <input
@@ -171,13 +171,13 @@ export default function AdminUsersPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="admin@royaltymeds.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <input
@@ -186,7 +186,7 @@ export default function AdminUsersPage() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                 required
                 minLength={8}
               />
@@ -194,7 +194,7 @@ export default function AdminUsersPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Confirm Password
               </label>
               <input
@@ -203,7 +203,7 @@ export default function AdminUsersPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                 required
               />
             </div>
@@ -212,7 +212,7 @@ export default function AdminUsersPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+                className="flex-1 bg-green-600 text-white text-xs sm:text-sm py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
               >
                 {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
                 {isSubmitting ? "Creating..." : "Create Admin"}
@@ -220,7 +220,7 @@ export default function AdminUsersPage() {
               <button
                 type="button"
                 onClick={() => setShowCreateForm(false)}
-                className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 font-medium"
+                className="flex-1 bg-gray-200 text-gray-700 text-xs sm:text-sm py-2 rounded-lg hover:bg-gray-300 font-medium"
               >
                 Cancel
               </button>
@@ -232,26 +232,26 @@ export default function AdminUsersPage() {
       {/* Admins List */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center">
+          <div className="p-6 sm:p-8 text-center">
             <Loader className="h-8 w-8 animate-spin mx-auto text-green-600 mb-4" />
-            <p className="text-gray-600">Loading admin users...</p>
+            <p className="text-xs sm:text-sm text-gray-600">Loading admin users...</p>
           </div>
         ) : admins.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-gray-600 text-lg">No admin users found</p>
+          <div className="p-6 sm:p-8 text-center">
+            <p className="text-gray-600 text-sm sm:text-lg">No admin users found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 hidden sm:table-cell">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 hidden sm:table-cell">
                     Created
                   </th>
                 </tr>
@@ -259,13 +259,14 @@ export default function AdminUsersPage() {
               <tbody className="divide-y divide-gray-200">
                 {admins.map((admin) => (
                   <tr key={admin.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <p className="font-medium text-gray-900">{admin.fullName}</p>
+                    <td className="px-3 sm:px-6 py-4">
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">{admin.fullName}</p>
+                      <p className="text-xs text-gray-500 sm:hidden">{admin.email}</p>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
                       {admin.email}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
                       {new Date(admin.createdAt).toLocaleDateString()}
                     </td>
                   </tr>
