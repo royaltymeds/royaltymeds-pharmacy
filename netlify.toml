@@ -17,7 +17,7 @@
   
   # Omit expected public environment variables from secrets scanning
   # These are public Supabase keys that can be exposed to the client
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY,STORAGE_BUCKET"
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY,STORAGE_BUCKET,SUPABASE_REF"
   # Omit paths containing code and documentation
   SECRETS_SCAN_OMIT_PATHS = "docs/**,node_modules/**,.next/**,.netlify/**,.git/**"
 
