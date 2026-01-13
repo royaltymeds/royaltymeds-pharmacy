@@ -65,7 +65,9 @@ export default function AdminLoginPage() {
         return;
       }
 
-      router.push("/admin/dashboard");
+      // Redirect to success page (no prefetching) to allow token processing
+      // See: https://supabase.com/docs/guides/auth/server-side-rendering#no-session-on-the-server-side-with-nextjs-route-prefetching
+      router.push("/auth/success?role=admin");
       router.refresh();
     } catch (err) {
       setError("An unexpected error occurred");
