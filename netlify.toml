@@ -4,18 +4,16 @@
 
 [build.environment]
   # Only pass PUBLIC environment variables to the build
-  # Private keys like SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_URL, SUPABASE_REF
-  # should NOT be available during build time - they will cause them to be
-  # embedded in the built code
-  NEXT_PUBLIC_SUPABASE_ANON_KEY = ""
-  NEXT_PUBLIC_SUPABASE_URL = ""
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY = ""
-  STORAGE_BUCKET = ""
+  # These PUBLIC keys are safe to include and needed for the app to work
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwd2h3aHRqc3BkYmJxemZicHR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4ODUwNDIsImV4cCI6MjA4MzQ2MTA0Mn0.G0gMebh5wOP5LRBb47ZOBx2iHRtBK6N1SQ4SjVk6zsA"
+  NEXT_PUBLIC_SUPABASE_URL = "https://kpwhwhtjspdbbqzfbptv.supabase.co"
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY = "sb_publishable_h0QM8QuIXTv2vrEo3CRoGQ_4jjCDTJA"
+  STORAGE_BUCKET = "royaltymeds_storage"
   
   # These are intentionally NOT set here - set them only in Netlify UI environment context
-  # SUPABASE_SERVICE_ROLE_KEY
-  # SUPABASE_DB_URL
-  # SUPABASE_REF
+  # SUPABASE_SERVICE_ROLE_KEY - set in Netlify UI Build & Deploy > Environment
+  # SUPABASE_DB_URL - set in Netlify UI Build & Deploy > Environment
+  # SUPABASE_REF - set in Netlify UI Build & Deploy > Environment
   
   # Omit expected public environment variables from secrets scanning
   # These are public Supabase keys that can be exposed to the client
