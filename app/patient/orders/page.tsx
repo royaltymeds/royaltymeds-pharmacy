@@ -101,10 +101,10 @@ export default async function OrdersPage() {
 
       {/* Orders List */}
       {orders && orders.length > 0 ? (
-        <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-3 sm:space-y-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 auto-rows-max">
           {orders.map((order: any) => (
             <Link key={order.id} href={`/patient/orders/${order.id}`}>
-              <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition cursor-pointer border-t-4 border-green-500">
+              <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition cursor-pointer border-t-4 border-green-500 h-full">
                 <div className="flex items-start justify-between gap-3 sm:gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 sm:gap-3">
