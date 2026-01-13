@@ -6,6 +6,27 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
+// Custom storage for browser client to sync cookies properly
+class CookieStorage {
+  getItem(key: string): string | null {
+    const value = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith(`${key}=`))
+      ?.split("=")[1];
+    return value ? decodeURIComponent(value) : null;
+  }
+
+  setItem(key: string, value: string): void {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000);
+    document.cookie = `${key}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+  }
+
+  removeItem(key: string): void {
+    document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  }
+}
+
 export default function DoctorLayout({
   children,
 }: {
@@ -19,7 +40,15 @@ export default function DoctorLayout({
   useEffect(() => {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          storage: new CookieStorage(),
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      }
     );
 
     const checkAuth = async () => {
