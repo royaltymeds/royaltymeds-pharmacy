@@ -1,6 +1,5 @@
 "use client";
 
-import { getSupabaseClient } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
@@ -25,51 +24,49 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      const supabase = getSupabaseClient();
-
       console.log("[LoginForm] Starting login for:", email);
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Use the API endpoint instead of direct Supabase to ensure consistency
+      const loginResponse = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      console.log("[LoginForm] Auth response:", { user: data.user, error: authError });
+      const data = await loginResponse.json();
 
-      if (authError) {
-        console.error("[LoginForm] Auth error:", authError);
-        setError(authError.message || "Failed to sign in");
+      console.log("[LoginForm] Login API response:", { success: data.success, error: data.error, role: data.role });
+
+      if (!loginResponse.ok) {
+        console.error("[LoginForm] Login error:", data.error);
+        setError(data.error || "Failed to sign in");
         return;
       }
 
-      if (!data.user) {
-        console.error("[LoginForm] No user returned from login");
-        setError("Login failed: No user data returned");
+      if (!data.success) {
+        console.error("[LoginForm] Login failed");
+        setError("Login failed");
         return;
       }
 
-      // Check user role and redirect accordingly
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("role")
-        .eq("id", data.user.id)
-        .single();
+      const userRole = data.role || "patient";
+      console.log("[LoginForm] User role from API:", userRole);
 
-      if (userError || !userData || !(userData as any)?.role) {
-        console.warn("[LoginForm] Could not determine user role, redirecting to dashboard");
-        router.push("/dashboard");
-      } else if ((userData as any).role === "patient") {
+      // Redirect based on role from API response
+      if (userRole === "patient") {
         console.log("[LoginForm] Customer login, redirecting to customer portal");
         router.push("/patient/home");
-      } else if ((userData as any).role === "doctor") {
+      } else if (userRole === "doctor") {
         console.log("[LoginForm] Doctor login, redirecting to doctor dashboard");
         router.push("/doctor/dashboard");
-      } else if ((userData as any).role === "admin") {
+      } else if (userRole === "admin") {
         console.log("[LoginForm] Admin login, redirecting to admin dashboard");
         router.push("/admin/dashboard");
       } else {
-        console.log("[LoginForm] Unknown role, redirecting to dashboard");
-        router.push("/dashboard");
+        console.log("[LoginForm] Unknown role, redirecting to patient home");
+        router.push("/patient/home");
       }
       
       router.refresh();

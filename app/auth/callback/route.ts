@@ -29,18 +29,24 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (error || !data.user?.id) {
+      console.error("Auth exchange failed:", error);
       return NextResponse.redirect(new URL("/login?error=auth", request.url));
     }
 
     // Ensure user profile exists in users table
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error: userError } = await supabase
       .from("users")
       .select("id, role")
       .eq("id", data.user.id)
       .single();
 
-    // Get user's role
+    if (userError) {
+      console.error("Error fetching user role:", userError);
+    }
+
+    // Get user's role - default to patient if not found
     const userRole = existingUser?.role || "patient";
+    console.log("User authenticated with role:", userRole, "User ID:", data.user.id);
 
     // Redirect based on role
     let redirectUrl = "/patient/home";
@@ -50,6 +56,7 @@ export async function GET(request: NextRequest) {
       redirectUrl = "/admin/dashboard";
     }
 
+    console.log("Redirecting to:", redirectUrl);
     // Return redirect - cookies are set by the server client
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
