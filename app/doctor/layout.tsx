@@ -1,18 +1,29 @@
-import { getUser } from "@/lib/supabase-server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
+"use client";
 
-export default async function DoctorLayout({
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import Link from "next/link";
+import { getSupabaseClient } from "@/lib/supabase-client";
+import { useEffect, useState } from "react";
+
+export default function DoctorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Server-side auth check
-  const user = await getUser();
-  
-  if (!user) {
-    redirect("/login");
-  }
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function getEmail() {
+      const supabase = getSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        setUserEmail(user.email || null);
+      }
+    }
+    getEmail();
+  }, []);
 
   const navLinks = [
     { href: "/doctor/dashboard", label: "Dashboard" },
@@ -22,7 +33,8 @@ export default async function DoctorLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <AuthGuard>
+      <div className="min-h-screen bg-white flex flex-col">
       {/* Doctor Navigation */}
       <nav className="bg-blue-600 border-b border-blue-700 shadow-lg sticky top-0 z-50">
         <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
@@ -45,7 +57,7 @@ export default async function DoctorLayout({
             </div>
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
-              <span className="hidden sm:inline text-xs md:text-sm text-blue-100 truncate max-w-[150px]">{user.email}</span>
+              <span className="hidden sm:inline text-xs md:text-sm text-blue-100 truncate max-w-[150px]">{userEmail}</span>
               <Link href="/api/auth/logout" className="text-xs md:text-sm text-blue-100 hover:text-white font-medium whitespace-nowrap">
                 Logout
               </Link>
@@ -60,6 +72,7 @@ export default async function DoctorLayout({
           {children}
         </div>
       </main>
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
