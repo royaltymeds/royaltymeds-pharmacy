@@ -88,84 +88,84 @@ export default async function PatientHomePage() {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-blue-500">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-green-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium">Prescriptions</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">
+              <p className="text-gray-500 text-xs md:text-sm font-medium">Active</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
                 {prescriptions?.length || 0}
               </p>
             </div>
-            <UploadIcon className="h-10 w-10 text-blue-500" />
+            <UploadIcon className="h-8 w-8 md:h-10 md:w-10 text-green-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Orders */}
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-green-500">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-blue-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium">Orders</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">
+              <p className="text-gray-500 text-xs md:text-sm font-medium">Orders</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
                 {orders?.length || 0}
               </p>
             </div>
-            <ShoppingCartIcon className="h-10 w-10 text-green-500" />
+            <ShoppingCartIcon className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Refills */}
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-purple-500">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-yellow-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium">Pending Refills</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">
+              <p className="text-gray-500 text-xs md:text-sm font-medium">Pending</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
                 {refills?.length || 0}
               </p>
             </div>
-            <RefreshCwIcon className="h-10 w-10 text-purple-500" />
+            <RefreshCwIcon className="h-8 w-8 md:h-10 md:w-10 text-yellow-500 flex-shrink-0" />
           </div>
         </div>
 
         {/* Messages */}
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-orange-500">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-green-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium">Messages</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">0</p>
+              <p className="text-gray-500 text-xs md:text-sm font-medium">Messages</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">0</p>
             </div>
-            <MessageSquareIcon className="h-10 w-10 text-orange-500" />
+            <MessageSquareIcon className="h-8 w-8 md:h-10 md:w-10 text-green-600 flex-shrink-0" />
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <Link
             href="/patient/prescriptions"
-            className="bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg p-4 text-center font-medium transition cursor-pointer"
+            className="bg-green-50 text-green-600 hover:bg-green-100 rounded-lg p-3 md:p-4 text-center text-sm md:text-base font-medium transition cursor-pointer"
           >
             Upload Prescription
           </Link>
 
           <Link
             href="/patient/orders"
-            className="bg-green-50 text-green-600 hover:bg-green-100 rounded-lg p-4 text-center font-medium transition cursor-pointer"
+            className="bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg p-3 md:p-4 text-center text-sm md:text-base font-medium transition cursor-pointer"
           >
             View Orders
           </Link>
 
           <Link
             href="/patient/refills"
-            className="bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg p-4 text-center font-medium transition cursor-pointer"
+            className="bg-green-50 text-green-600 hover:bg-green-100 rounded-lg p-3 md:p-4 text-center text-sm md:text-base font-medium transition cursor-pointer"
           >
             Request Refill
           </Link>
 
           <Link
             href="/patient/messages"
-            className="bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg p-4 text-center font-medium transition cursor-pointer"
+            className="bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg p-3 md:p-4 text-center text-sm md:text-base font-medium transition cursor-pointer"
           >
             Messages
           </Link>

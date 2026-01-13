@@ -70,7 +70,7 @@ export default function DoctorDashboard() {
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">Doctor Dashboard</h1>
             <p className="text-sm md:text-base text-gray-600 mt-2">
-              Manage prescriptions and communicate with your patients
+              Submit prescriptions and track pharmacy approval status
             </p>
           </div>
           <Link href="/" className="flex-shrink-0 text-blue-600 hover:text-blue-700 font-medium text-xs md:text-sm whitespace-nowrap">
@@ -178,9 +178,9 @@ export default function DoctorDashboard() {
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Workflow Guide */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Getting Started</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Pharmacy Workflow</h2>
         <div className="space-y-4">
           <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg">
             <div className="flex-shrink-0">
@@ -190,11 +190,26 @@ export default function DoctorDashboard() {
             </div>
             <div>
               <p className="font-semibold text-gray-900">
-                Submit Your First Prescription
+                Submit to Pharmacy
               </p>
               <p className="text-gray-600 text-sm mt-1">
-                Click on &quot;Submit Prescription&quot; to create a new prescription for
-                one of your patients.
+                Submit prescriptions with patient details, medication, and dosage. Include special instructions for pharmacist.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-4 p-4 bg-yellow-50 rounded-lg">
+            <div className="flex-shrink-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-600 text-white text-sm font-bold">
+                2
+              </div>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">
+                Pharmacist Review
+              </p>
+              <p className="text-gray-600 text-sm mt-1">
+                Pharmacy checks for interactions, coverage, and patient allergies. Status updates to pending review.
               </p>
             </div>
           </div>
@@ -202,33 +217,15 @@ export default function DoctorDashboard() {
           <div className="flex items-start space-x-4 p-4 bg-green-50 rounded-lg">
             <div className="flex-shrink-0">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-white text-sm font-bold">
-                2
-              </div>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">
-                Track Prescription Status
-              </p>
-              <p className="text-gray-600 text-sm mt-1">
-                Go to &quot;My Prescriptions&quot; to view the status of all prescriptions
-                you&apos;ve submitted. You&apos;ll see when they&apos;re approved or rejected.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg">
-            <div className="flex-shrink-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-bold">
                 3
               </div>
             </div>
             <div>
               <p className="font-semibold text-gray-900">
-                Manage Your Patient List
+                Approve or Request Changes
               </p>
               <p className="text-gray-600 text-sm mt-1">
-                Visit &quot;Patients&quot; to view and search your patient list, and see
-                their prescription history.
+                Pharmacy approves for dispensing or requests dosage/medication modifications. Check status updates in real-time.
               </p>
             </div>
           </div>

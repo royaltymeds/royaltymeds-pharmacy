@@ -80,45 +80,47 @@ export default async function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Page Header with Navigation */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">Pharmacy Dashboard</h1>
-          <p className="text-sm md:text-base text-gray-600 mt-1">Manage prescriptions, orders, and refills</p>
+      <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 border-l-4 border-green-600">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">Pharmacy Dashboard</h1>
+            <p className="text-sm md:text-base text-gray-600 mt-2">Manage prescriptions, orders, and refills</p>
+          </div>
+          <Link href="/" className="flex-shrink-0 text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap">
+            ← Home
+          </Link>
         </div>
-        <Link href="/" className="flex-shrink-0 text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap">
-          ← Home
-        </Link>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Pending Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-yellow-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Pending Prescriptions</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{prescriptionStats.pending}</p>
+              <p className="text-gray-600 text-xs md:text-sm font-medium">Pending</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{prescriptionStats.pending}</p>
             </div>
-            <AlertCircle className="w-10 h-10 text-yellow-500" />
+            <AlertCircle className="w-8 h-8 md:w-10 md:h-10 text-yellow-500 flex-shrink-0" />
           </div>
           <Link
             href="/admin/prescriptions"
-            className="text-blue-600 text-sm font-medium mt-4 hover:text-blue-700 inline-block"
+            className="text-green-600 text-xs md:text-sm font-medium mt-3 hover:text-green-700 inline-block"
           >
             View all →
           </Link>
         </div>
 
         {/* Approved Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-green-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Approved</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{prescriptionStats.approved}</p>
+              <p className="text-gray-600 text-xs md:text-sm font-medium">Approved</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{prescriptionStats.approved}</p>
             </div>
-            <CheckCircle className="w-10 h-10 text-green-500" />
+            <CheckCircle className="w-8 h-8 md:w-10 md:h-10 text-green-600 flex-shrink-0" />
           </div>
-          <p className="text-gray-600 text-xs mt-4">
+          <p className="text-gray-600 text-xs mt-3">
             {prescriptionStats.total > 0
               ? `${Math.round((prescriptionStats.approved / prescriptionStats.total) * 100)}% of total`
               : "No prescriptions"}
@@ -126,28 +128,28 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Processing Orders */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-blue-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Processing Orders</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{orderStats.processing}</p>
+              <p className="text-gray-600 text-xs md:text-sm font-medium">Processing</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{orderStats.processing}</p>
             </div>
-            <Clock className="w-10 h-10 text-blue-500" />
+            <Clock className="w-8 h-8 md:w-10 md:h-10 text-blue-600 flex-shrink-0" />
           </div>
           <Link
             href="/admin/orders"
-            className="text-blue-600 text-sm font-medium mt-4 hover:text-blue-700 inline-block"
+            className="text-green-600 text-xs md:text-sm font-medium mt-3 hover:text-green-700 inline-block"
           >
             View all →
           </Link>
         </div>
 
         {/* Pending Refills */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-orange-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">Pending Refills</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{refillStats.pending}</p>
+              <p className="text-gray-600 text-xs md:text-sm font-medium">Refills</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{refillStats.pending}</p>
             </div>
             <TrendingUp className="w-10 h-10 text-yellow-600" />
           </div>
