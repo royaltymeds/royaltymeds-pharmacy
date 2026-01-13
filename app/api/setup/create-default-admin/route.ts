@@ -5,6 +5,9 @@ const DEFAULT_ADMIN_ID = "550e8400-e29b-41d4-a716-446655440000";
 const DEFAULT_ADMIN_EMAIL = "royaltymedsadmin@royaltymeds.com";
 const DEFAULT_ADMIN_PASSWORD = "Options123$";
 
+// Prevent this route from being executed at build time
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   try {
     // Create admin client
