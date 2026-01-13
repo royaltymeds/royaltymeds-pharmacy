@@ -622,9 +622,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyxxx... # Server-side only
 - **Session Persistence**: ✅ Fixed - users stay logged in when navigating between pages on Netlify
 
 ### Default Credentials
-- **Pharmacist Login**: `/admin-login`
-  - Email: `royaltymedsadmin@royaltymeds.com`
-  - Password: `Options123$`
+- **Pharmacist Login**: `/admin-login` (credentials stored securely)
 - **Test Customer**: Create via `/signup`
 - **Test Doctor**: Create via `/admin/doctors`
 
