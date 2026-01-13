@@ -41,7 +41,7 @@ Please follow these steps to create the default admin account:
 
 1. **Go to Supabase Dashboard**
    - URL: https://supabase.com/dashboard/projects
-   - Select project: `kpwhwhtjspdbbqzfbptv`
+   - Select your project in the dashboard
 
 2. **Create Auth User**
    - Go to **Authentication** → **Users**

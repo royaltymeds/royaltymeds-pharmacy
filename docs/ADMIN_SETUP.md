@@ -44,7 +44,7 @@ Expected response:
 ### Option 2: Manual Setup via Supabase Dashboard
 
 1. Go to [Supabase Dashboard](https://supabase.com/dashboard/projects)
-2. Select your project: `kpwhwhtjspdbbqzfbptv`
+2. Select your project
 3. Go to **Authentication** → **Users**
 4. Click **Create new user**
 5. Fill in:

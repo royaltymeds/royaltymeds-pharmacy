@@ -21,12 +21,15 @@
 
 ## 🔐 Credentials (from .env.local)
 
+⚠️ **Credentials are sensitive and not stored in this file for security purposes.**
+
+Store the following in your `.env.local`:
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://kpwhwhtjspdbbqzfbptv.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwd2h3aHRqc3BkYmJxemZicHR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4ODUwNDIsImV4cCI6MjA4MzQ2MTA0Mn0.G0gMebh5wOP5LRBb47ZOBx2iHRtBK6N1SQ4SjVk6zsA
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwd2h3aHRqc3BkYmJxemZicHR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Nzg4NTA0MiwiZXhwIjoyMDgzNDYxMDQyfQ.L0h3u3bCvvouQKSqVi27lNBofmd3gW790ngTsM2ZrRM
-SUPABASE_DB_URL=postgresql://postgres:KodeKeyAlpha@db.kpwhwhtjspdbbqzfbptv.supabase.co:5432/postgres
-SUPABASE_REF=kpwhwhtjspdbbqzfbptv
+NEXT_PUBLIC_SUPABASE_URL=<your_supabase_url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your_anon_key>
+SUPABASE_SERVICE_ROLE_KEY=<your_service_role_key>
+SUPABASE_DB_URL=<your_database_url>
+SUPABASE_REF=<your_project_ref>
 ```
 
 ---
