@@ -1,6 +1,7 @@
 import "@/app/globals.css";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+import { ClientAuthProvider } from "@/components/client-auth-provider";
 
 export const metadata: Metadata = {
   title: "RoyaltyMeds - Prescription Platform",
@@ -18,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <ClientAuthProvider>{children}</ClientAuthProvider>
         <Toaster />
       </body>
     </html>

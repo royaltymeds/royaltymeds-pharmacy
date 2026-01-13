@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { createBlobSession } from "@/lib/netlify-blob-session";
+import { generateAuthorizationToken, formatAuthorizationHeader } from "@/lib/auth-header-session";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -36,25 +36,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // Create a Netlify Blobs session token for Netlify compatibility
-    // Blobs persists across serverless function invocations (unlike cookies)
-    const sessionData = await createBlobSession(
-      data.user.id,
-      data.session?.access_token,
-      data.session?.refresh_token
-    );
-    if (sessionData) {
-      const response = NextResponse.redirect(new URL("/", request.url));
-      // Store the session token in a cookie for easy access
-      response.cookies.set("session_token", sessionData.token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60, // 1 hour
-        path: "/",
-      });
-      return response;
-    }
+    // Generate an authorization token for header-based authentication
+    // This works reliably across Netlify's serverless functions
+    const authSession = generateAuthorizationToken(data.user.id);
 
     // Get the user's role from the users table
     const { data: userData } = await supabase
@@ -63,14 +47,26 @@ export async function GET(request: NextRequest) {
       .eq("id", data.user.id)
       .single();
 
-    // Redirect based on user role
+    // Determine redirect URL based on role
+    let redirectUrl = "/";
     if (userData?.role === "patient") {
-      return NextResponse.redirect(new URL("/patient/home", request.url));
+      redirectUrl = "/patient/home";
     } else if (userData?.role === "doctor") {
-      return NextResponse.redirect(new URL("/doctor/dashboard", request.url));
+      redirectUrl = "/doctor/dashboard";
     } else if (userData?.role === "admin") {
-      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      redirectUrl = "/admin/dashboard";
     }
+
+    // Redirect with authorization token in query param
+    // Client will extract and store in localStorage
+    const response = NextResponse.redirect(
+      new URL(`${redirectUrl}?auth_token=${encodeURIComponent(authSession.token)}`, request.url)
+    );
+
+    // Also set token as Authorization header on response for immediate access
+    response.headers.set("Authorization", formatAuthorizationHeader(authSession.token));
+    
+    return response;
   }
 
   // Default redirect to login if no code or role found

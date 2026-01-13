@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { validateBlobSessionToken } from "@/lib/netlify-blob-session";
+import { extractTokenFromHeader, validateAuthorizationToken } from "@/lib/auth-header-session";
 
 export async function middleware(req: NextRequest) {
   let response = NextResponse.next({
@@ -32,17 +32,19 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // Fallback: Check for Netlify Blobs session token if cookie-based auth failed
-  // This is critical for Netlify where cookies don't persist across function invocations
+  // Fallback: Check for Authorization header if cookie-based auth failed
+  // This is the most reliable method for Netlify serverless
+  let authHeaderUserId: string | null = null;
   if (!session) {
-    const sessionToken = req.cookies.get("session_token")?.value;
-    if (sessionToken) {
-      const blobSession = await validateBlobSessionToken(sessionToken);
-      if (blobSession) {
-        // We have a valid Blobs session token, but couldn't restore cookie-based session
-        // Set a flag in response headers to indicate this
-        response.headers.set("X-Session-Token-Valid", "true");
-        response.headers.set("X-User-ID", blobSession.userId);
+    const authHeader = req.headers.get("Authorization");
+    const token = extractTokenFromHeader(authHeader);
+    if (token) {
+      const authSession = validateAuthorizationToken(token);
+      if (authSession) {
+        authHeaderUserId = authSession.userId;
+        // Set a flag in response headers to indicate Authorization header was used
+        response.headers.set("X-Auth-Header-Valid", "true");
+        response.headers.set("X-User-ID", authHeaderUserId);
       }
     }
   }
@@ -57,8 +59,8 @@ export async function middleware(req: NextRequest) {
   ].some((route) => req.nextUrl.pathname.startsWith(route)) &&
     req.nextUrl.pathname !== "/admin-login";
 
-  // Check if user is authenticated either via cookie session or database session token
-  const isAuthenticated = !!session || response.headers.get("X-Session-Token-Valid") === "true";
+  // Check if user is authenticated either via cookie session or Authorization header
+  const isAuthenticated = !!session || response.headers.get("X-Auth-Header-Valid") === "true";
 
   // Redirect to admin-login if accessing admin routes without session
   if (!isAuthenticated && isAdminRoute) {
