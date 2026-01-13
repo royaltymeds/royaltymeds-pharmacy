@@ -33,8 +33,9 @@ function AuthSuccessContent() {
   useEffect(() => {
     if (!mounted) return;
 
-    // Wait a brief moment for the client-side Supabase library to process tokens
-    // Then redirect to the appropriate portal
+    // Wait for the client-side Supabase library to fully process tokens
+    // This is critical on platforms like StackBlitz where async context is limited
+    // Increase delay to ensure session is properly initialized
     const timer = setTimeout(() => {
       const redirectUrl =
         role === "doctor"
@@ -48,7 +49,7 @@ function AuthSuccessContent() {
       // Use standard window.location for final redirect to ensure clean navigation
       // This is a one-time redirect, not repeated navigation
       router.push(redirectUrl);
-    }, 100); // Small delay to ensure token processing
+    }, 800); // Increased delay to ensure token processing on StackBlitz
 
     return () => clearTimeout(timer);
   }, [mounted, role, router]);

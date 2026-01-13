@@ -48,17 +48,10 @@ export async function GET(request: NextRequest) {
     const userRole = existingUser?.role || "patient";
     console.log("User authenticated with role:", userRole, "User ID:", data.user.id);
 
-    // Redirect based on role
-    let redirectUrl = "/patient/home";
-    if (userRole === "doctor") {
-      redirectUrl = "/doctor/dashboard";
-    } else if (userRole === "admin") {
-      redirectUrl = "/admin/dashboard";
-    }
-
-    console.log("Redirecting to:", redirectUrl);
-    // Return redirect - cookies are set by the server client
-    return NextResponse.redirect(new URL(redirectUrl, request.url));
+    // Redirect to success page with user role as query param
+    // This gives the session time to fully persist before redirecting to portal
+    console.log("Redirecting to auth/success with role:", userRole);
+    return NextResponse.redirect(new URL(`/auth/success?role=${userRole}`, request.url));
   }
 
   return NextResponse.redirect(new URL("/login?error=nocode", request.url));
