@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
@@ -35,9 +34,10 @@ export default function PatientLayout({
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
+    // Load user data for display purposes only
+    // Middleware already protects this route, so we don't need to redirect
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -51,25 +51,25 @@ export default function PatientLayout({
       }
     );
 
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
-      } else {
-        setUser(user);
+    const loadUserData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUser(user);
+        }
+      } catch (error) {
+        console.error("Failed to load user:", error);
       }
       setLoading(false);
     };
 
-    checkAuth();
-  }, [router]);
+    loadUserData();
+  }, []);
 
+  // Don't redirect if user is null - middleware already protected this route
+  // Just show loading state while data is being fetched
   if (loading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
-  }
-
-  if (!user) {
-    return null;
   }
 
   const navLinks = [
