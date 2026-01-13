@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Create an admin client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Prevent this route from being executed at build time
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  // Create an admin client (only at request time)
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   console.log("[signup API] ========== SIGNUP ENDPOINT CALLED ==========");
   
   try {
