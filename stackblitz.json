@@ -1,0 +1,24 @@
+{
+  "title": "RoyaltyMeds Pharmacy Platform",
+  "description": "Prescription management platform with patient, doctor, and admin portals",
+  "template": "node",
+  "relatedLinks": [],
+  "settings": {
+    "hardReloadOnPreviewUpdate": false,
+    "includeSrcInPublicFolder": false
+  },
+  "files": {
+    "stackblitz.json": {
+      "hidden": true
+    },
+    ".env.local": {
+      "hidden": true
+    },
+    ".env.example": {
+      "hidden": false
+    }
+  },
+  "installDependencies": true,
+  "startCommand": "npm run dev",
+  "buildCommand": "npm run build"
+}
