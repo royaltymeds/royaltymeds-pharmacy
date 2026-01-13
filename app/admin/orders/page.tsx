@@ -1,6 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Truck, Package, CheckCircle, Clock } from "lucide-react";
 
@@ -28,14 +27,9 @@ export default async function AdminOrders() {
     }
   );
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  // Middleware already protects this route, so we don't need to check auth here
+  // Just fetch data for the page
 
-  if (error || !user) {
-    redirect("/login");
-  }
 
   // Fetch all orders with patient and prescription info
   const { data: orders } = await supabase

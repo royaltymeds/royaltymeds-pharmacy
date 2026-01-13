@@ -1,6 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { RefreshCwIcon, AlertCircle } from "lucide-react";
 
@@ -28,14 +27,11 @@ export default async function RefillsPage() {
     }
   );
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  // Middleware already protects this route, so we don't need to check auth here
+  // Just fetch the user to get their ID for queries
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (error || !user) {
-    redirect("/login");
-  }
+  if (!user) return null; // Should never happen due to middleware protection
 
   // Fetch refill requests
   const { data: refillsData } = await supabase

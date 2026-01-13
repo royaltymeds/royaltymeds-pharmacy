@@ -1,6 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export const metadata = {
@@ -32,13 +31,11 @@ export default async function ProfilePage() {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Middleware already protects this route, so we don't need to check auth here
+  // Just fetch the user to get their ID and email for the form
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) return null; // Should never happen due to middleware protection
 
   const { data: userProfile } = await supabase
     .from("user_profiles")

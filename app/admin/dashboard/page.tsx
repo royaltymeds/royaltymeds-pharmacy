@@ -1,6 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, CheckCircle, Clock, TrendingUp } from "lucide-react";
 
@@ -28,14 +27,9 @@ export default async function AdminDashboard() {
     }
   );
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  // Middleware already protects this route, so we don't need to check auth here
+  // Just fetch data for the page
 
-  if (error || !user) {
-    redirect("/login");
-  }
 
   // Fetch dashboard statistics
   const { data: pendingPrescriptions } = await supabase

@@ -1,6 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
 
@@ -28,16 +27,11 @@ export default async function PatientHomePage() {
     }
   );
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  // Middleware already protects this route, so we don't need to check auth here
+  // Just fetch the user to get their ID for queries
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (error || !user) {
-    redirect("/login");
-  }
-
-  // Fetch patient profile
+  if (!user) return null; // Should never happen due to middleware protection
   const { data: profile } = await supabase
     .from("user_profiles")
     .select("*")
