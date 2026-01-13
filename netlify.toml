@@ -30,13 +30,3 @@
   for = "/api/*"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    # Ensure cookies are properly sent and stored
-    "Set-Cookie" = "Path=/; SameSite=Lax"
-    # Allow credentials in fetch requests
-    "Access-Control-Allow-Credentials" = "true"
-    # Cache auth pages minimally to prevent stale sessions
-    Cache-Control = "public, max-age=0, must-revalidate"
