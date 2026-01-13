@@ -1,12 +1,71 @@
-import { createServerSupabaseClient, getUser } from "@/lib/supabase-server";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { PackageIcon, TruckIcon, CheckCircleIcon } from "lucide-react";
+import { PackageIcon, TruckIcon, CheckCircleIcon, Loader } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabase-client";
 
-export default async function OrdersPage() {
-  const supabase = await createServerSupabaseClient();
+export default function OrdersPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
 
-  // Use the utility function to ensure consistent auth context
-  const user = await getUser();
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        const supabase = getSupabaseClient();
+
+        // Get current user
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) {
+          setIsLoading(false);
+          return;
+        }
+
+        setUser(currentUser);
+
+        // Fetch orders with related data
+        const { data: ordersData } = await supabase
+          .from("orders")
+          .select(
+            `
+          id,
+          status,
+          total_amount,
+          currency,
+          payment_status,
+          delivery_type,
+          tracking_number,
+          estimated_delivery_date,
+          created_at,
+          prescription_id,
+          prescriptions(id, medication_name)
+        `
+          )
+          .eq("patient_id", currentUser.id)
+          .order("created_at", { ascending: false });
+
+        setOrders((ordersData as any) || []);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading orders:", error);
+        setIsLoading(false);
+      }
+    }
+
+    loadOrders();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-600">Loading your orders...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     // If we can't get user, render a minimal page with error message
@@ -20,30 +79,6 @@ export default async function OrdersPage() {
       </div>
     );
   }
-
-  // Fetch orders with related data
-  const { data: ordersData } = await supabase
-    .from("orders")
-    .select(
-      `
-      id,
-      status,
-      total_amount,
-      currency,
-      payment_status,
-      delivery_type,
-      tracking_number,
-      estimated_delivery_date,
-      created_at,
-      prescription_id,
-      prescriptions(id, medication_name)
-    `
-    )
-    .eq("patient_id", user.id)
-    .order("created_at", { ascending: false });
-
-  // Type the orders properly
-  const orders = (ordersData as any) || [];
 
   const getStatusIcon = (status: string) => {
     switch (status) {

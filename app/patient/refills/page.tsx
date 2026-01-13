@@ -1,12 +1,72 @@
-import { createServerSupabaseClient, getUser } from "@/lib/supabase-server";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { RefreshCwIcon, AlertCircle } from "lucide-react";
+import { RefreshCwIcon, AlertCircle, Loader } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabase-client";
 
-export default async function RefillsPage() {
-  const supabase = await createServerSupabaseClient();
+export default function RefillsPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [refills, setRefills] = useState<any[]>([]);
 
-  // Use the utility function to ensure consistent auth context
-  const user = await getUser();
+  useEffect(() => {
+    async function loadRefills() {
+      try {
+        const supabase = getSupabaseClient();
+
+        // Get current user
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) {
+          setIsLoading(false);
+          return;
+        }
+
+        setUser(currentUser);
+
+        // Fetch refill requests
+        const { data: refillsData } = await supabase
+          .from("refills")
+          .select(
+            `
+          id,
+          status,
+          refill_number,
+          requested_at,
+          processed_at,
+          prescriptions(
+            id,
+            medication_name,
+            dosage,
+            quantity,
+            refills_allowed
+          )
+        `
+          )
+          .eq("patient_id", currentUser.id)
+          .order("requested_at", { ascending: false });
+
+        setRefills((refillsData as any) || []);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading refills:", error);
+        setIsLoading(false);
+      }
+    }
+
+    loadRefills();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-600">Loading your refills...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     // If we can't get user, render a minimal page with error message
@@ -20,30 +80,6 @@ export default async function RefillsPage() {
       </div>
     );
   }
-
-  // Fetch refill requests
-  const { data: refillsData } = await supabase
-    .from("refills")
-    .select(
-      `
-      id,
-      status,
-      refill_number,
-      requested_at,
-      processed_at,
-      prescriptions(
-        id,
-        medication_name,
-        dosage,
-        quantity,
-        refills_allowed
-      )
-    `
-    )
-    .eq("patient_id", user.id)
-    .order("requested_at", { ascending: false });
-
-  const refills = (refillsData as any) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {

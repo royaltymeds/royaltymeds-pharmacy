@@ -1,11 +1,56 @@
-import { createServerSupabaseClient, getUser } from "@/lib/supabase-server";
-import { MessageSquareIcon } from "lucide-react";
+"use client";
 
-export default async function MessagesPage() {
-  const supabase = await createServerSupabaseClient();
+import { useState, useEffect } from "react";
+import { MessageSquareIcon, Loader } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabase-client";
 
-  // Use the utility function to ensure consistent auth context
-  const user = await getUser();
+export default function MessagesPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadMessages() {
+      try {
+        const supabase = getSupabaseClient();
+
+        // Get current user
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) {
+          setIsLoading(false);
+          return;
+        }
+
+        setUser(currentUser);
+
+        // Fetch messages for patient
+        const { data: messagesData } = await supabase
+          .from("messages")
+          .select("*")
+          .or(`sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`)
+          .order("created_at", { ascending: false });
+
+        setMessages(messagesData || []);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading messages:", error);
+        setIsLoading(false);
+      }
+    }
+
+    loadMessages();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-600">Loading your messages...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     // If we can't get user, render a minimal page with error message
@@ -19,13 +64,6 @@ export default async function MessagesPage() {
       </div>
     );
   }
-
-  // Fetch messages for patient
-  const { data: messages } = await supabase
-    .from("messages")
-    .select("*")
-    .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-    .order("created_at", { ascending: false });
 
   return (
     <div className="space-y-6">

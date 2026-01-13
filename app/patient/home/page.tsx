@@ -1,12 +1,87 @@
-import { createServerSupabaseClient, getUser } from "@/lib/supabase-server";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
+import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon, Loader } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabase-client";
 
-export default async function PatientHomePage() {
-  const supabase = await createServerSupabaseClient();
+export default function PatientHomePage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [refills, setRefills] = useState<any[]>([]);
 
-  // Use the utility function to ensure consistent auth context
-  const user = await getUser();
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const supabase = getSupabaseClient();
+
+        // Get current user
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) {
+          setIsLoading(false);
+          return;
+        }
+
+        setUser(currentUser);
+
+        // Fetch user profile
+        const { data: profileData } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("user_id", currentUser.id)
+          .single();
+        setProfile(profileData);
+
+        // Fetch recent prescriptions
+        const { data: prescriptionsData } = await supabase
+          .from("prescriptions")
+          .select("*, orders(id, status)")
+          .eq("patient_id", currentUser.id)
+          .order("created_at", { ascending: false })
+          .limit(3);
+        setPrescriptions(prescriptionsData || []);
+
+        // Fetch recent orders
+        const { data: ordersData } = await supabase
+          .from("orders")
+          .select("*, prescriptions(medication_name)")
+          .eq("patient_id", currentUser.id)
+          .order("created_at", { ascending: false })
+          .limit(3);
+        setOrders(ordersData || []);
+
+        // Fetch refill requests
+        const { data: refillsData } = await supabase
+          .from("refills")
+          .select("*, prescriptions(medication_name)")
+          .eq("patient_id", currentUser.id)
+          .eq("status", "pending")
+          .limit(3);
+        setRefills(refillsData || []);
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading patient dashboard:", error);
+        setIsLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     // If we can't get user, render a minimal page with error message
@@ -20,36 +95,6 @@ export default async function PatientHomePage() {
       </div>
     );
   }
-
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
-
-  // Fetch recent prescriptions
-  const { data: prescriptions } = await supabase
-    .from("prescriptions")
-    .select("*, orders(id, status)")
-    .eq("patient_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(3);
-
-  // Fetch recent orders
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("*, prescriptions(medication_name)")
-    .eq("patient_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(3);
-
-  // Fetch refill requests
-  const { data: refills } = await supabase
-    .from("refills")
-    .select("*, prescriptions(medication_name)")
-    .eq("patient_id", user.id)
-    .eq("status", "pending")
-    .limit(3);
 
   return (
     <div className="space-y-6">

@@ -10,7 +10,7 @@ export async function createServerSupabaseClient() {
   } catch (error) {
     // In some async contexts (like prerendering), cookies() might fail
     // We'll use an empty fallback and rely on client-side auth
-    console.debug("Note: cookies() not available in this context");
+    // This is expected during static generation and not an error
   }
 
   return createServerClient(
