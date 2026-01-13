@@ -17,9 +17,13 @@ export async function middleware(req: NextRequest) {
           return req.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options as CookieOptions);
-          });
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options as CookieOptions);
+            });
+          } catch (error) {
+            console.error("Error setting cookies in middleware:", error);
+          }
         },
       },
     }
@@ -33,11 +37,10 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/(auth.*)",
-    "/(patient.*)",
-    "/(doctor.*)",
-    "/(admin.*)",
-    "/dashboard/:path*",
+    "/auth/:path*",
+    "/patient/:path*",
+    "/doctor/:path*",
+    "/admin/:path*",
     "/profile/:path*",
   ],
 };

@@ -1,37 +1,26 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createServerSupabaseClient, getUser } from "@/lib/supabase-server";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
 
 export default async function PatientHomePage() {
-  const cookieStore = await cookies();
+  const supabase = await createServerSupabaseClient();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options as CookieOptions);
-            });
-          } catch (error) {
-            console.error("Cookie error:", error);
-          }
-        },
-      },
-    }
-  );
+  // Use the utility function to ensure consistent auth context
+  const user = await getUser();
 
-  // Middleware already protects this route, so we don't need to check auth here
-  // Just fetch the user to get their ID for queries
-  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    // If we can't get user, render a minimal page with error message
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-yellow-800">Unable to load dashboard. Please try refreshing the page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  if (!user) return null; // Should never happen due to middleware protection
   const { data: profile } = await supabase
     .from("user_profiles")
     .select("*")
