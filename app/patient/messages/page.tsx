@@ -46,7 +46,7 @@ export default async function MessagesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-600">
+      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-600">
         <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
         <p className="text-gray-600 mt-2">Communication with pharmacy and support team</p>
       </div>
@@ -55,7 +55,7 @@ export default async function MessagesPage() {
       {messages && messages.length > 0 ? (
         <div className="space-y-3">
           {messages.map((message: any) => (
-            <div key={message.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition border-t-4 border-indigo-500">
+            <div key={message.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition border-t-4 border-green-500">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900">
@@ -67,7 +67,7 @@ export default async function MessagesPage() {
                   </p>
                 </div>
                 {message.sender_id === user.id && (
-                  <span className="text-xs font-medium text-indigo-600 ml-4">Sent</span>
+                  <span className="text-xs font-medium text-green-600 ml-4">Sent</span>
                 )}
               </div>
             </div>

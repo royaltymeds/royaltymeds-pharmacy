@@ -68,9 +68,9 @@ export default function AdminDoctorsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-600">
+      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-600">
         <div className="flex items-center gap-3">
-          <Users className="w-8 h-8 text-indigo-600" />
+          <Users className="w-8 h-8 text-green-600" />
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Manage Doctors</h1>
             <p className="text-gray-600 mt-2">Create and manage doctor accounts</p>
@@ -159,7 +159,7 @@ export default function AdminDoctorsPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             {isLoading ? "Creating account..." : "Create Doctor Account"}
           </button>

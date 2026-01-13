@@ -111,14 +111,14 @@ export default function AdminUsersPage() {
   return (
     <div>
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-indigo-600 flex justify-between items-center">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-green-600 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Pharmacist Accounts</h1>
           <p className="text-gray-600 mt-2">Manage pharmacist accounts</p>
         </div>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
         >
           <UserPlus className="h-4 w-4" />
           Create Admin
@@ -156,7 +156,7 @@ export default function AdminUsersPage() {
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="John Doe"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
             </div>
@@ -171,7 +171,7 @@ export default function AdminUsersPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="admin@royaltymeds.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
             </div>
@@ -186,7 +186,7 @@ export default function AdminUsersPage() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
                 minLength={8}
               />
@@ -203,7 +203,7 @@ export default function AdminUsersPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
             </div>
@@ -212,7 +212,7 @@ export default function AdminUsersPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+                className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
               >
                 {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
                 {isSubmitting ? "Creating..." : "Create Admin"}
@@ -233,7 +233,7 @@ export default function AdminUsersPage() {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">
-            <Loader className="h-8 w-8 animate-spin mx-auto text-indigo-600 mb-4" />
+            <Loader className="h-8 w-8 animate-spin mx-auto text-green-600 mb-4" />
             <p className="text-gray-600">Loading admin users...</p>
           </div>
         ) : admins.length === 0 ? (

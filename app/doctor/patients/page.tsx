@@ -60,10 +60,10 @@ export default function Patients() {
   return (
     <div>
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-indigo-600">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-blue-600">
         <h1 className="text-2xl font-bold text-gray-900">Your Patients</h1>
         <p className="text-gray-600 mt-2">
-          View and manage your patient list
+          View patients for prescription submission
         </p>
       </div>
 
@@ -87,7 +87,7 @@ export default function Patients() {
             placeholder="Search by name, email, or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -96,7 +96,7 @@ export default function Patients() {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="text-gray-600 mt-4">Loading patients...</p>
           </div>
         ) : filteredPatients.length === 0 ? (
@@ -149,7 +149,7 @@ export default function Patients() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
-                        <FileText className="h-4 w-4 text-indigo-600" />
+                        <FileText className="h-4 w-4 text-blue-600" />
                         <span className="font-medium text-gray-900">
                           {patient.prescriptionCount}
                         </span>
@@ -158,7 +158,7 @@ export default function Patients() {
                     <td className="px-6 py-4 text-right">
                       <Link
                         href="/doctor/submit-prescription"
-                        className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
+                        className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                       >
                         New Prescription
                       </Link>

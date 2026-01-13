@@ -86,10 +86,10 @@ export default function MyPrescriptions() {
   return (
     <div>
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-indigo-600">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-blue-600">
         <h1 className="text-2xl font-bold text-gray-900">My Prescriptions</h1>
         <p className="text-gray-600 mt-2">
-          Track and manage all prescriptions you&apos;ve submitted
+          Track and manage all prescriptions submitted to the pharmacy
         </p>
       </div>
 
@@ -111,7 +111,7 @@ export default function MyPrescriptions() {
             onClick={() => setFilterStatus("all")}
             className={`px-4 py-2 rounded-lg font-medium transition ${
               filterStatus === "all"
-                ? "bg-indigo-600 text-white"
+                ? "bg-blue-600 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
@@ -154,7 +154,7 @@ export default function MyPrescriptions() {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="text-gray-600 mt-4">Loading prescriptions...</p>
           </div>
         ) : prescriptions.length === 0 ? (
@@ -170,7 +170,7 @@ export default function MyPrescriptions() {
             </p>
             <Link
               href="/doctor/submit-prescription"
-              className="inline-block mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Submit Your First Prescription
             </Link>
@@ -240,7 +240,7 @@ export default function MyPrescriptions() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end space-x-2">
-                        <button className="p-2 text-indigo-600 hover:bg-indigo-50 rounded">
+                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded">
                           <Eye className="h-4 w-4" />
                         </button>
                         {prescription.status === "pending" && (

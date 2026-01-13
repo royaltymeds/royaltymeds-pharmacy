@@ -79,7 +79,7 @@ export default async function AdminPrescriptions() {
         </div>
         <Link
           href="/admin/dashboard"
-          className="text-blue-600 hover:text-blue-700 font-medium"
+          className="text-green-600 hover:text-green-700 font-medium"
         >
           ← Back to Dashboard
         </Link>

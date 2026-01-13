@@ -77,7 +77,7 @@ export default async function RefillsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-600">
+      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-600">
         <h1 className="text-3xl font-bold text-gray-900">Refill Requests</h1>
         <p className="text-gray-600 mt-2">Manage your medication refills</p>
       </div>
@@ -85,7 +85,7 @@ export default async function RefillsPage() {
       {/* Request New Refill Button */}
       <Link
         href="/patient/refills/request"
-        className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+        className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
       >
         Request New Refill
       </Link>
@@ -94,11 +94,11 @@ export default async function RefillsPage() {
       {refills && refills.length > 0 ? (
         <div className="space-y-4">
           {refills.map((refill: any) => (
-            <div key={refill.id} className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-indigo-500">
+            <div key={refill.id} className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-green-500">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
-                    <RefreshCwIcon className="w-5 h-5 text-indigo-600" />
+                    <RefreshCwIcon className="w-5 h-5 text-green-600" />
                     <div>
                       <h3 className="font-semibold text-gray-900">
                         {refill.prescriptions?.medication_name || "Medication"}
@@ -166,7 +166,7 @@ export default async function RefillsPage() {
           </p>
           <Link
             href="/patient/refills/request"
-            className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+            className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
           >
             Request a Refill
           </Link>

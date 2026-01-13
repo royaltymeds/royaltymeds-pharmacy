@@ -122,10 +122,10 @@ export default function SubmitPrescription() {
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-indigo-600">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-blue-600">
         <h1 className="text-2xl font-bold text-gray-900">Submit Prescription</h1>
         <p className="text-gray-600 mt-2">
-          Create and submit a new prescription for your patient
+          Create and submit a new prescription to the pharmacy for processing
         </p>
       </div>
 
@@ -172,7 +172,7 @@ export default function SubmitPrescription() {
                 handlePatientSearch(e.target.value);
               }}
               placeholder="Search patients by email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {showSearchResults && searchResults.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
@@ -181,7 +181,7 @@ export default function SubmitPrescription() {
                     key={patient.id}
                     type="button"
                     onClick={() => selectPatient(patient.id, patient.email)}
-                    className="w-full text-left px-4 py-2 hover:bg-indigo-50 border-b last:border-b-0"
+                    className="w-full text-left px-4 py-2 hover:bg-blue-50 border-b last:border-b-0"
                   >
                     <p className="font-medium text-gray-900">{patient.name}</p>
                     <p className="text-sm text-gray-500">{patient.email}</p>
@@ -206,7 +206,7 @@ export default function SubmitPrescription() {
             value={formData.medicationName}
             onChange={handleChange}
             placeholder="e.g., Amoxicillin, Ibuprofen"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
           />
         </div>
@@ -222,7 +222,7 @@ export default function SubmitPrescription() {
             value={formData.dosage}
             onChange={handleChange}
             placeholder="e.g., 500mg, 1 tablet"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
           />
         </div>
@@ -238,7 +238,7 @@ export default function SubmitPrescription() {
             value={formData.quantity}
             onChange={handleChange}
             placeholder="e.g., 30 tablets, 1 bottle"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
           />
         </div>
@@ -252,7 +252,7 @@ export default function SubmitPrescription() {
             name="frequency"
             value={formData.frequency}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option>once daily</option>
             <option>twice daily</option>
@@ -276,7 +276,7 @@ export default function SubmitPrescription() {
             value={formData.duration}
             onChange={handleChange}
             placeholder="e.g., 7 days, 2 weeks, 30 days"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
           />
         </div>
@@ -292,7 +292,7 @@ export default function SubmitPrescription() {
             onChange={handleChange}
             placeholder="e.g., Take with food, Do not use with alcohol"
             rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
@@ -307,7 +307,7 @@ export default function SubmitPrescription() {
             onChange={handleChange}
             placeholder="Any additional notes or comments"
             rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
@@ -315,7 +315,7 @@ export default function SubmitPrescription() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           {loading ? "Submitting..." : "Submit Prescription"}
         </button>
