@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { createSession } from "@/lib/session-store";
+import { createBlobSession } from "@/lib/netlify-blob-session";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -36,9 +36,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // Create a database session token for Netlify compatibility
-    // This ensures session persists across serverless function invocations
-    const sessionData = await createSession(data.user.id);
+    // Create a Netlify Blobs session token for Netlify compatibility
+    // Blobs persists across serverless function invocations (unlike cookies)
+    const sessionData = await createBlobSession(
+      data.user.id,
+      data.session?.access_token,
+      data.session?.refresh_token
+    );
     if (sessionData) {
       const response = NextResponse.redirect(new URL("/", request.url));
       // Store the session token in a cookie for easy access

@@ -8,43 +8,52 @@
 
 ## Approaches Being Tested
 
-### Option A: Database-Backed Session Store ✅ DEPLOYED, TESTING
+### Option A: Database-Backed Session Store ❌ FAILED
 **Concept**: Store session state in the database instead of relying solely on cookies  
-**Status**: Deployed to Netlify production, ready for user testing  
+**Status**: Deployed but did not resolve session loss issue  
+**Date Tested**: January 13, 2026  
+
+**Result**: Did not fix the Netlify session logout issue. Sessions still lost on navigation.
+
+---
+
+### Option B: Netlify Blobs Session Cache ✅ DEPLOYED, TESTING
+**Concept**: Use Netlify's distributed blob storage for session persistence  
+**Status**: Deployed to production, ready for testing  
 **Date Started**: January 13, 2026  
 **Date Implemented**: January 13, 2026  
 **Date Deployed**: January 13, 2026
 
+**How It Works**:
+- Sessions stored in Netlify Blobs (not database, not cookies)
+- Blobs are accessible from any serverless function in the deployment
+- When cookies fail to persist across function invocations, Blobs provide the fallback
+- Netlify Blobs handles expiration and distributed storage automatically
+
 **Implementation Steps**:
-- [x] Create `sessions` table in Supabase (SQL migration created)
-- [x] Create session token utilities (session-store.ts)
-- [x] Update `/app/auth/callback/route.ts` to create session token after OAuth
-- [x] Update middleware to validate database session tokens as fallback
-- [x] Build verification: ✅ Passed (no errors)
-- [x] Database migration applied to Supabase: ✅ Success
-- [x] Deploy to Netlify production: ✅ Deployed at https://royaltymeds-pharmacy.netlify.app
+- [x] Create Netlify Blobs session utilities (`/lib/netlify-blob-session.ts`)
+- [x] Update `/app/auth/callback/route.ts` to create Blobs sessions
+- [x] Update `/middleware.ts` to validate Blobs sessions as fallback
+- [x] Build verification: ✅ Passed
+- [x] Deploy to Netlify production: ✅ Deployed
 - [ ] Test on production
 
 **Changes Made**:
-1. **Created `/lib/session-store.ts`**: 
-   - `createSession(userId)` - Creates and stores token in database after OAuth
-   - `validateSessionToken(token)` - Queries database to validate token when cookies fail
-   - `getUserFromSession()` - Tries cookies first, falls back to database token
+1. **Created `/lib/netlify-blob-session.ts`**:
+   - `createBlobSession(userId)` - Stores session in Netlify Blobs
+   - `validateBlobSessionToken(token)` - Retrieves and validates from Blobs
+   - `revokeBlobSession(token)` - Removes session from Blobs
+   - In-memory fallback cache for single-invocation scope
 
 2. **Updated `/app/auth/callback/route.ts`**:
-   - After successful OAuth code exchange, calls `createSession()` to create database token
+   - Calls `createBlobSession()` instead of database storage
    - Stores token in `session_token` cookie for easy access
-   - Maintains existing role-based redirect logic
+   - Passes access_token and refresh_token to Blobs session
 
 3. **Updated `/middleware.ts`**:
-   - Added session token validation as fallback when cookie-based auth fails
-   - Sets `X-Session-Token-Valid` header when database token validates
-   - Modified auth checks to recognize both cookie and database sessions
-
-4. **Applied Database Migration**:
-   - Created `/supabase/migrations/20260113000000_create_sessions_table.sql`
-   - Successfully pushed to Supabase with `supabase db push`
-   - Table includes RLS policies, indexes, and cleanup functions
+   - Changed from database validation to `validateBlobSessionToken()`
+   - Uses same header flags for session detection
+   - Maintains all routing and authorization logic
 
 **Production URL**: https://royaltymeds-pharmacy.netlify.app  
 **Deployment Status**: ✅ Live and ready for testing

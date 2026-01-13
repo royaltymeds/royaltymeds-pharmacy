@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { validateSessionToken } from "@/lib/session-store";
+import { validateBlobSessionToken } from "@/lib/netlify-blob-session";
 
 export async function middleware(req: NextRequest) {
   let response = NextResponse.next({
@@ -32,17 +32,17 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // Fallback: Check for database session token if cookie-based auth failed
+  // Fallback: Check for Netlify Blobs session token if cookie-based auth failed
   // This is critical for Netlify where cookies don't persist across function invocations
   if (!session) {
     const sessionToken = req.cookies.get("session_token")?.value;
     if (sessionToken) {
-      const userId = await validateSessionToken(sessionToken);
-      if (userId) {
-        // We have a valid session token, but couldn't restore cookie-based session
+      const blobSession = await validateBlobSessionToken(sessionToken);
+      if (blobSession) {
+        // We have a valid Blobs session token, but couldn't restore cookie-based session
         // Set a flag in response headers to indicate this
         response.headers.set("X-Session-Token-Valid", "true");
-        response.headers.set("X-User-ID", userId);
+        response.headers.set("X-User-ID", blobSession.userId);
       }
     }
   }
