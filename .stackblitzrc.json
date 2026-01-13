@@ -1,0 +1,10 @@
+{
+  "installDependencies": true,
+  "startCommand": "npm run dev",
+  "buildCommand": "npm run build",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://kpwhwhtjspdbbqzfbptv.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwd2h3aHRqc3BkYmJxemZicHR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4ODUwNDIsImV4cCI6MjA4MzQ2MTA0Mn0.G0gMebh5wOP5LRBb47ZOBx2iHRtBK6N1SQ4SjVk6zsA",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY": "sb_publishable_h0QM8QuIXTv2vrEo3CRoGQ_4jjCDTJA"
+  }
+}
