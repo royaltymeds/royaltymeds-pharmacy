@@ -2,27 +2,15 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function createServerSupabaseClient() {
-  let cookieStore;
+  // Try to get cookies, but always continue
+  let cookieStore: any = null;
   
   try {
     cookieStore = await cookies();
   } catch (error) {
-    // Fallback for environments where cookies aren't accessible (e.g., StackBlitz in some contexts)
-    console.warn("Warning: cookies() unavailable, using fallback");
-    return createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return [];
-          },
-          setAll() {
-            // No-op for fallback
-          },
-        },
-      }
-    );
+    // In some async contexts (like prerendering), cookies() might fail
+    // We'll use an empty fallback and rely on client-side auth
+    console.debug("Note: cookies() not available in this context");
   }
 
   return createServerClient(
@@ -31,15 +19,25 @@ export async function createServerSupabaseClient() {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll();
+          if (!cookieStore) {
+            return [];
+          }
+          try {
+            return cookieStore.getAll();
+          } catch (e) {
+            return [];
+          }
         },
         setAll(cookiesToSet) {
+          if (!cookieStore) {
+            return;
+          }
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options as CookieOptions);
             });
           } catch (error) {
-            // Handle setAll errors in middleware context
+            // Silently fail - cookies might not be writable in all contexts
           }
         },
       },
