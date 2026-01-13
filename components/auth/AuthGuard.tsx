@@ -7,70 +7,50 @@ import { Loader } from "lucide-react";
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  requiredRole?: "patient" | "doctor" | "admin";
 }
 
-export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthGuard({ children }: AuthGuardProps) {
+  const [isReady, setIsReady] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     async function checkAuth() {
       try {
+        console.log("[AuthGuard] Checking auth status...");
         const supabase = getSupabaseClient();
+        
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
+        console.log("[AuthGuard] Auth status:", user ? "authenticated" : "not authenticated");
+
         if (!user) {
-          console.log("[AuthGuard] No user found, redirecting to login");
+          console.log("[AuthGuard] No user, redirecting to /login");
           router.push("/login");
           return;
         }
 
-        // If a specific role is required, check it
-        if (requiredRole) {
-          const { data: userData } = await supabase
-            .from("users")
-            .select("role")
-            .eq("id", user.id)
-            .single();
-
-          const userRole = (userData as any)?.role || "patient";
-
-          if (userRole !== requiredRole) {
-            console.log(`[AuthGuard] User role ${userRole} != required ${requiredRole}`);
-            router.push("/login");
-            return;
-          }
-        }
-
-        setIsAuthenticated(true);
+        console.log("[AuthGuard] User authenticated, showing content");
+        setIsReady(true);
       } catch (error) {
-        console.error("[AuthGuard] Auth check failed:", error);
+        console.error("[AuthGuard] Error checking auth:", error);
         router.push("/login");
-      } finally {
-        setIsLoading(false);
       }
     }
 
     checkAuth();
-  }, [requiredRole, router]);
+  }, [router]);
 
-  if (isLoading) {
+  if (!isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Verifying access...</p>
         </div>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return null; // Will redirect via useEffect
   }
 
   return <>{children}</>;
