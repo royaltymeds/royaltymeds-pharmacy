@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { createSession } from "@/lib/session-store";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -33,6 +34,22 @@ export async function GET(request: NextRequest) {
     if (error || !data.user?.id) {
       // Redirect to login if code exchange fails
       return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    // Create a database session token for Netlify compatibility
+    // This ensures session persists across serverless function invocations
+    const sessionData = await createSession(data.user.id);
+    if (sessionData) {
+      const response = NextResponse.redirect(new URL("/", request.url));
+      // Store the session token in a cookie for easy access
+      response.cookies.set("session_token", sessionData.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60, // 1 hour
+        path: "/",
+      });
+      return response;
     }
 
     // Get the user's role from the users table

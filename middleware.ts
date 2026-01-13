@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { validateSessionToken } from "@/lib/session-store";
 
 export async function middleware(req: NextRequest) {
   let response = NextResponse.next({
@@ -27,9 +28,24 @@ export async function middleware(req: NextRequest) {
   );
 
   // Refresh session if exists
-  const {
+  let {
     data: { session },
   } = await supabase.auth.getSession();
+
+  // Fallback: Check for database session token if cookie-based auth failed
+  // This is critical for Netlify where cookies don't persist across function invocations
+  if (!session) {
+    const sessionToken = req.cookies.get("session_token")?.value;
+    if (sessionToken) {
+      const userId = await validateSessionToken(sessionToken);
+      if (userId) {
+        // We have a valid session token, but couldn't restore cookie-based session
+        // Set a flag in response headers to indicate this
+        response.headers.set("X-Session-Token-Valid", "true");
+        response.headers.set("X-User-ID", userId);
+      }
+    }
+  }
 
   const isAdminRoute = req.nextUrl.pathname.startsWith("/admin") && req.nextUrl.pathname !== "/admin-login";
   const isProtectedRoute = [
@@ -41,27 +57,38 @@ export async function middleware(req: NextRequest) {
   ].some((route) => req.nextUrl.pathname.startsWith(route)) &&
     req.nextUrl.pathname !== "/admin-login";
 
+  // Check if user is authenticated either via cookie session or database session token
+  const isAuthenticated = !!session || response.headers.get("X-Session-Token-Valid") === "true";
+
   // Redirect to admin-login if accessing admin routes without session
-  if (!session && isAdminRoute) {
+  if (!isAuthenticated && isAdminRoute) {
     const adminLoginUrl = new URL("/admin-login", req.nextUrl.origin);
     adminLoginUrl.searchParams.set("next", req.nextUrl.pathname);
     return NextResponse.redirect(adminLoginUrl);
   }
 
   // Redirect to login if accessing other protected routes without session
-  if (!session && isProtectedRoute) {
+  if (!isAuthenticated && isProtectedRoute) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("next", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // If authenticated user tries to access /admin routes, verify they are admin
-  if (session && (isAdminRoute || req.nextUrl.pathname === "/admin-login")) {
+  if (isAuthenticated && (isAdminRoute || req.nextUrl.pathname === "/admin-login")) {
     try {
+      // Use session user ID or fallback to header-provided user ID
+      const userId = session?.user?.id || response.headers.get("X-User-ID");
+      if (!userId) {
+        const adminLoginUrl = new URL("/admin-login", req.nextUrl.origin);
+        adminLoginUrl.searchParams.set("next", req.nextUrl.pathname);
+        return NextResponse.redirect(adminLoginUrl);
+      }
+
       const { data: userData, error } = await supabase
         .from("users")
         .select("role")
-        .eq("id", session.user.id)
+        .eq("id", userId)
         .single();
 
       // If user is not admin (regardless of error), redirect to admin-login
@@ -80,7 +107,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Redirect to dashboard if already logged in and trying to access auth pages
-  if (session && (req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/signup"))) {
+  if (isAuthenticated && (req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/signup"))) {
     return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
 
