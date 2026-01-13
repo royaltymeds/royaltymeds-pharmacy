@@ -1,75 +1,78 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { AlertCircle, CheckCircle, Clock, TrendingUp } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, TrendingUp, Loader } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabase-client";
 
-export default async function AdminDashboard() {
-  const cookieStore = await cookies();
+export default function AdminDashboard() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [pendingPrescriptions, setPendingPrescriptions] = useState<any[]>([]);
+  const [prescriptionStats, setPrescriptionStats] = useState({ pending: 0, approved: 0, rejected: 0, total: 0 });
+  const [orderStats, setOrderStats] = useState({ pending: 0, processing: 0, delivered: 0, total: 0 });
+  const [refillStats, setRefillStats] = useState({ pending: 0 });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options as CookieOptions);
-            });
-          } catch (error) {
-            console.error("Cookie error:", error);
-          }
-        },
-      },
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        const supabase = getSupabaseClient();
+
+        // Fetch dashboard statistics
+        const { data: pendingPrescriptionsData } = await supabase
+          .from("prescriptions")
+          .select("*")
+          .eq("status", "pending")
+          .limit(5);
+
+        const { data: allPrescriptions } = await supabase
+          .from("prescriptions")
+          .select("status");
+
+        const { data: allOrders } = await supabase
+          .from("orders")
+          .select("status");
+
+        const { data: pendingRefillsData } = await supabase
+          .from("refills")
+          .select("*")
+          .eq("status", "pending")
+          .limit(5);
+
+        // Calculate statistics
+        setPendingPrescriptions(pendingPrescriptionsData || []);
+        
+        setPrescriptionStats({
+          pending: allPrescriptions?.filter((p: any) => p.status === "pending").length || 0,
+          approved: allPrescriptions?.filter((p: any) => p.status === "approved").length || 0,
+          rejected: allPrescriptions?.filter((p: any) => p.status === "rejected").length || 0,
+          total: allPrescriptions?.length || 0,
+        });
+
+        setOrderStats({
+          pending: allOrders?.filter((o: any) => o.status === "pending").length || 0,
+          processing: allOrders?.filter((o: any) => o.status === "processing").length || 0,
+          delivered: allOrders?.filter((o: any) => o.status === "delivered").length || 0,
+          total: allOrders?.length || 0,
+        });
+
+        setRefillStats({
+          pending: pendingRefillsData?.length || 0,
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
-  );
 
-  // Middleware already protects this route, so we don't need to check auth here
-  // Just fetch data for the page
+    loadDashboardData();
+  }, []);
 
-
-  // Fetch dashboard statistics
-  const { data: pendingPrescriptions } = await supabase
-    .from("prescriptions")
-    .select("*")
-    .eq("status", "pending")
-    .limit(5);
-
-  const { data: allPrescriptions } = await supabase
-    .from("prescriptions")
-    .select("status");
-
-  const { data: allOrders } = await supabase
-    .from("orders")
-    .select("status");
-
-  const { data: pendingRefills } = await supabase
-    .from("refills")
-    .select("*")
-    .eq("status", "pending")
-    .limit(5);
-
-  // Calculate statistics
-  const prescriptionStats = {
-    pending: allPrescriptions?.filter((p: any) => p.status === "pending").length || 0,
-    approved: allPrescriptions?.filter((p: any) => p.status === "approved").length || 0,
-    rejected: allPrescriptions?.filter((p: any) => p.status === "rejected").length || 0,
-    total: allPrescriptions?.length || 0,
-  };
-
-  const orderStats = {
-    pending: allOrders?.filter((o: any) => o.status === "pending").length || 0,
-    processing: allOrders?.filter((o: any) => o.status === "processing").length || 0,
-    delivered: allOrders?.filter((o: any) => o.status === "delivered").length || 0,
-    total: allOrders?.length || 0,
-  };
-
-  const refillStats = {
-    pending: pendingRefills?.length || 0,
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader className="w-8 h-8 animate-spin text-green-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
