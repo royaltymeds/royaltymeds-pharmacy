@@ -303,6 +303,45 @@ CREATE POLICY "select_access" ON table FOR SELECT USING (
 - Redirects to `/login` after logout
 **Lesson**: Use correct Supabase client for logout and explicitly clear all auth cookies to prevent session caching
 
+### Problem 15: Session Lost When Navigating Between Pages on Netlify
+**Symptom**: After logging in successfully, clicking navbar/sidebar links logs user out and redirects to login
+**Root Cause**: Multiple issues:
+1. Auth callback (`/app/auth/callback/route.ts`) was using service role client instead of server client with cookie management
+2. Browser client initialization in layouts (admin, patient, doctor) was missing `CookieStorage` configuration
+3. Cookies weren't being synced between browser and Supabase session
+**Solution**:
+- Changed auth callback to use `createServerClient()` with anon key and proper cookie management via `CookieOptions`
+- Added `CookieStorage` class to all three layout files that implements proper cookie read/write/delete
+- Configured browser client with `auth: { storage: new CookieStorage(), persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }`
+- Now session persists across page navigation and automatic refresh works
+**Lesson**: 
+- Auth callback MUST use server client with cookie management to properly set session cookies
+- Browser clients MUST have explicit storage configuration for proper session persistence
+- Supabase cookies need custom storage class that syncs to browser cookies with proper expiration and SameSite attributes
+
+### Problem 16: Build Errors on Netlify - supabaseUrl is required
+**Symptom**: Netlify build fails with "Error: supabaseUrl is required" during page data collection
+**Root Cause**: API routes were initializing Supabase clients at module level (outside of handler functions), causing them to execute during build when environment variables might not be available
+**Solution**:
+- Added `export const dynamic = "force-dynamic"` to API routes that initialize Supabase at module level:
+  - `/api/admin/setup-auth-trigger/route.ts`
+  - `/api/setup/create-default-admin/route.ts`
+  - `/api/auth/create-profile/route.ts`
+  - `/api/auth/signup/route.ts`
+- Modified `/lib/supabase.ts` to conditionally initialize clients instead of throwing errors at module load
+- Routes marked as `force-dynamic` skip pre-rendering and only execute at request time
+**Lesson**: Never initialize Supabase clients at module level in API routes; use `force-dynamic` to prevent pre-rendering
+
+### Problem 17: Private Environment Variables Embedded in Build Output
+**Symptom**: Netlify secrets scanner detected SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_URL, and SUPABASE_REF exposed in compiled bundles
+**Root Cause**: Private keys were available at build time and Next.js embedded all environment variables into compiled code
+**Solution**:
+- Populated `netlify.toml` with PUBLIC variables only (NEXT_PUBLIC_* keys)
+- Set PRIVATE variables (SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_URL, SUPABASE_REF) in Netlify UI only via CLI
+- Added `SECRETS_SCAN_OMIT_PATHS` configuration to exclude non-source directories from scanning
+- Removed actual secrets from all documentation files
+**Lesson**: Public keys go in netlify.toml (build config), private keys ONLY in Netlify UI environment variables
+
 ---
 
 ## DATABASE ARCHITECTURE RULES
@@ -555,19 +594,32 @@ SUPABASE_SERVICE_ROLE_KEY=eyxxx... # Server-side only
 - ✅ Phase 5: Doctor Interface (Dashboard, prescriptions, patient search)
 - ✅ Phase 5.5: Pharmacist Authentication & Account Management
 - ✅ Landing Page & Theme Complete: Green/Blue/White theme, all dashboards updated
+- ✅ **DEPLOYMENT COMPLETE**: Netlify production deployment with proper session persistence
 
 ### Build Status
 - Routes: 44 total
 - TypeScript: 0 errors
 - ESLint: 0 errors
-- Build time: 6-7 seconds
+- Build time: 6-7 seconds locally, 54+ seconds on Netlify (with plugin overhead)
 - Bundle size: 106 kB (first load JS)
+- **Netlify Status**: ✅ Production live at https://royaltymeds-pharmacy.netlify.app
+
+### Recent Deployment Fixes (January 12-13, 2026)
+1. ✅ Fixed build-time Supabase initialization errors with `force-dynamic` routes
+2. ✅ Populated netlify.toml with public Supabase environment variables
+3. ✅ Set private environment variables on Netlify via CLI (SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_URL, SUPABASE_REF)
+4. ✅ Fixed session persistence with CookieStorage in browser clients (admin, patient, doctor layouts)
+5. ✅ Fixed auth callback to use server client with proper cookie management
+6. ✅ Added Rx symbol favicon (green background, white text)
+7. ✅ All 43 routes compiling, no build errors on Netlify
 
 ### Authentication & Routing Updates
 - `/dashboard`: Now deprecated, redirects users with unavailable page + green "Back to Homepage" button
 - `/admin` routes: Now require admin role verification in middleware, non-admin users redirected to `/admin-login`
 - `/admin-login`: Only admins allowed; non-admin authenticated users redirected to `/admin-login` for re-authentication
+- `/auth/callback`: Now uses server client with cookie management for proper session persistence
 - Authenticated users at `/login` or `/signup`: Redirected to homepage `/` instead of `/dashboard`
+- **Session Persistence**: ✅ Fixed - users stay logged in when navigating between pages on Netlify
 
 ### Default Credentials
 - **Pharmacist Login**: `/admin-login`
@@ -580,6 +632,63 @@ SUPABASE_SERVICE_ROLE_KEY=eyxxx... # Server-side only
 - Phase 6: Payment Integration (Stripe)
 - Phase 7: Notifications (Email, SMS, In-app)
 - Phase 8: Analytics & Reporting
+
+---
+
+## DEPLOYMENT CHECKLIST & CRITICAL LESSONS
+
+### Environment Variables
+**Build Environment** (netlify.toml or Netlify UI):
+- ✅ NEXT_PUBLIC_SUPABASE_URL (public, safe in build config)
+- ✅ NEXT_PUBLIC_SUPABASE_ANON_KEY (public, safe in build config)
+- ✅ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY (public, safe in build config)
+- ✅ STORAGE_BUCKET (public, safe in build config)
+
+**Runtime Environment ONLY** (Netlify UI Build & Deploy → Environment):
+- ✅ SUPABASE_SERVICE_ROLE_KEY (private, server-side only)
+- ✅ SUPABASE_DB_URL (private, contains password)
+- ✅ SUPABASE_REF (private project identifier)
+
+**NEVER** put private keys in netlify.toml or .env files that get committed.
+
+### API Routes: force-dynamic Requirement
+Any API route that initializes Supabase at module level MUST have:
+```typescript
+export const dynamic = "force-dynamic";
+```
+
+This prevents Next.js from trying to pre-render the route during build, which would fail without environment variables. Routes marked as `force-dynamic` only execute at request time when environment variables are available.
+
+**Routes requiring this:**
+- Any route with `const client = createClient(...)`  outside of handler function
+- Any route with `const client = createServerClient(...)` outside of handler function
+
+### Session Persistence Requirements
+For proper session persistence on Netlify:
+
+1. **Auth Callback** (`/auth/callback`):
+   - MUST use `createServerClient()` with anon key
+   - MUST set cookies via `CookieOptions` callback
+   - Should NOT use service role key for code exchange
+
+2. **Layout Files** (admin, patient, doctor):
+   - Client components initializing Supabase MUST provide `CookieStorage` class
+   - MUST configure: `auth: { storage: new CookieStorage(), persistSession: true, autoRefreshToken: true }`
+   - Storage class MUST handle `getItem()`, `setItem()`, `removeItem()` properly
+   - Cookies MUST have `SameSite=Lax` for cross-domain compatibility
+
+3. **API Routes Checking Auth**:
+   - Use `createServerClient()` with anon key for session checks
+   - Use service role key ONLY for server-side operations (admin actions)
+   - Never mix client/server auth in the same function
+
+### Common Mistakes Leading to Session Loss
+❌ Using service role key in auth callback
+❌ Initializing Supabase client at module level in API routes
+❌ Browser client without CookieStorage configuration
+❌ Putting private keys in netlify.toml
+❌ Not marking API routes as `force-dynamic` when they initialize clients
+❌ Manual token extraction instead of using Supabase client methods
 
 ---
 
@@ -665,6 +774,6 @@ The doctor dashboard should show pharmacist workflow metrics:
 
 ---
 
-**Last Updated:** January 12, 2026
+**Last Updated:** January 13, 2026
 **Maintained By:** AI Assistant (RoyaltyMeds Development Team)
 **Next Review:** After Phase 6 completion
