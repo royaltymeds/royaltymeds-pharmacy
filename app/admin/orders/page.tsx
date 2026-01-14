@@ -1,41 +1,33 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+"use client";
+
 import Link from "next/link";
 import { Truck, Package, CheckCircle, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getSupabaseClient } from "@/lib/supabase-client";
 
-export default async function AdminOrders() {
-  const cookieStore = await cookies();
+export default function AdminOrders() {
+  const [orders, setOrders] = useState<any[]>([]);
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options as CookieOptions);
-            });
-          } catch (error) {
-            console.error("Cookie error:", error);
-          }
-        },
-      },
-    }
-  );
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        const supabase = getSupabaseClient();
 
-  // Middleware already protects this route, so we don't need to check auth here
-  // Just fetch data for the page
+        // Fetch all orders with patient and prescription info
+        const { data } = await supabase
+          .from("orders")
+          .select("*, user_profiles(full_name), prescriptions(medication_name)")
+          .order("created_at", { ascending: false });
 
+        setOrders(data || []);
+      } catch (error) {
+        console.error("Error loading orders:", error);
+        setOrders([]);
+      }
+    };
 
-  // Fetch all orders with patient and prescription info
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("*, user_profiles(full_name), prescriptions(medication_name)")
-    .order("created_at", { ascending: false });
+    loadOrders();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {

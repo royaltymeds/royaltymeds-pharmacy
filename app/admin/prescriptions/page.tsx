@@ -1,41 +1,33 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+"use client";
+
 import Link from "next/link";
 import { CheckCircle, X, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getSupabaseClient } from "@/lib/supabase-client";
 
-export default async function AdminPrescriptions() {
-  const cookieStore = await cookies();
+export default function AdminPrescriptions() {
+  const [prescriptions, setPrescriptions] = useState<any[]>([]);
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options as CookieOptions);
-            });
-          } catch (error) {
-            console.error("Cookie error:", error);
-          }
-        },
-      },
-    }
-  );
+  useEffect(() => {
+    const loadPrescriptions = async () => {
+      try {
+        const supabase = getSupabaseClient();
 
-  // Middleware already protects this route, so we don't need to check auth here
-  // Just fetch data for the page
+        // Fetch all prescriptions with patient info
+        const { data } = await supabase
+          .from("prescriptions")
+          .select("*, user_profiles(full_name)")
+          .order("created_at", { ascending: false });
 
+        setPrescriptions(data || []);
+      } catch (error) {
+        console.error("Error loading prescriptions:", error);
+        setPrescriptions([]);
+      }
+    };
 
-  // Fetch all prescriptions with patient info
-  const { data: prescriptions } = await supabase
-    .from("prescriptions")
-    .select("*, user_profiles(full_name)")
-    .order("created_at", { ascending: false });
+    loadPrescriptions();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {

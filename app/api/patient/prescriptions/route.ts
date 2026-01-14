@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { createClientForApi } from "@/lib/supabase-server";
 
 /**
  * GET /api/patient/prescriptions
@@ -7,34 +7,19 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const supabase = createClientForApi(request);
 
-    const token = authHeader.substring(7);
-
-    // Use anon key for client-side requests
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      }
-    );
-
-    // Get user from token
+    // Get authenticated user from cookies (set by middleware)
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication failed" },
+        { status: 401 }
+      );
     }
 
     // Fetch patient's prescriptions
@@ -51,7 +36,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ prescriptions });
   } catch (error) {
     console.error("Prescription fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -61,25 +49,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = authHeader.substring(7);
+    const supabase = createClientForApi(request);
     const body = await request.json();
-
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      }
-    );
 
     const {
       data: { user },
@@ -87,12 +58,18 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication failed" },
+        { status: 401 }
+      );
     }
 
     // Validate required fields
     if (!body.file_url) {
-      return NextResponse.json({ error: "File URL is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "File URL is required" },
+        { status: 400 }
+      );
     }
 
     // Create prescription
@@ -117,6 +94,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ prescription }, { status: 201 });
   } catch (error) {
     console.error("Prescription creation error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

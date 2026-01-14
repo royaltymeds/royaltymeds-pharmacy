@@ -1,47 +1,66 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getSupabaseClient } from "@/lib/supabase-client";
+import type { Database } from "@/types/database";
 
-export const metadata = {
-  title: "Profile - RoyaltyMeds",
-  description: "Edit your profile",
-};
+type UserProfile = Database["public"]["Tables"]["user_profiles"]["Row"];
 
-export default async function ProfilePage() {
-  const cookieStore = await cookies();
+export default function ProfilePage() {
+  const [user, setUser] = useState<any | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options as CookieOptions);
-            });
-          } catch {
-            // Handle error in cookie setting
-          }
-        },
-      },
-    }
-  );
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const supabase = getSupabaseClient();
+        
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
 
-  // Middleware already protects this route, so we don't need to check auth here
-  // Just fetch the user to get their ID and email for the form
-  const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
 
-  if (!user) return null; // Should never happen due to middleware protection
+        // Fetch user profile
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
 
-  const { data: userProfile } = await supabase
-    .from("user_profiles")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
+        setUserProfile(profile);
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-600">Loading profile...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-600">Not authenticated</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
