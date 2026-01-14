@@ -42,7 +42,7 @@ BEGIN
   DELETE FROM public.sessions
   WHERE expires_at < now();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Comment for clarity
 COMMENT ON TABLE public.sessions IS 'Stores session tokens for Netlify compatibility. Provides session persistence across serverless function invocations.';
