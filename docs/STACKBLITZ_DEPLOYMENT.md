@@ -83,11 +83,52 @@ StackBlitz will show a preview URL automatically.
 ### Port Already in Use
 **Solution:** StackBlitz automatically assigns ports, just use the preview URL it provides
 
+### Portal Pages Not Loading After Login (FIXED ✅)
+**Previous StackBlitz Auth Issue**: Portal pages would not load after successful login due to fragile async context.
+
+**Status**: FIXED in Jan 14 Update ✅
+- All portal pages converted from async Server Components to client components
+- Auth flow enhanced with retry logic and longer session initialization delays
+- AuthGuard detects recent authentication and retries more aggressively
+- Session properly synced before portal access
+
+**If issue still occurs**:
+1. Check browser console for error messages (look for [AuthGuard] logs)
+2. Verify Supabase environment variables are set in Secrets
+3. Check localStorage for session data
+4. Clear StackBlitz cache and reload
+
+See [COMPLETE_FIX_SUMMARY_JAN14.md](COMPLETE_FIX_SUMMARY_JAN14.md) for detailed auth architecture.
+
+## Authentication Flow (Optimized for StackBlitz)
+
+```
+User Login
+    ↓
+/auth/callback exchanges OAuth code for session
+    ↓
+/auth/success waits 800ms for session initialization
+    ↓
+AuthGuard verifies session with retries (up to 3 attempts)
+    ↓
+Portal loads (client-side data fetching via useEffect)
+    ↓
+User can access prescriptions, orders, messages, etc.
+```
+
+**Key improvements**:
+- ✅ No "cookies() not available" build warnings
+- ✅ All portal pages static-prerenderable  
+- ✅ Works on StackBlitz, localhost, and production
+- ✅ Handles transient initialization issues gracefully
+
 ## Key Files for StackBlitz Deployment
 
 - `stackblitz.json` - Main StackBlitz configuration
 - `.stackblitzrc.json` - Runtime environment configuration
 - `netlify.toml` - Build configuration (also works for reference)
+- `/components/auth/AuthGuard.tsx` - Auth verification with retries
+- `/app/auth/success/page.tsx` - Session initialization bridge
 
 ## Local Testing Before StackBlitz
 
@@ -109,23 +150,27 @@ If all these work locally, it will work on StackBlitz.
 ## Next Steps After Deployment
 
 1. **Test all portals:**
-   - Patient: Login, navigate between pages
-   - Doctor: Dashboard, submit prescription
-   - Admin: Dashboard, manage data
+   - Patient: Login → success page → home (check [AuthGuard] console logs)
+   - Doctor: Login → success page → dashboard
+   - Admin: Login → success page → dashboard
 
 2. **Verify features:**
-   - Authentication flow
-   - Data persistence
-   - Middleware protection
-   - Session handling
+   - Authentication flow (check browser DevTools console)
+   - Data persistence (create/edit data, refresh page)
+   - Middleware protection (try accessing /patient/home without login)
+   - Session handling (logout and login again)
+   - AuthGuard retry logic (slow network simulation)
 
 3. **Monitor performance:**
    - Check WebContainer resource usage
    - Monitor API response times
    - Verify database connections
+   - Review console for any [AuthGuard] or [AuthSuccess] logs
 
 ## Resources
 
 - StackBlitz Docs: https://stackblitz.com/docs
 - Next.js on StackBlitz: https://stackblitz.com/github/vercel/next.js
 - Your GitHub: https://github.com/royaltymeds/royaltymeds-pharmacy
+- **Auth Fix Details**: [COMPLETE_FIX_SUMMARY_JAN14.md](COMPLETE_FIX_SUMMARY_JAN14.md)
+- **Root Cause Analysis**: [ROOT_CAUSE_FIX.md](ROOT_CAUSE_FIX.md)

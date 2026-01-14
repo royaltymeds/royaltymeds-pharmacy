@@ -1,6 +1,6 @@
 # RoyaltyMeds Prescription Platform
 
-**Status**: Phase 1 Complete ✅
+**Status**: Production Ready ✅
 
 An **online prescription ordering and management platform** built with **Next.js 15**, **Supabase**, and **Tailwind CSS**.
 
@@ -25,6 +25,26 @@ npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### 5. Deploy to StackBlitz
+See **[docs/STACKBLITZ_DEPLOYMENT.md](docs/STACKBLITZ_DEPLOYMENT.md)** for StackBlitz-specific setup and authentication flow information.
+
+---
+
+## 📋 Latest Updates (January 14, 2026)
+
+### ✅ Critical Fixes Applied
+1. **StackBlitz Portal Loading** - Resolved auth timing issues on StackBlitz WebContainer
+   - Converted all portal pages to client components
+   - Enhanced auth flow with retry logic
+   - All pages now static-prerenderable
+   
+2. **Supabase Advisor Compliance** - Fixed security and performance issues
+   - Function search_path immutability
+   - RLS policy optimization
+   - Database fully optimized for production
+
+See **[docs/COMPLETE_FIX_SUMMARY_JAN14.md](docs/COMPLETE_FIX_SUMMARY_JAN14.md)** for detailed changes.
+
 ---
 
 ## 📂 Project Structure
@@ -32,26 +52,39 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ```
 .
 ├── app/                      # Next.js App Router
-│   ├── (auth)/              # Authentication routes
-│   ├── (admin)/             # Admin dashboard routes
-│   ├── (patient)/           # Patient app routes
-│   ├── (doctor)/            # Doctor submission routes
+│   ├── auth/                # Authentication pages & callbacks
+│   │   ├── success/         # Auth success bridge page
+│   │   └── callback/        # OAuth callback handler
+│   ├── admin/               # Admin dashboard routes
+│   ├── patient/             # Patient app routes
+│   ├── doctor/              # Doctor submission routes
 │   ├── page.tsx             # Home page
 │   ├── layout.tsx           # Root layout
 │   └── globals.css          # Global styles
 ├── components/              # Reusable React components
+│   ├── auth/                # Auth components & guards
+│   ├── navigation/          # Navigation components
+│   └── ...
 ├── lib/                     # Utility functions
-│   └── supabase.ts         # Supabase client setup
+│   ├── supabase-client.ts  # Supabase client (browser)
+│   ├── supabase-server.ts  # Supabase server utilities
+│   └── supabase-ssr.ts     # Supabase SSR helpers
 ├── services/                # API service functions
 ├── types/                   # TypeScript type definitions
-│   └── database.ts         # Database schema types
-├── scripts/                 # Build & migration scripts
-│   ├── migration.sql       # Database schema (12 tables)
-│   └── migrate-pg.js       # Migration runner
-├── .env.local              # Environment variables (secrets)
+├── docs/                    # Documentation & guides
+│   ├── COMPLETE_FIX_SUMMARY_JAN14.md
+│   ├── ROOT_CAUSE_FIX.md
+│   ├── STACKBLITZ_DEPLOYMENT.md
+│   ├── FIXES_SUMMARY.md
+│   └── migrations/         # Database migration docs
+├── supabase/               # Supabase configuration
+│   └── migrations/         # Applied database migrations
+├── middleware.ts           # Auth middleware
+├── .env.local              # Environment variables
 ├── next.config.js          # Next.js configuration
 ├── tsconfig.json           # TypeScript configuration
 ├── tailwind.config.ts      # Tailwind CSS configuration
+├── stackblitz.json         # StackBlitz configuration
 └── package.json            # Dependencies & scripts
 ```
 
