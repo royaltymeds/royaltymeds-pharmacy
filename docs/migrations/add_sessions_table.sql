@@ -25,15 +25,23 @@ CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON public.sessions(expires_at
 -- Enable RLS
 ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
 
--- RLS Policy: Users can only see their own sessions
-CREATE POLICY "Users can view own sessions"
-  ON public.sessions FOR SELECT
-  USING (auth.uid() = user_id);
+-- NOTE: Original RLS policies have been optimized in migration 20260114000001
+-- The policies below are kept for reference but are replaced by the consolidated policy
+-- "Manage sessions with optimized auth check" which wraps auth.uid() in a subquery
+-- This prevents re-evaluation of auth functions for each row and consolidates
+-- multiple permissive policies into a single efficient policy.
 
+-- Original policy (replaced by optimized version):
+-- RLS Policy: Users can only see their own sessions
+-- CREATE POLICY "Users can view own sessions"
+--   ON public.sessions FOR SELECT
+--   USING (auth.uid() = user_id);
+
+-- Original policy (replaced by optimized version):
 -- RLS Policy: Service role can manage all sessions
-CREATE POLICY "Service role manages sessions"
-  ON public.sessions
-  USING (current_setting('role') = 'authenticated' OR current_user = 'service_role');
+-- CREATE POLICY "Service role manages sessions"
+--   ON public.sessions
+--   USING (current_setting('role') = 'authenticated' OR current_user = 'service_role');
 
 -- Function to cleanup expired sessions (run periodically)
 CREATE OR REPLACE FUNCTION public.cleanup_expired_sessions()
