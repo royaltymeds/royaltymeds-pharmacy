@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const search = url.searchParams.get("search");
 
     let query = supabase
-      .from("users")
+      .from("user_profiles")
       .select("id, name, email, phone");
 
     if (search) {
