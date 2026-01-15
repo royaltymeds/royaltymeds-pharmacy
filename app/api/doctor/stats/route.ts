@@ -5,6 +5,9 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createClientForApi(request);
 
+    // Refresh session to get valid auth context on Netlify
+    await supabase.auth.getSession();
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
