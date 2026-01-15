@@ -7,9 +7,6 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createClientForApi(request);
 
-    // Refresh session to get valid auth context on Netlify
-    await supabase.auth.getSession();
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -39,26 +36,14 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    // For each patient, count their prescriptions
-    const patientsWithCounts = await Promise.all(
-      (patients || []).map(async (patient: any) => {
-        const { count } = await supabase
-          .from("doctor_prescriptions")
-          .select("*", { count: "exact", head: true })
-          .eq("doctor_id", user.id)
-          .eq("patient_id", patient.id);
-
-        return {
-          id: patient.id,
-          email: patient.email,
-          name: patient.user_profiles?.[0]?.full_name || "Unknown",
-          phone: patient.user_profiles?.[0]?.phone || null,
-          prescriptionCount: count || 0,
-        };
-      })
+    return NextResponse.json(
+      patients?.map((patient: any) => ({
+        id: patient.id,
+        email: patient.email,
+        name: patient.user_profiles?.[0]?.full_name || "Unknown",
+        phone: patient.user_profiles?.[0]?.phone || null,
+      })) || []
     );
-
-    return NextResponse.json(patientsWithCounts);
   } catch (error: any) {
     console.error("Error fetching patients:", error);
     return NextResponse.json(
