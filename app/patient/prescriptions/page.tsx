@@ -2,8 +2,16 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, AlertCircle, CheckCircle } from "lucide-react";
+import { Upload, AlertCircle, CheckCircle, X, Plus } from "lucide-react";
 import Link from "next/link";
+
+interface Medication {
+  id: string;
+  name: string;
+  dosage: string;
+  quantity: string;
+  brandChoice: "brand" | "generic" | null;
+}
 
 export default function UploadPrescriptionPage() {
   const router = useRouter();
@@ -11,14 +19,18 @@ export default function UploadPrescriptionPage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
-  const [medication, setMedication] = useState("");
-  const [dosage, setDosage] = useState("");
-  const [quantity, setQuantity] = useState("");
+  const [medications, setMedications] = useState<Medication[]>([]);
+  
+  // Form for adding new medication
+  const [currentMedication, setCurrentMedication] = useState("");
+  const [currentDosage, setCurrentDosage] = useState("");
+  const [currentQuantity, setCurrentQuantity] = useState("");
+  const [currentBrandChoice, setCurrentBrandChoice] = useState<"brand" | "generic" | null>(null);
+  
   const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [brandChoice, setBrandChoice] = useState<"brand" | "generic" | null>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -27,6 +39,32 @@ export default function UploadPrescriptionPage() {
       setFileName(selectedFile.name);
       setError(null);
     }
+  };
+
+  const addMedication = () => {
+    if (!currentMedication.trim()) {
+      setError("Please enter a medication name");
+      return;
+    }
+
+    const newMedication: Medication = {
+      id: Math.random().toString(36).substring(7),
+      name: currentMedication,
+      dosage: currentDosage,
+      quantity: currentQuantity,
+      brandChoice: currentBrandChoice,
+    };
+
+    setMedications([...medications, newMedication]);
+    setCurrentMedication("");
+    setCurrentDosage("");
+    setCurrentQuantity("");
+    setCurrentBrandChoice(null);
+    setError(null);
+  };
+
+  const removeMedication = (id: string) => {
+    setMedications(medications.filter((med) => med.id !== id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,17 +81,13 @@ export default function UploadPrescriptionPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("medicationName", medication);
-      formData.append("dosage", dosage);
-      formData.append("quantity", quantity);
-      formData.append("frequency", "as needed");
-      formData.append("duration", "");
+      formData.append("medications", JSON.stringify(medications));
       formData.append("notes", notes);
-      formData.append("brandChoice", brandChoice || "");
 
       const response = await fetch("/api/patient/upload", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -65,11 +99,12 @@ export default function UploadPrescriptionPage() {
       setSuccess(true);
       setFile(null);
       setFileName("");
-      setMedication("");
-      setDosage("");
-      setQuantity("");
+      setMedications([]);
+      setCurrentMedication("");
+      setCurrentDosage("");
+      setCurrentQuantity("");
+      setCurrentBrandChoice(null);
       setNotes("");
-      setBrandChoice(null);
 
       // Redirect after 2 seconds
       setTimeout(() => {
@@ -142,73 +177,125 @@ export default function UploadPrescriptionPage() {
             </button>
           </div>
 
-          {/* Prescription Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                Medication Name (Optional)
-              </label>
-              <input
-                type="text"
-                value={medication}
-                onChange={(e) => setMedication(e.target.value)}
-                placeholder="e.g., Metformin"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-              />
+          {/* Prescription Details - Multiple Medications */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900">Medications (Optional)</h3>
+              <p className="text-xs text-gray-500">Add one or more medications from your prescription</p>
             </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                Dosage (Optional)
-              </label>
-              <input
-                type="text"
-                value={dosage}
-                onChange={(e) => setDosage(e.target.value)}
-                placeholder="e.g., 500mg"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-              />
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                Quantity (Optional)
-              </label>
-              <input
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder="e.g., 30"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-              />
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                Brand / Generic
-              </label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setBrandChoice("brand")}
-                  className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg font-medium transition ${
-                    brandChoice === "brand"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  Brand
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBrandChoice("generic")}
-                  className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg font-medium transition ${
-                    brandChoice === "generic"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  Generic
-                </button>
+
+            {/* Add Medication Form */}
+            <div className="border border-gray-200 rounded-lg p-4 space-y-4 bg-gray-50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    Medication Name
+                  </label>
+                  <input
+                    type="text"
+                    value={currentMedication}
+                    onChange={(e) => setCurrentMedication(e.target.value)}
+                    placeholder="e.g., Metformin"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    onKeyPress={(e) => e.key === "Enter" && addMedication()}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    Dosage
+                  </label>
+                  <input
+                    type="text"
+                    value={currentDosage}
+                    onChange={(e) => setCurrentDosage(e.target.value)}
+                    placeholder="e.g., 500mg"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    onKeyPress={(e) => e.key === "Enter" && addMedication()}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    value={currentQuantity}
+                    onChange={(e) => setCurrentQuantity(e.target.value)}
+                    placeholder="e.g., 30"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    onKeyPress={(e) => e.key === "Enter" && addMedication()}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    Brand / Generic
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentBrandChoice("brand")}
+                      className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg font-medium transition ${
+                        currentBrandChoice === "brand"
+                          ? "bg-green-600 text-white"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                      }`}
+                    >
+                      Brand
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentBrandChoice("generic")}
+                      className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg font-medium transition ${
+                        currentBrandChoice === "generic"
+                          ? "bg-green-600 text-white"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                      }`}
+                    >
+                      Generic
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              <button
+                type="button"
+                onClick={addMedication}
+                className="w-full py-2 px-4 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Medication
+              </button>
             </div>
+
+            {/* Medications List */}
+            {medications.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-xs sm:text-sm font-medium text-gray-700">Added Medications ({medications.length})</h4>
+                {medications.map((med) => (
+                  <div
+                    key={med.id}
+                    className="flex items-start justify-between bg-green-50 border border-green-200 rounded-lg p-3"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{med.name}</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {med.dosage && <span className="text-xs text-gray-600">Dosage: {med.dosage}</span>}
+                        {med.quantity && <span className="text-xs text-gray-600">Qty: {med.quantity}</span>}
+                        {med.brandChoice && <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">{med.brandChoice}</span>}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeMedication(med.id)}
+                      className="ml-2 p-1 text-red-600 hover:bg-red-50 rounded transition flex-shrink-0"
+                      title="Remove medication"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Notes */}
