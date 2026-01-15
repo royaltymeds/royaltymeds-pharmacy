@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClientForApi(request);
@@ -21,12 +23,12 @@ export async function GET(request: NextRequest) {
     const search = url.searchParams.get("search");
 
     let query = supabase
-      .from("user_profiles")
-      .select("id, name, email, phone");
+      .from("users")
+      .select("id, email, user_profiles(full_name, phone)");
 
     if (search) {
       query = query.or(
-        `email.ilike.%${search}%,name.ilike.%${search}%`
+        `email.ilike.%${search}%,user_profiles.full_name.ilike.%${search}%`
       );
     }
 
@@ -44,7 +46,10 @@ export async function GET(request: NextRequest) {
           .eq("patient_id", patient.id);
 
         return {
-          ...patient,
+          id: patient.id,
+          email: patient.email,
+          name: patient.user_profiles?.[0]?.full_name || "Unknown",
+          phone: patient.user_profiles?.[0]?.phone || null,
           prescriptionCount: count || 0,
         };
       })
