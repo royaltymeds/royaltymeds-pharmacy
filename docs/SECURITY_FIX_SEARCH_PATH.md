@@ -81,7 +81,7 @@ Provides instructions for applying the security fixes.
 ### Option 1: Supabase Dashboard (Recommended)
 
 1. Go to: **https://app.supabase.com/**
-2. Select your project: **kpwhwhtjspdbbqzfbptv**
+2. Select your project: **[REDACTED]**
 3. Navigate to: **SQL Editor** → **New Query**
 4. Copy the entire contents of: `scripts/fix-function-search-path.sql`
 5. Paste into the SQL Editor
@@ -92,7 +92,7 @@ Provides instructions for applying the security fixes.
 If you have PostgreSQL tools installed locally:
 
 ```bash
-psql -h db.kpwhwhtjspdbbqzfbptv.supabase.co \
+psql -h db.[YOUR-PROJECT].supabase.co \
      -d postgres \
      -U postgres \
      -f scripts/fix-function-search-path.sql

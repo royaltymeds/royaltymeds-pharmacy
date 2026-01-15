@@ -129,7 +129,7 @@ Your migration file includes:
 
 ### Option 2: PostgreSQL CLI
 ```bash
-psql -h db.fsaxrfjuyxetvbnoydns.supabase.co -U postgres -d postgres -f scripts/migration.sql
+psql -h db.[YOUR-PROJECT].supabase.co -U postgres -d postgres -f scripts/migration.sql
 ```
 
 See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for complete instructions.

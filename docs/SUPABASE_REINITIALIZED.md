@@ -12,8 +12,8 @@
 
 | Property | Value |
 |----------|-------|
-| **Project URL** | https://kpwhwhtjspdbbqzfbptv.supabase.co |
-| **Project Reference** | kpwhwhtjspdbbqzfbptv |
+| **Project URL** | [REDACTED] |
+| **Project Reference** | [REDACTED] |
 | **Region** | (Check Supabase dashboard) |
 | **Status** | ✅ Active & Connected |
 
@@ -38,7 +38,7 @@ SUPABASE_REF=<your_project_ref>
 
 1. ✅ Detected new credentials in `.env.local`
 2. ✅ Unlinked old project
-3. ✅ Linked new project: `kpwhwhtjspdbbqzfbptv`
+3. ✅ Linked new project: `[REDACTED]`
 4. ✅ Verified connection with Supabase-js
 5. ✅ Confirmed project is fresh and ready
 
@@ -80,7 +80,7 @@ node scripts/test-connection.js
 ## 📌 Key Differences from Old Project
 
 - **Fresh database** - no existing migrations
-- **New URL** - `kpwhwhtjspdbbqzfbptv` instead of `fsaxrfjuyxetvbnoydns`
+- **New URL** - `[REDACTED]` instead of `[PREVIOUS-PROJECT]`
 - **Clean slate** - ready for your `royaltymeds` schema
 
 ---

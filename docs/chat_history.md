@@ -46,8 +46,8 @@
 ### Phase 2: Supabase Project Migration (Days 2-3)
 **Objective:** Migrate from old Supabase project to new instance with updated schema
 
-**Initial Project:** fsaxrfjuyxetvbnoydns
-**New Project:** kpwhwhtjspdbbqzfbptv
+**Initial Project:** [REDACTED]
+**New Project:** [REDACTED]
 
 **Key Actions:**
 1. Created new Supabase project
@@ -196,7 +196,7 @@
 2. **Frontend Framework** - Next.js 15 with React 19
 3. **Styling** - Tailwind CSS v4.0 with full responsive design
 4. **TypeScript** - Strict mode enabled, types defined
-5. **Supabase Integration** - Connected to production instance (kpwhwhtjspdbbqzfbptv)
+5. **Supabase Integration** - Connected to production instance ([REDACTED])
 6. **Database** - 12-table schema with RLS and security functions
 7. **Security** - Function search paths locked, all tables have RLS policies
 8. **Performance** - Optimized RLS policies for efficient query evaluation, all foreign keys indexed
@@ -376,8 +376,8 @@ c:\websites\royaltymeds_prescript\
 - `SUPABASE_DB_URL` - Direct database connection
 
 ### Supabase Project
-- **URL:** https://kpwhwhtjspdbbqzfbptv.supabase.co
-- **Project Ref:** kpwhwhtjspdbbqzfbptv
+- **URL:** https://[REDACTED].supabase.co
+- **Project Ref:** [REDACTED]
 - **Schema:** public
 - **Auth:** Enabled
 - **RLS:** Active on all tables with optimized policies
@@ -604,8 +604,8 @@ node verify-migration.js
 ### Phase 2: Supabase Project Migration (Days 2-3)
 **Objective:** Migrate from old Supabase project to new instance with updated schema
 
-**Initial Project:** fsaxrfjuyxetvbnoydns
-**New Project:** kpwhwhtjspdbbqzfbptv
+**Initial Project:** [REDACTED]
+**New Project:** [REDACTED]
 
 **Key Actions:**
 1. Created new Supabase project
@@ -672,7 +672,7 @@ node verify-migration.js
 2. **Frontend Framework** - Next.js 15 with React 19
 3. **Styling** - Tailwind CSS v4.0 with full responsive design
 4. **TypeScript** - Strict mode enabled, types defined
-5. **Supabase Integration** - Connected to production instance (kpwhwhtjspdbbqzfbptv)
+5. **Supabase Integration** - Connected to production instance ([REDACTED])
 6. **Database** - 12-table schema with RLS and security functions
 7. **Documentation** - Comprehensive guides and checklists
 8. **Build Pipeline** - Production build tested and optimized
@@ -821,8 +821,8 @@ c:\websites\royaltymeds_prescript\
 - `SUPABASE_SERVICE_ROLE_KEY` - Service role key
 
 ### Supabase Project
-- **URL:** https://kpwhwhtjspdbbqzfbptv.supabase.co
-- **Project Ref:** kpwhwhtjspdbbqzfbptv
+- **URL:** https://[REDACTED].supabase.co
+- **Project Ref:** [REDACTED]
 - **Schema:** public
 - **Auth:** Enabled
 - **RLS:** Active on all tables

@@ -4,7 +4,7 @@
 
 ✅ **Supabase CLI**: Installed locally  
 ✅ **Authentication**: Complete with access token  
-✅ **Project Linked**: `fsaxrfjuyxetvbnoydns` (telemed-main)  
+✅ **Project Linked**: [REDACTED] (project-name)  
 ✅ **Project Region**: East US (Ohio)
 
 ---
@@ -12,11 +12,13 @@
 ## 🔐 Authentication Details
 
 ```
-Access Token: sbp_54bd0c8727b0d27ecb633461691857ac2faa228a
-Organization ID: mbfiwuztmdaongfoflpg
-Project Reference: fsaxrfjuyxetvbnoydns
-Project Name: telemed-main
+Access Token: [REDACTED]
+Organization ID: [REDACTED]
+Project Reference: [REDACTED]
+Project Name: [REDACTED]
 ```
+
+⚠️ **SENSITIVE INFORMATION REDACTED** - These credentials should never be stored in version control
 
 ---
 
@@ -24,11 +26,11 @@ Project Name: telemed-main
 
 | Property | Value |
 |----------|-------|
-| **Reference ID** | fsaxrfjuyxetvbnoydns |
-| **Project Name** | telemed-main |
+| **Reference ID** | [REDACTED] |
+| **Project Name** | [REDACTED] |
 | **Region** | East US (Ohio) |
-| **Created** | 2025-12-24 03:50:50 UTC |
-| **Organization** | mbfiwuztmdaongfoflpg |
+| **Created** | [REDACTED] |
+| **Organization** | [REDACTED] |
 | **Status** | ✅ Linked & Active |
 
 ---
@@ -98,14 +100,17 @@ psql $SUPABASE_DB_URL < scripts/migration.sql
 
 ## 🔗 Environment Variables
 
-Your `.env.local` contains:
+Your `.env.local` should contain:
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://fsaxrfjuyxetvbnoydns.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIs...
-SUPABASE_ACCESS_TOKEN=sbp_54bd0c8727b0d27ecb633461691857ac2faa228a
-SUPABASE_DB_URL=postgresql://postgres:***@db.fsaxrfjuyxetvbnoydns.supabase.co:5432/postgres
+NEXT_PUBLIC_SUPABASE_URL=[REDACTED]
+NEXT_PUBLIC_SUPABASE_ANON_KEY=[REDACTED]
+SUPABASE_SERVICE_ROLE_KEY=[REDACTED]
+SUPABASE_ACCESS_TOKEN=[REDACTED]
+SUPABASE_DB_URL=[REDACTED]
 ```
+
+⚠️ **NEVER commit `.env.local` to version control!**
+These credentials provide full access to your database and should be kept secure.
 
 ---
 

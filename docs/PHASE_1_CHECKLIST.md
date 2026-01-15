@@ -100,7 +100,7 @@ Choose ONE method:
 
 **B. PostgreSQL CLI**
 ```bash
-psql -h db.fsaxrfjuyxetvbnoydns.supabase.co \
+psql -h db.[YOUR-PROJECT].supabase.co \
   -U postgres -d postgres \
   -f scripts/migration.sql
 ```

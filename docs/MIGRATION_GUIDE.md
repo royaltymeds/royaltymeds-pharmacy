@@ -9,7 +9,7 @@ Since the migration script cannot connect directly from this environment, use **
 
 1. **Navigate to Supabase Dashboard**
    - Go to: https://app.supabase.com/
-   - Select your project "fsaxrfjuyxetvbnoydns"
+   - Select your project "[YOUR-PROJECT]"
 
 2. **Open SQL Editor**
    - Click **"SQL Editor"** in left sidebar
@@ -37,13 +37,13 @@ Since the migration script cannot connect directly from this environment, use **
 
 ```bash
 # 1. Set environment variable (Windows PowerShell)
-$env:PGPASSWORD = "KodeKeyAlpha"
+$env:PGPASSWORD = "[YOUR-DB-PASSWORD]"
 
 # 2. Run migration
-psql -h db.fsaxrfjuyxetvbnoydns.supabase.co -U postgres -d postgres -f scripts/migration.sql
+psql -h db.[YOUR-PROJECT].supabase.co -U postgres -d postgres -f scripts/migration.sql
 
 # 3. Verify
-psql -h db.fsaxrfjuyxetvbnoydns.supabase.co -U postgres -d postgres -c "\dn royaltymeds"
+psql -h db.[YOUR-PROJECT].supabase.co -U postgres -d postgres -c "\dn royaltymeds"
 ```
 
 ---
@@ -51,7 +51,7 @@ psql -h db.fsaxrfjuyxetvbnoydns.supabase.co -U postgres -d postgres -c "\dn roya
 ## Option 3: Supabase CLI (if installed)
 
 ```bash
-supabase db push --db-url "postgresql://postgres:KodeKeyAlpha@db.fsaxrfjuyxetvbnoydns.supabase.co:5432/postgres"
+supabase db push --db-url "postgresql://postgres:[PASSWORD]@db.[YOUR-PROJECT].supabase.co:5432/postgres"
 ```
 
 ---

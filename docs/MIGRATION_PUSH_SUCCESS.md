@@ -5,7 +5,7 @@
 
 ## Summary
 
-Database migration successfully pushed to Supabase project `kpwhwhtjspdbbqzfbptv` with the following schema:
+Database migration successfully pushed to Supabase project `[REDACTED]` with the following schema:
 
 ### Migration Details
 - **File:** `supabase/migrations/20260108000000_create_prescription_platform.sql`
@@ -108,7 +108,7 @@ This script checks all 12 core tables exist and are accessible.
 
 ## Environment
 
-- **Supabase Project:** kpwhwhtjspdbbqzfbptv
+- **Supabase Project:** [REDACTED]
 - **Region:** (as configured in Supabase dashboard)
 - **Database:** PostgreSQL (managed by Supabase)
 - **CLI Version:** supabase-cli

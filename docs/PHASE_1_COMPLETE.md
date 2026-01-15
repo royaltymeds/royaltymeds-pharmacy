@@ -102,8 +102,8 @@ scripts/           # Build & migration scripts
 
 **Option 2: PostgreSQL CLI**
 ```bash
-$env:PGPASSWORD = "KodeKeyAlpha"  # Windows
-psql -h db.fsaxrfjuyxetvbnoydns.supabase.co -U postgres -d postgres -f scripts/migration.sql
+$env:PGPASSWORD = "[YOUR-DB-PASSWORD]"  # Windows
+psql -h db.[YOUR-PROJECT].supabase.co -U postgres -d postgres -f scripts/migration.sql
 ```
 
 **Option 3: Node.js Script** (requires network access)
