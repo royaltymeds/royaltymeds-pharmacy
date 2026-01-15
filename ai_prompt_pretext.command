@@ -342,6 +342,66 @@ CREATE POLICY "select_access" ON table FOR SELECT USING (
 - Removed actual secrets from all documentation files
 **Lesson**: Public keys go in netlify.toml (build config), private keys ONLY in Netlify UI environment variables
 
+### Problem 18: 401 Unauthorized Errors on Doctor Prescriptions API (January 15, 2026)
+**Symptom**: Doctor pages return 401 "Unauthorized" when fetching prescription data; RLS policies appear correct but API returns 401
+**Root Cause**: Browser fetch calls were not including authentication cookies in request headers. Supabase client stores auth tokens in cookies via `CookieStorage`, but the browser's fetch API does not send cookies by default without explicit configuration.
+**Solution**:
+- Added `credentials: "include"` parameter to all fetch calls in protected pages:
+  - `/app/doctor/my-prescriptions/page.tsx`
+  - `/app/doctor/dashboard/page.tsx`
+  - `/app/doctor/patients/page.tsx`
+  - `/app/patient/home/page.tsx`
+  - `/app/patient/orders/page.tsx`
+  - `/app/patient/refills/page.tsx`
+  - `/app/patient/messages/page.tsx`
+- This ensures cookies are sent with every API request, allowing `createClientForApi()` to extract auth context
+- Example fix:
+  ```typescript
+  // Before: Missing credentials
+  const response = await fetch("/api/doctor/prescriptions");
+  
+  // After: Credentials included
+  const response = await fetch("/api/doctor/prescriptions", {
+    credentials: "include",
+  });
+  ```
+**Lesson**: Browser fetch API requires explicit `credentials: "include"` to send cookies. This is a security feature to prevent unintended cookie leakage. When using Supabase SSR pattern with CookieStorage, always include credentials in fetch calls.
+
+### Problem 19: Doctor Patients Page Showing All Users (January 15, 2026)
+**Symptom**: Doctor's patients list displayed both patient and doctor accounts instead of only patient accounts
+**Root Cause**: `/api/doctor/patients/route.ts` was querying the `users` table without role-based filtering. The RLS policies exist but don't filter by role type.
+**Solution**:
+- Added `.eq("role", "patient")` filter to the query in `/api/doctor/patients/route.ts`:
+  ```typescript
+  let query = supabase
+    .from("users")
+    .select("id, email, user_profiles(full_name, phone)")
+    .eq("role", "patient");  // Only fetch patients, not doctors or admins
+  ```
+- This ensures only patient accounts appear in the doctor's patient search results
+**Lesson**: RLS policies enforce access control by row, but application-level filtering (role, ownership) is still necessary for data relevance. Always filter query results by the intended role to prevent data leakage or confusion.
+
+### Problem 20: Sign-In Failures After Vercel Deployment (January 15, 2026)
+**Symptom**: Production sign-in page shows error "supabaseUrl is required" after deploying to Vercel
+**Root Cause**: Environment variables were not configured in Vercel dashboard. The `.env.local` file is local-only and is never committed to git; Vercel requires environment variables to be set through its project settings dashboard.
+**Solution**:
+- Manually set all required environment variables in Vercel dashboard (Settings > Environment Variables):
+  - `NEXT_PUBLIC_SUPABASE_URL` (public, safe in build config)
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (public, safe in build config)
+  - `SUPABASE_SERVICE_ROLE_KEY` (private, server-side only)
+  - `STORAGE_BUCKET` (public)
+  - `SUPABASE_DB_URL` (private, contains password)
+  - `SUPABASE_REF` (private project identifier)
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (public)
+- Applied to Production, Preview, and Development environments as needed
+- After setting variables, redeployed to Vercel
+- Sign-in working after environment variables configured
+**Lesson**: 
+- Hosting platforms (Vercel, Netlify, etc.) do not automatically pick up local environment files
+- Private keys must ONLY be set in the hosting platform's environment variable UI, never in build configs or .env files
+- Public keys (NEXT_PUBLIC_*) can be in build configs
+- Always test sign-in immediately after deployment to verify environment variables are loaded
+
 ---
 
 ## DATABASE ARCHITECTURE RULES
@@ -595,23 +655,43 @@ SUPABASE_SERVICE_ROLE_KEY=eyxxx... # Server-side only
 - ✅ Phase 5.5: Pharmacist Authentication & Account Management
 - ✅ Landing Page & Theme Complete: Green/Blue/White theme, all dashboards updated
 - ✅ **DEPLOYMENT COMPLETE**: Netlify production deployment with proper session persistence
+- ✅ **Auth Fixes Deployed (Jan 15)**: 401 errors resolved, credentials included in all fetch calls, doctor patients filtered by role, Vercel environment variables configured
 
 ### Build Status
-- Routes: 44 total
+- Routes: 45 total
 - TypeScript: 0 errors
 - ESLint: 0 errors
-- Build time: 6-7 seconds locally, 54+ seconds on Netlify (with plugin overhead)
+- Build time: 6-7 seconds locally
 - Bundle size: 106 kB (first load JS)
-- **Netlify Status**: ✅ Production live at https://royaltymeds-pharmacy.netlify.app
+- **Status**: ✅ Production live and tested with all auth fixes applied
 
-### Recent Deployment Fixes (January 12-13, 2026)
-1. ✅ Fixed build-time Supabase initialization errors with `force-dynamic` routes
-2. ✅ Populated netlify.toml with public Supabase environment variables
-3. ✅ Set private environment variables on Netlify via CLI (SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_URL, SUPABASE_REF)
-4. ✅ Fixed session persistence with CookieStorage in browser clients (admin, patient, doctor layouts)
-5. ✅ Fixed auth callback to use server client with proper cookie management
-6. ✅ Added Rx symbol favicon (green background, white text)
-7. ✅ All 43 routes compiling, no build errors on Netlify
+### Recent Fixes Applied (January 15, 2026)
+
+#### Authentication & API Updates
+1. ✅ **Fixed 401 Unauthorized on Doctor Pages**: Added `credentials: "include"` to all fetch calls
+   - Ensures auth cookies are sent with API requests
+   - Allows `createClientForApi()` to extract auth context from request cookies
+   - Applied to doctor prescriptions, dashboard, patients pages and patient home/orders/refills/messages
+
+2. ✅ **Fixed Doctor Patients Page Filtering**: Added role-based filtering to API
+   - `/api/doctor/patients/route.ts` now filters by `.eq("role", "patient")`
+   - Prevents doctors from seeing other doctor accounts in patient search
+   
+3. ✅ **Fixed Sign-In After Vercel Deployment**: Environment variables configured
+   - All required environment variables now set in Vercel dashboard
+   - Private keys (SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_URL) in Vercel UI only
+   - Public keys (NEXT_PUBLIC_*) available at build time
+   - Sign-in fully functional on production
+
+#### Files Modified
+- `app/doctor/my-prescriptions/page.tsx` - Added credentials to fetch
+- `app/doctor/dashboard/page.tsx` - Added credentials to fetch  
+- `app/doctor/patients/page.tsx` - Added credentials to fetch
+- `app/api/doctor/patients/route.ts` - Added role filtering
+- `app/patient/home/page.tsx` - Added credentials to fetch
+- `app/patient/orders/page.tsx` - Added credentials to fetch
+- `app/patient/refills/page.tsx` - Added credentials to fetch
+- `app/patient/messages/page.tsx` - Added credentials to fetch
 
 ### Authentication & Routing Updates
 - `/dashboard`: Now deprecated, redirects users with unavailable page + green "Back to Homepage" button
@@ -619,7 +699,8 @@ SUPABASE_SERVICE_ROLE_KEY=eyxxx... # Server-side only
 - `/admin-login`: Only admins allowed; non-admin authenticated users redirected to `/admin-login` for re-authentication
 - `/auth/callback`: Now uses server client with cookie management for proper session persistence
 - Authenticated users at `/login` or `/signup`: Redirected to homepage `/` instead of `/dashboard`
-- **Session Persistence**: ✅ Fixed - users stay logged in when navigating between pages on Netlify
+- **Session Persistence**: ✅ Fixed - users stay logged in when navigating between pages
+- **API Authentication**: ✅ Fixed - fetch calls now include credentials parameter for proper auth cookie transmission
 
 ### Default Credentials
 - **Pharmacist Login**: `/admin-login` (credentials stored securely)
@@ -772,6 +853,6 @@ The doctor dashboard should show pharmacist workflow metrics:
 
 ---
 
-**Last Updated:** January 13, 2026
+**Last Updated:** January 15, 2026 - Auth fixes deployed (401 errors, role filtering, Vercel env variables)
 **Maintained By:** AI Assistant (RoyaltyMeds Development Team)
 **Next Review:** After Phase 6 completion
