@@ -2,13 +2,11 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getSupabaseClient } from "@/lib/supabase-client";
 import { Upload, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function UploadPrescriptionPage() {
   const router = useRouter();
-  const supabase = getSupabaseClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
@@ -43,65 +41,25 @@ export default function UploadPrescriptionPage() {
     setError(null);
 
     try {
-      // Get current user
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("medicationName", medication);
+      formData.append("dosage", dosage);
+      formData.append("quantity", quantity);
+      formData.append("frequency", "as needed");
+      formData.append("duration", "");
+      formData.append("notes", notes);
+      formData.append("brandChoice", brandChoice || "");
 
-      if (userError || !user) {
-        setError("Authentication failed");
+      const response = await fetch("/api/patient/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || "Upload failed");
         return;
-      }
-
-      // Upload file to storage
-      const fileExtension = file.name.split(".").pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExtension}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("prescriptions")
-        .upload(fileName, file);
-
-      if (uploadError) {
-        setError("File upload failed: " + uploadError.message);
-        return;
-      }
-
-      // Get public URL
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("prescriptions").getPublicUrl(fileName);
-
-      // Create prescription record
-      const { data: prescription, error: dbError } = await (supabase
-        .from("prescriptions")
-        .insert({
-          patient_id: user.id,
-          medication_name: medication || null,
-          dosage: dosage || null,
-          quantity: quantity ? parseInt(quantity) : null,
-          notes: notes || null,
-          file_url: publicUrl,
-          status: "pending",
-        } as any)
-        .select()
-        .single() as any);
-
-      if (dbError) {
-        setError("Failed to create prescription: " + dbError.message);
-        return;
-      }
-
-      // Store brand/generic preference if selected
-      if (brandChoice && prescription) {
-        await (supabase
-          .from("prescription_items")
-          .insert({
-            prescription_id: prescription.id,
-            medication_name: medication,
-            quantity: quantity ? parseInt(quantity) : null,
-            brand_preferred: brandChoice === "brand",
-          } as any) as any);
       }
 
       setSuccess(true);
@@ -117,8 +75,9 @@ export default function UploadPrescriptionPage() {
       setTimeout(() => {
         router.push("/patient/home");
       }, 2000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+    } catch (error) {
+      console.error("Upload error:", error);
+      setError("An error occurred during upload");
     } finally {
       setIsLoading(false);
     }

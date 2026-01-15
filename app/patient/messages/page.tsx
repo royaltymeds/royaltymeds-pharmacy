@@ -2,38 +2,33 @@
 
 import { useState, useEffect } from "react";
 import { MessageSquareIcon, Loader } from "lucide-react";
-import { getSupabaseClient } from "@/lib/supabase-client";
 
 export default function MessagesPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadMessages() {
       try {
-        const supabase = getSupabaseClient();
-
-        // Get current user
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (!currentUser) {
-          setIsLoading(false);
-          return;
+        const response = await fetch("/api/patient/messages");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch messages");
         }
 
-        setUser(currentUser);
+        const data = await response.json();
+        setMessages(data.messages || []);
 
-        // Fetch messages for patient
-        const { data: messagesData } = await supabase
-          .from("messages")
-          .select("*")
-          .or(`sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`)
-          .order("created_at", { ascending: false });
-
-        setMessages(messagesData || []);
-        setIsLoading(false);
+        // Get current user ID for comparison
+        const { data: { user } } = await fetch("/api/auth/user").then((r) => r.json());
+        if (user) {
+          setCurrentUserId(user.id);
+        }
       } catch (error) {
         console.error("Error loading messages:", error);
+        setMessages([]);
+      } finally {
         setIsLoading(false);
       }
     }
@@ -47,19 +42,6 @@ export default function MessagesPage() {
         <div className="text-center">
           <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
           <p className="text-gray-600">Loading your messages...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    // If we can't get user, render a minimal page with error message
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-yellow-800">Unable to load messages. Please try refreshing the page.</p>
-          </div>
         </div>
       </div>
     );
@@ -81,14 +63,14 @@ export default function MessagesPage() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900">
-                    {message.sender_id === user.id ? "You" : "Pharmacy Support"}
+                    {message.sender_id === currentUserId ? "You" : "Pharmacy Support"}
                   </p>
                   <p className="text-gray-700 mt-2">{message.message_text}</p>
                   <p className="text-xs text-gray-500 mt-2">
                     {new Date(message.created_at).toLocaleString()}
                   </p>
                 </div>
-                {message.sender_id === user.id && (
+                {message.sender_id === currentUserId && (
                   <span className="text-xs font-medium text-green-600 ml-4">Sent</span>
                 )}
               </div>

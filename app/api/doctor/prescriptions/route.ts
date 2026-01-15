@@ -34,8 +34,7 @@ export async function GET(request: NextRequest) {
         instructions,
         notes,
         status,
-        created_at,
-        users(name, email)
+        created_at
       `
       )
       .eq("doctor_id", user.id);
@@ -53,8 +52,6 @@ export async function GET(request: NextRequest) {
     const formattedData = data?.map((prescription: any) => ({
       id: prescription.id,
       patientId: prescription.patient_id,
-      patientName: prescription.users?.name || "Unknown",
-      patientEmail: prescription.users?.email || "Unknown",
       medicationName: prescription.medication_name,
       dosage: prescription.dosage,
       quantity: prescription.quantity,

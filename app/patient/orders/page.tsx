@@ -3,52 +3,26 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PackageIcon, TruckIcon, CheckCircleIcon, Loader } from "lucide-react";
-import { getSupabaseClient } from "@/lib/supabase-client";
 
 export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadOrders() {
       try {
-        const supabase = getSupabaseClient();
-
-        // Get current user
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (!currentUser) {
-          setIsLoading(false);
-          return;
+        const response = await fetch("/api/patient/orders");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch orders");
         }
 
-        setUser(currentUser);
-
-        // Fetch orders with related data
-        const { data: ordersData } = await supabase
-          .from("orders")
-          .select(
-            `
-          id,
-          status,
-          total_amount,
-          currency,
-          payment_status,
-          delivery_type,
-          tracking_number,
-          estimated_delivery_date,
-          created_at,
-          prescription_id,
-          prescriptions(id, medication_name)
-        `
-          )
-          .eq("patient_id", currentUser.id)
-          .order("created_at", { ascending: false });
-
-        setOrders((ordersData as any) || []);
-        setIsLoading(false);
+        const data = await response.json();
+        setOrders(data.orders || []);
       } catch (error) {
         console.error("Error loading orders:", error);
+        setOrders([]);
+      } finally {
         setIsLoading(false);
       }
     }
@@ -62,19 +36,6 @@ export default function OrdersPage() {
         <div className="text-center">
           <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
           <p className="text-gray-600">Loading your orders...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    // If we can't get user, render a minimal page with error message
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-yellow-800">Unable to load orders. Please try refreshing the page.</p>
-          </div>
         </div>
       </div>
     );

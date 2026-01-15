@@ -3,11 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon, Loader } from "lucide-react";
-import { getSupabaseClient } from "@/lib/supabase-client";
 
 export default function PatientHomePage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -16,55 +14,20 @@ export default function PatientHomePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = getSupabaseClient();
-
-        // Get current user
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (!currentUser) {
-          setIsLoading(false);
-          return;
+        const response = await fetch("/api/patient/dashboard");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch dashboard data");
         }
 
-        setUser(currentUser);
-
-        // Fetch user profile
-        const { data: profileData } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("user_id", currentUser.id)
-          .single();
-        setProfile(profileData);
-
-        // Fetch recent prescriptions
-        const { data: prescriptionsData } = await supabase
-          .from("prescriptions")
-          .select("*, orders(id, status)")
-          .eq("patient_id", currentUser.id)
-          .order("created_at", { ascending: false })
-          .limit(3);
-        setPrescriptions(prescriptionsData || []);
-
-        // Fetch recent orders
-        const { data: ordersData } = await supabase
-          .from("orders")
-          .select("*, prescriptions(medication_name)")
-          .eq("patient_id", currentUser.id)
-          .order("created_at", { ascending: false })
-          .limit(3);
-        setOrders(ordersData || []);
-
-        // Fetch refill requests
-        const { data: refillsData } = await supabase
-          .from("refills")
-          .select("*, prescriptions(medication_name)")
-          .eq("patient_id", currentUser.id)
-          .eq("status", "pending")
-          .limit(3);
-        setRefills(refillsData || []);
-
-        setIsLoading(false);
+        const data = await response.json();
+        setProfile(data.profile);
+        setPrescriptions(data.prescriptions || []);
+        setOrders(data.orders || []);
+        setRefills(data.refills || []);
       } catch (error) {
         console.error("Error loading patient dashboard:", error);
+      } finally {
         setIsLoading(false);
       }
     }
@@ -78,19 +41,6 @@ export default function PatientHomePage() {
         <div className="text-center">
           <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
           <p className="text-gray-600">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    // If we can't get user, render a minimal page with error message
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-yellow-800">Unable to load dashboard. Please try refreshing the page.</p>
-          </div>
         </div>
       </div>
     );
