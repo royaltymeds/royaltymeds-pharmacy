@@ -1,340 +1,93 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FileText, Eye, Trash2, AlertCircle } from "lucide-react";
+import { Loader } from "lucide-react";
+import MyPrescriptionsClient from "./MyPrescriptionsClient";
 
 interface Prescription {
   id: string;
-  patientEmail: string;
-  patientName: string;
-  medicationName: string;
+  patient_id: string;
+  medication_name: string;
   dosage: string;
   quantity: string;
   frequency: string;
   duration: string;
+  instructions: string | null;
+  notes: string | null;
   status: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export default function MyPrescriptions() {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPrescriptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterStatus]);
+    const loadPrescriptions = async () => {
+      try {
+        const response = await fetch("/api/doctor/prescriptions");
 
-  const fetchPrescriptions = async () => {
-    try {
-      setLoading(true);
-      const url =
-        filterStatus === "all"
-          ? "/api/doctor/prescriptions"
-          : `/api/doctor/prescriptions?status=${filterStatus}`;
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Unauthorized - please log in again");
+          }
+          throw new Error("Failed to fetch prescriptions");
+        }
 
-      const response = await fetch(url);
-      if (response.ok) {
         const data = await response.json();
         setPrescriptions(data);
-      } else {
-        setError("Failed to load prescriptions");
+      } catch (err) {
+        console.error("Error loading prescriptions:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching prescriptions:", error);
-      setError("An error occurred while loading prescriptions");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const handleDelete = async (prescriptionId: string) => {
-    if (!confirm("Are you sure you want to delete this prescription?")) return;
+    loadPrescriptions();
+  }, []);
 
-    try {
-      const response = await fetch(`/api/doctor/prescriptions/${prescriptionId}`, {
-        method: "DELETE",
-      });
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-600">Loading prescriptions...</p>
+        </div>
+      </div>
+    );
+  }
 
-      if (response.ok) {
-        setPrescriptions(prescriptions.filter((p) => p.id !== prescriptionId));
-      } else {
-        setError("Failed to delete prescription");
-      }
-    } catch (error) {
-      console.error("Error deleting prescription:", error);
-      setError("An error occurred while deleting the prescription");
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow p-6 max-w-md w-full text-center">
+          <h2 className="text-lg font-semibold text-red-600 mb-2">Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Link
+            href="/doctor/dashboard"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6 border-l-4 border-blue-600">
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border-l-4 border-blue-600">
         <h1 className="text-lg sm:text-2xl font-bold text-gray-900">My Prescriptions</h1>
         <p className="text-xs sm:text-sm text-gray-600 mt-2">
           Track and manage all prescriptions submitted to the pharmacy
         </p>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 sm:gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-red-900 text-sm sm:text-base">Error</h3>
-            <p className="text-red-700 text-xs sm:text-sm mt-1">{error}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4 sm:mb-6">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setFilterStatus("all")}
-            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition ${
-              filterStatus === "all"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilterStatus("pending")}
-            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition ${
-              filterStatus === "pending"
-                ? "bg-yellow-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            Pending
-          </button>
-          <button
-            onClick={() => setFilterStatus("approved")}
-            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition ${
-              filterStatus === "approved"
-                ? "bg-green-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            Approved
-          </button>
-          <button
-            onClick={() => setFilterStatus("rejected")}
-            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition ${
-              filterStatus === "rejected"
-                ? "bg-red-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            Rejected
-          </button>
-        </div>
-      </div>
-
-      {/* Prescriptions List */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="text-gray-600 mt-4 text-sm sm:text-base">Loading prescriptions...</p>
-          </div>
-        ) : prescriptions.length === 0 ? (
-          <div className="p-6 sm:p-8 text-center">
-            <FileText className="h-10 sm:h-12 w-10 sm:w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-base sm:text-lg font-medium text-gray-900">
-              No prescriptions found
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600 mt-2">
-              {filterStatus === "all"
-                ? "You haven't submitted any prescriptions yet."
-                : `You have no ${filterStatus} prescriptions.`}
-            </p>
-            <Link
-              href="/doctor/submit-prescription"
-              className="inline-block mt-4 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Submit Prescription
-            </Link>
-          </div>
-        ) : (
-          <div className="hidden sm:block overflow-x-auto">
-            {/* Table view for tablet+ */}
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Patient
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Medication
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Dosage
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Frequency
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Status
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Submitted
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-right text-xs md:text-sm font-semibold text-gray-900">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {prescriptions.map((prescription) => (
-                  <tr key={prescription.id} className="hover:bg-gray-50">
-                    <td className="px-4 md:px-6 py-4 text-xs md:text-sm text-gray-900">
-                      <div>
-                        <p className="font-medium">
-                          {prescription.patientName || "Unknown"}
-                        </p>
-                        <p className="text-gray-500 text-xs">
-                          {prescription.patientEmail}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-4 md:px-6 py-4 text-xs md:text-sm text-gray-900 truncate">
-                      {prescription.medicationName}
-                    </td>
-                    <td className="px-4 md:px-6 py-4 text-xs md:text-sm text-gray-900 truncate">
-                      {prescription.dosage}
-                    </td>
-                    <td className="px-4 md:px-6 py-4 text-xs md:text-sm text-gray-900 truncate">
-                      {prescription.frequency}
-                    </td>
-                    <td className="px-4 md:px-6 py-4">
-                      <span
-                        className={`inline-block px-2 md:px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                          prescription.status
-                        )}`}
-                      >
-                        {prescription.status.charAt(0).toUpperCase() +
-                          prescription.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-4 md:px-6 py-4 text-xs md:text-sm text-gray-500">
-                      {new Date(prescription.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 md:px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded text-xs md:text-sm">
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {prescription.status === "pending" && (
-                          <button
-                            onClick={() => handleDelete(prescription.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded text-xs md:text-sm"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Card view for mobile (only shown on sm and below) */}
-        {!loading && prescriptions.length > 0 && (
-          <div className="sm:hidden divide-y divide-gray-200">
-            {prescriptions.map((prescription) => (
-              <div key={prescription.id} className="p-4 hover:bg-gray-50 space-y-3">
-                <div className="flex justify-between items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">
-                      {prescription.patientName || "Unknown"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {prescription.patientEmail}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${getStatusColor(
-                      prescription.status
-                    )}`}
-                  >
-                    {prescription.status.charAt(0).toUpperCase() +
-                      prescription.status.slice(1)}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-xs text-gray-500">Medication</p>
-                    <p className="text-gray-900 font-medium truncate">
-                      {prescription.medicationName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Dosage</p>
-                    <p className="text-gray-900 font-medium truncate">
-                      {prescription.dosage}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Frequency</p>
-                    <p className="text-gray-900 font-medium truncate">
-                      {prescription.frequency}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Submitted</p>
-                    <p className="text-gray-900 font-medium">
-                      {new Date(prescription.createdAt).toLocaleDateString(
-                        undefined,
-                        { month: "short", day: "numeric" }
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button className="flex-1 p-2 text-blue-600 hover:bg-blue-50 rounded text-xs font-medium">
-                    <Eye className="h-4 w-4 inline mr-1" />
-                    View
-                  </button>
-                  {prescription.status === "pending" && (
-                    <button
-                      onClick={() => handleDelete(prescription.id)}
-                      className="flex-1 p-2 text-red-600 hover:bg-red-50 rounded text-xs font-medium"
-                    >
-                      <Trash2 className="h-4 w-4 inline mr-1" />
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <MyPrescriptionsClient initialPrescriptions={prescriptions} />
     </div>
   );
 }

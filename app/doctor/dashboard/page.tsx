@@ -1,42 +1,70 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Loader, FileText, Users, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import {
-  FileText,
-  Users,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-} from "lucide-react";
+
+interface DashboardStats {
+  totalPrescriptions: number;
+  pendingApproval: number;
+  approved: number;
+  rejected: number;
+  totalPatients: number;
+}
 
 export default function DoctorDashboard() {
-  const [stats, setStats] = useState({
-    totalPrescriptions: 0,
-    pendingApproval: 0,
-    approved: 0,
-    rejected: 0,
-    totalPatients: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const loadStats = async () => {
       try {
         const response = await fetch("/api/doctor/stats");
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Unauthorized - please log in again");
+          }
+          throw new Error("Failed to fetch dashboard data");
         }
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
+
+        const data = await response.json();
+        setStats(data);
+      } catch (err) {
+        console.error("Error loading stats:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchStats();
+    loadStats();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow p-6 max-w-md w-full text-center">
+          <h2 className="text-lg font-semibold text-red-600 mb-2">Error</h2>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
 
   const quickActions = [
     {
@@ -89,7 +117,7 @@ export default function DoctorDashboard() {
                 Total
               </p>
               <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
-                {loading ? "-" : stats.totalPrescriptions}
+                {stats.totalPrescriptions}
               </p>
             </div>
             <FileText className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
@@ -104,7 +132,7 @@ export default function DoctorDashboard() {
                 Pending
               </p>
               <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
-                {loading ? "-" : stats.pendingApproval}
+                {stats.pendingApproval}
               </p>
             </div>
             <Clock className="h-8 w-8 md:h-10 md:w-10 text-yellow-600 flex-shrink-0" />
@@ -117,7 +145,7 @@ export default function DoctorDashboard() {
             <div>
               <p className="text-gray-500 text-xs md:text-sm font-medium">Approved</p>
               <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
-                {loading ? "-" : stats.approved}
+                {stats.approved}
               </p>
             </div>
             <CheckCircle className="h-8 w-8 md:h-10 md:w-10 text-green-600 flex-shrink-0" />
@@ -130,7 +158,7 @@ export default function DoctorDashboard() {
             <div>
               <p className="text-gray-500 text-xs md:text-sm font-medium">Rejected</p>
               <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
-                {loading ? "-" : stats.rejected}
+                {stats.rejected}
               </p>
             </div>
             <AlertCircle className="h-8 w-8 md:h-10 md:w-10 text-red-600 flex-shrink-0" />
@@ -143,7 +171,7 @@ export default function DoctorDashboard() {
             <div>
               <p className="text-gray-500 text-xs md:text-sm font-medium">Patients</p>
               <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
-                {loading ? "-" : stats.totalPatients}
+                {stats.totalPatients}
               </p>
             </div>
             <Users className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
