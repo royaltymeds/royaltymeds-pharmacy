@@ -20,7 +20,9 @@ export default function DoctorDashboard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const response = await fetch("/api/doctor/stats");
+        const response = await fetch("/api/doctor/stats", {
+          credentials: "include",
+        });
 
         if (!response.ok) {
           if (response.status === 401) {

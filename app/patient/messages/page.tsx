@@ -11,7 +11,9 @@ export default function MessagesPage() {
   useEffect(() => {
     async function loadMessages() {
       try {
-        const response = await fetch("/api/patient/messages");
+        const response = await fetch("/api/patient/messages", {
+          credentials: "include",
+        });
         
         if (!response.ok) {
           throw new Error("Failed to fetch messages");

@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("users")
-      .select("id, email, user_profiles(full_name, phone)");
+      .select("id, email, user_profiles(full_name, phone)")
+      .eq("role", "patient");  // Only fetch patients, not doctors or admins
 
     if (search) {
       query = query.or(

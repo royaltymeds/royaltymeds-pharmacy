@@ -27,7 +27,9 @@ export default function MyPrescriptions() {
   useEffect(() => {
     const loadPrescriptions = async () => {
       try {
-        const response = await fetch("/api/doctor/prescriptions");
+        const response = await fetch("/api/doctor/prescriptions", {
+          credentials: "include",
+        });
 
         if (!response.ok) {
           if (response.status === 401) {

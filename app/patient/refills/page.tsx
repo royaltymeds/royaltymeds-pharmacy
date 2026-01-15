@@ -11,7 +11,9 @@ export default function RefillsPage() {
   useEffect(() => {
     async function loadRefills() {
       try {
-        const response = await fetch("/api/patient/refills");
+        const response = await fetch("/api/patient/refills", {
+          credentials: "include",
+        });
         
         if (!response.ok) {
           throw new Error("Failed to fetch refills");

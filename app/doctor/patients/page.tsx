@@ -20,7 +20,9 @@ export default function Patients() {
   useEffect(() => {
     const loadPatients = async () => {
       try {
-        const response = await fetch("/api/doctor/patients");
+        const response = await fetch("/api/doctor/patients", {
+          credentials: "include",
+        });
 
         if (!response.ok) {
           if (response.status === 401) {

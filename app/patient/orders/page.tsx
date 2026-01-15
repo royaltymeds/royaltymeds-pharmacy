@@ -11,7 +11,9 @@ export default function OrdersPage() {
   useEffect(() => {
     async function loadOrders() {
       try {
-        const response = await fetch("/api/patient/orders");
+        const response = await fetch("/api/patient/orders", {
+          credentials: "include",
+        });
         
         if (!response.ok) {
           throw new Error("Failed to fetch orders");

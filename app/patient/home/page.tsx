@@ -14,7 +14,9 @@ export default function PatientHomePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const response = await fetch("/api/patient/dashboard");
+        const response = await fetch("/api/patient/dashboard", {
+          credentials: "include",
+        });
         
         if (!response.ok) {
           throw new Error("Failed to fetch dashboard data");
