@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
 
@@ -18,9 +18,8 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    const isRefresh = dashboardData !== null;
-    if (isRefresh) {
+  const fetchData = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
       setIsRefreshing(true);
     } else {
       setIsLoading(true);
@@ -38,30 +37,34 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       // Fall back to initial data if fetch fails
-      if (!isRefresh && initialData) {
+      if (!isManualRefresh && initialData) {
         setDashboardData(initialData);
       }
     } finally {
       setIsLoading(false);
-      if (isRefresh) {
+      if (isManualRefresh) {
         setIsRefreshing(false);
       }
     }
-  }, [dashboardData, initialData]);
+  };
 
-  // Fetch data on mount and when window focuses or visibility changes
+  // Fetch data on mount only
   useEffect(() => {
-    // Fetch on mount
-    fetchData();
+    fetchData(false);
+  }, []);
 
+  // Handle visibility and focus changes to refresh data
+  useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchData();
+      if (document.visibilityState === "visible" && dashboardData) {
+        fetchData(true);
       }
     };
 
     const handleFocus = () => {
-      fetchData();
+      if (dashboardData) {
+        fetchData(true);
+      }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -71,7 +74,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [fetchData]);
+  }, [dashboardData]);
 
   if (isLoading || !dashboardData) {
     return (
@@ -99,7 +102,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
-              onClick={fetchData}
+              onClick={() => fetchData(true)}
               disabled={isRefreshing}
               className="text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap px-3 py-2 rounded hover:bg-green-50 disabled:opacity-50 flex items-center gap-1"
             >
