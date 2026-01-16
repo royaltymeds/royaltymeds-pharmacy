@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { CheckCircle, X, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase-client";
 
 export default function AdminRefills() {
   const [refills, setRefills] = useState<any[]>([]);
@@ -11,15 +10,16 @@ export default function AdminRefills() {
   useEffect(() => {
     const loadRefills = async () => {
       try {
-        const supabase = getSupabaseClient();
+        const response = await fetch("/api/admin/refills", {
+          credentials: "include",
+        });
 
-        // Fetch all refills with patient and prescription info
-        const { data } = await supabase
-          .from("refills")
-          .select("*, user_profiles(full_name), prescriptions(medication_name, dosage)")
-          .order("created_at", { ascending: false });
+        if (!response.ok) {
+          throw new Error("Failed to fetch refills");
+        }
 
-        setRefills(data || []);
+        const data = await response.json();
+        setRefills(data.refills || []);
       } catch (error) {
         console.error("Error loading refills:", error);
         setRefills([]);

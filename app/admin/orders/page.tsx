@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Truck, Package, CheckCircle, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase-client";
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -11,15 +10,16 @@ export default function AdminOrders() {
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        const supabase = getSupabaseClient();
+        const response = await fetch("/api/admin/orders", {
+          credentials: "include",
+        });
 
-        // Fetch all orders with patient and prescription info
-        const { data } = await supabase
-          .from("orders")
-          .select("*, user_profiles(full_name), prescriptions(medication_name)")
-          .order("created_at", { ascending: false });
+        if (!response.ok) {
+          throw new Error("Failed to fetch orders");
+        }
 
-        setOrders(data || []);
+        const data = await response.json();
+        setOrders(data.orders || []);
       } catch (error) {
         console.error("Error loading orders:", error);
         setOrders([]);

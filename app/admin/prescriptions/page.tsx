@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { CheckCircle, X, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase-client";
 
 export default function AdminPrescriptions() {
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
@@ -11,15 +10,16 @@ export default function AdminPrescriptions() {
   useEffect(() => {
     const loadPrescriptions = async () => {
       try {
-        const supabase = getSupabaseClient();
+        const response = await fetch("/api/admin/prescriptions", {
+          credentials: "include",
+        });
 
-        // Fetch all prescriptions with patient info
-        const { data } = await supabase
-          .from("prescriptions")
-          .select("*, user_profiles(full_name)")
-          .order("created_at", { ascending: false });
+        if (!response.ok) {
+          throw new Error("Failed to fetch prescriptions");
+        }
 
-        setPrescriptions(data || []);
+        const data = await response.json();
+        setPrescriptions(data.prescriptions || []);
       } catch (error) {
         console.error("Error loading prescriptions:", error);
         setPrescriptions([]);
