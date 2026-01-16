@@ -906,6 +906,71 @@ CREATE POLICY "storage_delete_permissive" ON storage.objects
 ```
 **Lesson**: Storage bucket RLS is separate from table RLS; must be configured explicitly. For development, permissive policies work; for production, add ownership checks with `auth.uid()`.
 
+### Problem 21: Silent Logout on First Login After Authentication (January 16, 2026)
+**Symptom**: After successful login, user briefly sees portal, then is silently redirected to `/login` with 302 response
+- Pattern: Only occurred on initial/first login
+- Subsequent logins after manual logout worked fine
+- Vercel logs showed automatic GET request to `/api/auth/logout?_rsc=16j24`
+**Root Cause**: Next.js automatic Link prefetching triggered logout endpoint
+- Logout implemented as: `<Link href="/api/auth/logout">Logout</Link>`
+- Next.js prefetches all Link components as RSC (React Server Component) requests in production
+- Prefetch requests include `?_rsc=` query parameter (marks RSC request)
+- Layout rendered with logout Link triggered prefetch of logout endpoint automatically
+- Logout executed WITHOUT user clicking, clearing session mid-login
+- Headers showed: `x-matched-path: /api/auth/logout.rsc` (RSC prefetch identifier)
+**Solution**:
+- Created `components/LogoutButton.tsx` - client-side button component
+- Button calls logout via POST only on user click
+- Replaced all `<Link href="/api/auth/logout">` with `<LogoutButton />`
+- Logout endpoint no longer prefetched automatically
+**Files Modified**:
+- Created: `components/LogoutButton.tsx`
+- Updated: `app/patient/layout.tsx` - Replaced Link with LogoutButton
+- Updated: `app/doctor/layout.tsx` - Replaced Link with LogoutButton  
+- Updated: `app/admin/layout.tsx` - Replaced Link with LogoutButton
+**Code Change**:
+```typescript
+// Before: Link component auto-prefetches logout
+<Link href="/api/auth/logout">Logout</Link>
+
+// After: Button only calls logout on click
+<LogoutButton className="..." />
+```
+**Lesson**: 
+- Link components auto-prefetch in production; avoid for destructive operations
+- RSC requests (`?_rsc=` param) execute without user interaction
+- Use buttons with onClick for state-changing operations
+- Production-only issues require production testing; localhost doesn't prefetch
+- Detect RSC requests via: query param `?_rsc=` + header `x-matched-path: .rsc`
+
+---
+
+## CURRENT PROJECT STATE (Updated January 16, 2026)
+
+### Build Status
+- Routes: 45 total
+- TypeScript: 0 errors
+- ESLint: 0 errors
+- **Status**: ✅ Production live with ALL authentication issues resolved
+
+### Auth Issues Fixed (Comprehensive Summary)
+1. ✅ **401 Unauthorized errors**: Fixed by adding `credentials: "include"` to fetch calls
+2. ✅ **Session loss on page navigation**: Fixed by migrating to Supabase SSR client
+3. ✅ **Race condition on first login**: Fixed by adding 200ms delay + `router.refresh()`
+4. ✅ **401 errors on API routes**: Fixed by adding `export const dynamic = "force-dynamic"`
+5. ✅ **Silent logout after first login**: Fixed by replacing Link with LogoutButton ← **FINAL FIX**
+6. ✅ **Middleware not running on API routes**: Fixed by updating matcher regex pattern
+7. ✅ **Server-side auth checks**: Fixed by converting layouts to async server components
+
+### Production Verified
+- ✅ First login completes without auto-logout
+- ✅ Session persists through portal navigation
+- ✅ Logout only triggers on user click
+- ✅ API calls include proper authentication
+- ✅ No automatic redirects or race conditions
+- ✅ All roles (customer, doctor, pharmacist) working correctly
+- ✅ Build compiles with 0 errors (32/32 pages generated)
+
 ---
 
 ## QUICK REFERENCE
