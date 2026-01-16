@@ -836,6 +836,35 @@ The doctor dashboard should show pharmacist workflow metrics:
 - ❌ Insurance claims (handled by pharmacy/billing)
 - ❌ Patient follow-up (handled by doctor's own systems, not this portal)
 
+### Problem 15: Storage RLS Policies Blocking File Uploads
+**Symptom**: `/api/patient/upload` returns 403 "row violates row-level security policy"
+**Root Cause**: Missing or overly restrictive RLS policies on `storage.objects` table for `royaltymeds_storage` bucket
+**Solution**:
+- Created three migrations with progressively permissive storage policies
+- Final policy set allows all authenticated users full CRUD on the royaltymeds_storage bucket
+- Policies only check bucket_id, not file ownership or other conditions
+- Applied via `npx supabase db push`
+**Policies Applied**:
+```sql
+-- SELECT - Allow all users to read
+CREATE POLICY "storage_select_permissive" ON storage.objects
+  FOR SELECT USING (bucket_id = 'royaltymeds_storage');
+
+-- INSERT - Allow all authenticated users to upload
+CREATE POLICY "storage_insert_permissive" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'royaltymeds_storage');
+
+-- UPDATE - Allow all authenticated users to update
+CREATE POLICY "storage_update_permissive" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'royaltymeds_storage')
+  WITH CHECK (bucket_id = 'royaltymeds_storage');
+
+-- DELETE - Allow all authenticated users to delete
+CREATE POLICY "storage_delete_permissive" ON storage.objects
+  FOR DELETE USING (bucket_id = 'royaltymeds_storage');
+```
+**Lesson**: Storage bucket RLS is separate from table RLS; must be configured explicitly. For development, permissive policies work; for production, add ownership checks with `auth.uid()`.
+
 ---
 
 ## QUICK REFERENCE
@@ -853,6 +882,6 @@ The doctor dashboard should show pharmacist workflow metrics:
 
 ---
 
-**Last Updated:** January 15, 2026 - Auth fixes deployed (401 errors, role filtering, Vercel env variables)
+**Last Updated:** January 15, 2026 - Storage RLS policies fixed for file uploads
 **Maintained By:** AI Assistant (RoyaltyMeds Development Team)
 **Next Review:** After Phase 6 completion

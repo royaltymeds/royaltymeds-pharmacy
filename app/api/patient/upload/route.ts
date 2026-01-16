@@ -55,49 +55,83 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const medicationName = formData.get("medicationName") as string;
-    const dosage = formData.get("dosage") as string;
-    const quantity = formData.get("quantity") as string;
-    const frequency = formData.get("frequency") as string;
-    const duration = formData.get("duration") as string;
+    const medicationsString = formData.get("medications") as string;
     const notes = formData.get("notes") as string;
-    const brandChoice = formData.get("brandChoice") as string;
 
-    if (!file || !medicationName) {
+    if (!file) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Convert file to base64 for storage
+    let medications: any[] = [];
+    if (medicationsString) {
+      try {
+        medications = JSON.parse(medicationsString);
+      } catch (e) {
+        console.error("Failed to parse medications:", e);
+      }
+    }
+
+    // Upload file to Supabase Storage
+    const fileName = `${user.id}/${Date.now()}-${file.name}`;
     const bytes = await file.arrayBuffer();
-    const base64 = Buffer.from(bytes).toString("base64");
+    
+    const { error: uploadError } = await supabase.storage
+      .from("royaltymeds_storage")
+      .upload(fileName, bytes, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) throw uploadError;
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("royaltymeds_storage")
+      .getPublicUrl(fileName);
+
+    const fileUrl = urlData.publicUrl;
 
     // Store prescription in database
-    const { data, error } = await supabase
+    const { data: prescriptionData, error: prescriptionError } = await supabase
       .from("prescriptions")
       .insert([
         {
           patient_id: user.id,
-          medication_name: medicationName,
-          dosage,
-          quantity,
-          frequency,
-          duration,
+          medication_name: medications[0]?.name || null,
+          dosage: medications[0]?.dosage || null,
+          quantity: medications[0]?.quantity || null,
           notes,
-          brand_choice: brandChoice,
-          file_data: base64,
-          file_name: file.name,
+          file_url: fileUrl,
           status: "pending",
           created_at: new Date().toISOString(),
         },
       ])
       .select();
 
-    if (error) throw error;
+    if (prescriptionError) throw prescriptionError;
 
-    return NextResponse.json({ success: true, prescription: data?.[0] });
+    // Insert additional medications if more than one
+    if (medications.length > 1 && prescriptionData?.[0]) {
+      const prescriptionId = prescriptionData[0].id;
+      const additionalMeds = medications.slice(1).map((med: any) => ({
+        prescription_id: prescriptionId,
+        medication_name: med.name,
+        dosage: med.dosage,
+        quantity: med.quantity,
+        brand_preferred: med.brandChoice === "brand",
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("prescription_items")
+        .insert(additionalMeds);
+
+      if (itemsError) throw itemsError;
+    }
+
+    return NextResponse.json({ success: true, prescription: prescriptionData?.[0] });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
