@@ -3,16 +3,7 @@ import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
 export async function createServerSupabaseClient() {
-  // Try to get cookies, but always continue
-  let cookieStore: any = null;
-  
-  try {
-    cookieStore = await cookies();
-  } catch (error) {
-    // In some async contexts (like prerendering), cookies() might fail
-    // We'll use an empty fallback and rely on client-side auth
-    // This is expected during static generation and not an error
-  }
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,25 +11,17 @@ export async function createServerSupabaseClient() {
     {
       cookies: {
         getAll() {
-          if (!cookieStore) {
-            return [];
-          }
-          try {
-            return cookieStore.getAll();
-          } catch (e) {
-            return [];
-          }
+          return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
-          if (!cookieStore) {
-            return;
-          }
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options as CookieOptions);
             });
           } catch (error) {
-            // Silently fail - cookies might not be writable in all contexts
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
           }
         },
       },
