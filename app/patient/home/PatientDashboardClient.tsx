@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
 
@@ -14,46 +15,16 @@ interface DashboardData {
 }
 
 export default function PatientDashboardClient({ initialData }: { initialData: DashboardData }) {
-  const [dashboardData, setDashboardData] = useState<DashboardData>(initialData);
+  const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadDashboardData = useCallback(async () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    try {
-      const response = await fetch("/api/patient/dashboard", {
-        credentials: "include",
-      });
+    router.refresh();
+    setIsRefreshing(false);
+  };
 
-      if (response.ok) {
-        const data = await response.json();
-        setDashboardData(data);
-      } else {
-        console.error("Failed to fetch dashboard:", response.statusText);
-      }
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  // Load data on mount
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  if (!dashboardData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <RefreshCwIcon className="h-8 w-8 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const { profile, prescriptions, pendingPrescriptions, orders } = dashboardData;
+  const { profile, prescriptions, pendingPrescriptions, orders } = initialData;
 
   return (
     <div className="space-y-6">
@@ -68,7 +39,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
-              onClick={loadDashboardData}
+              onClick={handleRefresh}
               disabled={isRefreshing}
               className="text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap px-3 py-2 rounded hover:bg-green-50 disabled:opacity-50 flex items-center gap-1"
             >
