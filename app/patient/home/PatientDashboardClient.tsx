@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
 
@@ -18,7 +18,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     const isRefresh = dashboardData !== null;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -47,7 +47,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
         setIsRefreshing(false);
       }
     }
-  };
+  }, [dashboardData, initialData]);
 
   // Fetch data on mount and when window focuses or visibility changes
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, []);
+  }, [fetchData]);
 
   if (isLoading || !dashboardData) {
     return (
