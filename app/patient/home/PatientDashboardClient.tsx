@@ -14,17 +14,11 @@ interface DashboardData {
 }
 
 export default function PatientDashboardClient({ initialData }: { initialData: DashboardData }) {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<DashboardData>(initialData);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchData = async (isManualRefresh = false) => {
-    if (isManualRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-    
+  const loadDashboardData = async () => {
+    setIsRefreshing(true);
     try {
       const response = await fetch("/api/patient/dashboard", {
         credentials: "include",
@@ -35,48 +29,18 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
         setDashboardData(data);
       }
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      // Fall back to initial data if fetch fails
-      if (!isManualRefresh && initialData) {
-        setDashboardData(initialData);
-      }
+      console.error("Error loading dashboard data:", error);
     } finally {
-      setIsLoading(false);
-      if (isManualRefresh) {
-        setIsRefreshing(false);
-      }
+      setIsRefreshing(false);
     }
   };
 
-  // Fetch data on mount only
+  // Load data on mount
   useEffect(() => {
-    fetchData(false);
+    loadDashboardData();
   }, []);
 
-  // Handle visibility and focus changes to refresh data
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && dashboardData) {
-        fetchData(true);
-      }
-    };
-
-    const handleFocus = () => {
-      if (dashboardData) {
-        fetchData(true);
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-    
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [dashboardData]);
-
-  if (isLoading || !dashboardData) {
+  if (!dashboardData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -102,7 +66,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
-              onClick={() => fetchData(true)}
+              onClick={loadDashboardData}
               disabled={isRefreshing}
               className="text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap px-3 py-2 rounded hover:bg-green-50 disabled:opacity-50 flex items-center gap-1"
             >
