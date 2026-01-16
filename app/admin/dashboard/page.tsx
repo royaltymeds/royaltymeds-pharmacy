@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AlertCircle, CheckCircle, Clock, TrendingUp, Loader } from "lucide-react";
-import { getSupabaseClient } from "@/lib/supabase-client";
 
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,49 +14,21 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const supabase = getSupabaseClient();
-
-        // Fetch dashboard statistics
-        const { data: pendingPrescriptionsData } = await supabase
-          .from("prescriptions")
-          .select("*")
-          .eq("status", "pending")
-          .limit(5);
-
-        const { data: allPrescriptions } = await supabase
-          .from("prescriptions")
-          .select("status");
-
-        const { data: allOrders } = await supabase
-          .from("orders")
-          .select("status");
-
-        const { data: pendingRefillsData } = await supabase
-          .from("refills")
-          .select("*")
-          .eq("status", "pending")
-          .limit(5);
-
-        // Calculate statistics
-        setPendingPrescriptions(pendingPrescriptionsData || []);
-        
-        setPrescriptionStats({
-          pending: allPrescriptions?.filter((p: any) => p.status === "pending").length || 0,
-          approved: allPrescriptions?.filter((p: any) => p.status === "approved").length || 0,
-          rejected: allPrescriptions?.filter((p: any) => p.status === "rejected").length || 0,
-          total: allPrescriptions?.length || 0,
+        const response = await fetch("/api/admin/dashboard", {
+          credentials: "include",
         });
 
-        setOrderStats({
-          pending: allOrders?.filter((o: any) => o.status === "pending").length || 0,
-          processing: allOrders?.filter((o: any) => o.status === "processing").length || 0,
-          delivered: allOrders?.filter((o: any) => o.status === "delivered").length || 0,
-          total: allOrders?.length || 0,
-        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch admin dashboard data");
+        }
 
-        setRefillStats({
-          pending: pendingRefillsData?.length || 0,
-        });
+        const data = await response.json();
+        setPrescriptionStats(data.prescriptionStats);
+        setOrderStats(data.orderStats);
+        setRefillStats(data.refillStats);
+        setPendingPrescriptions(data.pendingPrescriptions || []);
+      } catch (error) {
+        console.error("Error loading admin dashboard:", error);
       } finally {
         setIsLoading(false);
       }

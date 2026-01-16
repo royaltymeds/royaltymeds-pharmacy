@@ -8,6 +8,7 @@ export default function PatientHomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [pendingPrescriptions, setPendingPrescriptions] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [refills, setRefills] = useState<any[]>([]);
 
@@ -25,6 +26,7 @@ export default function PatientHomePage() {
         const data = await response.json();
         setProfile(data.profile);
         setPrescriptions(data.prescriptions || []);
+        setPendingPrescriptions(data.pendingPrescriptions || []);
         setOrders(data.orders || []);
         setRefills(data.refills || []);
       } catch (error) {
@@ -93,13 +95,13 @@ export default function PatientHomePage() {
           </div>
         </div>
 
-        {/* Refills */}
+        {/* Pending Prescriptions */}
         <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-yellow-500">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-xs md:text-sm font-medium">Pending</p>
               <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
-                {refills?.length || 0}
+                {pendingPrescriptions?.length || 0}
               </p>
             </div>
             <RefreshCwIcon className="h-8 w-8 md:h-10 md:w-10 text-yellow-500 flex-shrink-0" />
@@ -157,9 +159,9 @@ export default function PatientHomePage() {
         {/* Recent Prescriptions */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Prescriptions</h2>
-          {prescriptions && prescriptions.length > 0 ? (
+          {(prescriptions && prescriptions.length > 0) || (pendingPrescriptions && pendingPrescriptions.length > 0) ? (
             <div className="space-y-3">
-              {prescriptions.map((prescription) => (
+              {[...prescriptions, ...pendingPrescriptions].map((prescription) => (
                 <div
                   key={prescription.id}
                   className="border rounded-lg p-4 hover:bg-gray-50 transition flex items-center justify-between"

@@ -30,13 +30,22 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
-    // Fetch recent prescriptions
+    // Fetch active/approved prescriptions
     const { data: prescriptionsData } = await supabase
       .from("prescriptions")
       .select("*, orders(id, status)")
       .eq("patient_id", user.id)
+      .eq("status", "approved")
       .order("created_at", { ascending: false })
       .limit(3);
+
+    // Fetch pending prescriptions
+    const { data: pendingPrescriptionsData } = await supabase
+      .from("prescriptions")
+      .select("*")
+      .eq("patient_id", user.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
 
     // Fetch recent orders
     const { data: ordersData } = await supabase
@@ -58,6 +67,7 @@ export async function GET(request: NextRequest) {
       user,
       profile: profileData,
       prescriptions: prescriptionsData || [],
+      pendingPrescriptions: pendingPrescriptionsData || [],
       orders: ordersData || [],
       refills: refillsData || [],
     });
