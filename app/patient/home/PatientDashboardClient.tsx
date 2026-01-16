@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
 
@@ -17,7 +17,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
   const [dashboardData, setDashboardData] = useState<DashboardData>(initialData);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setIsRefreshing(true);
     try {
       const response = await fetch("/api/patient/dashboard", {
@@ -27,13 +27,15 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
       if (response.ok) {
         const data = await response.json();
         setDashboardData(data);
+      } else {
+        console.error("Failed to fetch dashboard:", response.statusText);
       }
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   // Load data on mount
   useEffect(() => {
