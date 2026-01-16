@@ -102,7 +102,7 @@ export default function AdminPrescriptions() {
                       {rx.id.slice(0, 8)}...
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
-                      {(rx.user_profiles as any)?.full_name || "Unknown"}
+                      {(rx.users as any)?.user_profiles?.full_name || "Unknown"}
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <span

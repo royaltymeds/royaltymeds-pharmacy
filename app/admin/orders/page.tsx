@@ -112,7 +112,7 @@ export default function AdminOrders() {
                       {order.id.slice(0, 8)}...
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
-                      {order.user_profiles?.full_name || "Unknown"}
+                      {order.users?.user_profiles?.full_name || "Unknown"}
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
                       {order.prescriptions?.medication_name || "N/A"}

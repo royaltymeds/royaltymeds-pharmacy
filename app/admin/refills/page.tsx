@@ -105,7 +105,7 @@ export default function AdminRefills() {
                       {refill.id.slice(0, 8)}...
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
-                      {refill.user_profiles?.full_name || "Unknown"}
+                      {refill.users?.user_profiles?.full_name || "Unknown"}
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
                       {refill.prescriptions?.medication_name || "Unknown"}

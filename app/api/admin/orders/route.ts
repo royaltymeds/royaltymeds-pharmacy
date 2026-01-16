@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     // Fetch all orders with patient and prescription info
     const { data: orders, error: ordersError } = await supabaseAdmin
       .from("orders")
-      .select("*, user_profiles(full_name), prescriptions(medication_name)")
+      .select("*, users!patient_id(user_profiles(full_name)), prescriptions(medication_name)")
       .order("created_at", { ascending: false });
 
     if (ordersError) {
