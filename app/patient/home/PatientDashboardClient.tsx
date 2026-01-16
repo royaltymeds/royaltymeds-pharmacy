@@ -14,11 +14,18 @@ interface DashboardData {
 }
 
 export default function PatientDashboardClient({ initialData }: { initialData: DashboardData }) {
-  const [dashboardData, setDashboardData] = useState<DashboardData>(initialData);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const refreshData = async () => {
-    setIsRefreshing(true);
+  const fetchData = async () => {
+    const isRefresh = dashboardData !== null;
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+    
     try {
       const response = await fetch("/api/patient/dashboard", {
         credentials: "include",
@@ -29,26 +36,32 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
         setDashboardData(data);
       }
     } catch (error) {
-      console.error("Error refreshing dashboard data:", error);
-      // Fall back to current data if refresh fails
+      console.error("Error fetching dashboard data:", error);
+      // Fall back to initial data if fetch fails
+      if (!isRefresh && initialData) {
+        setDashboardData(initialData);
+      }
     } finally {
-      setIsRefreshing(false);
+      setIsLoading(false);
+      if (isRefresh) {
+        setIsRefreshing(false);
+      }
     }
   };
 
-  // Refresh data on mount and when window focuses or visibility changes
+  // Fetch data on mount and when window focuses or visibility changes
   useEffect(() => {
-    // Refresh on mount
-    refreshData();
+    // Fetch on mount
+    fetchData();
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        refreshData();
+        fetchData();
       }
     };
 
     const handleFocus = () => {
-      refreshData();
+      fetchData();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -59,6 +72,17 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
       window.removeEventListener("focus", handleFocus);
     };
   }, []);
+
+  if (isLoading || !dashboardData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <RefreshCwIcon className="h-8 w-8 animate-spin text-green-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   const { profile, prescriptions, pendingPrescriptions, orders } = dashboardData;
 
@@ -75,7 +99,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
-              onClick={refreshData}
+              onClick={fetchData}
               disabled={isRefreshing}
               className="text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap px-3 py-2 rounded hover:bg-green-50 disabled:opacity-50 flex items-center gap-1"
             >
