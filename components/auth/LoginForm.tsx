@@ -63,6 +63,11 @@ export default function LoginForm() {
       const userRole = (userData as any)?.role || "patient";
       console.log("[LoginForm] User authenticated with role:", userRole);
 
+      // Give the Supabase client time to persist session cookies to HTTP layer
+      // This prevents a race condition where server-side auth check happens
+      // before client-side cookies are fully synced
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       // Redirect directly to portal - middleware + server-side redirect will handle auth check
       const redirectUrl =
         userRole === "doctor"
@@ -73,6 +78,9 @@ export default function LoginForm() {
 
       console.log("[LoginForm] Redirecting to:", redirectUrl);
       router.push(redirectUrl);
+      
+      // Refresh server components to ensure cookies are available
+      router.refresh();
     } catch (err) {
       console.error("[LoginForm] Unexpected error:", err);
       setError("An unexpected error occurred");
