@@ -991,3 +991,39 @@ CREATE POLICY "storage_delete_permissive" ON storage.objects
 **Last Updated:** January 15, 2026 - Storage RLS policies fixed for file uploads
 **Maintained By:** AI Assistant (RoyaltyMeds Development Team)
 **Next Review:** After Phase 6 completion
+
+---
+
+## RECENT UPDATES - January 16, 2026
+
+### Prescription Upload Workflow Restructured
+**Change**: Separated medication management between patient and admin roles
+
+**Patient Side:**
+- Removed medication form from `/app/patient/prescriptions/page.tsx`
+- Patients now only upload prescription files
+- No medication data submitted with upload
+
+**API Changes:**
+- Updated `/app/api/patient/upload/route.ts` 
+- Removed validation requiring "at least one medication"
+- Medications array now optional
+- Allows file-only uploads for patients
+
+**Admin Side (TO IMPLEMENT):**
+- Admin will add medications via `/app/admin/prescriptions/[id]/page.tsx`
+- Create form to add/edit/delete prescription_items
+- New endpoint needed for medication management
+
+**Display (TO IMPLEMENT):**
+- Show prescription_items linked to prescriptions
+- Both patient and admin views should display medications
+
+**Workflow:**
+1. Patient uploads file only → Creates prescription record
+2. Admin views prescription → Adds medications via form
+3. Both can view prescription with medications
+
+**Status**: Build successful, deployed to production, ready for admin medication form implementation
+
+**Last Updated:** January 16, 2026 - Prescription workflow restructured

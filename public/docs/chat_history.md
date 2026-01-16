@@ -1328,4 +1328,47 @@ Created via: SQL migration + database trigger
 - e60abe0 - Add multiple medications + file upload to doctor form
 - 0374740 - Document solutions in ai_prompt_pretext
 
+---
+
+## Phase 5.6: Restructuring Prescription Upload Workflow (January 16, 2026)
+
+**Objective:** Separate prescription medication management - patients upload files only, admins add medications
+
+**Changes Made:**
+
+1. **Removed Medication Form from Patient Upload**
+   - Removed `Medication` interface definition
+   - Removed state: `currentMedication`, `currentDosage`, `currentQuantity`, `notes`
+   - Removed functions: `addMedication()`, `removeMedication()`
+   - Removed "Medications (Optional)" section from upload form
+   - File: `/app/patient/prescriptions/page.tsx`
+
+2. **Fixed Upload API Validation**
+   - Problem: API required "At least one medication is required" blocking all uploads
+   - Solution: Removed validation check from lines 78-82
+   - File: `/app/api/patient/upload/route.ts`
+   - Result: Patients can now upload prescription files without entering medications
+
+3. **Dependency Verification**
+   - All dependencies match REFERENCE_APP versions
+   - Build successful with 0 errors
+   - Production deployment verified
+
+**New Workflow:**
+1. Patient uploads prescription file → API creates prescription record with file only
+2. Prescription appears in admin dashboard for review and processing
+3. Admin adds medications via admin prescription details page (TO BE IMPLEMENTED)
+4. Both patient and admin views will display prescription with linked medications
+
+**Commits This Phase:**
+- e41d645 - Remove medication requirement from prescription upload API - patients now submit file only
+
+**Build Status**: ✅ 0 errors | 48 routes | Deployed to production
+
+**Next Steps:**
+- Implement admin medication management form on prescription details page
+- Add API endpoint for admin to add/edit/delete prescription items
+- Display prescription_items on both patient and admin prescription views
+- Test full workflow end-to-end
+
 **Build Status**: ? 0 errors | ? 48 routes | ? All commits pushed to main branch
