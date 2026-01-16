@@ -29,7 +29,7 @@ export default function LoginForm() {
 
       const supabase = getSupabaseClient();
 
-      // Step 1: Authenticate with Supabase (sets client-side session)
+      // Authenticate with Supabase
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -49,7 +49,7 @@ export default function LoginForm() {
         return;
       }
 
-      // Step 2: Get user role from database
+      // Get user role from database
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("role")
@@ -63,13 +63,16 @@ export default function LoginForm() {
       const userRole = (userData as any)?.role || "patient";
       console.log("[LoginForm] User authenticated with role:", userRole);
 
-      // Step 3: Redirect to success page (no prefetching)
-      // This allows the client-side Supabase library to process tokens from URL fragment
-      // See: https://supabase.com/docs/guides/auth/server-side-rendering#no-session-on-the-server-side-with-nextjs-route-prefetching
-      console.log("[LoginForm] Redirecting to success page");
-      router.push(`/auth/success?role=${userRole}`);
-      
-      router.refresh();
+      // Redirect directly to portal - middleware + server-side redirect will handle auth check
+      const redirectUrl =
+        userRole === "doctor"
+          ? "/doctor/dashboard"
+          : userRole === "admin"
+            ? "/admin/dashboard"
+            : "/patient/home";
+
+      console.log("[LoginForm] Redirecting to:", redirectUrl);
+      router.push(redirectUrl);
     } catch (err) {
       console.error("[LoginForm] Unexpected error:", err);
       setError("An unexpected error occurred");
