@@ -58,8 +58,36 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Generate signed URLs for prescription files
+    const prescriptionsWithSignedUrls = await Promise.all(
+      (prescriptions || []).map(async (prescription) => {
+        if (!prescription.file_url) return prescription;
+
+        try {
+          // Extract file path from storage URL
+          const filePath =
+            prescription.file_url.split(
+              "storage/v1/object/public/royaltymeds_storage/"
+            )[1] || prescription.file_url;
+
+          // Generate signed URL with 1-hour expiration
+          const { data: signedUrl } = await supabaseAdmin.storage
+            .from("royaltymeds_storage")
+            .createSignedUrl(filePath, 3600);
+
+          return {
+            ...prescription,
+            file_url: signedUrl?.signedUrl || null,
+          };
+        } catch (error) {
+          console.error("Error generating signed URL:", error);
+          return { ...prescription, file_url: null };
+        }
+      })
+    );
+
     return NextResponse.json({
-      prescriptions: prescriptions || [],
+      prescriptions: prescriptionsWithSignedUrls,
     });
   } catch (error) {
     console.error("Admin prescriptions fetch error:", error);
