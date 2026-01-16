@@ -1,15 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Upload, AlertCircle, CheckCircle, X, Plus } from "lucide-react";
+import { Upload, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
-
-interface Medication {
-  id: string;
-  name: string;
-  dosage: string;
-  quantity: string;
-}
 
 interface Prescription {
   id: string;
@@ -25,13 +18,7 @@ export default function PrescriptionsPage() {
   const [activeTab, setActiveTab] = useState<"upload" | "view">("upload");
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
-  const [medications, setMedications] = useState<Medication[]>([]);
   
-  const [currentMedication, setCurrentMedication] = useState("");
-  const [currentDosage, setCurrentDosage] = useState("");
-  const [currentQuantity, setCurrentQuantity] = useState("");
-  
-  const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -72,30 +59,6 @@ export default function PrescriptionsPage() {
     }
   };
 
-  const addMedication = () => {
-    if (!currentMedication.trim()) {
-      setError("Please enter a medication name");
-      return;
-    }
-
-    const newMedication: Medication = {
-      id: Math.random().toString(36).substring(7),
-      name: currentMedication,
-      dosage: currentDosage,
-      quantity: currentQuantity,
-    };
-
-    setMedications([...medications, newMedication]);
-    setCurrentMedication("");
-    setCurrentDosage("");
-    setCurrentQuantity("");
-    setError(null);
-  };
-
-  const removeMedication = (id: string) => {
-    setMedications(medications.filter((med) => med.id !== id));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -110,8 +73,6 @@ export default function PrescriptionsPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("medications", JSON.stringify(medications));
-      formData.append("notes", notes);
 
       const response = await fetch("/api/patient/upload", {
         method: "POST",
@@ -128,11 +89,6 @@ export default function PrescriptionsPage() {
       setSuccess(true);
       setFile(null);
       setFileName("");
-      setMedications([]);
-      setCurrentMedication("");
-      setCurrentDosage("");
-      setCurrentQuantity("");
-      setNotes("");
 
       // Reload prescriptions list
       loadPrescriptions();
@@ -231,106 +187,6 @@ export default function PrescriptionsPage() {
                     </p>
                     <p className="text-xs sm:text-sm text-gray-600 mt-1">PDF, JPG, or PNG (Max 10MB)</p>
                   </button>
-                </div>
-
-                {/* Medications Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm sm:text-base font-semibold text-gray-900">Medications (Optional)</h3>
-                    <p className="text-xs text-gray-500">Add one or more medications</p>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-lg p-4 space-y-4 bg-gray-50">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                          Medication Name
-                        </label>
-                        <input
-                          type="text"
-                          value={currentMedication}
-                          onChange={(e) => setCurrentMedication(e.target.value)}
-                          placeholder="e.g., Metformin"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-                          onKeyPress={(e) => e.key === "Enter" && addMedication()}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                          Dosage
-                        </label>
-                        <input
-                          type="text"
-                          value={currentDosage}
-                          onChange={(e) => setCurrentDosage(e.target.value)}
-                          placeholder="e.g., 500mg"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                          Quantity
-                        </label>
-                        <input
-                          type="number"
-                          value={currentQuantity}
-                          onChange={(e) => setCurrentQuantity(e.target.value)}
-                          placeholder="e.g., 30"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={addMedication}
-                      className="w-full py-2 px-4 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Medication
-                    </button>
-                  </div>
-
-                  {medications.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-xs sm:text-sm font-medium text-gray-700">Added Medications ({medications.length})</h4>
-                      {medications.map((med) => (
-                        <div
-                          key={med.id}
-                          className="flex items-start justify-between bg-green-50 border border-green-200 rounded-lg p-3"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900">{med.name}</p>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              {med.dosage && <span className="text-xs text-gray-600">Dosage: {med.dosage}</span>}
-                              {med.quantity && <span className="text-xs text-gray-600">Qty: {med.quantity}</span>}
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeMedication(med.id)}
-                            className="ml-2 p-1 text-red-600 hover:bg-red-50 rounded transition flex-shrink-0"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Additional Notes (Optional)
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Any special instructions or notes..."
-                    rows={2}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 resize-none"
-                  />
                 </div>
 
                 {/* Error Message */}
