@@ -135,7 +135,6 @@ export async function POST(request: NextRequest) {
       medication_name: med.name || null,
       dosage: med.dosage || null,
       quantity: parseInt(med.quantity) || null,
-      brand_preferred: med.brandChoice === "brand",
     }));
 
     const { error: itemsError } = await supabase
