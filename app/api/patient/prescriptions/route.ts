@@ -43,10 +43,6 @@ export async function GET(request: NextRequest) {
               ? prescription.file_url.split("royaltymeds_storage/")[1]
               : prescription.file_url;
 
-            const { data } = supabase.storage
-              .from("royaltymeds_storage")
-              .getPublicUrl(filePath);
-
             // Generate a signed URL that's valid for 1 hour (3600 seconds)
             const { data: signedUrl } = await supabase.storage
               .from("royaltymeds_storage")

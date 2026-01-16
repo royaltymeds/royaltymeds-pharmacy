@@ -10,7 +10,6 @@ export default function PatientHomePage() {
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [pendingPrescriptions, setPendingPrescriptions] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
-  const [refills, setRefills] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadData() {
@@ -28,7 +27,6 @@ export default function PatientHomePage() {
         setPrescriptions(data.prescriptions || []);
         setPendingPrescriptions(data.pendingPrescriptions || []);
         setOrders(data.orders || []);
-        setRefills(data.refills || []);
       } catch (error) {
         console.error("Error loading patient dashboard:", error);
       } finally {
