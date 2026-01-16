@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon, Loader } from "lucide-react";
 
 export default function PatientHomePage() {
-  const searchParams = useSearchParams();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
@@ -39,17 +39,19 @@ export default function PatientHomePage() {
 
   useEffect(() => {
     loadData();
-  }, [searchParams]);
+  }, []);
 
-  // Refetch data when page becomes visible
+  // Refresh data when window focuses or visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
+        router.refresh();
         loadData();
       }
     };
 
     const handleFocus = () => {
+      router.refresh();
       loadData();
     };
 
@@ -60,7 +62,7 @@ export default function PatientHomePage() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, []);
+  }, [router]);
 
   if (isLoading) {
     return (
