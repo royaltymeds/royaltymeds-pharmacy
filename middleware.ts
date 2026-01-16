@@ -1,53 +1,37 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
-      headers: req.headers,
+      headers: request.headers,
     },
   });
 
-  try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return req.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                response.cookies.set(name, value, options as CookieOptions);
-              });
-            } catch (error) {
-              console.error("Error setting cookies in middleware:", error);
-            }
-          },
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
         },
-      }
-    );
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
 
-    // Refresh session - this ensures auth.users cookies stay valid
-    await supabase.auth.getSession();
-  } catch (error) {
-    // Gracefully handle errors when there's no request context (e.g., during build)
-    // This is normal during static generation and doesn't affect runtime behavior
-    console.debug("Middleware session refresh skipped (no request context)");
-  }
+  // Refresh session if expired - required for Server Components
+  await supabase.auth.getUser();
 
   return response;
 }
 
 export const config = {
-  matcher: [
-    "/auth/:path*",
-    "/api/:path*",
-    "/patient/:path*",
-    "/doctor/:path*",
-    "/admin/:path*",
-    "/profile/:path*",
-  ],
-};
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+}
