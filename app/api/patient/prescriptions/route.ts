@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/patient/prescriptions
  * Fetch prescriptions for authenticated patient
