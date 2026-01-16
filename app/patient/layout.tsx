@@ -19,9 +19,12 @@ export default async function PatientLayout({
 }) {
   // Check auth server-side - redirect if not authenticated
   const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  console.log("[PatientLayout] Auth check - user:", user?.id, "error:", error?.message);
   
   if (!user) {
+    console.log("[PatientLayout] No user, redirecting to /login");
     redirect("/login");
   }
 
