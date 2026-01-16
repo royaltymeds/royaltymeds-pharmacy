@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon, Loader } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-
 export default function PatientHomePage() {
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
@@ -18,6 +18,7 @@ export default function PatientHomePage() {
       setIsLoading(true);
       const response = await fetch("/api/patient/dashboard", {
         credentials: "include",
+        cache: "no-store",
       });
       
       if (!response.ok) {
@@ -38,7 +39,7 @@ export default function PatientHomePage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [searchParams]);
 
   // Refetch data when page becomes visible
   useEffect(() => {
@@ -48,8 +49,17 @@ export default function PatientHomePage() {
       }
     };
 
+    const handleFocus = () => {
+      loadData();
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
 
   if (isLoading) {
