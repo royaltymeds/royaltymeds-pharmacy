@@ -78,13 +78,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (medications.length === 0) {
-      return NextResponse.json(
-        { error: "At least one medication is required" },
-        { status: 400 }
-      );
-    }
-
     // Upload file to Supabase Storage
     const fileName = `${user.id}/${Date.now()}-${file.name}`;
     const bytes = await file.arrayBuffer();
