@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
 
@@ -15,22 +14,38 @@ interface DashboardData {
 }
 
 export default function PatientDashboardClient({ initialData }: { initialData: DashboardData }) {
-  const router = useRouter();
-  const [profile] = useState(initialData.profile);
-  const [prescriptions] = useState(initialData.prescriptions || []);
-  const [pendingPrescriptions] = useState(initialData.pendingPrescriptions || []);
-  const [orders] = useState(initialData.orders || []);
+  const [dashboardData, setDashboardData] = useState<DashboardData>(initialData);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      const response = await fetch("/api/patient/dashboard", {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setDashboardData(data);
+      }
+    } catch (error) {
+      console.error("Error refreshing dashboard data:", error);
+      // Fall back to current data if refresh fails
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Refresh data when window focuses or visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        router.refresh();
+        refreshData();
       }
     };
 
     const handleFocus = () => {
-      router.refresh();
+      refreshData();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -40,7 +55,9 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [router]);
+  }, []);
+
+  const { profile, prescriptions, pendingPrescriptions, orders } = dashboardData;
 
   return (
     <div className="space-y-6">
@@ -53,9 +70,19 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
             </h1>
             <p className="text-sm md:text-base text-gray-600 mt-2">Manage your prescriptions and orders</p>
           </div>
-          <Link href="/" className="flex-shrink-0 text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap">
-            ← Home
-          </Link>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={refreshData}
+              disabled={isRefreshing}
+              className="text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap px-3 py-2 rounded hover:bg-green-50 disabled:opacity-50 flex items-center gap-1"
+            >
+              <RefreshCwIcon className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </button>
+            <Link href="/" className="text-green-600 hover:text-green-700 font-medium text-xs md:text-sm whitespace-nowrap">
+              ← Home
+            </Link>
+          </div>
         </div>
       </div>
 
