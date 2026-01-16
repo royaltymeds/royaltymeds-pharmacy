@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     const fileUrl = urlData.publicUrl;
 
-    // Store prescription in database
+    // Store prescription in database (only prescription metadata, no medications)
     const { data: prescriptionData, error: prescriptionError } = await supabase
       .from("prescriptions")
       .insert([
