@@ -36,8 +36,11 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
     }
   };
 
-  // Refresh data when window focuses or visibility changes
+  // Refresh data on mount and when window focuses or visibility changes
   useEffect(() => {
+    // Refresh on mount
+    refreshData();
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         refreshData();
