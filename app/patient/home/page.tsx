@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon, Loader } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default function PatientHomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
@@ -11,30 +13,43 @@ export default function PatientHomePage() {
   const [pendingPrescriptions, setPendingPrescriptions] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const response = await fetch("/api/patient/dashboard", {
-          credentials: "include",
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch dashboard data");
-        }
-
-        const data = await response.json();
-        setProfile(data.profile);
-        setPrescriptions(data.prescriptions || []);
-        setPendingPrescriptions(data.pendingPrescriptions || []);
-        setOrders(data.orders || []);
-      } catch (error) {
-        console.error("Error loading patient dashboard:", error);
-      } finally {
-        setIsLoading(false);
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/patient/dashboard", {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch dashboard data");
       }
-    }
 
+      const data = await response.json();
+      setProfile(data.profile);
+      setPrescriptions(data.prescriptions || []);
+      setPendingPrescriptions(data.pendingPrescriptions || []);
+      setOrders(data.orders || []);
+    } catch (error) {
+      console.error("Error loading patient dashboard:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
+  }, []);
+
+  // Refetch data when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadData();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
   if (isLoading) {
