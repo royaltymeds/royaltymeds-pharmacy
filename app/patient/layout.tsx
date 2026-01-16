@@ -1,29 +1,31 @@
-"use client";
-
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import Link from "next/link";
-import { getSupabaseClient } from "@/lib/supabase-client";
-import { useEffect, useState } from "react";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 
-export default function PatientLayout({
+async function getPatientEmail() {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.email || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+export default async function PatientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  // Check auth server-side - redirect if not authenticated
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    redirect("/login");
+  }
 
-  useEffect(() => {
-    async function getEmail() {
-      const supabase = getSupabaseClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setUserEmail(user.email || null);
-      }
-    }
-    getEmail();
-  }, []);
+  const userEmail = await getPatientEmail();
 
   const navLinks = [
     { href: "/patient/home", label: "Dashboard" },
@@ -34,8 +36,7 @@ export default function PatientLayout({
   ];
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Customer Portal Navigation */}
       <nav className="bg-green-600 border-b border-green-700 shadow-lg sticky top-0 z-50">
         <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
@@ -73,7 +74,6 @@ export default function PatientLayout({
           {children}
         </div>
       </main>
-      </div>
-    </AuthGuard>
+    </div>
   );
 }
