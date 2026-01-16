@@ -9,7 +9,6 @@ interface Medication {
   name: string;
   dosage: string;
   quantity: string;
-  brandChoice: "brand" | "generic" | null;
 }
 
 interface Prescription {
@@ -31,7 +30,6 @@ export default function PrescriptionsPage() {
   const [currentMedication, setCurrentMedication] = useState("");
   const [currentDosage, setCurrentDosage] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState("");
-  const [currentBrandChoice, setCurrentBrandChoice] = useState<"brand" | "generic" | null>(null);
   
   const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -85,14 +83,12 @@ export default function PrescriptionsPage() {
       name: currentMedication,
       dosage: currentDosage,
       quantity: currentQuantity,
-      brandChoice: currentBrandChoice,
     };
 
     setMedications([...medications, newMedication]);
     setCurrentMedication("");
     setCurrentDosage("");
     setCurrentQuantity("");
-    setCurrentBrandChoice(null);
     setError(null);
   };
 
@@ -136,7 +132,6 @@ export default function PrescriptionsPage() {
       setCurrentMedication("");
       setCurrentDosage("");
       setCurrentQuantity("");
-      setCurrentBrandChoice(null);
       setNotes("");
 
       // Reload prescriptions list
@@ -284,35 +279,6 @@ export default function PrescriptionsPage() {
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                          Brand / Generic
-                        </label>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setCurrentBrandChoice("brand")}
-                            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg font-medium transition ${
-                              currentBrandChoice === "brand"
-                                ? "bg-green-600 text-white"
-                                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-                            }`}
-                          >
-                            Brand
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setCurrentBrandChoice("generic")}
-                            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg font-medium transition ${
-                              currentBrandChoice === "generic"
-                                ? "bg-green-600 text-white"
-                                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-                            }`}
-                          >
-                            Generic
-                          </button>
-                        </div>
-                      </div>
                     </div>
 
                     <button
@@ -338,7 +304,6 @@ export default function PrescriptionsPage() {
                             <div className="flex flex-wrap gap-2 mt-1">
                               {med.dosage && <span className="text-xs text-gray-600">Dosage: {med.dosage}</span>}
                               {med.quantity && <span className="text-xs text-gray-600">Qty: {med.quantity}</span>}
-                              {med.brandChoice && <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">{med.brandChoice}</span>}
                             </div>
                           </div>
                           <button
