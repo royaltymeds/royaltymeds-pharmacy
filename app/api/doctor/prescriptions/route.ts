@@ -91,17 +91,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // For now, we'll create one prescription record per set of medications
+    // In the future, this might be refactored to store medications separately
+    const medicationsText = body.medications
+      ?.map(
+        (med: any) =>
+          `${med.name} (${med.dosage}, ${med.quantity}, ${med.frequency})`
+      )
+      .join("; ");
+
     const { error } = await supabase.from("doctor_prescriptions").insert([
       {
         doctor_id: user.id,
         patient_id: body.patientId,
-        medication_name: body.medicationName,
-        dosage: body.dosage,
-        quantity: body.quantity,
-        frequency: body.frequency,
+        medication_name: medicationsText || "No medications",
+        dosage: body.medications?.[0]?.dosage || null,
+        quantity: body.medications?.[0]?.quantity || null,
+        frequency: body.medications?.[0]?.frequency || null,
         duration: body.duration,
         instructions: body.instructions || null,
         notes: body.notes || null,
+        file_url: body.file_url || null,
         status: "pending",
       },
     ]);

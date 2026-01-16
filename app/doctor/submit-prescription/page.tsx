@@ -2,23 +2,33 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Plus, Trash2, Upload } from "lucide-react";
+
+interface Medication {
+  id: string;
+  name: string;
+  dosage: string;
+  quantity: string;
+  frequency: string;
+}
 
 export default function SubmitPrescription() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [medications, setMedications] = useState<Medication[]>([
+    { id: "1", name: "", dosage: "", quantity: "", frequency: "once daily" },
+  ]);
+  const [fileUrl, setFileUrl] = useState<string>("");
+  const [fileName, setFileName] = useState<string>("");
 
   const [formData, setFormData] = useState({
     patientId: "",
     patientEmail: "",
-    medicationName: "",
-    dosage: "",
-    quantity: "",
-    frequency: "once daily",
     duration: "",
     instructions: "",
     notes: "",
@@ -71,13 +81,16 @@ export default function SubmitPrescription() {
         return;
       }
 
-      if (
-        !formData.medicationName ||
-        !formData.dosage ||
-        !formData.quantity ||
-        !formData.duration
-      ) {
-        setError("Please fill in all required fields");
+      // Filter out empty medications
+      const validMeds = medications.filter(m => m.name.trim());
+      if (validMeds.length === 0) {
+        setError("Please add at least one medication");
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.duration) {
+        setError("Please fill in duration");
         setLoading(false);
         return;
       }
@@ -87,7 +100,11 @@ export default function SubmitPrescription() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          medications: validMeds,
+          file_url: fileUrl || null,
+        }),
       });
 
       if (!response.ok) {
@@ -99,14 +116,15 @@ export default function SubmitPrescription() {
       setFormData({
         patientId: "",
         patientEmail: "",
-        medicationName: "",
-        dosage: "",
-        quantity: "",
-        frequency: "once daily",
         duration: "",
         instructions: "",
         notes: "",
       });
+      setMedications([
+        { id: "1", name: "", dosage: "", quantity: "", frequency: "once daily" },
+      ]);
+      setFileUrl("");
+      setFileName("");
 
       // Redirect to my-prescriptions after 2 seconds
       setTimeout(() => {
@@ -117,6 +135,59 @@ export default function SubmitPrescription() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError("");
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+
+      const response = await fetch("/api/patient/upload", {
+        method: "POST",
+        body: formDataUpload,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("File upload failed");
+      }
+
+      const data = await response.json();
+      setFileUrl(data.file_url);
+      setFileName(file.name);
+    } catch (err: any) {
+      setError("Failed to upload file: " + err.message);
+      setFileUrl("");
+      setFileName("");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const addMedication = () => {
+    const newId = String(Math.max(...medications.map(m => parseInt(m.id) || 0)) + 1);
+    setMedications([
+      ...medications,
+      { id: newId, name: "", dosage: "", quantity: "", frequency: "once daily" },
+    ]);
+  };
+
+  const removeMedication = (id: string) => {
+    setMedications(medications.filter(m => m.id !== id));
+  };
+
+  const updateMedication = (id: string, field: string, value: string) => {
+    setMedications(
+      medications.map(m =>
+        m.id === id ? { ...m, [field]: value } : m
+      )
+    );
   };
 
   return (
@@ -197,74 +268,114 @@ export default function SubmitPrescription() {
         </div>
 
         {/* Medication Name & Dosage - 2 Column on Tablet+ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-              Medication Name <span className="text-red-500">*</span>
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-sm font-medium text-gray-700">
+              Medications <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              name="medicationName"
-              value={formData.medicationName}
-              onChange={handleChange}
-              placeholder="e.g., Amoxicillin"
-              className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-              Dosage <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="dosage"
-              value={formData.dosage}
-              onChange={handleChange}
-              placeholder="e.g., 500mg"
-              className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Quantity & Frequency - 2 Column on Tablet+ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-              Quantity <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="quantity"
-              value={formData.quantity}
-              onChange={handleChange}
-              placeholder="e.g., 30 tablets"
-              className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-              Frequency
-            </label>
-            <select
-              name="frequency"
-              value={formData.frequency}
-              onChange={handleChange}
-              className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <button
+              type="button"
+              onClick={addMedication}
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition"
             >
-              <option>once daily</option>
-              <option>twice daily</option>
-              <option>three times daily</option>
-              <option>four times daily</option>
-              <option>every 6 hours</option>
-              <option>every 8 hours</option>
-              <option>every 12 hours</option>
-              <option>as needed</option>
-            </select>
+              <Plus className="w-4 h-4" />
+              Add Medication
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {medications.map((med, index) => (
+              <div key={med.id} className="p-4 border border-gray-200 rounded-lg">
+                <div className="flex justify-between items-start mb-3">
+                  <span className="text-sm font-medium text-gray-700">
+                    Medication {index + 1}
+                  </span>
+                  {medications.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeMedication(med.id)}
+                      className="text-red-600 hover:text-red-700 p-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Medication Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={med.name}
+                      onChange={(e) =>
+                        updateMedication(med.id, "name", e.target.value)
+                      }
+                      placeholder="e.g., Amoxicillin"
+                      className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Dosage <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={med.dosage}
+                      onChange={(e) =>
+                        updateMedication(med.id, "dosage", e.target.value)
+                      }
+                      placeholder="e.g., 500mg"
+                      className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Quantity <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={med.quantity}
+                      onChange={(e) =>
+                        updateMedication(med.id, "quantity", e.target.value)
+                      }
+                      placeholder="e.g., 30 tablets"
+                      className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Frequency
+                    </label>
+                    <select
+                      value={med.frequency}
+                      onChange={(e) =>
+                        updateMedication(med.id, "frequency", e.target.value)
+                      }
+                      className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option>once daily</option>
+                      <option>twice daily</option>
+                      <option>three times daily</option>
+                      <option>four times daily</option>
+                      <option>every 6 hours</option>
+                      <option>every 8 hours</option>
+                      <option>every 12 hours</option>
+                      <option>as needed</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -284,35 +395,50 @@ export default function SubmitPrescription() {
           />
         </div>
 
-        {/* Instructions & Notes - 2 Column on Tablet+ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-              Instructions
-            </label>
-            <textarea
-              name="instructions"
-              value={formData.instructions}
-              onChange={handleChange}
-              placeholder="e.g., Take with food"
-              rows={2}
-              className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            />
-          </div>
+        {/* Additional Notes */}
+        <div className="mb-4 sm:mb-6">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+            Additional Notes
+          </label>
+          <textarea
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            placeholder="Any additional notes"
+            rows={2}
+            className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          />
+        </div>
 
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-              Additional Notes
-            </label>
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              placeholder="Any additional notes"
-              rows={2}
-              className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+        {/* Prescription File Upload */}
+        <div className="mb-4 sm:mb-6">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+            Prescription File (Optional)
+          </label>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
+            <input
+              type="file"
+              onChange={handleFileUpload}
+              disabled={uploading}
+              accept="image/*,.pdf"
+              className="hidden"
+              id="file-upload"
             />
+            <label htmlFor="file-upload" className="cursor-pointer">
+              <div className="flex items-center justify-center gap-2">
+                <Upload className="w-5 h-5 text-gray-400" />
+                <div>
+                  <p className="text-sm font-medium text-gray-700">
+                    {uploading ? "Uploading..." : "Click to upload or drag and drop"}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, PDF up to 10MB</p>
+                </div>
+              </div>
+            </label>
           </div>
+          {fileName && (
+            <p className="mt-2 text-sm text-green-600">✓ File uploaded: {fileName}</p>
+          )}
         </div>
 
         {/* Submit Button */}
