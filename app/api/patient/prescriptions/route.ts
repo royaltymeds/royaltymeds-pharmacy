@@ -33,7 +33,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ prescriptions });
+    // Generate signed URLs for file access (valid for 1 hour)
+    const prescriptionsWithSignedUrls = await Promise.all(
+      (prescriptions || []).map(async (prescription) => {
+        if (prescription.file_url) {
+          try {
+            // Extract the file path from the URL or use it directly if it's already a path
+            const filePath = prescription.file_url.includes("royaltymeds_storage/")
+              ? prescription.file_url.split("royaltymeds_storage/")[1]
+              : prescription.file_url;
+
+            const { data } = supabase.storage
+              .from("royaltymeds_storage")
+              .getPublicUrl(filePath);
+
+            // Generate a signed URL that's valid for 1 hour (3600 seconds)
+            const { data: signedUrl } = await supabase.storage
+              .from("royaltymeds_storage")
+              .createSignedUrl(filePath, 3600);
+
+            return {
+              ...prescription,
+              file_url: signedUrl?.signedUrl || null,
+            };
+          } catch (err) {
+            console.error("Error generating signed URL:", err);
+            return {
+              ...prescription,
+              file_url: null,
+            };
+          }
+        }
+        return prescription;
+      })
+    );
+
+    return NextResponse.json({ prescriptions: prescriptionsWithSignedUrls });
   } catch (error) {
     console.error("Prescription fetch error:", error);
     return NextResponse.json(
