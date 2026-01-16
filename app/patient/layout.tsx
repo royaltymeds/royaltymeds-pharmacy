@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoutButton } from "@/components/LogoutButton";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
@@ -63,9 +64,7 @@ export default async function PatientLayout({
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
               <span className="hidden sm:inline text-xs md:text-sm text-green-100 truncate max-w-[150px]">{userEmail}</span>
-              <Link href="/api/auth/logout" className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap">
-                Logout
-              </Link>
+              <LogoutButton className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap" />
             </div>
           </div>
         </div>
