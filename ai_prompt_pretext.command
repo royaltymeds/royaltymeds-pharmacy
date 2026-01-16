@@ -402,6 +402,47 @@ CREATE POLICY "select_access" ON table FOR SELECT USING (
 - Public keys (NEXT_PUBLIC_*) can be in build configs
 - Always test sign-in immediately after deployment to verify environment variables are loaded
 
+### Problem 21: Private Bucket File Access Returns 404 "Bucket not found" (January 15, 2026)
+**Symptom**: Patient clicks "View File" on prescription file; browser receives 404 error "Bucket not found"; file URL appears valid
+**Root Cause**: Prescription files were stored in private Supabase Storage bucket, but code was returning public URLs. Private buckets reject unauthenticated access with 404 errors.
+**Solution**:
+- Modified `/app/api/patient/prescriptions/route.ts` to generate server-side signed URLs:
+  ```typescript
+  // Generate signed URL for each prescription file
+  const signedUrls = await Promise.all(
+    prescriptions.map(async (prescription) => {
+      if (!prescription.file_url) return null;
+      
+      // Extract file path from storage URL
+      const filePath = prescription.file_url.split("storage/v1/object/public/royaltymeds_storage/")[1] || 
+                      prescription.file_url;
+      
+      // Generate signed URL with 1-hour expiration
+      const { data: signedUrl } = await supabase.storage
+        .from("royaltymeds_storage")
+        .createSignedUrl(filePath, 3600);
+      
+      return signedUrl?.signedUrl || null;
+    })
+  );
+  ```
+- Frontend now receives temporary signed URLs (valid for 1 hour) that allow authenticated access to private bucket
+- Each request generates fresh URLs, ensuring time-limited access without compromising security
+**Implementation Details**:
+- Signed URLs use service role key (server-side only, never exposed to client)
+- 3600-second (1-hour) expiration balances security with user convenience
+- File paths extracted from storage URLs or used directly if already formatted
+- Graceful error handling returns null for files that fail signing
+- Patient access still scoped via RLS (only own prescriptions)
+**File References**: 
+- Endpoint: [/app/api/patient/prescriptions/route.ts](/app/api/patient/prescriptions/route.ts)
+- Documentation: [docs/SIGNED_URLS_PRIVATE_STORAGE_JAN15.md](/docs/SIGNED_URLS_PRIVATE_STORAGE_JAN15.md)
+**Lesson**: 
+- Private Supabase Storage buckets require signed URLs for access, not public URLs
+- Server-side URL generation protects the service role key while providing temporary access tokens
+- Always generate signed URLs server-side; never expose the service role key to the client
+- 1-hour expiration provides security without requiring URL regeneration for each file view
+
 ---
 
 ## DATABASE ARCHITECTURE RULES
