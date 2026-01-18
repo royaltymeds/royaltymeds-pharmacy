@@ -1,59 +1,68 @@
-"use client";
-
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, X, AlertCircle } from "lucide-react";
-import { useEffect, useState } from "react";
 
-export default function AdminPrescriptions() {
-  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    const loadPrescriptions = async () => {
-      try {
-        const response = await fetch("/api/admin/prescriptions", {
-          credentials: "include",
-        });
+interface Prescription {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  medication_name: string;
+  dosage: string;
+  status: string;
+  created_at: string;
+}
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch prescriptions");
-        }
+async function getPrescriptions(): Promise<Prescription[]> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase
+      .from("prescriptions")
+      .select("*")
+      .order("created_at", { ascending: false });
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching prescriptions:", error);
+    return [];
+  }
+}
 
-        const data = await response.json();
-        setPrescriptions(data.prescriptions || []);
-      } catch (error) {
-        console.error("Error loading prescriptions:", error);
-        setPrescriptions([]);
-      }
-    };
+function getStatusColor(status: string) {
+  switch (status) {
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "approved":
+      return "bg-green-100 text-green-800";
+    case "rejected":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
 
-    loadPrescriptions();
-  }, []);
+function getStatusIcon(status: string) {
+  switch (status) {
+    case "pending":
+      return <AlertCircle className="w-4 h-4" />;
+    case "approved":
+      return <CheckCircle className="w-4 h-4" />;
+    case "rejected":
+      return <X className="w-4 h-4" />;
+    default:
+      return null;
+  }
+}
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+export default async function AdminPrescriptions() {
+  // Auth check
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <AlertCircle className="w-4 h-4" />;
-      case "approved":
-        return <CheckCircle className="w-4 h-4" />;
-      case "rejected":
-        return <X className="w-4 h-4" />;
-      default:
-        return null;
-    }
-  };
+  // Fetch prescriptions
+  const prescriptions = await getPrescriptions();
 
   return (
     <div className="space-y-6">

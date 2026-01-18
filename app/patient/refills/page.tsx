@@ -1,60 +1,54 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { RefreshCwIcon, AlertCircle, Loader } from "lucide-react";
+import { RefreshCwIcon, AlertCircle } from "lucide-react";
 
-export default function RefillsPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [refills, setRefills] = useState<any[]>([]);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    async function loadRefills() {
-      try {
-        const response = await fetch("/api/patient/refills", {
-          credentials: "include",
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch refills");
-        }
+interface Refill {
+  id: string;
+  prescription_id: string;
+  status: string;
+  created_at: string;
+  prescription?: { medication_name: string };
+}
 
-        const data = await response.json();
-        setRefills(data.refills || []);
-      } catch (error) {
-        console.error("Error loading refills:", error);
-        setRefills([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadRefills();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
-          <p className="text-gray-600">Loading your refills...</p>
-        </div>
-      </div>
-    );
+async function getRefills(userId: string): Promise<Refill[]> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase
+      .from("refills")
+      .select("*")
+      .eq("patient_id", userId)
+      .order("created_at", { ascending: false });
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching refills:", error);
+    return [];
   }
+}
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+function getStatusColor(status: string) {
+  switch (status) {
+    case "completed":
+      return "bg-green-100 text-green-800";
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "denied":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
+
+export default async function RefillsPage() {
+  // Auth check
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Fetch refills
+  const refills = await getRefills(user.id);
 
   return (
     <div className="space-y-6">
@@ -75,7 +69,7 @@ export default function RefillsPage() {
       {/* Refills List */}
       {refills && refills.length > 0 ? (
         <div className="space-y-4">
-          {refills.map((refill: any) => (
+          {refills.map((refill) => (
             <div key={refill.id} className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-green-500">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -83,37 +77,19 @@ export default function RefillsPage() {
                     <RefreshCwIcon className="w-5 h-5 text-green-600" />
                     <div>
                       <h3 className="font-semibold text-gray-900">
-                        {refill.prescriptions?.medication_name || "Medication"}
+                        {refill.prescription?.medication_name || "Medication"}
                       </h3>
                       <p className="text-sm text-gray-600 mt-1">
-                        Refill #{refill.refill_number}
+                        Refill #{refill.id.slice(0, 8).toUpperCase()}
                       </p>
                     </div>
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                     <div>
-                      <p className="text-xs font-medium">Dosage</p>
-                      <p className="font-medium text-gray-900 mt-1">
-                        {refill.prescriptions?.dosage || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium">Quantity</p>
-                      <p className="font-medium text-gray-900 mt-1">
-                        {refill.prescriptions?.quantity || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium">Refills Allowed</p>
-                      <p className="font-medium text-gray-900 mt-1">
-                        {refill.prescriptions?.refills_allowed || "0"}
-                      </p>
-                    </div>
-                    <div>
                       <p className="text-xs font-medium">Requested</p>
                       <p className="font-medium text-gray-900 mt-1">
-                        {new Date(refill.requested_at).toLocaleDateString()}
+                        {new Date(refill.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -128,11 +104,11 @@ export default function RefillsPage() {
                 </span>
               </div>
 
-              {refill.status === "rejected" && (
+              {refill.status === "denied" && (
                 <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-3">
                   <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-red-700">
-                    This refill request was rejected. Please contact support for more details.
+                    This refill request was denied. Please contact support for more details.
                   </p>
                 </div>
               )}

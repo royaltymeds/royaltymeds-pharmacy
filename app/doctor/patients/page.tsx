@@ -1,8 +1,8 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { Loader } from "lucide-react";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 import PatientsClient from "./PatientsClient";
+
+export const dynamic = "force-dynamic";
 
 interface Patient {
   id: string;
@@ -12,59 +12,58 @@ interface Patient {
   prescriptionCount: number;
 }
 
-export default function Patients() {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+async function getPatients(doctorId: string): Promise<Patient[]> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase
+      .from("doctor_patients")
+      .select("patient_id")
+      .eq("doctor_id", doctorId);
 
-  useEffect(() => {
-    const loadPatients = async () => {
-      try {
-        const response = await fetch("/api/doctor/patients", {
-          credentials: "include",
-        });
+    if (!data || data.length === 0) return [];
 
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("Unauthorized - please log in again");
-          }
-          throw new Error("Failed to fetch patients");
-        }
+    const patientIds = data.map((dp) => dp.patient_id);
+    const { data: patients } = await supabase
+      .from("users")
+      .select("id, email, name, phone")
+      .in("id", patientIds);
 
-        const data = await response.json();
-        setPatients(data);
-      } catch (err) {
-        console.error("Error loading patients:", err);
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Get prescription counts
+    const { data: prescriptions } = await supabase
+      .from("prescriptions")
+      .select("patient_id");
 
-    loadPatients();
-  }, []);
+    const prescriptionCounts = prescriptions?.reduce(
+      (acc, p) => {
+        acc[p.patient_id] = (acc[p.patient_id] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    ) || {};
 
-  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
-          <p className="text-gray-600">Loading patients...</p>
-        </div>
-      </div>
+      patients?.map((p) => ({
+        id: p.id,
+        email: p.email,
+        name: p.name || "",
+        phone: p.phone,
+        prescriptionCount: prescriptionCounts[p.id] || 0,
+      })) || []
     );
+  } catch (error) {
+    console.error("Error fetching patients:", error);
+    return [];
   }
+}
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow p-6 max-w-md w-full text-center">
-          <h2 className="text-lg font-semibold text-red-600 mb-2">Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-        </div>
-      </div>
-    );
-  }
+export default async function Patients() {
+  // Auth check
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Fetch patients
+  const patients = await getPatients(user.id);
 
   return (
     <div className="space-y-6">

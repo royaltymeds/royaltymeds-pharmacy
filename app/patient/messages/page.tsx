@@ -1,53 +1,39 @@
-"use client";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
+import { MessageSquareIcon } from "lucide-react";
 
-import { useState, useEffect } from "react";
-import { MessageSquareIcon, Loader } from "lucide-react";
+export const dynamic = "force-dynamic";
 
-export default function MessagesPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+interface Message {
+  id: string;
+  message_text: string;
+  sender_id: string;
+  created_at: string;
+}
 
-  useEffect(() => {
-    async function loadMessages() {
-      try {
-        const response = await fetch("/api/patient/messages", {
-          credentials: "include",
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch messages");
-        }
-
-        const data = await response.json();
-        setMessages(data.messages || []);
-
-        // Get current user ID for comparison
-        const { data: { user } } = await fetch("/api/auth/user").then((r) => r.json());
-        if (user) {
-          setCurrentUserId(user.id);
-        }
-      } catch (error) {
-        console.error("Error loading messages:", error);
-        setMessages([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadMessages();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
-          <p className="text-gray-600">Loading your messages...</p>
-        </div>
-      </div>
-    );
+async function getMessages(userId: string): Promise<{ messages: Message[]; currentUserId: string }> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+      .order("created_at", { ascending: true });
+    return { messages: data || [], currentUserId: userId };
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    return { messages: [], currentUserId: userId };
   }
+}
+
+export default async function MessagesPage() {
+  // Auth check
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Fetch messages
+  const { messages, currentUserId } = await getMessages(user.id);
 
   return (
     <div className="space-y-6">

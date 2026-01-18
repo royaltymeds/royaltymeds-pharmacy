@@ -1,63 +1,71 @@
-"use client";
-
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Truck, Package, CheckCircle, Clock } from "lucide-react";
-import { useEffect, useState } from "react";
 
-export default function AdminOrders() {
-  const [orders, setOrders] = useState<any[]>([]);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        const response = await fetch("/api/admin/orders", {
-          credentials: "include",
-        });
+interface Order {
+  id: string;
+  patient_id: string;
+  prescription_id: string;
+  status: string;
+  created_at: string;
+  total_price: number;
+}
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch orders");
-        }
+async function getOrders(): Promise<Order[]> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return [];
+  }
+}
 
-        const data = await response.json();
-        setOrders(data.orders || []);
-      } catch (error) {
-        console.error("Error loading orders:", error);
-        setOrders([]);
-      }
-    };
+function getStatusColor(status: string) {
+  switch (status) {
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "processing":
+      return "bg-blue-100 text-blue-800";
+    case "delivered":
+      return "bg-green-100 text-green-800";
+    case "cancelled":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
 
-    loadOrders();
-  }, []);
+function getStatusIcon(status: string) {
+  switch (status) {
+    case "pending":
+      return <Clock className="w-4 h-4" />;
+    case "processing":
+      return <Package className="w-4 h-4" />;
+    case "delivered":
+      return <CheckCircle className="w-4 h-4" />;
+    case "cancelled":
+      return <Truck className="w-4 h-4" />;
+    default:
+      return null;
+  }
+}
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "processing":
-        return "bg-blue-100 text-blue-800";
-      case "delivered":
-        return "bg-green-100 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+export default async function AdminOrders() {
+  // Auth check
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Clock className="w-4 h-4" />;
-      case "processing":
-        return <Package className="w-4 h-4" />;
-      case "delivered":
-        return <CheckCircle className="w-4 h-4" />;
-      case "cancelled":
-        return <Truck className="w-4 h-4" />;
-      default:
-        return null;
-    }
-  };
+  // Fetch orders
+  const orders = await getOrders();
 
   return (
     <div className="space-y-6">

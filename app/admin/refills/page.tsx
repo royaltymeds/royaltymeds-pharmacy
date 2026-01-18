@@ -1,59 +1,66 @@
-"use client";
-
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, X, AlertCircle } from "lucide-react";
-import { useEffect, useState } from "react";
 
-export default function AdminRefills() {
-  const [refills, setRefills] = useState<any[]>([]);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    const loadRefills = async () => {
-      try {
-        const response = await fetch("/api/admin/refills", {
-          credentials: "include",
-        });
+interface Refill {
+  id: string;
+  patient_id: string;
+  prescription_id: string;
+  status: string;
+  created_at: string;
+}
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch refills");
-        }
+async function getRefills(): Promise<Refill[]> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase
+      .from("refills")
+      .select("*")
+      .order("created_at", { ascending: false });
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching refills:", error);
+    return [];
+  }
+}
 
-        const data = await response.json();
-        setRefills(data.refills || []);
-      } catch (error) {
-        console.error("Error loading refills:", error);
-        setRefills([]);
-      }
-    };
+function getStatusColor(status: string) {
+  switch (status) {
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "completed":
+      return "bg-green-100 text-green-800";
+    case "rejected":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
 
-    loadRefills();
-  }, []);
+function getStatusIcon(status: string) {
+  switch (status) {
+    case "pending":
+      return <AlertCircle className="w-4 h-4" />;
+    case "completed":
+      return <CheckCircle className="w-4 h-4" />;
+    case "rejected":
+      return <X className="w-4 h-4" />;
+    default:
+      return null;
+  }
+}
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+export default async function AdminRefills() {
+  // Auth check
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <AlertCircle className="w-4 h-4" />;
-      case "completed":
-        return <CheckCircle className="w-4 h-4" />;
-      case "rejected":
-        return <X className="w-4 h-4" />;
-      default:
-        return null;
-    }
-  };
+  // Fetch refills
+  const refills = await getRefills();
 
   return (
     <div className="space-y-6">

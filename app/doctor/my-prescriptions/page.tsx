@@ -1,9 +1,8 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Loader } from "lucide-react";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 import MyPrescriptionsClient from "./MyPrescriptionsClient";
+
+export const dynamic = "force-dynamic";
 
 interface Prescription {
   id: string;
@@ -19,65 +18,29 @@ interface Prescription {
   created_at: string;
 }
 
-export default function MyPrescriptions() {
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadPrescriptions = async () => {
-      try {
-        const response = await fetch("/api/doctor/prescriptions", {
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("Unauthorized - please log in again");
-          }
-          throw new Error("Failed to fetch prescriptions");
-        }
-
-        const data = await response.json();
-        setPrescriptions(data);
-      } catch (err) {
-        console.error("Error loading prescriptions:", err);
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPrescriptions();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
-          <p className="text-gray-600">Loading prescriptions...</p>
-        </div>
-      </div>
-    );
+async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase
+      .from("prescriptions")
+      .select("*")
+      .eq("doctor_id", doctorId)
+      .order("created_at", { ascending: false });
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching prescriptions:", error);
+    return [];
   }
+}
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow p-6 max-w-md w-full text-center">
-          <h2 className="text-lg font-semibold text-red-600 mb-2">Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Link
-            href="/doctor/dashboard"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Back to Dashboard
-          </Link>
-        </div>
-      </div>
-    );
-  }
+export default async function MyPrescriptions() {
+  // Auth check
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Fetch prescriptions
+  const prescriptions = await getPrescriptions(user.id);
 
   return (
     <div className="space-y-6">

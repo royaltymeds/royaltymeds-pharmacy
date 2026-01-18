@@ -1,77 +1,73 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { PackageIcon, TruckIcon, CheckCircleIcon, Loader } from "lucide-react";
+import { PackageIcon, TruckIcon, CheckCircleIcon } from "lucide-react";
 
-export default function OrdersPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [orders, setOrders] = useState<any[]>([]);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    async function loadOrders() {
-      try {
-        const response = await fetch("/api/patient/orders", {
-          credentials: "include",
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch orders");
-        }
+interface Order {
+  id: string;
+  prescription_id: string;
+  status: string;
+  created_at: string;
+  estimated_delivery?: string;
+  total_amount?: number;
+  payment_status?: string;
+  delivery_type?: string;
+  estimated_delivery_date?: string;
+  tracking_number?: string;
+  prescriptions?: { medication_name: string };
+}
 
-        const data = await response.json();
-        setOrders(data.orders || []);
-      } catch (error) {
-        console.error("Error loading orders:", error);
-        setOrders([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadOrders();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
-          <p className="text-gray-600">Loading your orders...</p>
-        </div>
-      </div>
-    );
+async function getOrders(userId: string): Promise<Order[]> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("patient_id", userId)
+      .order("created_at", { ascending: false });
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return [];
   }
+}
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "delivered":
-        return <CheckCircleIcon className="w-5 h-5 text-green-600" />;
-      case "in_transit":
-        return <TruckIcon className="w-5 h-5 text-blue-600" />;
-      case "ready":
-        return <PackageIcon className="w-5 h-5 text-yellow-600" />;
-      default:
-        return <PackageIcon className="w-5 h-5 text-gray-600" />;
-    }
-  };
+function getStatusIcon(status: string) {
+  switch (status) {
+    case "delivered":
+      return <CheckCircleIcon className="w-5 h-5 text-green-600" />;
+    case "in_transit":
+      return <TruckIcon className="w-5 h-5 text-blue-600" />;
+    default:
+      return <PackageIcon className="w-5 h-5 text-gray-600" />;
+  }
+}
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "delivered":
-        return "bg-green-100 text-green-800";
-      case "in_transit":
-        return "bg-blue-100 text-blue-800";
-      case "ready":
-        return "bg-yellow-100 text-yellow-800";
-      case "processing":
-        return "bg-blue-100 text-blue-800";
-      case "pending":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+function getStatusColor(status: string) {
+  switch (status) {
+    case "delivered":
+      return "bg-green-100 text-green-800";
+    case "in_transit":
+      return "bg-blue-100 text-blue-800";
+    case "processing":
+      return "bg-yellow-100 text-yellow-800";
+    case "cancelled":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
+
+export default async function OrdersPage() {
+  // Auth check
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Fetch orders
+  const orders = await getOrders(user.id);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -84,7 +80,7 @@ export default function OrdersPage() {
       {/* Orders List */}
       {orders && orders.length > 0 ? (
         <div className="space-y-3 sm:space-y-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 auto-rows-max">
-          {orders.map((order: any) => (
+          {orders.map((order) => (
             <Link key={order.id} href={`/patient/orders/${order.id}`}>
               <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition cursor-pointer border-t-4 border-green-500 h-full">
                 <div className="flex items-start justify-between gap-3 sm:gap-4">
@@ -116,13 +112,13 @@ export default function OrdersPage() {
                   <div>
                     <p className="text-xs font-medium">Payment</p>
                     <p className="font-medium text-gray-900 capitalize mt-1">
-                      {order.payment_status}
+                      {order.payment_status || "pending"}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs font-medium">Delivery</p>
                     <p className="font-medium text-gray-900 capitalize mt-1">
-                      {order.delivery_type}
+                      {order.delivery_type || "standard"}
                     </p>
                   </div>
                   {order.estimated_delivery_date && (
@@ -155,11 +151,11 @@ export default function OrdersPage() {
           <PackageIcon className="w-10 sm:w-12 h-10 sm:h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-base sm:text-xl font-semibold text-gray-900 mb-2">No Orders Yet</h3>
           <p className="text-xs sm:text-sm text-gray-600 mb-6">
-            Start by uploading a prescription to place your first order.
+            Your orders will appear here once you place them.
           </p>
           <Link
             href="/patient/prescriptions"
-            className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+            className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg text-sm"
           >
             Upload Prescription
           </Link>
