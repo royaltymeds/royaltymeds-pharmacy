@@ -127,10 +127,9 @@ export default async function PrescriptionsPage({ searchParams }: Props) {
                     href={`?page=${validPage - 1}`}
                     className={`flex items-center gap-1 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition ${
                       validPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        ? "bg-gray-100 text-gray-400 pointer-events-none"
                         : "bg-green-50 text-green-600 hover:bg-green-100"
                     }`}
-                    onClick={(e) => validPage === 1 && e.preventDefault()}
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span className="hidden sm:inline">Previous</span>
@@ -156,10 +155,9 @@ export default async function PrescriptionsPage({ searchParams }: Props) {
                     href={`?page=${validPage + 1}`}
                     className={`flex items-center gap-1 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition ${
                       validPage === totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        ? "bg-gray-100 text-gray-400 pointer-events-none"
                         : "bg-green-50 text-green-600 hover:bg-green-100"
                     }`}
-                    onClick={(e) => validPage === totalPages && e.preventDefault()}
                   >
                     <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="w-4 h-4" />
