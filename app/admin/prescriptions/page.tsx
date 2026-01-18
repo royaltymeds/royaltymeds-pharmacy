@@ -44,8 +44,8 @@ async function getPrescriptions(): Promise<Prescription[]> {
 
     // Combine and mark source
     const allPrescriptions = [
-      ...patientPrescriptions.map((p: any) => ({ ...p, source: "patient" as const })),
-      ...doctorPrescriptions.map((p: any) => ({ ...p, source: "doctor" as const })),
+      ...(patientPrescriptions || []).map((p: any) => ({ ...p, source: "patient" as const })),
+      ...(doctorPrescriptions || []).map((p: any) => ({ ...p, source: "doctor" as const })),
     ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return allPrescriptions;
