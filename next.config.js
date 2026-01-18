@@ -12,7 +12,6 @@ const nextConfig = {
     };
     return config;
   },
-  excludedDir: ['REFERENCE_APP'],
 };
 
 export default nextConfig;

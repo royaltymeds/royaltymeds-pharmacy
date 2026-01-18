@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
+import { MobileSidebar } from "@/components/MobileSidebar";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
@@ -66,6 +67,9 @@ export default async function PatientLayout({
               <span className="hidden sm:inline text-xs md:text-sm text-green-100 truncate max-w-[150px]">{userEmail}</span>
               <LogoutButton className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap" />
             </div>
+
+            {/* Mobile Sidebar */}
+            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} />
           </div>
         </div>
       </nav>
