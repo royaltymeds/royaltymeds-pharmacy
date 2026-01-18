@@ -95,18 +95,6 @@ export function PrescriptionsUploadForm() {
     <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload New Prescription</h3>
 
-      {success && (
-        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
-          <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
-          <div className="min-w-0">
-            <h4 className="font-semibold text-gray-900">Prescription Uploaded!</h4>
-            <p className="text-sm text-gray-600 mt-1">
-              Your prescription has been uploaded successfully. Our pharmacists will review it shortly.
-            </p>
-          </div>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         <p className="text-gray-600 text-sm">
           Upload a clear image or PDF of your prescription for pharmacy review
@@ -192,6 +180,18 @@ export function PrescriptionsUploadForm() {
           {isLoading ? "Uploading..." : "Upload Prescription"}
         </button>
       </form>
+
+      {success && (
+        <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+          <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <h4 className="font-semibold text-gray-900">Prescription Uploaded!</h4>
+            <p className="text-sm text-gray-600 mt-1">
+              Your prescription has been uploaded successfully. Our pharmacists will review it shortly.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
