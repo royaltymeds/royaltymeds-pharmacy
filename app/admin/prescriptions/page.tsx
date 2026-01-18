@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, X, AlertCircle } from "lucide-react";
@@ -14,16 +15,40 @@ interface Prescription {
   dosage: string;
   status: string;
   created_at: string;
+  source: "patient" | "doctor";
 }
 
 async function getPrescriptions(): Promise<Prescription[]> {
   try {
     const supabase = await createServerSupabaseClient();
-    const { data } = await supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    // Create admin client for unrestricted access
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Fetch prescriptions from patient prescriptions table
+    const { data: patientPrescriptions = [] } = await supabaseAdmin
       .from("prescriptions")
       .select("*")
       .order("created_at", { ascending: false });
-    return data || [];
+
+    // Fetch prescriptions from doctor prescriptions table
+    const { data: doctorPrescriptions = [] } = await supabaseAdmin
+      .from("doctor_prescriptions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    // Combine and mark source
+    const allPrescriptions = [
+      ...patientPrescriptions.map((p: any) => ({ ...p, source: "patient" as const })),
+      ...doctorPrescriptions.map((p: any) => ({ ...p, source: "doctor" as const })),
+    ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return allPrescriptions;
   } catch (error) {
     console.error("Error fetching prescriptions:", error);
     return [];
@@ -91,10 +116,13 @@ export default async function AdminPrescriptions() {
                   Prescription #
                 </th>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Patient
+                  Source
                 </th>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Medication
                 </th>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Submitted
@@ -107,12 +135,16 @@ export default async function AdminPrescriptions() {
             <tbody className="divide-y divide-gray-200">
               {prescriptions && prescriptions.length > 0 ? (
                 (prescriptions as any[]).map((rx) => (
-                  <tr key={rx.id} className="hover:bg-gray-50 transition">
+                  <tr key={`${rx.source}-${rx.id}`} className="hover:bg-gray-50 transition">
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900 font-mono">
                       {rx.prescription_number}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
-                      {(rx.users as any)?.user_profiles?.full_name || "Unknown"}
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                        rx.source === "patient" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
+                      }`}>
+                        {rx.source === "patient" ? "Patient" : "Doctor"}
+                      </span>
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <span
@@ -123,6 +155,9 @@ export default async function AdminPrescriptions() {
                         {getStatusIcon(rx.status)}
                         <span className="hidden sm:inline">{rx.status.charAt(0).toUpperCase() + rx.status.slice(1)}</span>
                       </span>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
+                      {rx.medication_name}
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
                       {new Date(rx.created_at).toLocaleDateString()}

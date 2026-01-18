@@ -32,19 +32,38 @@ async function getDashboardData(userId: string): Promise<DashboardStats> {
       throw new Error("Access denied - admin only");
     }
 
-    // Fetch all prescriptions
-    const { data: allPrescriptions = [] } = await supabaseAdmin
+    // Fetch all prescriptions from patient prescriptions table
+    const { data: patientPrescriptions = [] } = await supabaseAdmin
       .from("prescriptions")
-      .select("id, status, medication_name, patient_id, doctor_id, created_at")
+      .select("id, status, medication_name, patient_id, doctor_id, created_at, prescription_number")
       .order("created_at", { ascending: false });
 
-    // Fetch pending prescriptions (for recent list)
-    const { data: pendingPrescriptionsData = [] } = await supabaseAdmin
-      .from("prescriptions")
-      .select("id, prescription_number, medication_name, patient_id, status, created_at")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(5);
+    // Fetch all prescriptions from doctor prescriptions table
+    const { data: doctorPrescriptions = [] } = await supabaseAdmin
+      .from("doctor_prescriptions")
+      .select("id, status, medication_name, patient_id, doctor_id, created_at, prescription_number")
+      .order("created_at", { ascending: false });
+
+    // Combine both prescription sources
+    const allPrescriptions = [
+      ...(patientPrescriptions || []).map((p: any) => ({ ...p, source: "patient" })),
+      ...(doctorPrescriptions || []).map((p: any) => ({ ...p, source: "doctor" })),
+    ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    // Fetch pending prescriptions (for recent list) - from both tables
+    const pendingFromPatient = ((patientPrescriptions as any[]) || [])
+      .filter((p) => p.status === "pending")
+      .slice(0, 5)
+      .map((p) => ({ ...p, source: "patient" }));
+
+    const pendingFromDoctor = ((doctorPrescriptions as any[]) || [])
+      .filter((p) => p.status === "pending")
+      .slice(0, 5 - pendingFromPatient.length)
+      .map((p) => ({ ...p, source: "doctor" }));
+
+    const pendingPrescriptionsData = [...pendingFromPatient, ...pendingFromDoctor]
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 5);
 
     // Fetch all orders
     const { data: allOrders = [] } = await supabaseAdmin
@@ -57,11 +76,11 @@ async function getDashboardData(userId: string): Promise<DashboardStats> {
       .select("id, status, created_at")
       .eq("status", "pending");
 
-    // Calculate stats
+    // Calculate stats from combined prescriptions
     const prescriptionStats = {
-      pending: ((allPrescriptions || []) as any[]).filter((p) => p.status === "pending").length,
-      approved: ((allPrescriptions || []) as any[]).filter((p) => p.status === "approved").length,
-      rejected: ((allPrescriptions || []) as any[]).filter((p) => p.status === "rejected").length,
+      pending: (allPrescriptions as any[]).filter((p) => p.status === "pending").length,
+      approved: (allPrescriptions as any[]).filter((p) => p.status === "approved").length,
+      rejected: (allPrescriptions as any[]).filter((p) => p.status === "rejected").length,
       total: (allPrescriptions || []).length,
     };
 
@@ -123,15 +142,15 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
         {/* Pending Prescriptions */}
         <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-yellow-500">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <p className="text-gray-600 text-xs md:text-sm font-medium">Pending</p>
               <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{prescriptionStats.pending}</p>
             </div>
-            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-yellow-500 flex-shrink-0" />
+            <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:w-10 text-yellow-500 flex-shrink-0 hidden sm:block" />
           </div>
           <Link
             href="/admin/prescriptions"
@@ -143,12 +162,12 @@ export default async function AdminDashboard() {
 
         {/* Approved Prescriptions */}
         <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-green-600">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <p className="text-gray-600 text-xs md:text-sm font-medium">Approved</p>
               <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{prescriptionStats.approved}</p>
             </div>
-            <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-green-600 flex-shrink-0 hidden sm:block" />
+            <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:w-10 text-green-600 flex-shrink-0 hidden sm:block" />
           </div>
           <p className="text-gray-600 text-xs mt-2 sm:mt-3">
             {prescriptionStats.total > 0
@@ -164,7 +183,7 @@ export default async function AdminDashboard() {
               <p className="text-gray-600 text-xs md:text-sm font-medium">Processing</p>
               <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{orderStats.processing}</p>
             </div>
-            <Clock className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-blue-600 flex-shrink-0 hidden sm:block" />
+            <Clock className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:w-10 text-blue-600 flex-shrink-0 hidden sm:block" />
           </div>
           <Link
             href="/admin/orders"
@@ -175,13 +194,13 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Pending Refills */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-orange-500 col-span-2 sm:col-span-1">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-orange-500">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <p className="text-gray-600 text-xs md:text-sm font-medium">Refills</p>
               <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{refillStats.pending}</p>
             </div>
-            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-yellow-600 flex-shrink-0 hidden sm:block" />
+            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:w-10 text-orange-600 flex-shrink-0 hidden sm:block" />
           </div>
           <Link
             href="/admin/refills"
