@@ -212,7 +212,7 @@ export default function AdminUsersPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 bg-green-600 text-white text-xs sm:text-sm py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+                className="px-6 bg-green-600 text-white text-xs sm:text-sm py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2 w-auto"
               >
                 {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
                 {isSubmitting ? "Creating..." : "Create Admin"}

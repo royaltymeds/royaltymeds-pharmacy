@@ -146,11 +146,11 @@ export default function ProfilePage() {
             {/* Account Settings */}
             <div className="border-t border-gray-200 pt-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Account Settings</h2>
-              <div className="space-y-4">
-                <button className="w-full md:w-auto px-6 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition font-medium text-sm">
+              <div className="space-y-2 flex flex-wrap gap-3">
+                <button className="px-6 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition font-medium text-sm w-auto">
                   Change Password
                 </button>
-                <button className="w-full md:w-auto px-6 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-medium text-sm ml-0 md:ml-3">
+                <button className="px-6 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-medium text-sm w-auto">
                   Delete Account
                 </button>
               </div>

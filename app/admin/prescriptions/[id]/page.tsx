@@ -269,11 +269,11 @@ export default function PrescriptionDetail() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 Actions
               </h2>
-              <div className="space-y-2">
-                <button className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition">
+              <div className="space-y-2 flex flex-col gap-2">
+                <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition w-auto">
                   Approve
                 </button>
-                <button className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition">
+                <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition w-auto">
                   Reject
                 </button>
               </div>
