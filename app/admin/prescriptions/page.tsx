@@ -65,16 +65,16 @@ export default async function AdminPrescriptions() {
   const prescriptions = await getPrescriptions();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 md:gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Prescription Management</h1>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">Review and approve patient prescriptions</p>
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900">Prescription Management</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">Review and approve patient prescriptions</p>
         </div>
         <Link
           href="/admin/dashboard"
-          className="text-green-600 hover:text-green-700 font-medium text-sm whitespace-nowrap"
+          className="text-green-600 hover:text-green-700 font-medium text-xs sm:text-sm whitespace-nowrap"
         >
           ← Back to Dashboard
         </Link>

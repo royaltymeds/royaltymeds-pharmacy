@@ -66,14 +66,14 @@ export default function AdminDoctorsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 border-l-4 border-green-600">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <Users className="w-6 sm:w-8 h-6 sm:h-8 text-green-600 flex-shrink-0" />
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Manage Doctors</h1>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Create and manage doctor accounts</p>
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 border-l-4 border-green-600">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+          <Users className="w-5 sm:w-6 md:w-8 h-5 sm:h-6 md:h-8 text-green-600 flex-shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900">Manage Doctors</h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">Create and manage doctor accounts</p>
           </div>
         </div>
       </div>

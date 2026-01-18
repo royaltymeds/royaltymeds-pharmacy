@@ -40,11 +40,11 @@ export default async function PrescriptionsPage() {
 
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border-l-4 border-green-600">
-        <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Prescriptions</h1>
-        <p className="text-xs sm:text-sm text-gray-600 mt-2">
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 border-l-4 border-green-600">
+        <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900">Prescriptions</h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-2">
           Upload new prescriptions or view your existing prescriptions
         </p>
       </div>
@@ -53,16 +53,16 @@ export default async function PrescriptionsPage() {
       <PrescriptionsUploadForm />
 
       {/* View Prescriptions (Server-rendered) */}
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Prescriptions</h3>
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6">
+        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Your Prescriptions</h3>
         
         {prescriptions.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3 md:space-y-4">
             {prescriptions.map((rx) => (
-              <div key={rx.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-                <div className="flex items-start justify-between gap-4">
+              <div key={rx.id} className="border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 hover:shadow-md transition">
+                <div className="flex items-start justify-between gap-2 sm:gap-3 md:gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 text-sm sm:text-base">
                       {rx.medication_name || "Prescription"}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
@@ -70,7 +70,7 @@ export default async function PrescriptionsPage() {
                     </p>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
+                    className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
                       rx.status === "approved"
                         ? "bg-green-100 text-green-800"
                         : rx.status === "rejected"
@@ -86,7 +86,7 @@ export default async function PrescriptionsPage() {
                     href={rx.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-3 text-xs text-blue-600 hover:underline"
+                    className="inline-block mt-2 sm:mt-3 text-xs text-blue-600 hover:underline"
                   >
                     View File →
                   </Link>
@@ -95,7 +95,7 @@ export default async function PrescriptionsPage() {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-600 py-8">
+          <p className="text-center text-gray-600 py-6 sm:py-8 text-sm">
             No prescriptions found.
           </p>
         )}

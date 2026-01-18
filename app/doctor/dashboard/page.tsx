@@ -117,86 +117,86 @@ export default async function DoctorDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Header with Navigation */}
-      <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 border-l-4 border-blue-600">
-        <div className="flex items-start justify-between gap-4">
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 border-l-4 border-blue-600">
+        <div className="flex items-start justify-between gap-2 sm:gap-3 md:gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">Doctor Dashboard</h1>
-            <p className="text-sm md:text-base text-gray-600 mt-2">
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Doctor Dashboard</h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2">
               Submit prescriptions and track pharmacy approval status
             </p>
           </div>
-          <Link href="/" className="flex-shrink-0 text-blue-600 hover:text-blue-700 font-medium text-xs md:text-sm whitespace-nowrap">
+          <Link href="/" className="flex-shrink-0 text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm whitespace-nowrap">
             ← Home
           </Link>
         </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
         {/* Total Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-blue-600">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-blue-600">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-gray-500 text-xs md:text-sm font-medium">
                 Total
               </p>
-              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
+              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
                 {stats.totalPrescriptions}
               </p>
             </div>
-            <FileText className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
+            <FileText className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-blue-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Pending Approval */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-yellow-500">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-yellow-500">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-gray-500 text-xs md:text-sm font-medium">
                 Pending
               </p>
-              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
+              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
                 {stats.pendingApproval}
               </p>
             </div>
-            <Clock className="h-8 w-8 md:h-10 md:w-10 text-yellow-600 flex-shrink-0" />
+            <Clock className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-yellow-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Approved */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-green-600">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-green-600">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-gray-500 text-xs md:text-sm font-medium">Approved</p>
-              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
+              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
                 {stats.approved}
               </p>
             </div>
-            <CheckCircle className="h-8 w-8 md:h-10 md:w-10 text-green-600 flex-shrink-0" />
+            <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-green-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Rejected */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-red-600">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-red-600">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-gray-500 text-xs md:text-sm font-medium">Rejected</p>
-              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
+              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
                 {stats.rejected}
               </p>
             </div>
-            <AlertCircle className="h-8 w-8 md:h-10 md:w-10 text-red-600 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-red-600 flex-shrink-0" />
           </div>
         </div>
 
         {/* Total Patients */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 border-t-4 border-blue-600">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-blue-600">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-gray-500 text-xs md:text-sm font-medium">Patients</p>
-              <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
+              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
                 {stats.totalPatients}
               </p>
             </div>

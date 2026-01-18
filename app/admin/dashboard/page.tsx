@@ -108,12 +108,12 @@ export default async function AdminDashboard() {
   const { prescriptionStats, orderStats, refillStats, pendingPrescriptions } = dashboardData;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Page Header with Navigation */}
-      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 border-l-4 border-green-600">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 border-l-4 border-green-600">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 md:gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Pharmacy Dashboard</h1>
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Pharmacy Dashboard</h1>
             <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2">Manage prescriptions, orders, and refills</p>
           </div>
           <Link href="/" className="flex-shrink-0 text-green-600 hover:text-green-700 font-medium text-xs sm:text-sm whitespace-nowrap">
@@ -123,15 +123,15 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
         {/* Pending Prescriptions */}
         <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-yellow-500">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col gap-2">
             <div>
               <p className="text-gray-600 text-xs md:text-sm font-medium">Pending</p>
               <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{prescriptionStats.pending}</p>
             </div>
-            <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-yellow-500 flex-shrink-0 hidden sm:block" />
+            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-yellow-500 flex-shrink-0" />
           </div>
           <Link
             href="/admin/prescriptions"
@@ -143,7 +143,7 @@ export default async function AdminDashboard() {
 
         {/* Approved Prescriptions */}
         <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-green-600">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col gap-2">
             <div>
               <p className="text-gray-600 text-xs md:text-sm font-medium">Approved</p>
               <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{prescriptionStats.approved}</p>

@@ -43,11 +43,11 @@ export default async function MyPrescriptions() {
   const prescriptions = await getPrescriptions(user.id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border-l-4 border-blue-600">
-        <h1 className="text-lg sm:text-2xl font-bold text-gray-900">My Prescriptions</h1>
-        <p className="text-xs sm:text-sm text-gray-600 mt-2">
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 border-l-4 border-blue-600">
+        <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900">My Prescriptions</h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2">
           Track and manage all prescriptions submitted to the pharmacy
         </p>
       </div>
