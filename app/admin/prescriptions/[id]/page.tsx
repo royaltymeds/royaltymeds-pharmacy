@@ -9,6 +9,8 @@ interface PrescriptionDetailPageProps {
 }
 
 async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
+  console.log("[getPrescriptionDetail] Looking for prescription ID:", prescriptionId);
+  
   try {
     // Create an admin client that bypasses RLS using service role key
     const supabaseAdmin = createClient(
@@ -16,8 +18,16 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    // First, let's see what prescriptions exist in the patient table
+    console.log("[getPrescriptionDetail] Fetching ALL patient prescriptions for debugging...");
+    const { data: allPatientPrescriptions } = await supabaseAdmin
+      .from("prescriptions")
+      .select("id");
+    console.log("[getPrescriptionDetail] Patient prescriptions in DB:", allPatientPrescriptions?.map((p: any) => p.id) || []);
+
     // Try to fetch from patient prescriptions table first
-    const { data: patientPrescription } = await supabaseAdmin
+    console.log("[getPrescriptionDetail] Searching patient prescriptions table for ID:", prescriptionId);
+    const { data: patientPrescription, error: patientError } = await supabaseAdmin
       .from("prescriptions")
       .select(
         `
@@ -28,7 +38,6 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         created_at,
         updated_at,
         file_url,
-        dosage_instructions,
         notes,
         prescription_number,
         prescription_items(
@@ -48,13 +57,26 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
       .eq("id", prescriptionId)
       .maybeSingle();
 
+    if (patientError) {
+      console.log("[getPrescriptionDetail] Patient query error:", patientError);
+    }
+
     if (patientPrescription) {
-      console.log("Found patient prescription:", patientPrescription.id);
+      console.log("[getPrescriptionDetail] Found in patient prescriptions:", patientPrescription.id);
       return { ...patientPrescription, source: "patient" };
     }
 
+    console.log("[getPrescriptionDetail] Not found in patient prescriptions, searching doctor prescriptions...");
+    
+    // First, let's see what prescriptions exist in the doctor table
+    console.log("[getPrescriptionDetail] Fetching ALL doctor prescriptions for debugging...");
+    const { data: allDoctorPrescriptions } = await supabaseAdmin
+      .from("doctor_prescriptions")
+      .select("id");
+    console.log("[getPrescriptionDetail] Doctor prescriptions in DB:", allDoctorPrescriptions?.map((p: any) => p.id) || []);
+    
     // If not found, try doctor prescriptions table
-    const { data: doctorPrescription } = await supabaseAdmin
+    const { data: doctorPrescription, error: doctorError } = await supabaseAdmin
       .from("doctor_prescriptions")
       .select(
         `
@@ -63,12 +85,13 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         patient_id,
         doctor_id,
         medication_name,
-        dosage_instructions,
+        dosage,
         quantity,
         frequency,
+        duration,
+        instructions,
         created_at,
         updated_at,
-        file_url,
         notes,
         prescription_number,
         users:patient_id(
@@ -82,16 +105,20 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
       .eq("id", prescriptionId)
       .maybeSingle();
 
+    if (doctorError) {
+      console.log("[getPrescriptionDetail] Doctor query error:", doctorError);
+    }
+
     if (doctorPrescription) {
-      console.log("Found doctor prescription:", doctorPrescription.id);
+      console.log("[getPrescriptionDetail] Found in doctor prescriptions:", doctorPrescription.id);
       return { ...doctorPrescription, source: "doctor" };
     }
 
     // Not found in either table
-    console.log("Prescription not found with ID:", prescriptionId);
+    console.log("[getPrescriptionDetail] Prescription not found in either table with ID:", prescriptionId);
     return null;
   } catch (error) {
-    console.error("Error fetching prescription:", error);
+    console.error("[getPrescriptionDetail] Error fetching prescription:", error);
     return null;
   }
 }

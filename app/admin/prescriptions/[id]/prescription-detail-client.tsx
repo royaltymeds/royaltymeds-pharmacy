@@ -145,16 +145,24 @@ export default function PrescriptionDetailClient({
                       {prescription.frequency || "N/A"}
                     </p>
                   </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase tracking-wide">
+                      Duration
+                    </p>
+                    <p className="text-gray-900">
+                      {prescription.duration || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase tracking-wide">
+                      Instructions
+                    </p>
+                    <p className="text-gray-900">
+                      {prescription.instructions || "N/A"}
+                    </p>
+                  </div>
                 </>
               )}
-              <div>
-                <p className="text-xs text-gray-600 uppercase tracking-wide">
-                  Dosage Instructions
-                </p>
-                <p className="text-gray-900">
-                  {prescription.dosage_instructions || "N/A"}
-                </p>
-              </div>
               <div>
                 <p className="text-xs text-gray-600 uppercase tracking-wide">
                   Notes
