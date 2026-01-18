@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, AlertCircle, CheckCircle } from "lucide-react";
+import { revalidatePrescriptionsPath } from "@/lib/actions";
 
 export function PrescriptionsUploadForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,6 +51,9 @@ export function PrescriptionsUploadForm() {
       setSuccess(true);
       setFile(null);
       setFileName("");
+
+      // Trigger page refresh to update prescriptions list
+      await revalidatePrescriptionsPath();
 
       // Reset after 3 seconds
       setTimeout(() => {
