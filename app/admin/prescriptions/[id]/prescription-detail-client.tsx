@@ -119,50 +119,8 @@ export default function PrescriptionDetailClient({
               Prescription Details
             </h2>
             <div className="space-y-3">
-              {prescription.source === "patient" && (
-                <>
-                  {prescription.medication_name && (
-                    <div>
-                      <p className="text-xs text-gray-600 uppercase tracking-wide">
-                        Medication
-                      </p>
-                      <p className="text-gray-900">
-                        {prescription.medication_name}
-                      </p>
-                    </div>
-                  )}
-                  {prescription.dosage && (
-                    <div>
-                      <p className="text-xs text-gray-600 uppercase tracking-wide">
-                        Dosage
-                      </p>
-                      <p className="text-gray-900">
-                        {prescription.dosage}
-                      </p>
-                    </div>
-                  )}
-                  {prescription.quantity && (
-                    <div>
-                      <p className="text-xs text-gray-600 uppercase tracking-wide">
-                        Quantity
-                      </p>
-                      <p className="text-gray-900">
-                        {prescription.quantity}
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
               {prescription.source === "doctor" && (
                 <>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase tracking-wide">
-                      Dosage
-                    </p>
-                    <p className="text-gray-900">
-                      {prescription.dosage || "N/A"}
-                    </p>
-                  </div>
                   <div>
                     <p className="text-xs text-gray-600 uppercase tracking-wide">
                       Quantity
@@ -227,8 +185,13 @@ export default function PrescriptionDetailClient({
                           {item.medication_name || "Unknown Medication"}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {item.quantity || 0}x - {item.frequency || "N/A"}
+                          Dosage: {item.dosage || "N/A"} | Quantity: {item.quantity || 0}
                         </p>
+                        {item.notes && (
+                          <p className="text-sm text-gray-600 mt-2">
+                            Notes: {item.notes}
+                          </p>
+                        )}
                       </div>
                     )
                   )}
