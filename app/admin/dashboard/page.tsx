@@ -13,7 +13,7 @@ interface DashboardStats {
   pendingPrescriptions: any[];
 }
 
-async function getDashboardData(userId: string): Promise<DashboardStats> {
+async function getDashboardData(): Promise<DashboardStats> {
   try {
     // Create an admin client that bypasses RLS using service role key
     const supabaseAdmin = createClient(
@@ -21,28 +21,25 @@ async function getDashboardData(userId: string): Promise<DashboardStats> {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Check if user is admin
-    const { data: userData } = await supabaseAdmin
-      .from("users")
-      .select("role")
-      .eq("id", userId)
-      .single();
-
-    if (!userData || userData?.role !== "admin") {
-      throw new Error("Access denied - admin only");
-    }
-
     // Fetch all prescriptions from patient prescriptions table
-    const { data: patientPrescriptions = [] } = await supabaseAdmin
+    const { data: patientPrescriptions = [], error: patientError } = await supabaseAdmin
       .from("prescriptions")
       .select("id, status, medication_name, patient_id, doctor_id, created_at, prescription_number")
       .order("created_at", { ascending: false });
 
+    if (patientError) {
+      console.error("Error fetching patient prescriptions:", patientError);
+    }
+
     // Fetch all prescriptions from doctor prescriptions table
-    const { data: doctorPrescriptions = [] } = await supabaseAdmin
+    const { data: doctorPrescriptions = [], error: doctorError } = await supabaseAdmin
       .from("doctor_prescriptions")
       .select("id, status, medication_name, patient_id, doctor_id, created_at, prescription_number")
       .order("created_at", { ascending: false });
+
+    if (doctorError) {
+      console.error("Error fetching doctor prescriptions:", doctorError);
+    }
 
     // Combine both prescription sources
     const allPrescriptions = [
@@ -123,7 +120,7 @@ export default async function AdminDashboard() {
     redirect("/login");
   }
 
-  const dashboardData = await getDashboardData(user.id);
+  const dashboardData = await getDashboardData();
   const { prescriptionStats, orderStats, refillStats, pendingPrescriptions } = dashboardData;
 
   return (
@@ -142,7 +139,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
         {/* Pending Prescriptions */}
         <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-yellow-500">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
