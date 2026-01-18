@@ -34,7 +34,7 @@ async function getDashboardData(): Promise<DashboardStats> {
     // Fetch all prescriptions from doctor prescriptions table
     const { data: doctorPrescriptions = [], error: doctorError } = await supabaseAdmin
       .from("doctor_prescriptions")
-      .select("id, status, medication_name, patient_id, doctor_id, created_at, prescription_number")
+      .select("id, status, patient_id, doctor_id, created_at, prescription_number")
       .order("created_at", { ascending: false });
 
     if (doctorError) {
