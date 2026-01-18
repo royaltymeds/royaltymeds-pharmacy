@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
+import { generatePrescriptionNumber } from "@/lib/prescription-number";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         id,
+        prescription_number,
         patient_id,
         medication_name,
         dosage,
@@ -53,6 +55,7 @@ export async function GET(request: NextRequest) {
 
     const formattedData = data?.map((prescription: any) => ({
       id: prescription.id,
+      prescriptionNumber: prescription.prescription_number,
       patientId: prescription.patient_id,
       medicationName: prescription.medication_name,
       dosage: prescription.dosage,
@@ -100,9 +103,13 @@ export async function POST(request: NextRequest) {
       )
       .join("; ");
 
+    // Generate prescription number based on current date/time
+    const prescriptionNumber = generatePrescriptionNumber();
+
     const { error } = await supabase.from("doctor_prescriptions").insert([
       {
         doctor_id: user.id,
+        prescription_number: prescriptionNumber,
         patient_id: body.patientId,
         medication_name: medicationsText || "No medications",
         dosage: body.medications?.[0]?.dosage || null,
