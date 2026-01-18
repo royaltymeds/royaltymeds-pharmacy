@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
-import { generatePrescriptionNumber } from "@/lib/prescription-number";
 
 export const dynamic = "force-dynamic";
 
@@ -56,10 +55,11 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
+    const prescriptionNumber = formData.get("prescription_number") as string;
     const medicationsString = formData.get("medications") as string;
     const notes = formData.get("notes") as string;
 
-    if (!file) {
+    if (!file || !prescriptionNumber) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -99,10 +99,7 @@ export async function POST(request: NextRequest) {
 
     const fileUrl = urlData.publicUrl;
 
-    // Generate prescription number based on current date/time
-    const prescriptionNumber = generatePrescriptionNumber();
-
-    // Store prescription in database (only prescription metadata, no medications)
+    // Store prescription in database (prescription_number generated on client using browser time)
     const { data: prescriptionData, error: prescriptionError } = await supabase
       .from("prescriptions")
       .insert([

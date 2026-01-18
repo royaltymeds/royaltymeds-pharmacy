@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Upload, AlertCircle, CheckCircle, FileText, X } from "lucide-react";
 import { revalidatePrescriptionsPath } from "@/lib/actions";
+import { generatePrescriptionNumber } from "@/lib/prescription-number";
 
 export function PrescriptionsUploadForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,8 +57,12 @@ export function PrescriptionsUploadForm() {
     setError(null);
 
     try {
+      // Generate prescription number using browser time
+      const prescriptionNumber = generatePrescriptionNumber();
+
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("prescription_number", prescriptionNumber);
 
       const response = await fetch("/api/patient/upload", {
         method: "POST",

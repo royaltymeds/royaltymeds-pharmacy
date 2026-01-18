@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
-import { generatePrescriptionNumber } from "@/lib/prescription-number";
 
 export const dynamic = "force-dynamic";
 
@@ -103,8 +102,15 @@ export async function POST(request: NextRequest) {
       )
       .join("; ");
 
-    // Generate prescription number based on current date/time
-    const prescriptionNumber = generatePrescriptionNumber();
+    // Use prescription number generated on client using browser time
+    const prescriptionNumber = body.prescriptionNumber;
+
+    if (!prescriptionNumber) {
+      return NextResponse.json(
+        { error: "Missing prescription number" },
+        { status: 400 }
+      );
+    }
 
     const { error } = await supabase.from("doctor_prescriptions").insert([
       {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle, Plus, Trash2, Upload } from "lucide-react";
+import { generatePrescriptionNumber } from "@/lib/prescription-number";
 
 interface Medication {
   id: string;
@@ -95,6 +96,9 @@ export default function SubmitPrescription() {
         return;
       }
 
+      // Generate prescription number using browser time
+      const prescriptionNumber = generatePrescriptionNumber();
+
       const response = await fetch("/api/doctor/prescriptions", {
         method: "POST",
         headers: {
@@ -102,6 +106,7 @@ export default function SubmitPrescription() {
         },
         body: JSON.stringify({
           ...formData,
+          prescriptionNumber,
           medications: validMeds,
           file_url: fileUrl || null,
         }),
