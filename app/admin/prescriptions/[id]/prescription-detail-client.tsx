@@ -119,14 +119,48 @@ export default function PrescriptionDetailClient({
               Prescription Details
             </h2>
             <div className="space-y-3">
+              {prescription.source === "patient" && (
+                <>
+                  {prescription.medication_name && (
+                    <div>
+                      <p className="text-xs text-gray-600 uppercase tracking-wide">
+                        Medication
+                      </p>
+                      <p className="text-gray-900">
+                        {prescription.medication_name}
+                      </p>
+                    </div>
+                  )}
+                  {prescription.dosage && (
+                    <div>
+                      <p className="text-xs text-gray-600 uppercase tracking-wide">
+                        Dosage
+                      </p>
+                      <p className="text-gray-900">
+                        {prescription.dosage}
+                      </p>
+                    </div>
+                  )}
+                  {prescription.quantity && (
+                    <div>
+                      <p className="text-xs text-gray-600 uppercase tracking-wide">
+                        Quantity
+                      </p>
+                      <p className="text-gray-900">
+                        {prescription.quantity}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
               {prescription.source === "doctor" && (
                 <>
                   <div>
                     <p className="text-xs text-gray-600 uppercase tracking-wide">
-                      Medication
+                      Dosage
                     </p>
                     <p className="text-gray-900">
-                      {prescription.medication_name || "N/A"}
+                      {prescription.dosage || "N/A"}
                     </p>
                   </div>
                   <div>

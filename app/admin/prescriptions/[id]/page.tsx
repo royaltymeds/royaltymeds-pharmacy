@@ -40,12 +40,9 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         file_url,
         notes,
         prescription_number,
-        prescription_items(
-          id,
-          medication_name,
-          quantity,
-          frequency
-        ),
+        medication_name,
+        dosage,
+        quantity,
         users:patient_id(
           id,
           user_profiles(
@@ -84,7 +81,6 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         status,
         patient_id,
         doctor_id,
-        medication_name,
         dosage,
         quantity,
         frequency,
