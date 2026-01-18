@@ -1,8 +1,15 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { Loader, FileText, Users, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
+import {
+  FileText,
+  Users,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 interface DashboardStats {
   totalPrescriptions: number;
@@ -12,61 +19,78 @@ interface DashboardStats {
   totalPatients: number;
 }
 
-export default function DoctorDashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+async function getDashboardStats(doctorId: string): Promise<DashboardStats> {
+  try {
+    const supabase = await createServerSupabaseClient();
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const response = await fetch("/api/doctor/stats", {
-          credentials: "include",
-        });
+    // Get total prescriptions
+    const { count: totalPrescriptions } = await supabase
+      .from("doctor_prescriptions")
+      .select("*", { count: "exact", head: true })
+      .eq("doctor_id", doctorId);
 
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("Unauthorized - please log in again");
-          }
-          throw new Error("Failed to fetch dashboard data");
-        }
+    // Get pending prescriptions
+    const { count: pendingApproval } = await supabase
+      .from("doctor_prescriptions")
+      .select("*", { count: "exact", head: true })
+      .eq("doctor_id", doctorId)
+      .eq("status", "pending");
 
-        const data = await response.json();
-        setStats(data);
-      } catch (err) {
-        console.error("Error loading stats:", err);
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
+    // Get approved prescriptions
+    const { count: approved } = await supabase
+      .from("doctor_prescriptions")
+      .select("*", { count: "exact", head: true })
+      .eq("doctor_id", doctorId)
+      .eq("status", "approved");
+
+    // Get rejected prescriptions
+    const { count: rejected } = await supabase
+      .from("doctor_prescriptions")
+      .select("*", { count: "exact", head: true })
+      .eq("doctor_id", doctorId)
+      .eq("status", "rejected");
+
+    // Get total unique patients
+    const { data: prescriptions } = await supabase
+      .from("doctor_prescriptions")
+      .select("patient_id")
+      .eq("doctor_id", doctorId);
+
+    const uniquePatients = new Set(
+      (prescriptions || []).map((p: any) => p.patient_id)
+    );
+
+    return {
+      totalPrescriptions: totalPrescriptions || 0,
+      pendingApproval: pendingApproval || 0,
+      approved: approved || 0,
+      rejected: rejected || 0,
+      totalPatients: uniquePatients.size,
     };
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    return {
+      totalPrescriptions: 0,
+      pendingApproval: 0,
+      approved: 0,
+      rejected: 0,
+      totalPatients: 0,
+    };
+  }
+}
 
-    loadStats();
-  }, []);
+export default async function DoctorDashboard() {
+  // Auth check - page-level enforcement
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-600" />
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+  if (!user) {
+    redirect("/login");
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow p-6 max-w-md w-full text-center">
-          <h2 className="text-lg font-semibold text-red-600 mb-2">Error</h2>
-          <p className="text-gray-600">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!stats) return null;
+  const stats = await getDashboardStats(user.id);
 
   const quickActions = [
     {

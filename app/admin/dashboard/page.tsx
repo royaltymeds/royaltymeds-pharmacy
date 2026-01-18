@@ -1,49 +1,111 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { AlertCircle, CheckCircle, Clock, TrendingUp, Loader } from "lucide-react";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
+import { redirect } from "next/navigation";
+import { AlertCircle, CheckCircle, Clock, TrendingUp } from "lucide-react";
 
-export default function AdminDashboard() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [pendingPrescriptions, setPendingPrescriptions] = useState<any[]>([]);
-  const [prescriptionStats, setPrescriptionStats] = useState({ pending: 0, approved: 0, rejected: 0, total: 0 });
-  const [orderStats, setOrderStats] = useState({ pending: 0, processing: 0, delivered: 0, total: 0 });
-  const [refillStats, setRefillStats] = useState({ pending: 0 });
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        const response = await fetch("/api/admin/dashboard", {
-          credentials: "include",
-        });
+interface DashboardStats {
+  prescriptionStats: { pending: number; approved: number; rejected: number; total: number };
+  orderStats: { pending: number; processing: number; delivered: number; total: number };
+  refillStats: { pending: number };
+  pendingPrescriptions: any[];
+}
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch admin dashboard data");
-        }
+async function getDashboardData(userId: string): Promise<DashboardStats> {
+  try {
+    // Create an admin client that bypasses RLS using service role key
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-        const data = await response.json();
-        setPrescriptionStats(data.prescriptionStats);
-        setOrderStats(data.orderStats);
-        setRefillStats(data.refillStats);
-        setPendingPrescriptions(data.pendingPrescriptions || []);
-      } catch (error) {
-        console.error("Error loading admin dashboard:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    // Check if user is admin
+    const { data: userData } = await supabaseAdmin
+      .from("users")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (!userData || userData?.role !== "admin") {
+      throw new Error("Access denied - admin only");
     }
 
-    loadDashboardData();
-  }, []);
+    // Fetch all prescriptions
+    const { data: allPrescriptions = [] } = await supabaseAdmin
+      .from("prescriptions")
+      .select("id, status, medication_name, patient_id, doctor_id, created_at")
+      .order("created_at", { ascending: false });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader className="w-8 h-8 animate-spin text-green-600" />
-      </div>
-    );
+    // Fetch pending prescriptions (for recent list)
+    const { data: pendingPrescriptionsData = [] } = await supabaseAdmin
+      .from("prescriptions")
+      .select("id, medication_name, patient_id, status, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    // Fetch all orders
+    const { data: allOrders = [] } = await supabaseAdmin
+      .from("orders")
+      .select("id, status, created_at");
+
+    // Fetch all refills
+    const { data: allRefills = [] } = await supabaseAdmin
+      .from("refills")
+      .select("id, status, created_at")
+      .eq("status", "pending");
+
+    // Calculate stats
+    const prescriptionStats = {
+      pending: ((allPrescriptions || []) as any[]).filter((p) => p.status === "pending").length,
+      approved: ((allPrescriptions || []) as any[]).filter((p) => p.status === "approved").length,
+      rejected: ((allPrescriptions || []) as any[]).filter((p) => p.status === "rejected").length,
+      total: (allPrescriptions || []).length,
+    };
+
+    const orderStats = {
+      pending: ((allOrders || []) as any[]).filter((o) => o.status === "pending").length,
+      processing: ((allOrders || []) as any[]).filter((o) => o.status === "processing").length,
+      delivered: ((allOrders || []) as any[]).filter((o) => o.status === "delivered").length,
+      total: (allOrders || []).length,
+    };
+
+    const refillStats = {
+      pending: ((allRefills || []) as any[]).length,
+    };
+
+    return {
+      prescriptionStats,
+      orderStats,
+      refillStats,
+      pendingPrescriptions: pendingPrescriptionsData || [],
+    };
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    return {
+      prescriptionStats: { pending: 0, approved: 0, rejected: 0, total: 0 },
+      orderStats: { pending: 0, processing: 0, delivered: 0, total: 0 },
+      refillStats: { pending: 0 },
+      pendingPrescriptions: [],
+    };
   }
+}
+
+export default async function AdminDashboard() {
+  // Auth check - page-level enforcement
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const dashboardData = await getDashboardData(user.id);
+  const { prescriptionStats, orderStats, refillStats, pendingPrescriptions } = dashboardData;
 
   return (
     <div className="space-y-6">
