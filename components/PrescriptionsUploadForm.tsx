@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, AlertCircle, CheckCircle } from "lucide-react";
+import { Upload, AlertCircle, CheckCircle, FileText, X } from "lucide-react";
 import { revalidatePrescriptionsPath } from "@/lib/actions";
 
 export function PrescriptionsUploadForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [preview, setPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -18,6 +19,28 @@ export function PrescriptionsUploadForm() {
       setFile(selectedFile);
       setFileName(selectedFile.name);
       setError(null);
+
+      // Generate preview
+      if (selectedFile.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setPreview(event.target?.result as string);
+        };
+        reader.readAsDataURL(selectedFile);
+      } else if (selectedFile.type === "application/pdf") {
+        setPreview("pdf");
+      } else {
+        setPreview(null);
+      }
+    }
+  };
+
+  const clearFile = () => {
+    setFile(null);
+    setFileName("");
+    setPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -51,6 +74,7 @@ export function PrescriptionsUploadForm() {
       setSuccess(true);
       setFile(null);
       setFileName("");
+      setPreview(null);
 
       // Trigger page refresh to update prescriptions list
       await revalidatePrescriptionsPath();
@@ -88,27 +112,68 @@ export function PrescriptionsUploadForm() {
           Upload a clear image or PDF of your prescription for pharmacy review
         </p>
 
+        {/* File Preview */}
+        {preview && (
+          <div className="relative bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+            {preview === "pdf" ? (
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 flex items-center justify-center w-16 h-20 bg-red-100 rounded">
+                  <FileText className="w-8 h-8 text-red-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{fileName}</p>
+                  <p className="text-xs text-gray-500">PDF Document</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearFile}
+                  className="flex-shrink-0 p-1 hover:bg-gray-200 rounded transition"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="w-full h-auto max-h-80 object-contain rounded"
+                />
+                <button
+                  type="button"
+                  onClick={clearFile}
+                  className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 rounded-full transition"
+                >
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* File Upload */}
-        <div className="border-2 border-dashed border-green-300 rounded-lg p-6 sm:p-8 hover:border-green-400 transition">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            accept=".pdf,.jpg,.jpeg,.png"
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full text-center"
-          >
-            <Upload className="w-8 sm:w-12 h-8 sm:h-12 text-green-600 mx-auto mb-3" />
-            <p className="font-medium text-gray-900 text-sm sm:text-base">
-              {fileName || "Click to upload or drag file"}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">PDF, JPG, or PNG (Max 10MB)</p>
-          </button>
-        </div>
+        {!preview && (
+          <div className="border-2 border-dashed border-green-300 rounded-lg p-6 sm:p-8 hover:border-green-400 transition">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept=".pdf,.jpg,.jpeg,.png"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full text-center"
+            >
+              <Upload className="w-8 sm:w-12 h-8 sm:h-12 text-green-600 mx-auto mb-3" />
+              <p className="font-medium text-gray-900 text-sm sm:text-base">
+                Click to upload or drag file
+              </p>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">PDF, JPG, or PNG (Max 10MB)</p>
+            </button>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
