@@ -23,7 +23,7 @@ async function getDashboardData(userId: string) {
       .eq("patient_id", userId)
       .eq("status", "approved")
       .order("created_at", { ascending: false })
-      .limit(3);
+      .limit(5);
 
     // Fetch pending prescriptions
     const { data: pendingPrescriptionsData } = await supabase
@@ -83,7 +83,7 @@ export default async function PatientHomePage() {
     await getDashboardData(user.id);
 
   const firstName = profile?.full_name?.split(" ")[0] || "Customer";
-  const allPrescriptions = [...prescriptions, ...pendingPrescriptions];
+  const recentPrescriptions = prescriptions.slice(0, 5);
 
   return (
     <div className="space-y-3 sm:space-y-4 md:space-y-6">
@@ -211,17 +211,22 @@ export default async function PatientHomePage() {
           <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
             Recent Prescriptions
           </h2>
-          {allPrescriptions.length > 0 ? (
+          {recentPrescriptions.length > 0 ? (
             <div className="space-y-2 sm:space-y-3">
-              {allPrescriptions.map((prescription) => (
+              {recentPrescriptions.map((prescription) => (
                 <div
                   key={prescription.id}
                   className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition flex items-center justify-between gap-2"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                      {prescription.medication_name || "Prescription"}
-                    </p>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <p className="font-semibold text-gray-900 text-sm sm:text-base">
+                        {prescription.medication_name || "Prescription"}
+                      </p>
+                      <span className="text-xs text-gray-600 font-mono bg-gray-100 px-2 py-0.5 rounded">
+                        #{prescription.prescription_number}
+                      </span>
+                    </div>
                     <p className="text-xs text-gray-500 mt-1">
                       {new Date(prescription.created_at).toLocaleDateString()}
                     </p>

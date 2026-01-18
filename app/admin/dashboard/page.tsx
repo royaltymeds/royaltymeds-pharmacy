@@ -41,7 +41,7 @@ async function getDashboardData(userId: string): Promise<DashboardStats> {
     // Fetch pending prescriptions (for recent list)
     const { data: pendingPrescriptionsData = [] } = await supabaseAdmin
       .from("prescriptions")
-      .select("id, medication_name, patient_id, status, created_at")
+      .select("id, prescription_number, medication_name, patient_id, status, created_at")
       .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(5);
@@ -207,7 +207,12 @@ export default async function AdminDashboard() {
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div>
-                      <p className="font-medium text-xs sm:text-sm text-gray-900">Rx ID: {prescription.id.slice(0, 8)}</p>
+                      <p className="font-medium text-xs sm:text-sm text-gray-900">
+                        Rx #{prescription.prescription_number}
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                        {prescription.medication_name || "Prescription"}
+                      </p>
                       <p className="text-xs sm:text-sm text-gray-600">
                         Status: <span className="font-medium">Pending</span>
                       </p>

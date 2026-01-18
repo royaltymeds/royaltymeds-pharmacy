@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 interface Prescription {
   id: string;
+  prescription_number: string;
   medication_name: string;
   status: string;
   created_at: string;
@@ -78,14 +79,69 @@ export default async function PrescriptionsPage({ searchParams }: Props) {
         
         {allPrescriptions.length > 0 ? (
           <>
+            {/* Top Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mb-6 flex items-center justify-between">
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Page {validPage} of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Link
+                    href={`?page=${validPage - 1}`}
+                    className={`flex items-center gap-1 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      validPage === 1
+                        ? "bg-gray-100 text-gray-400 pointer-events-none"
+                        : "bg-green-50 text-green-600 hover:bg-green-100"
+                    }`}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Previous</span>
+                  </Link>
+                  
+                  <div className="flex gap-1 items-center">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Link
+                        key={page}
+                        href={`?page=${page}`}
+                        className={`px-2.5 sm:px-3 py-2 rounded text-xs sm:text-sm font-medium transition ${
+                          page === validPage
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {page}
+                      </Link>
+                    ))}
+                  </div>
+
+                  <Link
+                    href={`?page=${validPage + 1}`}
+                    className={`flex items-center gap-1 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      validPage === totalPages
+                        ? "bg-gray-100 text-gray-400 pointer-events-none"
+                        : "bg-green-50 text-green-600 hover:bg-green-100"
+                    }`}
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2 sm:space-y-3 md:space-y-4">
               {prescriptions.map((rx) => (
                 <div key={rx.id} className="border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 hover:shadow-md transition">
                   <div className="flex items-start justify-between gap-2 sm:gap-3 md:gap-4">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm sm:text-base">
-                        {rx.medication_name || "Prescription"}
-                      </p>
+                      <div className="flex items-baseline gap-2 mb-1 flex-wrap">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">
+                          {rx.medication_name || "Prescription"}
+                        </p>
+                        <span className="text-xs text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded">
+                          #{rx.prescription_number}
+                        </span>
+                      </div>
                       <p className="text-xs text-gray-500 mt-1">
                         {new Date(rx.created_at).toLocaleDateString()}
                       </p>

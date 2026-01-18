@@ -24,6 +24,7 @@ export type Prescription = {
   id: string;
   patient_id: string;
   doctor_id: string | null;
+  prescription_number: string;
   status: "pending" | "approved" | "rejected";
   file_url: string;
   notes: string | null;

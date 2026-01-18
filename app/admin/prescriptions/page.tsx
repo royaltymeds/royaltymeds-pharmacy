@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 interface Prescription {
   id: string;
+  prescription_number: string;
   patient_id: string;
   doctor_id: string;
   medication_name: string;
@@ -87,7 +88,7 @@ export default async function AdminPrescriptions() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Prescription ID
+                  Prescription #
                 </th>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Patient
@@ -107,8 +108,8 @@ export default async function AdminPrescriptions() {
               {prescriptions && prescriptions.length > 0 ? (
                 (prescriptions as any[]).map((rx) => (
                   <tr key={rx.id} className="hover:bg-gray-50 transition">
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
-                      {rx.id.slice(0, 8)}...
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900 font-mono">
+                      {rx.prescription_number}
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
                       {(rx.users as any)?.user_profiles?.full_name || "Unknown"}

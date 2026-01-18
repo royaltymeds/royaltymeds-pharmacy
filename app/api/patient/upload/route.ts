@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
+import { generatePrescriptionNumber } from "@/lib/prescription-number";
 
 export const dynamic = "force-dynamic";
 
@@ -98,12 +99,16 @@ export async function POST(request: NextRequest) {
 
     const fileUrl = urlData.publicUrl;
 
+    // Generate prescription number based on current date/time
+    const prescriptionNumber = generatePrescriptionNumber();
+
     // Store prescription in database (only prescription metadata, no medications)
     const { data: prescriptionData, error: prescriptionError } = await supabase
       .from("prescriptions")
       .insert([
         {
           patient_id: user.id,
+          prescription_number: prescriptionNumber,
           notes: notes || null,
           file_url: fileUrl,
           status: "pending",
