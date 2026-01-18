@@ -46,9 +46,10 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
       `
       )
       .eq("id", prescriptionId)
-      .single();
+      .maybeSingle();
 
     if (patientPrescription) {
+      console.log("Found patient prescription:", patientPrescription.id);
       return { ...patientPrescription, source: "patient" };
     }
 
@@ -79,13 +80,15 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
       `
       )
       .eq("id", prescriptionId)
-      .single();
+      .maybeSingle();
 
     if (doctorPrescription) {
+      console.log("Found doctor prescription:", doctorPrescription.id);
       return { ...doctorPrescription, source: "doctor" };
     }
 
     // Not found in either table
+    console.log("Prescription not found with ID:", prescriptionId);
     return null;
   } catch (error) {
     console.error("Error fetching prescription:", error);
