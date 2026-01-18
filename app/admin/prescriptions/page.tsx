@@ -96,7 +96,7 @@ export default async function AdminPrescriptions() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 md:gap-4">
         <div>
           <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900">Prescription Management</h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">Review and approve patient prescriptions</p>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">Review and approve prescriptions</p>
         </div>
         <Link
           href="/admin/dashboard"
@@ -106,117 +106,152 @@ export default async function AdminPrescriptions() {
         </Link>
       </div>
 
-      {/* Prescriptions Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Prescription #
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Source
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Medication
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Submitted
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {prescriptions && prescriptions.length > 0 ? (
-                (prescriptions as any[]).map((rx) => (
-                  <tr key={`${rx.source}-${rx.id}`} className="hover:bg-gray-50 transition">
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900 font-mono">
-                      {rx.prescription_number}
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                        rx.source === "patient" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
-                      }`}>
-                        {rx.source === "patient" ? "Patient" : "Doctor"}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(
-                          rx.status
-                        )}`}
-                      >
-                        {getStatusIcon(rx.status)}
-                        <span className="hidden sm:inline">{rx.status.charAt(0).toUpperCase() + rx.status.slice(1)}</span>
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
-                      {rx.medication_name}
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
-                      {new Date(rx.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm space-x-1 sm:space-x-2">
-                      <Link
-                        href={`/admin/prescriptions/${rx.id}`}
-                        className="text-blue-600 hover:text-blue-700 font-medium text-xs"
-                      >
-                        View
-                      </Link>
-                      {rx.status === "pending" && (
-                        <>
-                          <span className="text-gray-300 hidden sm:inline">|</span>
-                          <button className="text-green-600 hover:text-green-700 font-medium text-xs hidden sm:inline">
-                            Approve
-                          </button>
-                          <span className="text-gray-300 hidden sm:inline">|</span>
-                          <button className="text-red-600 hover:text-red-700 font-medium text-xs hidden sm:inline">
-                            Reject
-                          </button>
-                        </>
-                      )}
-                    </td>
+      {/* Prescriptions - Responsive Table/Cards */}
+      {prescriptions && prescriptions.length > 0 ? (
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Prescription #
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Source
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Medication
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Submitted
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-3 sm:px-6 py-8 text-center text-xs sm:text-sm text-gray-600">
-                    No prescriptions found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {(prescriptions as any[]).map((rx) => (
+                    <tr key={`${rx.source}-${rx.id}`} className="hover:bg-gray-50 transition">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900 font-mono">
+                        {rx.prescription_number}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          rx.source === "patient" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
+                        }`}>
+                          {rx.source === "patient" ? "Patient" : "Doctor"}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(
+                            rx.status
+                          )}`}
+                        >
+                          {getStatusIcon(rx.status)}
+                          <span>{rx.status.charAt(0).toUpperCase() + rx.status.slice(1)}</span>
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
+                        {rx.medication_name}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
+                        {new Date(rx.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm space-x-1 sm:space-x-2">
+                        <Link
+                          href={`/admin/prescriptions/${rx.id}`}
+                          className="text-blue-600 hover:text-blue-700 font-medium text-xs"
+                        >
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-      {/* Stats */}
-      {prescriptions && prescriptions.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
-          <div className="bg-white rounded-lg shadow p-3 sm:p-6">
-            <p className="text-xs sm:text-sm text-gray-600">Pending</p>
-            <p className="text-xl sm:text-3xl font-bold text-yellow-600 mt-1 sm:mt-2">
-              {(prescriptions as any[]).filter((p) => p.status === "pending").length}
-            </p>
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-3">
+            {(prescriptions as any[]).map((rx) => (
+              <Link
+                key={`${rx.source}-${rx.id}`}
+                href={`/admin/prescriptions/${rx.id}`}
+                className="bg-white rounded-lg shadow p-3 sm:p-4 border border-gray-200 hover:shadow-md transition"
+              >
+                <div className="space-y-3">
+                  {/* Row 1: Prescription Number and Source */}
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="font-medium text-gray-900 text-sm font-mono">
+                      Rx #{rx.prescription_number}
+                    </p>
+                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                      rx.source === "patient" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
+                    }`}>
+                      {rx.source === "patient" ? "Patient" : "Doctor"}
+                    </span>
+                  </div>
+
+                  {/* Row 2: Medication */}
+                  {rx.medication_name && (
+                    <div>
+                      <p className="text-xs text-gray-500">Medication</p>
+                      <p className="text-sm text-gray-900 font-medium">{rx.medication_name}</p>
+                    </div>
+                  )}
+
+                  {/* Row 3: Status and Date */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                        rx.status
+                      )}`}
+                    >
+                      {getStatusIcon(rx.status)}
+                      <span>{rx.status.charAt(0).toUpperCase() + rx.status.slice(1)}</span>
+                    </span>
+                    <p className="text-xs text-gray-500">
+                      {new Date(rx.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
-          <div className="bg-white rounded-lg shadow p-3 sm:p-6">
-            <p className="text-xs sm:text-sm text-gray-600">Approved</p>
-            <p className="text-xl sm:text-3xl font-bold text-green-600 mt-1 sm:mt-2">
-              {(prescriptions as any[]).filter((p) => p.status === "approved").length}
-            </p>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+            <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6">
+              <p className="text-xs sm:text-sm text-gray-600">Pending</p>
+              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-yellow-600 mt-1 sm:mt-2">
+                {(prescriptions as any[]).filter((p) => p.status === "pending").length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6">
+              <p className="text-xs sm:text-sm text-gray-600">Approved</p>
+              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-green-600 mt-1 sm:mt-2">
+                {(prescriptions as any[]).filter((p) => p.status === "approved").length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6">
+              <p className="text-xs sm:text-sm text-gray-600">Rejected</p>
+              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-red-600 mt-1 sm:mt-2">
+                {(prescriptions as any[]).filter((p) => p.status === "rejected").length}
+              </p>
+            </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-3 sm:p-6 sm:col-span-1 col-span-2">
-            <p className="text-xs sm:text-sm text-gray-600">Rejected</p>
-            <p className="text-xl sm:text-3xl font-bold text-red-600 mt-1 sm:mt-2">
-              {(prescriptions as any[]).filter((p) => p.status === "rejected").length}
-            </p>
-          </div>
+        </>
+      ) : (
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <p className="text-gray-600">No prescriptions found</p>
         </div>
       )}
     </div>
