@@ -222,18 +222,20 @@ export default async function AdminDashboard() {
                   className="block p-3 border border-gray-200 rounded hover:bg-gray-50 transition"
                 >
                   <div className="flex justify-between items-start gap-2">
-                    <div>
-                      <p className="font-medium text-xs sm:text-sm text-gray-900">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-xs sm:text-sm text-gray-900 font-mono">
                         Rx #{prescription.prescription_number}
                       </p>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                        {prescription.medication_name || "Prescription"}
-                      </p>
+                      {prescription.medication_name && (
+                        <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                          {prescription.medication_name}
+                        </p>
+                      )}
                       <p className="text-xs sm:text-sm text-gray-600">
                         Status: <span className="font-medium">Pending</span>
                       </p>
                     </div>
-                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                    <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0">
                       {new Date(prescription.created_at).toLocaleDateString()}
                     </span>
                   </div>
