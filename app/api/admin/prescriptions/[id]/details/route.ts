@@ -8,9 +8,10 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const prescriptionId = params.id;
+  const { id } = await params;
+  const prescriptionId = id;
   const body = await request.json();
   const { admin_notes, doctor_name, doctor_phone, doctor_email, practice_name, practice_address } = body;
 
