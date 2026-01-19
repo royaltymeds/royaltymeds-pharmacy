@@ -22,6 +22,16 @@ export default function PrescriptionDetailClient({
     notes: "",
   });
   const [editingItems, setEditingItems] = useState<Record<string, any>>({});
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [isEditingDoctorDetails, setIsEditingDoctorDetails] = useState(false);
+  const [adminNotes, setAdminNotes] = useState(prescription.admin_notes || "");
+  const [doctorDetails, setDoctorDetails] = useState({
+    doctor_name: prescription.doctor_name || "",
+    doctor_phone: prescription.doctor_phone || "",
+    doctor_email: prescription.doctor_email || "",
+    practice_name: prescription.practice_name || "",
+    practice_address: prescription.practice_address || "",
+  });
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
@@ -249,6 +259,102 @@ export default function PrescriptionDetailClient({
       setIsLoading(false);
     }
   };
+
+  const handleSaveNotes = async () => {
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/admin/prescriptions/${prescription.id}/details`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            admin_notes: adminNotes,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to save notes",
+        });
+        return;
+      }
+
+      setPrescription({ ...prescription, admin_notes: adminNotes });
+      setIsEditingNotes(false);
+      setMessage({
+        type: "success",
+        text: "Notes saved successfully",
+      });
+
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error("Error saving notes:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while saving notes",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveDoctorDetails = async () => {
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/admin/prescriptions/${prescription.id}/details`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(doctorDetails),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to save doctor details",
+        });
+        return;
+      }
+
+      setPrescription({
+        ...prescription,
+        ...doctorDetails,
+      });
+      setIsEditingDoctorDetails(false);
+      setMessage({
+        type: "success",
+        text: "Doctor details saved successfully",
+      });
+
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error("Error saving doctor details:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while saving doctor details",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -696,6 +802,237 @@ export default function PrescriptionDetailClient({
                   No medications added yet. Click &quot;Make Changes&quot; to add medications.
                 </p>
               )}
+          </div>
+
+          {/* Admin Notes Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Admin Notes
+              </h2>
+              {!isEditingNotes && (
+                <button
+                  onClick={() => setIsEditingNotes(true)}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </button>
+              )}
+            </div>
+
+            {isEditingNotes ? (
+              <div className="space-y-4">
+                <textarea
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="Add internal notes about this prescription..."
+                  className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={4}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveNotes}
+                    disabled={isLoading}
+                    className="inline-block px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                  >
+                    {isLoading ? "Saving..." : "Save Notes"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingNotes(false);
+                      setAdminNotes(prescription.admin_notes || "");
+                    }}
+                    className="inline-block px-4 py-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 text-gray-900 rounded-lg transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-700 whitespace-pre-wrap">
+                {prescription.admin_notes || "No notes added yet"}
+              </p>
+            )}
+          </div>
+
+          {/* Doctor Details Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Doctor Details
+              </h2>
+              {!isEditingDoctorDetails && (
+                <button
+                  onClick={() => setIsEditingDoctorDetails(true)}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </button>
+              )}
+            </div>
+
+            {isEditingDoctorDetails ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Doctor&apos;s Name
+                  </label>
+                  <input
+                    type="text"
+                    value={doctorDetails.doctor_name}
+                    onChange={(e) =>
+                      setDoctorDetails({
+                        ...doctorDetails,
+                        doctor_name: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., Dr. John Smith"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={doctorDetails.doctor_phone}
+                      onChange={(e) =>
+                        setDoctorDetails({
+                          ...doctorDetails,
+                          doctor_phone: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., (555) 123-4567"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={doctorDetails.doctor_email}
+                      onChange={(e) =>
+                        setDoctorDetails({
+                          ...doctorDetails,
+                          doctor_email: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., doctor@example.com"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Practice Name
+                  </label>
+                  <input
+                    type="text"
+                    value={doctorDetails.practice_name}
+                    onChange={(e) =>
+                      setDoctorDetails({
+                        ...doctorDetails,
+                        practice_name: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., City Medical Center"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Practice Address
+                  </label>
+                  <textarea
+                    value={doctorDetails.practice_address}
+                    onChange={(e) =>
+                      setDoctorDetails({
+                        ...doctorDetails,
+                        practice_address: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., 123 Medical Lane, Suite 200, City, State 12345"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={2}
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={handleSaveDoctorDetails}
+                    disabled={isLoading}
+                    className="inline-block px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                  >
+                    {isLoading ? "Saving..." : "Save Details"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingDoctorDetails(false);
+                      setDoctorDetails({
+                        doctor_name: prescription.doctor_name || "",
+                        doctor_phone: prescription.doctor_phone || "",
+                        doctor_email: prescription.doctor_email || "",
+                        practice_name: prescription.practice_name || "",
+                        practice_address: prescription.practice_address || "",
+                      });
+                    }}
+                    className="inline-block px-4 py-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 text-gray-900 rounded-lg transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide">
+                    Name
+                  </p>
+                  <p className="text-gray-900 font-medium">
+                    {prescription.doctor_name || "Not provided"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase tracking-wide">
+                      Phone
+                    </p>
+                    <p className="text-gray-900">
+                      {prescription.doctor_phone || "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase tracking-wide">
+                      Email
+                    </p>
+                    <p className="text-gray-900">
+                      {prescription.doctor_email || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide">
+                    Practice Name
+                  </p>
+                  <p className="text-gray-900">
+                    {prescription.practice_name || "Not provided"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide">
+                    Practice Address
+                  </p>
+                  <p className="text-gray-900">
+                    {prescription.practice_address || "Not provided"}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
