@@ -357,22 +357,41 @@ export default function PrescriptionDetailClient({
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 Status
               </h2>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  {prescription.status === "approved" && (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span className="text-green-700 font-medium">
+                        This prescription has been approved
+                      </span>
+                    </>
+                  )}
+                  {prescription.status === "rejected" && (
+                    <>
+                      <X className="w-5 h-5 text-red-600" />
+                      <span className="text-red-700 font-medium">
+                        This prescription has been rejected
+                      </span>
+                    </>
+                  )}
+                  {prescription.status === "processing" && (
+                    <>
+                      <AlertCircle className="w-5 h-5 text-blue-600" />
+                      <span className="text-blue-700 font-medium">
+                        This prescription is being processed
+                      </span>
+                    </>
+                  )}
+                </div>
                 {prescription.status === "approved" && (
-                  <>
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <span className="text-green-700 font-medium">
-                      This prescription has been approved
-                    </span>
-                  </>
-                )}
-                {prescription.status === "rejected" && (
-                  <>
-                    <X className="w-5 h-5 text-red-600" />
-                    <span className="text-red-700 font-medium">
-                      This prescription has been rejected
-                    </span>
-                  </>
+                  <button
+                    onClick={() => handleUpdateStatus("processing")}
+                    disabled={isLoading}
+                    className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition"
+                  >
+                    {isLoading ? "Processing..." : "Process Prescription"}
+                  </button>
                 )}
               </div>
             </div>
