@@ -500,14 +500,6 @@ export default function PrescriptionDetailClient({
                   </div>
                 </>
               )}
-              <div>
-                <p className="text-xs text-gray-600 uppercase tracking-wide">
-                  Notes
-                </p>
-                <p className="text-gray-900">
-                  {prescription.notes || "No additional notes"}
-                </p>
-              </div>
             </div>
           </div>
 
