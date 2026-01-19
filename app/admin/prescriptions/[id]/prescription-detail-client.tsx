@@ -2,14 +2,64 @@
 
 import Link from "next/link";
 import { CheckCircle, X, AlertCircle, Download } from "lucide-react";
+import { useState } from "react";
 
 interface PrescriptionDetailClientProps {
   prescription: any;
 }
 
 export default function PrescriptionDetailClient({
-  prescription,
+  prescription: initialPrescription,
 }: PrescriptionDetailClientProps) {
+  const [prescription, setPrescription] = useState(initialPrescription);
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const handleUpdateStatus = async (newStatus: "approved" | "rejected") => {
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(`/api/admin/prescriptions/${prescription.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          table: prescription.source,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: data.error || `Failed to ${newStatus} prescription`,
+        });
+        return;
+      }
+
+      // Update local state
+      setPrescription({ ...prescription, status: newStatus });
+      setMessage({
+        type: "success",
+        text: `Prescription ${newStatus} successfully`,
+      });
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error("Error updating prescription:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while updating the prescription",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -269,13 +319,61 @@ export default function PrescriptionDetailClient({
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 Actions
               </h2>
+
+              {message && (
+                <div
+                  className={`mb-4 p-3 rounded-lg text-sm ${
+                    message.type === "success"
+                      ? "bg-green-50 text-green-800 border border-green-200"
+                      : "bg-red-50 text-red-800 border border-red-200"
+                  }`}
+                >
+                  {message.text}
+                </div>
+              )}
+
               <div className="space-y-2 flex flex-col gap-2">
-                <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition w-auto">
-                  Approve
+                <button
+                  onClick={() => handleUpdateStatus("approved")}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition w-auto"
+                >
+                  {isLoading ? "Processing..." : "Approve"}
                 </button>
-                <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition w-auto">
-                  Reject
+                <button
+                  onClick={() => handleUpdateStatus("rejected")}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition w-auto"
+                >
+                  {isLoading ? "Processing..." : "Reject"}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Status Confirmation (when not pending) */}
+          {prescription.status !== "pending" && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Status
+              </h2>
+              <div className="flex items-center gap-2">
+                {prescription.status === "approved" && (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="text-green-700 font-medium">
+                      This prescription has been approved
+                    </span>
+                  </>
+                )}
+                {prescription.status === "rejected" && (
+                  <>
+                    <X className="w-5 h-5 text-red-600" />
+                    <span className="text-red-700 font-medium">
+                      This prescription has been rejected
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           )}
