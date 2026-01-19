@@ -417,7 +417,7 @@ export default function PrescriptionDetailClient({
                   className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
                 >
                   <Edit2 className="w-4 h-4" />
-                  {isEditingMeds ? "Done Editing" : "Edit Details"}
+                  {isEditingMeds ? "Done Editing" : "Make Changes"}
                 </button>
               )}
             </div>
