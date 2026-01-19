@@ -16,9 +16,9 @@ export async function PATCH(
       );
     }
 
-    if (!["approved", "rejected"].includes(status)) {
+    if (!["approved", "rejected", "processing"].includes(status)) {
       return NextResponse.json(
-        { error: "Invalid status. Must be 'approved' or 'rejected'" },
+        { error: "Invalid status. Must be 'approved', 'rejected', or 'processing'" },
         { status: 400 }
       );
     }
