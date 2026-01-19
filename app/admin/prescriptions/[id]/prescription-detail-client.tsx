@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle, X, AlertCircle, Download } from "lucide-react";
+import { CheckCircle, X, AlertCircle, Download, Edit2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 interface PrescriptionDetailClientProps {
@@ -14,6 +14,14 @@ export default function PrescriptionDetailClient({
   const [prescription, setPrescription] = useState(initialPrescription);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isEditingMeds, setIsEditingMeds] = useState(false);
+  const [newMedication, setNewMedication] = useState({
+    medication_name: "",
+    dosage: "",
+    quantity: "",
+    notes: "",
+  });
+  const [editingItems, setEditingItems] = useState<Record<string, any>>({});
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
@@ -55,6 +63,187 @@ export default function PrescriptionDetailClient({
       setMessage({
         type: "error",
         text: "An error occurred while updating the prescription",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddMedication = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/admin/prescriptions/${prescription.id}/items`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newMedication),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to add medication",
+        });
+        return;
+      }
+
+      // Update prescription items
+      const updatedItems = [
+        ...(prescription.prescription_items || []),
+        data,
+      ];
+      setPrescription({
+        ...prescription,
+        prescription_items: updatedItems,
+      });
+
+      setMessage({
+        type: "success",
+        text: "Medication added successfully",
+      });
+
+      // Reset form
+      setNewMedication({
+        medication_name: "",
+        dosage: "",
+        quantity: "",
+        notes: "",
+      });
+
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error("Error adding medication:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while adding the medication",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateMedication = async (itemId: string) => {
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const updatedData = editingItems[itemId];
+
+      const response = await fetch(
+        `/api/admin/prescriptions/${prescription.id}/items`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            itemId,
+            ...updatedData,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to update medication",
+        });
+        return;
+      }
+
+      // Update prescription items
+      const updatedItems = (prescription.prescription_items || []).map(
+        (item: any) => (item.id === itemId ? data : item)
+      );
+      setPrescription({
+        ...prescription,
+        prescription_items: updatedItems,
+      });
+
+      // Clear editing state
+      setEditingItems((prev) => {
+        const newState = { ...prev };
+        delete newState[itemId];
+        return newState;
+      });
+
+      setMessage({
+        type: "success",
+        text: "Medication updated successfully",
+      });
+
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error("Error updating medication:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while updating the medication",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteMedication = async (itemId: string) => {
+    if (!confirm("Are you sure you want to delete this medication?")) {
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/admin/prescriptions/${prescription.id}/items`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ itemId }),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to delete medication",
+        });
+        return;
+      }
+
+      // Update prescription items
+      const updatedItems = (prescription.prescription_items || []).filter(
+        (item: any) => item.id !== itemId
+      );
+      setPrescription({
+        ...prescription,
+        prescription_items: updatedItems,
+      });
+
+      setMessage({
+        type: "success",
+        text: "Medication deleted successfully",
+      });
+
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error("Error deleting medication:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while deleting the medication",
       });
     } finally {
       setIsLoading(false);
@@ -216,38 +405,296 @@ export default function PrescriptionDetailClient({
             </div>
           </div>
 
-          {/* Medication Items (for patient source prescriptions) */}
-          {prescription.source === "patient" &&
-            prescription.prescription_items &&
-            prescription.prescription_items.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                  Medications
-                </h2>
-                <div className="space-y-4">
-                  {prescription.prescription_items.map(
-                    (item: any, index: number) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4"
-                      >
-                        <p className="font-medium text-gray-900">
-                          {item.medication_name || "Unknown Medication"}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Dosage: {item.dosage || "N/A"} | Quantity: {item.quantity || 0}
-                        </p>
-                        {item.notes && (
-                          <p className="text-sm text-gray-600 mt-2">
-                            Notes: {item.notes}
-                          </p>
-                        )}
-                      </div>
-                    )
-                  )}
-                </div>
+          {/* Medications Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Medications
+              </h2>
+              <button
+                onClick={() => setIsEditingMeds(!isEditingMeds)}
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+              >
+                <Edit2 className="w-4 h-4" />
+                {isEditingMeds ? "Done Editing" : "Edit Details"}
+              </button>
+            </div>
+
+            {message && (
+              <div
+                className={`mb-4 p-3 rounded-lg text-sm ${
+                  message.type === "success"
+                    ? "bg-green-50 text-green-800 border border-green-200"
+                    : "bg-red-50 text-red-800 border border-red-200"
+                }`}
+              >
+                {message.text}
               </div>
             )}
+
+            {/* Existing Medications List */}
+            {prescription.prescription_items &&
+              prescription.prescription_items.length > 0 && (
+                <div className="space-y-4 mb-6">
+                  {prescription.prescription_items.map((item: any) => (
+                    <div
+                      key={item.id}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
+                      {editingItems[item.id] ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Medication Name
+                              </label>
+                              <input
+                                type="text"
+                                value={editingItems[item.id].medication_name}
+                                onChange={(e) =>
+                                  setEditingItems({
+                                    ...editingItems,
+                                    [item.id]: {
+                                      ...editingItems[item.id],
+                                      medication_name: e.target.value,
+                                    },
+                                  })
+                                }
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Dosage
+                              </label>
+                              <input
+                                type="text"
+                                value={editingItems[item.id].dosage}
+                                onChange={(e) =>
+                                  setEditingItems({
+                                    ...editingItems,
+                                    [item.id]: {
+                                      ...editingItems[item.id],
+                                      dosage: e.target.value,
+                                    },
+                                  })
+                                }
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Quantity
+                            </label>
+                            <input
+                              type="text"
+                              value={editingItems[item.id].quantity}
+                              onChange={(e) =>
+                                setEditingItems({
+                                  ...editingItems,
+                                  [item.id]: {
+                                    ...editingItems[item.id],
+                                    quantity: e.target.value,
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Notes
+                            </label>
+                            <input
+                              type="text"
+                              value={editingItems[item.id].notes || ""}
+                              onChange={(e) =>
+                                setEditingItems({
+                                  ...editingItems,
+                                  [item.id]: {
+                                    ...editingItems[item.id],
+                                    notes: e.target.value,
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                            <button
+                              onClick={() => handleUpdateMedication(item.id)}
+                              disabled={isLoading}
+                              className="inline-block px-3 py-2 text-xs font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() =>
+                                setEditingItems((prev) => {
+                                  const newState = { ...prev };
+                                  delete newState[item.id];
+                                  return newState;
+                                })
+                              }
+                              className="inline-block px-3 py-2 text-xs font-medium bg-gray-300 hover:bg-gray-400 text-gray-900 rounded-lg transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">
+                              {item.medication_name}
+                            </p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Dosage: {item.dosage} | Quantity: {item.quantity}
+                            </p>
+                            {item.notes && (
+                              <p className="text-sm text-gray-600 mt-2">
+                                Notes: {item.notes}
+                              </p>
+                            )}
+                          </div>
+                          {isEditingMeds && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  setEditingItems({
+                                    ...editingItems,
+                                    [item.id]: {
+                                      medication_name: item.medication_name,
+                                      dosage: item.dosage,
+                                      quantity: item.quantity,
+                                      notes: item.notes,
+                                    },
+                                  })
+                                }
+                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteMedication(item.id)}
+                                disabled={isLoading}
+                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 hover:text-red-700 disabled:text-red-400"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            {/* Add New Medication Form */}
+            {isEditingMeds && (
+              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Medication
+                </h3>
+                <form onSubmit={handleAddMedication} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Medication Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={newMedication.medication_name}
+                        onChange={(e) =>
+                          setNewMedication({
+                            ...newMedication,
+                            medication_name: e.target.value,
+                          })
+                        }
+                        placeholder="e.g., Amoxicillin"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Dosage <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={newMedication.dosage}
+                        onChange={(e) =>
+                          setNewMedication({
+                            ...newMedication,
+                            dosage: e.target.value,
+                          })
+                        }
+                        placeholder="e.g., 500mg"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Quantity <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newMedication.quantity}
+                      onChange={(e) =>
+                        setNewMedication({
+                          ...newMedication,
+                          quantity: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., 30 tablets"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Notes
+                    </label>
+                    <input
+                      type="text"
+                      value={newMedication.notes}
+                      onChange={(e) =>
+                        setNewMedication({
+                          ...newMedication,
+                          notes: e.target.value,
+                        })
+                      }
+                      placeholder="Optional notes"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full inline-block px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                  >
+                    {isLoading ? "Adding..." : "Add Medication"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {(!prescription.prescription_items ||
+              prescription.prescription_items.length === 0) &&
+              !isEditingMeds && (
+                <p className="text-sm text-gray-600 text-center py-4">
+                  No medications added yet. Click &quot;Edit Details&quot; to add medications.
+                </p>
+              )}
+          </div>
         </div>
 
         {/* Right Column - File & Actions */}
