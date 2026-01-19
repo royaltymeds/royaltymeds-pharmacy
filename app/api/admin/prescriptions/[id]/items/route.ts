@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 export async function POST(
@@ -11,6 +12,7 @@ export async function POST(
   try {
     const cookieStore = await cookies();
 
+    // Use SSR client for auth verification
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -65,8 +67,14 @@ export async function POST(
       );
     }
 
+    // Create admin client that bypasses RLS using service role key
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Insert prescription item
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("prescription_items")
       .insert([
         {
@@ -106,6 +114,7 @@ export async function PATCH(
   try {
     const cookieStore = await cookies();
 
+    // Use SSR client for auth verification
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -160,8 +169,14 @@ export async function PATCH(
       );
     }
 
+    // Create admin client that bypasses RLS using service role key
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Update prescription item
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("prescription_items")
       .update({
         medication_name,
@@ -200,6 +215,7 @@ export async function DELETE(
   try {
     const cookieStore = await cookies();
 
+    // Use SSR client for auth verification
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -253,8 +269,14 @@ export async function DELETE(
       );
     }
 
+    // Create admin client that bypasses RLS using service role key
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Delete prescription item
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("prescription_items")
       .delete()
       .eq("id", itemId)
