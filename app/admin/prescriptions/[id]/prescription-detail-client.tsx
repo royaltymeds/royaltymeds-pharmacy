@@ -693,7 +693,7 @@ export default function PrescriptionDetailClient({
               prescription.prescription_items.length === 0) &&
               !isEditingMeds && (
                 <p className="text-sm text-gray-600 text-center py-4">
-                  No medications added yet. Click &quot;Edit Details&quot; to add medications.
+                  No medications added yet. Click &quot;Make Changes&quot; to add medications.
                 </p>
               )}
           </div>
