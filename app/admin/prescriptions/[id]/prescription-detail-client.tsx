@@ -336,14 +336,14 @@ export default function PrescriptionDetailClient({
                 <button
                   onClick={() => handleUpdateStatus("approved")}
                   disabled={isLoading}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition w-auto"
+                  className="inline-block px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition"
                 >
                   {isLoading ? "Processing..." : "Approve"}
                 </button>
                 <button
                   onClick={() => handleUpdateStatus("rejected")}
                   disabled={isLoading}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition w-auto"
+                  className="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition"
                 >
                   {isLoading ? "Processing..." : "Reject"}
                 </button>

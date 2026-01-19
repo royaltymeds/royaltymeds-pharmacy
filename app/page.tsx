@@ -58,16 +58,13 @@ export default function HomePage() {
             available to answer your questions. Get your medications delivered
             right to your door.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link
               href="/login"
-              className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-lg"
+              className="inline-block px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-lg"
             >
               Get Started
             </Link>
-            <button className="px-8 py-4 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-lg">
-              Learn More
-            </button>
           </div>
         </div>
       </section>
@@ -256,7 +253,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             {/* Brand */}
-            <div>
+            <div className="text-center">
               <span className="text-xl font-bold text-white">
                 <span className="text-green-400">R</span>oyaltyMeds
               </span>
@@ -266,7 +263,7 @@ export default function HomePage() {
             </div>
 
             {/* Quick Links */}
-            <div>
+            <div className="text-center">
               <h4 className="font-semibold text-white mb-4">Quick Links</h4>
               <ul className="space-y-2 text-sm">
                 <li>
@@ -288,9 +285,9 @@ export default function HomePage() {
             </div>
 
             {/* Support */}
-            <div>
+            <div className="text-center">
               <h4 className="font-semibold text-white mb-4">Support</h4>
-              <ul className="space-y-3 text-sm">
+              <ul className="space-y-3 text-sm flex flex-col items-center">
                 <li className="flex items-center gap-2">
                   <MailIcon className="w-4 h-4" />
                   <a
@@ -314,11 +311,11 @@ export default function HomePage() {
             </div>
 
             {/* Pharmacist Access */}
-            <div>
+            <div className="text-center">
               <h4 className="font-semibold text-white mb-4">For Pharmacists</h4>
               <Link
                 href="/admin-login"
-                className="block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-center text-sm"
+                className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm"
               >
                 Pharmacist Portal
               </Link>
