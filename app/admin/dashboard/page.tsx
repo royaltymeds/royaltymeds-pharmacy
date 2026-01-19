@@ -7,7 +7,7 @@ import { AlertCircle, CheckCircle, Clock, TrendingUp } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 interface DashboardStats {
-  prescriptionStats: { pending: number; approved: number; rejected: number; total: number };
+  prescriptionStats: { pending: number; approved: number; rejected: number; processing: number; total: number };
   orderStats: { pending: number; processing: number; delivered: number; total: number };
   refillStats: { pending: number };
   pendingPrescriptions: any[];
@@ -78,6 +78,7 @@ async function getDashboardData(): Promise<DashboardStats> {
       pending: (allPrescriptions as any[]).filter((p) => p.status === "pending").length,
       approved: (allPrescriptions as any[]).filter((p) => p.status === "approved").length,
       rejected: (allPrescriptions as any[]).filter((p) => p.status === "rejected").length,
+      processing: (allPrescriptions as any[]).filter((p) => p.status === "processing").length,
       total: (allPrescriptions || []).length,
     };
 
@@ -101,7 +102,7 @@ async function getDashboardData(): Promise<DashboardStats> {
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
     return {
-      prescriptionStats: { pending: 0, approved: 0, rejected: 0, total: 0 },
+      prescriptionStats: { pending: 0, approved: 0, rejected: 0, processing: 0, total: 0 },
       orderStats: { pending: 0, processing: 0, delivered: 0, total: 0 },
       refillStats: { pending: 0 },
       pendingPrescriptions: [],
@@ -173,17 +174,17 @@ export default async function AdminDashboard() {
           </p>
         </div>
 
-        {/* Processing Orders */}
+        {/* Processing Prescriptions */}
         <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-blue-600">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <p className="text-gray-600 text-xs md:text-sm font-medium">Processing</p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{orderStats.processing}</p>
+              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{prescriptionStats.processing}</p>
             </div>
             <Clock className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:w-10 text-blue-600 flex-shrink-0 hidden sm:block" />
           </div>
           <Link
-            href="/admin/orders"
+            href="/admin/prescriptions"
             className="text-green-600 text-xs md:text-sm font-medium mt-2 sm:mt-3 hover:text-green-700 inline-block"
           >
             View all →
