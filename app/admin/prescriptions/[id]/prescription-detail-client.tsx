@@ -332,7 +332,7 @@ export default function PrescriptionDetailClient({
                 </div>
               )}
 
-              <div className="space-y-2">
+              <div className="flex justify-between gap-4">
                 <button
                   onClick={() => handleUpdateStatus("approved")}
                   disabled={isLoading}
