@@ -15,7 +15,7 @@ export default function PrescriptionDetailClient({
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const handleUpdateStatus = async (newStatus: "approved" | "rejected") => {
+  const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
     setMessage(null);
 
