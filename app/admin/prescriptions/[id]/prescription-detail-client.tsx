@@ -332,7 +332,7 @@ export default function PrescriptionDetailClient({
                 </div>
               )}
 
-              <div className="space-y-2 flex flex-col gap-2">
+              <div className="space-y-2">
                 <button
                   onClick={() => handleUpdateStatus("approved")}
                   disabled={isLoading}
