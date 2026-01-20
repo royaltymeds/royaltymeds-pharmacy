@@ -458,51 +458,6 @@ export default function PrescriptionDetailClient({
             </div>
           </div>
 
-          {/* Prescription Details */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Prescription Details
-            </h2>
-            <div className="space-y-3">
-              {prescription.source === "doctor" && (
-                <>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase tracking-wide">
-                      Quantity
-                    </p>
-                    <p className="text-gray-900">
-                      {prescription.quantity || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase tracking-wide">
-                      Frequency
-                    </p>
-                    <p className="text-gray-900">
-                      {prescription.frequency || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase tracking-wide">
-                      Duration
-                    </p>
-                    <p className="text-gray-900">
-                      {prescription.duration || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase tracking-wide">
-                      Instructions
-                    </p>
-                    <p className="text-gray-900">
-                      {prescription.instructions || "N/A"}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
           {/* Medications Section */}
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
