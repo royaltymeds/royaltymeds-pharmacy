@@ -25,12 +25,12 @@ export async function POST(
 
     // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer());
-    const fileName = `${prescriptionId}-${Date.now()}-${file.name}`;
-    const filePath = `prescriptions/${fileName}`;
+    const fileName = `${prescriptionId}/${Date.now()}-${file.name}`;
+    const filePath = fileName;
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage using the same bucket as patient uploads
     const { error: uploadError } = await supabase.storage
-      .from("prescription-files")
+      .from("royaltymeds_storage")
       .upload(filePath, buffer, {
         contentType: file.type,
         upsert: false,
@@ -46,15 +46,31 @@ export async function POST(
 
     // Get the public URL
     const { data: publicUrl } = supabase.storage
-      .from("prescription-files")
+      .from("royaltymeds_storage")
       .getPublicUrl(filePath);
+
+    const fileUrl = publicUrl.publicUrl;
+
+    // Update the prescription's file_url in the database
+    const { error: updateError } = await supabase
+      .from("prescriptions")
+      .update({ file_url: fileUrl })
+      .eq("id", prescriptionId);
+
+    if (updateError) {
+      console.error("Update error:", updateError);
+      return NextResponse.json(
+        { error: "Failed to update prescription with new file" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: "File uploaded successfully",
+      message: "File uploaded and prescription updated successfully",
       file: {
         path: filePath,
-        url: publicUrl.publicUrl,
+        url: fileUrl,
       },
     });
   } catch (error) {
