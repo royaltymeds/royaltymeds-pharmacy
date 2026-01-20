@@ -433,7 +433,8 @@ export default function PrescriptionDetailClient({
         text: `Prescription ${data.data.prescription.status === "filled" ? "filled" : "partially filled"} successfully`,
       });
 
-      setTimeout(() => setMessage(null), 3000);
+      // Refresh page after 1.5 seconds to ensure all data is updated
+      setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       console.error("Error filling prescription:", error);
       setMessage({
