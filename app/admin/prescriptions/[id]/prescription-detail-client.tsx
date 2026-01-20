@@ -32,6 +32,8 @@ export default function PrescriptionDetailClient({
     practice_name: prescription.practice_name || "",
     practice_address: prescription.practice_address || "",
   });
+  const [isFillingPrescription, setIsFillingPrescription] = useState(false);
+  const [quantitiesBeingFilled, setQuantitiesBeingFilled] = useState<Record<string, number>>({});
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
@@ -355,6 +357,106 @@ export default function PrescriptionDetailClient({
     }
   };
 
+  const handleFillPrescription = () => {
+    // Initialize quantities being filled to 0
+    const initialQuantities = prescription.prescription_items?.reduce((acc: Record<string, number>, item: any) => ({
+      ...acc,
+      [item.id]: 0,
+    }), {}) || {};
+    setQuantitiesBeingFilled(initialQuantities);
+    setIsFillingPrescription(true);
+  };
+
+  const handleDoneFilling = async () => {
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      // Validate quantities
+      for (const [itemId, quantityFilled] of Object.entries(quantitiesBeingFilled)) {
+        const item = prescription.prescription_items.find((pi: any) => pi.id === itemId);
+        if (!item) continue;
+
+        const filled = parseInt(quantityFilled as any) || 0;
+        if (filled < 0) {
+          setMessage({
+            type: "error",
+            text: "Quantity filled cannot be negative",
+          });
+          setIsLoading(false);
+          return;
+        }
+        if (filled > item.quantity) {
+          setMessage({
+            type: "error",
+            text: `Quantity filled cannot exceed original quantity for ${item.medication_name}`,
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // API call to fill prescription
+      const response = await fetch(
+        `/api/admin/prescriptions/${prescription.id}/fill`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            items: prescription.prescription_items.map((item: any) => ({
+              itemId: item.id,
+              quantityFilled: quantitiesBeingFilled[item.id] || 0,
+            })),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to fill prescription",
+        });
+        return;
+      }
+
+      // Update prescription with new data
+      setPrescription(data.data.prescription);
+      setIsFillingPrescription(false);
+      setQuantitiesBeingFilled({});
+
+      setMessage({
+        type: "success",
+        text: `Prescription ${data.data.prescription.status === "filled" ? "filled" : "partially filled"} successfully`,
+      });
+
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error("Error filling prescription:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while filling the prescription",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelFilling = () => {
+    setIsFillingPrescription(false);
+    setQuantitiesBeingFilled({});
+  };
+
+  const handleQuantityFilledChange = (itemId: string, value: number) => {
+    setQuantitiesBeingFilled({
+      ...quantitiesBeingFilled,
+      [itemId]: value,
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -363,6 +465,12 @@ export default function PrescriptionDetailClient({
         return "bg-green-100 text-green-800";
       case "rejected":
         return "bg-red-100 text-red-800";
+      case "processing":
+        return "bg-blue-100 text-blue-800";
+      case "partially_filled":
+        return "bg-orange-100 text-orange-800";
+      case "filled":
+        return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -376,6 +484,12 @@ export default function PrescriptionDetailClient({
         return <CheckCircle className="w-5 h-5" />;
       case "rejected":
         return <X className="w-5 h-5" />;
+      case "processing":
+        return <AlertCircle className="w-5 h-5" />;
+      case "partially_filled":
+        return <AlertCircle className="w-5 h-5" />;
+      case "filled":
+        return <CheckCircle className="w-5 h-5" />;
       default:
         return null;
     }
@@ -749,6 +863,94 @@ export default function PrescriptionDetailClient({
                   No medications added yet. Click &quot;Make Changes&quot; to add medications.
                 </p>
               )}
+
+            {/* Fill Prescription Button */}
+            {(prescription.status === "processing" || prescription.status === "partially_filled") && !isFillingPrescription && (
+              <button
+                onClick={handleFillPrescription}
+                className="mt-6 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
+              >
+                Fill Prescription
+              </button>
+            )}
+
+            {/* Fill Mode */}
+            {isFillingPrescription && (
+              <div className="mt-6 bg-purple-50 rounded-lg p-4 sm:p-6 border border-purple-200">
+                <h3 className="text-base font-semibold text-gray-900 mb-4">
+                  Fill Prescription - Quantity Details
+                </h3>
+                <div className="space-y-4 mb-6">
+                  {prescription.prescription_items?.map((item: any) => {
+                    const quantityFilled = quantitiesBeingFilled[item.id] || 0;
+                    const remaining = item.quantity - quantityFilled;
+                    return (
+                      <div key={item.id} className="bg-white rounded-lg p-4 border border-gray-200">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
+                              Medication Name
+                            </p>
+                            <p className="text-gray-900 font-medium mt-1">{item.medication_name}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
+                              Dosage
+                            </p>
+                            <p className="text-gray-900 mt-1">{item.dosage || "N/A"}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
+                              Original Quantity
+                            </p>
+                            <p className="text-gray-900 font-bold mt-1">{item.quantity}</p>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 uppercase tracking-wide font-medium mb-2">
+                              Quantity to Fill
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              max={item.quantity}
+                              value={quantityFilled}
+                              onChange={(e) => handleQuantityFilledChange(item.id, parseInt(e.target.value) || 0)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
+                              Remaining After Fill
+                            </p>
+                            <p className={`font-bold mt-1 ${remaining === 0 ? "text-green-600" : "text-orange-600"}`}>
+                              {remaining}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDoneFilling}
+                    disabled={isLoading}
+                    className="inline-block px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                  >
+                    {isLoading ? "Filling..." : "Done Filling"}
+                  </button>
+                  <button
+                    onClick={handleCancelFilling}
+                    disabled={isLoading}
+                    className="inline-block px-4 py-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-gray-900 rounded-lg transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Admin Notes Section */}
