@@ -875,7 +875,8 @@ export default function PrescriptionDetailClient({
               {(prescription.status === "processing" || prescription.status === "partially_filled") && !isFillingPrescription && (
                 <button
                   onClick={handleFillPrescription}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
+                  disabled={!prescription.prescription_items || prescription.prescription_items.length === 0}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white rounded-lg transition"
                 >
                   Fill Prescription
                 </button>
