@@ -34,6 +34,7 @@ export default function PrescriptionDetailClient({
   });
   const [isFillingPrescription, setIsFillingPrescription] = useState(false);
   const [quantitiesBeingFilled, setQuantitiesBeingFilled] = useState<Record<string, number>>({});
+  const [prescriptionFileUploaded, setPrescriptionFileUploaded] = useState(false);
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
@@ -449,6 +450,7 @@ export default function PrescriptionDetailClient({
   const handleCancelFilling = () => {
     setIsFillingPrescription(false);
     setQuantitiesBeingFilled({});
+    setPrescriptionFileUploaded(false);
   };
 
   const handleQuantityFilledChange = (itemId: string, value: number) => {
@@ -456,6 +458,58 @@ export default function PrescriptionDetailClient({
       ...quantitiesBeingFilled,
       [itemId]: value,
     });
+  };
+
+  const handlePrescriptionFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("prescriptionId", prescription.id);
+
+      const response = await fetch(`/api/admin/prescriptions/${prescription.id}/upload-file`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to upload prescription file",
+        });
+        setPrescriptionFileUploaded(false);
+        return;
+      }
+
+      setMessage({
+        type: "success",
+        text: "Prescription file uploaded successfully",
+      });
+
+      setPrescriptionFileUploaded(true);
+      // Clear success message after 3 seconds
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error("Error uploading prescription file:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while uploading the prescription file",
+      });
+      setPrescriptionFileUploaded(false);
+    } finally {
+      setIsLoading(false);
+      // Reset the input so the same file can be uploaded again if needed
+      if (e.target) {
+        e.target.value = "";
+      }
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -968,15 +1022,45 @@ export default function PrescriptionDetailClient({
                     </div>
                   ) : null;
                 })()}
+
+                {/* Prescription File Upload */}
+                <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-900 mb-3">
+                    Update Prescription File <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="flex-1 flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg cursor-pointer transition border border-blue-200">
+                      <Download className="w-4 h-4" />
+                      <span className="text-sm font-medium">Choose File</span>
+                      <input
+                        type="file"
+                        onChange={handlePrescriptionFileUpload}
+                        disabled={isLoading}
+                        className="hidden"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                      />
+                    </label>
+                    {prescriptionFileUploaded && (
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle className="w-5 h-5" />
+                        <span className="text-sm font-medium">File uploaded</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Accepted formats: PDF, JPG, PNG
+                  </p>
+                </div>
+
                 <div className="flex gap-2">
                   <button
                     onClick={handleDoneFilling}
-                    disabled={isLoading || prescription.prescription_items?.some(
+                    disabled={isLoading || !prescriptionFileUploaded || prescription.prescription_items?.some(
                       (item: any) => (quantitiesBeingFilled[item.id] || 0) > item.quantity
                     )}
                     className="inline-block px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition"
                   >
-                    {isLoading ? "Filling..." : "Done Filling"}
+                    {isLoading ? "Processing..." : "Done Filling"}
                   </button>
                   <button
                     onClick={handleCancelFilling}
