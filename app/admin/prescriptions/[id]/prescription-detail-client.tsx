@@ -722,7 +722,10 @@ export default function PrescriptionDetailClient({
                               {item.medication_name}
                             </p>
                             <p className="text-sm text-gray-600 mt-1">
-                              Dosage: {item.dosage} | Quantity: {item.quantity}
+                              Dosage: {item.dosage}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Total: {item.total_amount || item.quantity} | Filled: {(item.total_amount || item.quantity) - item.quantity} | Remaining: {item.quantity}
                             </p>
                             {item.notes && (
                               <p className="text-sm text-gray-600 mt-2">

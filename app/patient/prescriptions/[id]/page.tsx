@@ -37,6 +37,7 @@ async function getPrescriptionDetail(prescriptionId: string) {
           medication_name,
           dosage,
           quantity,
+          total_amount,
           notes
         )
       `
@@ -159,7 +160,7 @@ export default async function PrescriptionDetailPage({
                           </h3>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-1 gap-4 text-sm">
                         <div>
                           <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
                             Dosage
@@ -170,10 +171,7 @@ export default async function PrescriptionDetailPage({
                         </div>
                         <div>
                           <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
-                            Quantity
-                          </p>
-                          <p className="text-gray-900 mt-1">
-                            {item.quantity || "N/A"}
+                            Total: {item.total_amount || item.quantity} | Filled: {(item.total_amount || item.quantity) - item.quantity} | Remaining: {item.quantity}
                           </p>
                         </div>
                       </div>

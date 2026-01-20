@@ -54,6 +54,7 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
           medication_name,
           dosage,
           quantity,
+          total_amount,
           notes
         ),
         users:patient_id(

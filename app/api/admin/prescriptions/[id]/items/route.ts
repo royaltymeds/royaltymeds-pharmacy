@@ -82,6 +82,7 @@ export async function POST(
           medication_name,
           dosage,
           quantity: parseInt(quantity),
+          total_amount: parseInt(quantity),
           notes: notes || null,
         },
       ])
