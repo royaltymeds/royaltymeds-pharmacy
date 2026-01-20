@@ -579,11 +579,6 @@ export default function PrescriptionDetailClient({
                 <h2 className="text-lg font-semibold text-gray-900">
                   Medications
                 </h2>
-                {(prescription.status === "partially_filled" || prescription.status === "filled") && prescription.filled_at && (
-                  <p className="text-xs text-gray-600 mt-1">
-                    {prescription.status === "partially_filled" ? "Partially filled" : "Filled"} at {new Date(prescription.filled_at).toLocaleString()}
-                  </p>
-                )}
               </div>
               {prescription.status === "processing" && (
                 <button
@@ -871,15 +866,22 @@ export default function PrescriptionDetailClient({
                 </p>
               )}
 
-            {/* Fill Prescription Button */}
-            {(prescription.status === "processing" || prescription.status === "partially_filled") && !isFillingPrescription && (
-              <button
-                onClick={handleFillPrescription}
-                className="mt-6 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
-              >
-                Fill Prescription
-              </button>
-            )}
+            {/* Fill Prescription Button and Fill Timestamp */}
+            <div className="mt-6 space-y-4">
+              {(prescription.status === "processing" || prescription.status === "partially_filled") && !isFillingPrescription && (
+                <button
+                  onClick={handleFillPrescription}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
+                >
+                  Fill Prescription
+                </button>
+              )}
+              {(prescription.status === "partially_filled" || prescription.status === "filled") && prescription.filled_at && (
+                <p className="text-xs text-gray-600 p-3 bg-gray-50 rounded-lg">
+                  <span className="font-medium">{prescription.status === "partially_filled" ? "Partially filled" : "Filled"} at:</span> {new Date(prescription.filled_at).toLocaleString()}
+                </p>
+              )}
+            </div>
 
             {/* Fill Mode */}
             {isFillingPrescription && (

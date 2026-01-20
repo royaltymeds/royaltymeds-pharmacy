@@ -65,6 +65,12 @@ function getStatusColor(status: string) {
       return "bg-green-100 text-green-800";
     case "rejected":
       return "bg-red-100 text-red-800";
+    case "processing":
+      return "bg-blue-100 text-blue-800";
+    case "partially_filled":
+      return "bg-orange-100 text-orange-800";
+    case "filled":
+      return "bg-green-100 text-green-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -78,6 +84,12 @@ function getStatusIcon(status: string) {
       return <CheckCircle className="w-4 h-4" />;
     case "rejected":
       return <X className="w-4 h-4" />;
+    case "processing":
+      return <AlertCircle className="w-4 h-4" />;
+    case "partially_filled":
+      return <AlertCircle className="w-4 h-4" />;
+    case "filled":
+      return <CheckCircle className="w-4 h-4" />;
     default:
       return null;
   }
