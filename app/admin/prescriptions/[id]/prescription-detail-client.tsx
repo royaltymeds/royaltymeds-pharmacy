@@ -575,9 +575,16 @@ export default function PrescriptionDetailClient({
           {/* Medications Section */}
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Medications
-              </h2>
+              <div className="flex-1">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Medications
+                </h2>
+                {(prescription.status === "partially_filled" || prescription.status === "filled") && prescription.filled_at && (
+                  <p className="text-xs text-gray-600 mt-1">
+                    {prescription.status === "partially_filled" ? "Partially filled" : "Filled"} at {new Date(prescription.filled_at).toLocaleString()}
+                  </p>
+                )}
+              </div>
               {prescription.status === "processing" && (
                 <button
                   onClick={() => setIsEditingMeds(!isEditingMeds)}
@@ -1193,12 +1200,18 @@ export default function PrescriptionDetailClient({
             <div className="inline-block">
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  prescription.source === "patient"
+                  prescription.status === "partially_filled" || prescription.status === "filled"
+                    ? "bg-green-100 text-green-800"
+                    : prescription.source === "patient"
                     ? "bg-blue-100 text-blue-800"
                     : "bg-purple-100 text-purple-800"
                 }`}
               >
-                {prescription.source === "patient" ? "Patient Upload" : "Doctor Submitted"}
+                {prescription.status === "partially_filled" || prescription.status === "filled"
+                  ? "Pharmacist Submitted"
+                  : prescription.source === "patient"
+                  ? "Patient Upload"
+                  : "Doctor Submitted"}
               </span>
             </div>
           </div>
@@ -1316,6 +1329,38 @@ export default function PrescriptionDetailClient({
                       <span className="text-blue-700 font-medium">
                         This prescription is being processed
                       </span>
+                    </>
+                  )}
+                  {prescription.status === "partially_filled" && (
+                    <>
+                      <AlertCircle className="w-5 h-5 text-orange-600" />
+                      <div>
+                        <span className="text-orange-700 font-medium block">
+                          This prescription is partially filled
+                        </span>
+                        {prescription.filled_at && prescription.pharmacist_name && (
+                          <span className="text-xs text-orange-600 block mt-1">
+                            Filled by {prescription.pharmacist_name} at{" "}
+                            {new Date(prescription.filled_at).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {prescription.status === "filled" && (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <div>
+                        <span className="text-green-700 font-medium block">
+                          This prescription is filled
+                        </span>
+                        {prescription.filled_at && prescription.pharmacist_name && (
+                          <span className="text-xs text-green-600 block mt-1">
+                            Filled by {prescription.pharmacist_name} at{" "}
+                            {new Date(prescription.filled_at).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
