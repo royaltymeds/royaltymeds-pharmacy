@@ -30,6 +30,8 @@ async function getPrescriptionDetail(prescriptionId: string) {
         doctor_email,
         practice_name,
         practice_address,
+        filled_at,
+        pharmacist_name,
         prescription_items(
           id,
           medication_name,
@@ -310,6 +312,21 @@ export default async function PrescriptionDetailPage({
                   <p className="text-gray-900 mt-1">
                     {new Date(prescription.updated_at).toLocaleString()}
                   </p>
+                </div>
+              )}
+              {prescription.filled_at && (
+                <div>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
+                    Filled
+                  </p>
+                  <p className="text-gray-900 mt-1">
+                    {new Date(prescription.filled_at).toLocaleString()}
+                  </p>
+                  {prescription.pharmacist_name && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      by {prescription.pharmacist_name}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

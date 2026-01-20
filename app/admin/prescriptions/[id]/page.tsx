@@ -48,6 +48,7 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         practice_name,
         practice_address,
         filled_at,
+        pharmacist_name,
         prescription_items(
           id,
           medication_name,
@@ -108,6 +109,7 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         practice_name,
         practice_address,
         filled_at,
+        pharmacist_name,
         users:patient_id(
           id,
           user_profiles(
