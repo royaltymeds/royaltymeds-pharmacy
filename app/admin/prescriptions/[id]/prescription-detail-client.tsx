@@ -894,6 +894,7 @@ export default function PrescriptionDetailClient({
                   {prescription.prescription_items?.map((item: any) => {
                     const quantityFilled = quantitiesBeingFilled[item.id] || 0;
                     const remaining = item.quantity - quantityFilled;
+                    const isExceeded = quantityFilled > item.quantity;
                     return (
                       <div key={item.id} className="bg-white rounded-lg p-4 border border-gray-200">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -927,14 +928,23 @@ export default function PrescriptionDetailClient({
                               max={item.quantity}
                               value={quantityFilled}
                               onChange={(e) => handleQuantityFilledChange(item.id, parseInt(e.target.value) || 0)}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                              className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:border-transparent ${
+                                isExceeded
+                                  ? "border-red-300 focus:ring-red-500"
+                                  : "border-gray-300 focus:ring-purple-500"
+                              }`}
                             />
+                            {isExceeded && (
+                              <p className="text-xs text-red-600 mt-1">
+                                Cannot exceed {item.quantity}
+                              </p>
+                            )}
                           </div>
                           <div>
                             <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
                               Remaining After Fill
                             </p>
-                            <p className={`font-bold mt-1 ${remaining === 0 ? "text-green-600" : "text-orange-600"}`}>
+                            <p className={`font-bold mt-1 ${remaining === 0 ? "text-green-600" : remaining < 0 ? "text-red-600" : "text-orange-600"}`}>
                               {remaining}
                             </p>
                           </div>
@@ -943,10 +953,23 @@ export default function PrescriptionDetailClient({
                     );
                   })}
                 </div>
+                {/* Check if any quantity exceeds the limit */}
+                {(() => {
+                  const hasExceeded = prescription.prescription_items?.some(
+                    (item: any) => (quantitiesBeingFilled[item.id] || 0) > item.quantity
+                  );
+                  return hasExceeded ? (
+                    <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-800 border border-red-200 text-sm">
+                      ⚠️ One or more quantities exceed the available amount. Please correct the values before proceeding.
+                    </div>
+                  ) : null;
+                })()}
                 <div className="flex gap-2">
                   <button
                     onClick={handleDoneFilling}
-                    disabled={isLoading}
+                    disabled={isLoading || prescription.prescription_items?.some(
+                      (item: any) => (quantitiesBeingFilled[item.id] || 0) > item.quantity
+                    )}
                     className="inline-block px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition"
                   >
                     {isLoading ? "Filling..." : "Done Filling"}
