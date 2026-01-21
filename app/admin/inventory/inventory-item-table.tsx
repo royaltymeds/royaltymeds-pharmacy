@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Edit2, Trash2, AlertTriangle } from 'lucide-react';
+import { Edit2, Trash2, AlertTriangle, ChevronDown } from 'lucide-react';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 
 type Drug = OTCDrug | PrescriptionDrug;
@@ -20,6 +20,17 @@ export default function InventoryItemTable({
   onEditQuantity,
 }: Props) {
   const [editingQuantity, setEditingQuantity] = useState<{ drugId: string; value: number } | null>(null);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
+  const toggleCardExpanded = (drugId: string) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(drugId)) {
+      newExpanded.delete(drugId);
+    } else {
+      newExpanded.add(drugId);
+    }
+    setExpandedCards(newExpanded);
+  };
 
   const handleSaveQuantity = async (drugId: string) => {
     if (!editingQuantity || editingQuantity.drugId !== drugId) return;
@@ -213,131 +224,149 @@ export default function InventoryItemTable({
         {drugs.map((drug) => {
           const isEditingQty = editingQuantity?.drugId === drug.id;
           const stockStatus = getStockStatus(drug);
+          const isExpanded = expandedCards.has(drug.id);
 
           return (
-            <div key={drug.id} className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-              {/* Header */}
-              <div className="flex justify-between items-start gap-3">
-                <div className="flex-1 min-w-0">
+            <div key={drug.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              {/* Collapsed Header - Always Visible */}
+              <button
+                onClick={() => toggleCardExpanded(drug.id)}
+                className="w-full p-4 flex justify-between items-start gap-3 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex-1 min-w-0 text-left">
                   <h3 className="font-semibold text-gray-900 break-words">{drug.name}</h3>
                   {drug.active_ingredient && (
                     <p className="text-xs text-gray-500 mt-1">{drug.active_ingredient}</p>
                   )}
                 </div>
-                <span
-                  className={`inline-flex px-2 py-1 rounded-full text-xs font-medium border whitespace-nowrap flex-shrink-0 ${getStatusColor(
-                    drug.status
-                  )}`}
-                >
-                  {drug.status.replace(/_/g, ' ').charAt(0).toUpperCase() +
-                    drug.status.replace(/_/g, ' ').slice(1)}
-                </span>
-              </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span
+                    className={`inline-flex px-2 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getStatusColor(
+                      drug.status
+                    )}`}
+                  >
+                    {drug.status.replace(/_/g, ' ').charAt(0).toUpperCase() +
+                      drug.status.replace(/_/g, ' ').slice(1)}
+                  </span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-gray-400 transition-transform ${
+                      isExpanded ? 'rotate-180' : ''
+                    }`}
+                  />
+                </div>
+              </button>
 
-              {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-gray-500 text-xs">Category</p>
-                  <p className="font-medium text-gray-900">{drug.category}</p>
-                  <p className="text-xs text-gray-500">{drug.sub_category}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs">SKU</p>
-                  <p className="font-medium text-gray-900 break-words">{drug.sku}</p>
-                </div>
-                {drug.manufacturer && (
-                  <div className="col-span-2">
-                    <p className="text-gray-500 text-xs">Manufacturer</p>
-                    <p className="font-medium text-gray-900">{drug.manufacturer}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Stock Information */}
-              <div className="grid grid-cols-2 gap-3 text-sm border-t border-gray-200 pt-3">
-                <div>
-                  <p className="text-gray-500 text-xs">Unit Price</p>
-                  <p className="font-medium text-gray-900">${drug.unit_price.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs">Total Value</p>
-                  <p className="font-medium text-gray-900">
-                    ${(drug.quantity_on_hand * drug.unit_price).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Quantity Management */}
-              <div className="border-t border-gray-200 pt-3">
-                <p className="text-gray-500 text-xs mb-2">Quantity</p>
-                {isEditingQty ? (
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      value={editingQuantity.value}
-                      onChange={(e) =>
-                        setEditingQuantity({
-                          drugId: drug.id,
-                          value: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      min="0"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
-                      autoFocus
-                    />
-                    <button
-                      onClick={() => handleSaveQuantity(drug.id)}
-                      className="px-3 py-2 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 whitespace-nowrap"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditingQuantity(null)}
-                      className="px-3 py-2 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 whitespace-nowrap"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 flex items-center gap-2">
-                      <span className="text-lg font-semibold text-gray-900">{drug.quantity_on_hand}</span>
-                      <button
-                        onClick={() =>
-                          setEditingQuantity({ drugId: drug.id, value: drug.quantity_on_hand })
-                        }
-                        className="text-blue-600 hover:text-blue-700 transition-colors text-sm"
-                      >
-                        Update
-                      </button>
+              {/* Expanded Content */}
+              {isExpanded && (
+                <div className="border-t border-gray-200 p-4 space-y-3">
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-500 text-xs">Category</p>
+                      <p className="font-medium text-gray-900">{drug.category}</p>
+                      <p className="text-xs text-gray-500">{drug.sub_category}</p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {stockStatus.icon && <AlertTriangle className="w-4 h-4 text-yellow-600" />}
-                      <span className={`text-xs font-medium ${stockStatus.color}`}>
-                        {stockStatus.label}
-                      </span>
+                    <div>
+                      <p className="text-gray-500 text-xs">SKU</p>
+                      <p className="font-medium text-gray-900 break-words">{drug.sku}</p>
+                    </div>
+                    {drug.manufacturer && (
+                      <div className="col-span-2">
+                        <p className="text-gray-500 text-xs">Manufacturer</p>
+                        <p className="font-medium text-gray-900">{drug.manufacturer}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Stock Information */}
+                  <div className="grid grid-cols-2 gap-3 text-sm border-t border-gray-200 pt-3">
+                    <div>
+                      <p className="text-gray-500 text-xs">Unit Price</p>
+                      <p className="font-medium text-gray-900">${drug.unit_price.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs">Total Value</p>
+                      <p className="font-medium text-gray-900">
+                        ${(drug.quantity_on_hand * drug.unit_price).toFixed(2)}
+                      </p>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Actions */}
-              <div className="flex gap-2 border-t border-gray-200 pt-3">
-                <button
-                  onClick={() => onEdit(drug)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors text-sm font-medium"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete(drug.id)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors text-sm font-medium"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
-              </div>
+                  {/* Stock Status */}
+                  <div className="flex items-center gap-1 text-sm border-t border-gray-200 pt-3">
+                    {stockStatus.icon && <AlertTriangle className="w-4 h-4 text-yellow-600" />}
+                    <span className={`text-xs font-medium ${stockStatus.color}`}>
+                      {stockStatus.label}
+                    </span>
+                  </div>
+
+                  {/* Quantity Management */}
+                  <div className="border-t border-gray-200 pt-3">
+                    <p className="text-gray-500 text-xs mb-2">Quantity</p>
+                    {isEditingQty ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={editingQuantity.value}
+                          onChange={(e) =>
+                            setEditingQuantity({
+                              drugId: drug.id,
+                              value: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          min="0"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleSaveQuantity(drug.id)}
+                          className="px-3 py-2 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 whitespace-nowrap"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingQuantity(null)}
+                          className="px-3 py-2 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 whitespace-nowrap"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 flex items-center gap-2">
+                          <span className="text-lg font-semibold text-gray-900">{drug.quantity_on_hand}</span>
+                          <button
+                            onClick={() =>
+                              setEditingQuantity({ drugId: drug.id, value: drug.quantity_on_hand })
+                            }
+                            className="text-blue-600 hover:text-blue-700 transition-colors text-sm"
+                          >
+                            Update
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 border-t border-gray-200 pt-3">
+                    <button
+                      onClick={() => onEdit(drug)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors text-sm font-medium"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete(drug.id)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors text-sm font-medium"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
