@@ -14,7 +14,7 @@ const getAdminClient = () => {
 };
 
 export async function getOTCDrugs() {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { data, error } = await supabase
     .from('otc_drugs')
     .select('*')
@@ -25,7 +25,7 @@ export async function getOTCDrugs() {
 }
 
 export async function getPrescriptionDrugs() {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { data, error } = await supabase
     .from('prescription_drugs')
     .select('*')
@@ -36,7 +36,7 @@ export async function getPrescriptionDrugs() {
 }
 
 export async function getOTCDrugById(id: string) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { data, error } = await supabase
     .from('otc_drugs')
     .select('*')
@@ -48,7 +48,7 @@ export async function getOTCDrugById(id: string) {
 }
 
 export async function getPrescriptionDrugById(id: string) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { data, error } = await supabase
     .from('prescription_drugs')
     .select('*')
@@ -194,7 +194,7 @@ export async function updateInventoryQuantity(
 }
 
 export async function getInventoryTransactions(drugId?: string, drugType?: DrugType) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   let query = supabase.from('inventory_transactions').select('*');
 
   if (drugId) {
@@ -212,7 +212,7 @@ export async function getInventoryTransactions(drugId?: string, drugType?: DrugT
 }
 
 export async function getLowStockItems() {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   
   const { data: otcLow, error: otcError } = await supabase
     .from('otc_drugs')
@@ -235,7 +235,7 @@ export async function getLowStockItems() {
 }
 
 export async function searchInventory(query: string, drugType?: DrugType) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const searchTerm = `%${query}%`;
 
   if (drugType === 'otc') {
