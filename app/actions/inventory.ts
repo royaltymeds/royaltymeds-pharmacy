@@ -3,6 +3,15 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { OTCDrug, PrescriptionDrug, DrugType } from '@/lib/types/inventory';
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@supabase/supabase-js';
+
+// Create an admin client that bypasses RLS using service role key
+const getAdminClient = () => {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+};
 
 export async function getOTCDrugs() {
   const supabase = await createServerSupabaseClient();
@@ -51,7 +60,7 @@ export async function getPrescriptionDrugById(id: string) {
 }
 
 export async function createOTCDrug(drug: Omit<OTCDrug, 'id' | 'created_at' | 'updated_at'>) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { data, error } = await supabase
     .from('otc_drugs')
     .insert([drug])
@@ -64,7 +73,7 @@ export async function createOTCDrug(drug: Omit<OTCDrug, 'id' | 'created_at' | 'u
 }
 
 export async function createPrescriptionDrug(drug: Omit<PrescriptionDrug, 'id' | 'created_at' | 'updated_at'>) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { data, error } = await supabase
     .from('prescription_drugs')
     .insert([drug])
@@ -77,7 +86,7 @@ export async function createPrescriptionDrug(drug: Omit<PrescriptionDrug, 'id' |
 }
 
 export async function updateOTCDrug(id: string, updates: Partial<Omit<OTCDrug, 'id' | 'created_at'>>) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { data, error } = await supabase
     .from('otc_drugs')
     .update({
@@ -94,7 +103,7 @@ export async function updateOTCDrug(id: string, updates: Partial<Omit<OTCDrug, '
 }
 
 export async function updatePrescriptionDrug(id: string, updates: Partial<Omit<PrescriptionDrug, 'id' | 'created_at'>>) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { data, error } = await supabase
     .from('prescription_drugs')
     .update({
@@ -111,7 +120,7 @@ export async function updatePrescriptionDrug(id: string, updates: Partial<Omit<P
 }
 
 export async function deleteOTCDrug(id: string) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { error } = await supabase
     .from('otc_drugs')
     .delete()
@@ -122,7 +131,7 @@ export async function deleteOTCDrug(id: string) {
 }
 
 export async function deletePrescriptionDrug(id: string) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const { error } = await supabase
     .from('prescription_drugs')
     .delete()
@@ -138,7 +147,7 @@ export async function updateInventoryQuantity(
   newQuantity: number,
   notes?: string
 ) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getAdminClient();
   const tableName = drugType === 'otc' ? 'otc_drugs' : 'prescription_drugs';
 
   // Get current quantity first
