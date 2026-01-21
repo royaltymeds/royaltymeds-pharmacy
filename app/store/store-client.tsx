@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { OTCDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
 import { ShoppingCart, Search } from 'lucide-react';
@@ -21,9 +20,7 @@ export default function StoreClientComponent({ drugs }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { addItem } = useCart();
-  const router = useRouter();
 
   // Filter drugs by status (only active)
   const activeDrugs = useMemo(
