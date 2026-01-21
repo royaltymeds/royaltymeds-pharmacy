@@ -47,6 +47,19 @@ CREATE TABLE public.doctor_prescriptions (
   CONSTRAINT doctor_prescriptions_doctor_id_fkey FOREIGN KEY (doctor_id) REFERENCES public.users(id),
   CONSTRAINT doctor_prescriptions_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.users(id)
 );
+CREATE TABLE public.inventory_transactions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  drug_id uuid NOT NULL,
+  drug_type text NOT NULL CHECK (drug_type = ANY (ARRAY['otc'::text, 'prescription'::text])),
+  transaction_type text NOT NULL CHECK (transaction_type = ANY (ARRAY['adjustment'::text, 'purchase'::text, 'sale'::text, 'expiration'::text, 'damage'::text])),
+  quantity_change integer NOT NULL,
+  quantity_before integer NOT NULL,
+  quantity_after integer NOT NULL,
+  notes text,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT inventory_transactions_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.messages (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   sender_id uuid NOT NULL,
@@ -84,6 +97,35 @@ CREATE TABLE public.orders (
   CONSTRAINT orders_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.users(id),
   CONSTRAINT orders_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES public.prescriptions(id)
 );
+CREATE TABLE public.otc_drugs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL UNIQUE,
+  category text NOT NULL,
+  sub_category text NOT NULL,
+  manufacturer text,
+  sku text NOT NULL UNIQUE,
+  quantity_on_hand integer NOT NULL DEFAULT 0,
+  reorder_level integer NOT NULL DEFAULT 10,
+  reorder_quantity integer NOT NULL DEFAULT 50,
+  unit_price numeric NOT NULL,
+  cost_price numeric,
+  description text,
+  indications text,
+  warnings text,
+  side_effects text,
+  dosage text,
+  active_ingredient text,
+  strength text,
+  pack_size text,
+  expiration_date date,
+  lot_number text,
+  status text DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'discontinued'::text, 'out_of_stock'::text])),
+  low_stock_alert boolean DEFAULT false,
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT otc_drugs_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.payments (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   order_id uuid NOT NULL,
@@ -100,6 +142,37 @@ CREATE TABLE public.payments (
   CONSTRAINT payments_pkey PRIMARY KEY (id),
   CONSTRAINT payments_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
   CONSTRAINT payments_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.prescription_drugs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL UNIQUE,
+  category text NOT NULL,
+  sub_category text NOT NULL,
+  manufacturer text,
+  sku text NOT NULL UNIQUE,
+  quantity_on_hand integer NOT NULL DEFAULT 0,
+  reorder_level integer NOT NULL DEFAULT 20,
+  reorder_quantity integer NOT NULL DEFAULT 100,
+  unit_price numeric NOT NULL,
+  cost_price numeric,
+  description text,
+  indications text,
+  warnings text,
+  side_effects text,
+  dosage text,
+  active_ingredient text,
+  strength text,
+  pack_size text,
+  requires_refrigeration boolean DEFAULT false,
+  controlled_substance boolean DEFAULT false,
+  expiration_date date,
+  lot_number text,
+  status text DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'discontinued'::text, 'out_of_stock'::text])),
+  low_stock_alert boolean DEFAULT false,
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT prescription_drugs_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.prescription_items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
