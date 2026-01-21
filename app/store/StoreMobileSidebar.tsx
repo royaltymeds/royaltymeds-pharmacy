@@ -42,11 +42,11 @@ export function StoreMobileSidebar() {
           {/* Navigation Links */}
           <nav className="space-y-2">
             <Link
-              href="/patient/home"
+              href="/"
               onClick={() => setIsOpen(false)}
               className="block px-3 py-2 rounded-md text-green-100 hover:text-white hover:bg-green-600"
             >
-              Dashboard
+              Home
             </Link>
             <Link
               href="/patient/orders"

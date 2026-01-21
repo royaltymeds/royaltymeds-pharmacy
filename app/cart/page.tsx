@@ -9,6 +9,7 @@ import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
 import { Trash2, Plus, Minus, ArrowLeft, AlertCircle } from 'lucide-react';
 import { getCart, removeFromCart, updateCartItem, createOrder } from '@/app/actions/orders';
 import { getOTCDrugById } from '@/app/actions/inventory';
+import { useCart } from '@/lib/context/CartContext';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -23,6 +24,7 @@ export default function CartPage() {
     notes: '',
   });
   const [processingOrder, setProcessingOrder] = useState(false);
+  const { clearCart } = useCart();
 
   // Load cart and drug details
   useEffect(() => {
@@ -112,6 +114,9 @@ export default function CartPage() {
         formData.billing_address,
         formData.notes || undefined
       );
+
+      // Clear cart after successful order
+      clearCart();
 
       // Redirect to order confirmation or success page
       window.location.href = `/patient/orders/${order.id}?success=true`;

@@ -127,80 +127,86 @@ export default function StoreClientComponent({ drugs }: Props) {
 
       {/* Products Grid */}
       {filteredDrugs.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredDrugs.map((drug) => (
             <div
               key={drug.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col md:flex-row md:h-56 lg:h-72"
+              className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col"
             >
-              {/* Main Content Area */}
-              <div className="flex flex-1 flex-col">
-                {/* Product Info */}
-                <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 flex-1 flex flex-col">
-                  <div>
-                    <h3 className="font-semibold text-base sm:text-lg text-gray-900">{drug.name}</h3>
-                    {drug.active_ingredient && (
-                      <p className="text-xs sm:text-sm text-gray-600">{drug.active_ingredient}</p>
-                    )}
-                  </div>
-
-                  {/* Category and Manufacturer */}
-                  <div className="text-xs sm:text-sm text-gray-600">
-                    <p>{drug.category}</p>
-                    {drug.manufacturer && <p className="text-xs">{drug.manufacturer}</p>}
-                  </div>
-
-                  {/* Description */}
-                  {drug.description && (
-                    <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 sm:line-clamp-3">{drug.description}</p>
-                  )}
-                </div>
-
-                {/* Product Image - Hidden on mobile, shown on md+ */}
-                <div className="hidden md:flex relative w-full md:w-24 lg:w-32 h-24 lg:h-32 bg-gray-100 items-center justify-center flex-shrink-0">
-                  <Image
-                    src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
-                    alt={drug.name}
-                    fill
-                    className="object-contain p-2"
-                  />
-                </div>
-              </div>
-
-              {/* Mobile Product Image */}
-              <div className="md:hidden flex relative w-full h-24 bg-gray-100 items-center justify-center">
+              {/* Image Section - Centered and Prominent */}
+              <div className="relative w-full h-48 sm:h-56 bg-gray-50 border-b border-gray-100 flex items-center justify-center">
                 <Image
                   src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
                   alt={drug.name}
                   fill
-                  className="object-contain p-2"
+                  className="object-contain p-4"
                 />
               </div>
 
-              {/* Footer - Price and Button */}
-              <div className="p-3 sm:p-4 space-y-2 border-t border-gray-100 flex flex-col justify-between">
-                <div className="flex items-end justify-between gap-2 min-h-max">
-                  <div className="min-w-0">
-                    <p className="text-lg sm:text-2xl font-bold text-blue-600 truncate">${drug.unit_price.toFixed(2)}</p>
-                    <p className="text-xs text-gray-500">{drug.pack_size || 'Standard'}</p>
-                  </div>
-
-                  {/* Add to Cart Button */}
-                  <button
-                    onClick={() => handleAddToCart(drug)}
-                    disabled={addingToCart === drug.id || drug.quantity_on_hand === 0}
-                    className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap"
-                  >
-                    <ShoppingCart size={16} />
-                    <span className="hidden sm:inline">{addingToCart === drug.id ? 'Adding...' : 'Add'}</span>
-                    <span className="sm:hidden">{addingToCart === drug.id ? '...' : 'Add'}</span>
-                  </button>
+              {/* Product Info */}
+              <div className="p-4 space-y-4 flex-1 flex flex-col">
+                {/* Title and Ingredient */}
+                <div>
+                  <h3 className="font-semibold text-lg text-gray-900">{drug.name}</h3>
+                  {drug.active_ingredient && (
+                    <p className="text-sm text-gray-600 mt-1">{drug.active_ingredient}</p>
+                  )}
                 </div>
 
-                {/* Stock Status */}
-                {drug.quantity_on_hand === 0 && (
-                  <p className="text-red-600 text-xs sm:text-sm font-medium">Out of Stock</p>
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-gray-500 text-xs font-medium">Category</p>
+                    <p className="font-medium text-gray-900 mt-1">{drug.category}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs font-medium">Pack Size</p>
+                    <p className="font-medium text-gray-900 mt-1">{drug.pack_size || 'Standard'}</p>
+                  </div>
+                  {drug.manufacturer && (
+                    <div className="col-span-2">
+                      <p className="text-gray-500 text-xs font-medium">Manufacturer</p>
+                      <p className="font-medium text-gray-900 mt-1">{drug.manufacturer}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Description */}
+                {drug.description && (
+                  <p className="text-sm text-gray-600 line-clamp-2">{drug.description}</p>
                 )}
+
+                {/* Price and Stock Section */}
+                <div className="space-y-3 border-t border-gray-100 pt-3 mt-auto">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 font-medium">Unit Price</p>
+                      <p className="text-2xl font-bold text-blue-600 mt-1">${drug.unit_price.toFixed(2)}</p>
+                    </div>
+                    {drug.quantity_on_hand > 0 && (
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500 font-medium">Available</p>
+                        <p className="text-lg font-semibold text-green-600 mt-1">{drug.quantity_on_hand}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Stock Status */}
+                  {drug.quantity_on_hand === 0 ? (
+                    <div className="w-full py-2 text-center bg-red-50 text-red-600 text-sm font-medium rounded-lg">
+                      Out of Stock
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleAddToCart(drug)}
+                      disabled={addingToCart === drug.id}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      <ShoppingCart size={18} />
+                      {addingToCart === drug.id ? 'Adding...' : 'Add to Cart'}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
