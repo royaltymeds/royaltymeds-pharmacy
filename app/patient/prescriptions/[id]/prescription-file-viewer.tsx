@@ -117,8 +117,8 @@ export default function PrescriptionFileViewer({
 
       {/* File Viewer Modal */}
       {fileViewerOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg w-11/12 h-5/6 max-w-6xl flex flex-col">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl h-auto max-h-[90vh] flex flex-col shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
