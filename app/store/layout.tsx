@@ -2,6 +2,7 @@ import Link from "next/link";
 import { StoreMobileSidebar } from "./StoreMobileSidebar";
 import { CartButtonWithBadge } from "./CartButtonWithBadge";
 import { MobileCartIconButton } from "./MobileCartIconButton";
+import { OrdersButton } from "./OrdersButton";
 
 export default function StoreLayout({
   children,
@@ -25,12 +26,7 @@ export default function StoreLayout({
                 >
                   Home
                 </Link>
-                <Link
-                  href="/patient/orders"
-                  className="px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
-                >
-                  Orders
-                </Link>
+                <OrdersButton />
               </div>
             </div>
 

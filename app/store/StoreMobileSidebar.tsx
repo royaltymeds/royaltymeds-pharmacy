@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
+import { OrdersButton } from './OrdersButton';
 
 export function StoreMobileSidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,13 +47,12 @@ export function StoreMobileSidebar() {
             >
               Home
             </Link>
-            <Link
-              href="/patient/orders"
+            <button
               onClick={() => setIsOpen(false)}
-              className="block px-3 py-2 rounded-md text-green-100 hover:text-white hover:bg-green-600"
+              className="w-full text-left"
             >
-              Orders
-            </Link>
+              <OrdersButton />
+            </button>
           </nav>
         </div>
       </div>

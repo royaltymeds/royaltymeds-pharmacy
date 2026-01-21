@@ -208,10 +208,10 @@ export default function HomePage() {
                 </li>
               </ul>
               <Link
-                href="/store"
+                href="/patient/home"
                 className="w-full sm:w-auto block px-6 sm:px-8 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base text-center"
               >
-                Order Prescriptions Now
+                Order Prescription Medications
               </Link>
             </div>
             <div className="hidden lg:block relative rounded-xl overflow-hidden shadow-lg">
@@ -340,10 +340,9 @@ export default function HomePage() {
 
       {/* Pharmacist Section */}
       <section className="bg-gray-50 py-12 sm:py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div></div>
-            <div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+          <div className="w-full max-w-2xl">
+            <div className="text-center lg:text-left">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Professional Pharmacist Care
               </h2>
