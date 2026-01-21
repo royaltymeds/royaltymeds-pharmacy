@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { OTCDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
-import { ShoppingCart, Search, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Search } from 'lucide-react';
 import { addToCart } from '@/app/actions/orders';
 import { toast } from 'sonner';
 import { useCart } from '@/lib/context/CartContext';

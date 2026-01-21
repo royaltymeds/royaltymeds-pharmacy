@@ -6,11 +6,9 @@ import {
   CreditCardIcon,
   PhoneIcon,
   MailIcon,
-  MapPinIcon,
   CheckCircleIcon,
   Heart,
   Truck,
-  Pill,
 } from "lucide-react";
 
 // Color palette: Green (primary), Blue (secondary), White (background/text)
@@ -244,7 +242,7 @@ export default function HomePage() {
                 Over-The-Counter Medications & Wellness
               </h2>
               <p className="text-lg text-gray-600 mb-6">
-                Browse our extensive selection of OTC medications, vitamins, supplements, and wellness products. From pain relief to cold medicine, allergy medication to digestive aids, we have everything you need for your family's health.
+                Browse our extensive selection of OTC medications, vitamins, supplements, and wellness products. From pain relief to cold medicine, allergy medication to digestive aids, we have everything you need for your family&apos;s health.
               </p>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3">
@@ -354,7 +352,7 @@ export default function HomePage() {
                 Professional Pharmacist Care
               </h2>
               <p className="text-lg text-gray-600 mb-6">
-                Every prescription is reviewed by our team of licensed, experienced pharmacists. We're not just filling orders—we're providing professional healthcare guidance to ensure your medications are right for you.
+                Every prescription is reviewed by our team of licensed, experienced pharmacists. We&apos;re not just filling orders—we&apos;re providing professional healthcare guidance to ensure your medications are right for you.
               </p>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center gap-3">
