@@ -1,166 +1,349 @@
-import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { PackageIcon, TruckIcon, CheckCircleIcon } from "lucide-react";
+'use client';
 
-export const dynamic = "force-dynamic";
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
+import { ChevronDown, Package, Calendar, DollarSign } from 'lucide-react';
+import { getOrdersByUser, getOrderWithItems } from '@/app/actions/orders';
 
-interface Order {
-  id: string;
-  prescription_id: string;
-  status: string;
-  created_at: string;
-  estimated_delivery?: string;
-  total_amount?: number;
-  payment_status?: string;
-  delivery_type?: string;
-  estimated_delivery_date?: string;
-  tracking_number?: string;
-  prescriptions?: { medication_name: string };
-}
+export default function PatientOrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [orderDetails, setOrderDetails] = useState<Record<string, OrderWithItems>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-async function getOrders(userId: string): Promise<Order[]> {
-  try {
-    const supabase = await createServerSupabaseClient();
-    const { data } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("patient_id", userId)
-      .order("created_at", { ascending: false });
-    return data || [];
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    return [];
+  // Load orders
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
+        const userOrders = await getOrdersByUser();
+        setOrders(userOrders);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, []);
+
+  // Load order details when expanded
+  const handleExpandOrder = async (orderId: string) => {
+    if (expandedOrderId === orderId) {
+      setExpandedOrderId(null);
+      return;
+    }
+
+    if (!orderDetails[orderId]) {
+      try {
+        const details = await getOrderWithItems(orderId);
+        setOrderDetails((prev) => ({ ...prev, [orderId]: details }));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load order details');
+        return;
+      }
+    }
+
+    setExpandedOrderId(orderId);
+  };
+
+  const getStatusLabel = (status: string) => {
+    return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center text-gray-600">Loading your orders...</div>
+        </div>
+      </div>
+    );
   }
-}
-
-function getStatusIcon(status: string) {
-  switch (status) {
-    case "delivered":
-      return <CheckCircleIcon className="w-5 h-5 text-green-600" />;
-    case "in_transit":
-      return <TruckIcon className="w-5 h-5 text-blue-600" />;
-    default:
-      return <PackageIcon className="w-5 h-5 text-gray-600" />;
-  }
-}
-
-function getStatusColor(status: string) {
-  switch (status) {
-    case "delivered":
-      return "bg-green-100 text-green-800";
-    case "in_transit":
-      return "bg-blue-100 text-blue-800";
-    case "processing":
-      return "bg-yellow-100 text-yellow-800";
-    case "cancelled":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-}
-
-export default async function OrdersPage() {
-  // Auth check
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  // Fetch orders
-  const orders = await getOrders(user.id);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border-l-4 border-green-600">
-        <h1 className="text-lg sm:text-3xl font-bold text-gray-900">My Orders</h1>
-        <p className="text-xs sm:text-sm text-gray-600 mt-2">Track your prescriptions and deliveries</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
+          <p className="text-gray-600">View and track your orders</p>
+        </div>
 
-      {/* Orders List */}
-      {orders && orders.length > 0 ? (
-        <div className="space-y-3 sm:space-y-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 auto-rows-max">
-          {orders.map((order) => (
-            <Link key={order.id} href={`/patient/orders/${order.id}`}>
-              <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition cursor-pointer border-t-4 border-green-500 h-full">
-                <div className="flex items-start justify-between gap-3 sm:gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      {getStatusIcon(order.status)}
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                          Order #{order.id.slice(0, 8).toUpperCase()}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">
-                          {order.prescriptions?.medication_name || "Prescription Order"}
-                        </p>
+        {/* Error Message */}
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 mb-6">
+            {error}
+          </div>
+        )}
+
+        {/* Orders List */}
+        {orders.length > 0 ? (
+          <div className="space-y-4">
+            {orders.map((order) => {
+              const isExpanded = expandedOrderId === order.id;
+              const details = orderDetails[order.id];
+
+              return (
+                <div
+                  key={order.id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden"
+                >
+                  {/* Order Header */}
+                  <button
+                    onClick={() => handleExpandOrder(order.id)}
+                    className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex-grow text-left">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">
+                            Order #{order.order_number}
+                          </h3>
+                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Calendar size={16} />
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <DollarSign size={16} />
+                              ${order.total_amount.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-right">
-                    <p className="text-lg sm:text-xl font-bold text-gray-900">
-                      ${order.total_amount?.toFixed(2) || "0.00"}
-                    </p>
-                    <span className={`inline-block mt-2 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(order.status)}`}>
-                      {order.status.replace("_", " ")}
-                    </span>
-                  </div>
-                </div>
+                    {/* Status Badge */}
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <span
+                          className={`inline-block px-4 py-2 rounded-full text-sm font-semibold text-white`}
+                          style={{
+                            backgroundColor: ORDER_STATUS_COLORS[
+                              order.status as keyof typeof ORDER_STATUS_COLORS
+                            ],
+                          }}
+                        >
+                          {getStatusLabel(order.status)}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        size={24}
+                        className={`text-gray-400 transition-transform ${
+                          isExpanded ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </div>
+                  </button>
 
-                <div className="mt-3 sm:mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                  <div>
-                    <p className="text-xs font-medium">Payment</p>
-                    <p className="font-medium text-gray-900 capitalize mt-1">
-                      {order.payment_status || "pending"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium">Delivery</p>
-                    <p className="font-medium text-gray-900 capitalize mt-1">
-                      {order.delivery_type || "standard"}
-                    </p>
-                  </div>
-                  {order.estimated_delivery_date && (
-                    <div>
-                      <p className="text-xs font-medium">Est. Delivery</p>
-                      <p className="font-medium text-gray-900 mt-1 text-xs">
-                        {new Date(order.estimated_delivery_date).toLocaleDateString()}
-                      </p>
+                  {/* Order Details */}
+                  {isExpanded && details && (
+                    <div className="border-t border-gray-200 p-6 space-y-6 bg-gray-50">
+                      {/* Order Items */}
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                          <Package size={20} />
+                          Order Items
+                        </h4>
+                        <div className="space-y-4">
+                          {details.items.map((item) => (
+                            <div
+                              key={item.id}
+                              className="bg-white rounded-lg p-4 flex gap-4"
+                            >
+                              <div className="flex-grow">
+                                <h5 className="font-semibold text-gray-900">
+                                  {item.drug_name}
+                                </h5>
+                                <div className="flex gap-4 text-sm text-gray-600 mt-2">
+                                  <span>Qty: {item.quantity}</span>
+                                  <span>
+                                    Unit Price: ${item.unit_price.toFixed(2)}
+                                  </span>
+                                  <span>
+                                    Subtotal: ${(
+                                      item.unit_price * item.quantity
+                                    ).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Pricing */}
+                      <div className="bg-white rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between text-gray-700">
+                          <span>Subtotal</span>
+                          <span>
+                            ${(
+                              order.total_amount -
+                              order.tax_amount -
+                              order.shipping_amount
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-gray-700">
+                          <span>Tax</span>
+                          <span>${order.tax_amount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-700">
+                          <span>Shipping</span>
+                          <span>${order.shipping_amount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
+                          <span>Total</span>
+                          <span>${order.total_amount.toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      {/* Addresses */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white rounded-lg p-4">
+                          <h5 className="font-semibold text-gray-900 mb-2">
+                            Shipping Address
+                          </h5>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                            {order.shipping_address}
+                          </p>
+                        </div>
+                        <div className="bg-white rounded-lg p-4">
+                          <h5 className="font-semibold text-gray-900 mb-2">
+                            Billing Address
+                          </h5>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                            {order.billing_address}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Notes */}
+                      {order.notes && (
+                        <div className="bg-white rounded-lg p-4">
+                          <h5 className="font-semibold text-gray-900 mb-2">
+                            Order Notes
+                          </h5>
+                          <p className="text-sm text-gray-600">{order.notes}</p>
+                        </div>
+                      )}
+
+                      {/* Timeline */}
+                      <div className="bg-white rounded-lg p-4">
+                        <h5 className="font-semibold text-gray-900 mb-4">Order Timeline</h5>
+                        <div className="space-y-3">
+                          <div className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                              <div className="w-3 h-3 rounded-full bg-blue-600" />
+                              <div className="w-0.5 h-8 bg-gray-300" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">Order Placed</p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(order.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          {order.status !== 'cancelled' && (
+                            <div className="flex gap-4">
+                              <div className="flex flex-col items-center">
+                                <div
+                                  className={`w-3 h-3 rounded-full ${
+                                    ['confirmed', 'processing', 'shipped', 'delivered'].includes(
+                                      order.status
+                                    )
+                                      ? 'bg-blue-600'
+                                      : 'bg-gray-300'
+                                  }`}
+                                />
+                                <div className="w-0.5 h-8 bg-gray-300" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-gray-900">Order Confirmed</p>
+                                <p className="text-sm text-gray-600">
+                                  {['confirmed', 'processing', 'shipped', 'delivered'].includes(
+                                    order.status
+                                  )
+                                    ? 'Confirmed'
+                                    : 'Pending confirmation'}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {['processing', 'shipped', 'delivered'].includes(order.status) && (
+                            <div className="flex gap-4">
+                              <div className="flex flex-col items-center">
+                                <div className="w-3 h-3 rounded-full bg-blue-600" />
+                                <div className="w-0.5 h-8 bg-gray-300" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-gray-900">Processing</p>
+                                <p className="text-sm text-gray-600">
+                                  Your order is being prepared
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {['shipped', 'delivered'].includes(order.status) && (
+                            <div className="flex gap-4">
+                              <div className="flex flex-col items-center">
+                                <div className="w-3 h-3 rounded-full bg-blue-600" />
+                                <div className="w-0.5 h-8 bg-gray-300" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-gray-900">Shipped</p>
+                                <p className="text-sm text-gray-600">
+                                  Your order is on the way
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {order.status === 'delivered' && (
+                            <div className="flex gap-4">
+                              <div className="w-3 h-3 rounded-full bg-blue-600" />
+                              <div>
+                                <p className="font-semibold text-gray-900">Delivered</p>
+                                <p className="text-sm text-gray-600">
+                                  {new Date(order.updated_at).toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
-                  {order.tracking_number && (
-                    <div>
-                      <p className="text-xs font-medium">Tracking</p>
-                      <p className="font-medium text-gray-900 mt-1 truncate text-xs">
-                        {order.tracking_number}
-                      </p>
-                    </div>
-                  )}
                 </div>
-
-                <p className="text-xs text-gray-500 mt-3 sm:mt-4">
-                  Ordered on {new Date(order.created_at).toLocaleDateString()}
-                </p>
-              </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <Package size={48} className="mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-600 text-lg mb-4">No orders yet</p>
+            <Link
+              href="/store"
+              className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Start Shopping
             </Link>
-          ))}
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow-sm p-6 sm:p-12 text-center">
-          <PackageIcon className="w-10 sm:w-12 h-10 sm:h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-base sm:text-xl font-semibold text-gray-900 mb-2">No Orders Yet</h3>
-          <p className="text-xs sm:text-sm text-gray-600 mb-6">
-            Your orders will appear here once you place them.
-          </p>
+          </div>
+        )}
+
+        {/* Back Button */}
+        <div className="mt-8">
           <Link
-            href="/patient/prescriptions"
-            className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg text-sm"
+            href="/patient/dashboard"
+            className="inline-block px-6 py-2 text-blue-600 hover:text-blue-700 font-semibold"
           >
-            Upload Prescription
+            ← Back to Dashboard
           </Link>
         </div>
-      )}
+      </div>
     </div>
   );
 }
