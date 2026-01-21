@@ -39,6 +39,13 @@ export default function PrescriptionDetailClient({
   const [prescriptionFileName, setPrescriptionFileName] = useState<string | null>(null);
   const [selectedPrescriptionFile, setSelectedPrescriptionFile] = useState<File | null>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [fileViewerOpen, setFileViewerOpen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStartX, setPanStartX] = useState(0);
+  const [panStartY, setPanStartY] = useState(0);
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
@@ -530,6 +537,55 @@ export default function PrescriptionDetailClient({
       setPrescriptionFileUploaded(false);
     } finally {
       setIsUploadingFile(false);
+    }
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(Math.min(zoomLevel + 10, 300));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(Math.max(zoomLevel - 10, 100));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel > 100) {
+      setIsPanning(true);
+      setPanStartX(e.clientX - panX);
+      setPanStartY(e.clientY - panY);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPanning && zoomLevel > 100) {
+      setPanX(e.clientX - panStartX);
+      setPanY(e.clientY - panStartY);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const handleDownloadFile = async () => {
+    if (!prescription.file_url) return;
+    try {
+      const response = await fetch(prescription.file_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `prescription-${prescription.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      setMessage({
+        type: "error",
+        text: "Failed to download file",
+      });
     }
   };
 
@@ -1389,15 +1445,123 @@ export default function PrescriptionDetailClient({
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 Prescription File
               </h2>
-              <a
-                href={prescription.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition"
-              >
-                <Download className="w-4 h-4" />
-                View File
-              </a>
+              
+              {/* Thumbnail Preview */}
+              <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center" style={{ height: "200px" }}>
+                {prescription.file_url.includes(".pdf") ? (
+                  <div className="text-center">
+                    <Download className="w-12 h-12 text-red-500 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">PDF Document</p>
+                  </div>
+                ) : (
+                  <img
+                    src={prescription.file_url}
+                    alt="Prescription preview"
+                    className="w-full h-full object-contain"
+                  />
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setFileViewerOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
+                >
+                  <Download className="w-4 h-4" />
+                  View File
+                </button>
+                <button
+                  onClick={handleDownloadFile}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* File Viewer Modal */}
+          {fileViewerOpen && prescription.file_url && (
+            <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center">
+              <div className="bg-white rounded-lg w-11/12 h-5/6 max-w-6xl flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Prescription File Viewer</h3>
+                  <button
+                    onClick={() => {
+                      setFileViewerOpen(false);
+                      setZoomLevel(100);
+                      setPanX(0);
+                      setPanY(0);
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Toolbar */}
+                <div className="flex items-center gap-2 p-3 bg-gray-100 border-b border-gray-200">
+                  <button
+                    onClick={handleZoomOut}
+                    className="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium"
+                  >
+                    −
+                  </button>
+                  <span className="text-sm font-medium text-gray-700 w-12 text-center">{zoomLevel}%</span>
+                  <button
+                    onClick={handleZoomIn}
+                    className="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium"
+                  >
+                    +
+                  </button>
+                  <div className="flex-1" />
+                  <button
+                    onClick={handleDownloadFile}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium flex items-center gap-1"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-hidden bg-gray-200 flex items-center justify-center relative">
+                  <div
+                    className="overflow-hidden relative"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    style={{ width: "100%", height: "100%", cursor: isPanning ? "grabbing" : zoomLevel > 100 ? "grab" : "auto" }}
+                  >
+                    {prescription.file_url.includes(".pdf") ? (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <Download className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                          <p className="text-lg">PDF files cannot be previewed in the modal</p>
+                          <p className="text-sm text-gray-300 mt-2">Use the Download button to view the file</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={prescription.file_url}
+                        alt="Prescription full view"
+                        style={{
+                          transform: `scale(${zoomLevel / 100}) translate(${panX}px, ${panY}px)`,
+                          transformOrigin: "center center",
+                          transition: isPanning ? "none" : "transform 0.2s",
+                          maxWidth: "100%",
+                          maxHeight: "100%",
+                        }}
+                        className="w-full h-full object-contain"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

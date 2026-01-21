@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Download } from "lucide-react";
+import PrescriptionFileViewer from "./prescription-file-viewer";
 
 export const dynamic = "force-dynamic";
 
@@ -272,20 +272,11 @@ export default async function PrescriptionDetailPage({
         <div className="lg:col-span-1 space-y-6">
           {/* File Section */}
           {prescription.file_url && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Prescription File
-              </h2>
-              <a
-                href={prescription.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition text-sm"
-              >
-                <Download className="w-4 h-4" />
-                View File
-              </a>
-            </div>
+            <PrescriptionFileViewer
+              fileUrl={prescription.file_url}
+              prescriptionId={prescription.id}
+              isAdmin={false}
+            />
           )}
 
           {/* Timeline */}
