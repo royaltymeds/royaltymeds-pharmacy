@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/lib/context/CartContext';
 import { AuthRequiredModal } from './AuthRequiredModal';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase-browser';
 
 export function MobileCartIconButton() {
   const { itemCount } = useCart();

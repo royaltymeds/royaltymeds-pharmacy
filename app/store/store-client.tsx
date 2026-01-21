@@ -10,7 +10,7 @@ import { addToCart } from '@/app/actions/orders';
 import { toast } from 'sonner';
 import { useCart } from '@/lib/context/CartContext';
 import { AuthRequiredModal } from './AuthRequiredModal';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase-browser';
 
 interface Props {
   drugs: OTCDrug[];
