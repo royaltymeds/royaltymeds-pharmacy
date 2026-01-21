@@ -2,12 +2,15 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { OTCDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
 import { ShoppingCart, Search } from 'lucide-react';
 import { addToCart } from '@/app/actions/orders';
 import { toast } from 'sonner';
 import { useCart } from '@/lib/context/CartContext';
+import { AuthRequiredModal } from './AuthRequiredModal';
+import { createClient } from '@/lib/supabase/client';
 
 interface Props {
   drugs: OTCDrug[];
@@ -17,7 +20,10 @@ export default function StoreClientComponent({ drugs }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { addItem } = useCart();
+  const router = useRouter();
 
   // Filter drugs by status (only active)
   const activeDrugs = useMemo(
@@ -46,6 +52,15 @@ export default function StoreClientComponent({ drugs }: Props) {
   }, [activeDrugs, searchTerm, selectedCategory]);
 
   const handleAddToCart = async (drug: OTCDrug) => {
+    // Check authentication
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setAddingToCart(drug.id);
 
     try {
@@ -67,7 +82,9 @@ export default function StoreClientComponent({ drugs }: Props) {
   };
 
   return (
-    <div className="space-y-8">
+    <>
+      <AuthRequiredModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <div className="space-y-8">
       {/* Search and Filter */}
       <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
         {/* Search */}
@@ -216,6 +233,7 @@ export default function StoreClientComponent({ drugs }: Props) {
           <p className="text-gray-600 text-lg">No products found matching your criteria.</p>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
