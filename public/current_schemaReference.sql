@@ -13,20 +13,16 @@ CREATE TABLE public.audit_logs (
   CONSTRAINT audit_logs_pkey PRIMARY KEY (id),
   CONSTRAINT audit_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
-CREATE TABLE public.deliveries (
+CREATE TABLE public.cart_items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  order_id uuid NOT NULL,
-  courier_id uuid,
-  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'picked_up'::text, 'in_transit'::text, 'delivered'::text, 'failed'::text])),
-  tracking_url text,
-  delivery_notes text,
-  signature_required boolean DEFAULT false,
-  delivered_at timestamp with time zone,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  user_id uuid NOT NULL,
+  drug_id uuid NOT NULL,
+  quantity integer NOT NULL CHECK (quantity > 0),
+  added_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT deliveries_pkey PRIMARY KEY (id),
-  CONSTRAINT deliveries_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
-  CONSTRAINT deliveries_courier_id_fkey FOREIGN KEY (courier_id) REFERENCES public.users(id)
+  CONSTRAINT cart_items_pkey PRIMARY KEY (id),
+  CONSTRAINT cart_items_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT cart_items_drug_id_fkey FOREIGN KEY (drug_id) REFERENCES public.otc_drugs(id)
 );
 CREATE TABLE public.doctor_prescriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -60,42 +56,35 @@ CREATE TABLE public.inventory_transactions (
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT inventory_transactions_pkey PRIMARY KEY (id)
 );
-CREATE TABLE public.messages (
+CREATE TABLE public.order_items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  sender_id uuid NOT NULL,
-  recipient_id uuid NOT NULL,
-  order_id uuid,
-  subject text,
-  body text NOT NULL,
-  read boolean DEFAULT false,
-  read_at timestamp with time zone,
+  order_id uuid NOT NULL,
+  drug_id uuid NOT NULL,
+  drug_name text NOT NULL,
+  quantity integer NOT NULL CHECK (quantity > 0),
+  unit_price numeric NOT NULL,
+  total_price numeric NOT NULL,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT messages_pkey PRIMARY KEY (id),
-  CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(id),
-  CONSTRAINT messages_recipient_id_fkey FOREIGN KEY (recipient_id) REFERENCES public.users(id),
-  CONSTRAINT messages_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id)
+  CONSTRAINT order_items_pkey PRIMARY KEY (id),
+  CONSTRAINT order_items_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
+  CONSTRAINT order_items_drug_id_fkey FOREIGN KEY (drug_id) REFERENCES public.otc_drugs(id)
 );
 CREATE TABLE public.orders (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  patient_id uuid NOT NULL,
-  prescription_id uuid NOT NULL,
-  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'processing'::text, 'ready'::text, 'in_transit'::text, 'delivered'::text, 'cancelled'::text])),
-  total_amount numeric,
-  currency text DEFAULT 'USD'::text,
-  payment_method text,
-  payment_status text DEFAULT 'pending'::text CHECK (payment_status = ANY (ARRAY['pending'::text, 'completed'::text, 'failed'::text])),
-  delivery_type text DEFAULT 'delivery'::text CHECK (delivery_type = ANY (ARRAY['pickup'::text, 'delivery'::text])),
-  delivery_address text,
-  delivery_city text,
-  delivery_state text,
-  delivery_zip text,
-  tracking_number text,
-  estimated_delivery_date date,
+  user_id uuid NOT NULL,
+  order_number text NOT NULL UNIQUE,
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'confirmed'::text, 'processing'::text, 'shipped'::text, 'delivered'::text, 'cancelled'::text])),
+  total_amount numeric NOT NULL,
+  subtotal_amount numeric NOT NULL,
+  tax_amount numeric DEFAULT 0,
+  shipping_amount numeric DEFAULT 0,
+  shipping_address text,
+  billing_address text,
+  notes text,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT orders_pkey PRIMARY KEY (id),
-  CONSTRAINT orders_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.users(id),
-  CONSTRAINT orders_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES public.prescriptions(id)
+  CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.otc_drugs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -124,24 +113,8 @@ CREATE TABLE public.otc_drugs (
   notes text,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  file_url text,
   CONSTRAINT otc_drugs_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.payments (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  order_id uuid NOT NULL,
-  patient_id uuid NOT NULL,
-  amount numeric NOT NULL,
-  currency text DEFAULT 'USD'::text,
-  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'completed'::text, 'failed'::text, 'refunded'::text])),
-  payment_method text,
-  stripe_payment_id text,
-  transaction_id text,
-  failure_reason text,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT payments_pkey PRIMARY KEY (id),
-  CONSTRAINT payments_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
-  CONSTRAINT payments_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.users(id)
 );
 CREATE TABLE public.prescription_drugs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -172,6 +145,7 @@ CREATE TABLE public.prescription_drugs (
   notes text,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  file_url text,
   CONSTRAINT prescription_drugs_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.prescription_items (
@@ -229,19 +203,6 @@ CREATE TABLE public.refills (
   CONSTRAINT refills_pkey PRIMARY KEY (id),
   CONSTRAINT refills_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES public.prescriptions(id),
   CONSTRAINT refills_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.reviews (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  patient_id uuid NOT NULL,
-  order_id uuid NOT NULL,
-  rating integer CHECK (rating >= 1 AND rating <= 5),
-  comment text,
-  is_verified boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT reviews_pkey PRIMARY KEY (id),
-  CONSTRAINT reviews_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.users(id),
-  CONSTRAINT reviews_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id)
 );
 CREATE TABLE public.sessions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
