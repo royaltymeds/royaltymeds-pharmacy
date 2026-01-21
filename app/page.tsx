@@ -213,6 +213,9 @@ export default function HomePage() {
               >
                 Order Prescription Medications
               </Link>
+              <p className="text-xs sm:text-sm text-gray-500 mt-2">
+                You will need to login or create an account to place an order.
+              </p>
             </div>
             <div className="hidden lg:block relative rounded-xl overflow-hidden shadow-lg">
               <Image
