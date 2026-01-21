@@ -15,15 +15,15 @@ export default function StoreLayout({
         <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-4 md:gap-8 min-w-0 flex-1">
-              <Link href="/store" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap truncate flex-shrink-0">
+              <Link href="/" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap truncate flex-shrink-0">
                 <span className="text-green-300">R</span><span>oyaltyMeds</span>
               </Link>
               <div className="hidden lg:flex space-x-1">
                 <Link
-                  href="/patient/home"
+                  href="/"
                   className="px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
                 >
-                  Dashboard
+                  Home
                 </Link>
                 <Link
                   href="/patient/orders"
