@@ -105,7 +105,11 @@ export default function HomePage() {
             </div>
           </div>
           <div className="relative h-96 lg:h-full min-h-96 rounded-xl overflow-hidden shadow-2xl">
-            <Image\n              src="https://images.unsplash.com/photo-1631217b9201-d59cefd92f26?w=600&h=600&fit=crop"\n              alt="Pharmacist with medications"\n              fill\n              className="object-cover"
+            <Image
+              src="https://images.unsplash.com/photo-1631217b9201-d59cefd92f26?w=600&h=600&fit=crop"
+              alt="Pharmacist with medications"
+              fill
+              className="object-cover"
             />
           </div>
         </div>
