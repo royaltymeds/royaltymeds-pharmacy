@@ -106,7 +106,7 @@ export default function HomePage() {
           </div>
           <div className="relative h-96 lg:h-full min-h-96 rounded-xl overflow-hidden shadow-2xl">
             <Image
-              src="https://images.unsplash.com/photo-1631217b9201-d59cefd92f26?w=600&h=600&fit=crop"
+              src="https://images.unsplash.com/photo-1587854692152-cbe660dbde0e?w=600&h=600&fit=crop"
               alt="Pharmacist with medications"
               fill
               className="object-cover"
@@ -215,7 +215,7 @@ export default function HomePage() {
             </div>
             <div className="relative h-96 rounded-xl overflow-hidden shadow-lg">
               <Image
-                src="https://images.unsplash.com/photo-1576091160675-4daf2e1ebf80?w=600&h=600&fit=crop"
+                src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=600&fit=crop"
                 alt="Prescription medications"
                 fill
                 className="object-cover"
@@ -231,7 +231,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative h-96 rounded-xl overflow-hidden shadow-lg order-2 lg:order-1">
               <Image
-                src="https://images.unsplash.com/photo-1576091160550-2173f7f80c11?w=600&h=600&fit=crop"
+                src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&h=600&fit=crop"
                 alt="Over-the-counter medications"
                 fill
                 className="object-cover"
@@ -341,7 +341,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative h-96 rounded-xl overflow-hidden shadow-lg">
               <Image
-                src="https://images.unsplash.com/photo-1631217b9201-d59cefd92f26?w=600&h=600&fit=crop"
+                src="https://images.unsplash.com/photo-1576091160625-2173dba999ef?w=600&h=600&fit=crop"
                 alt="Professional pharmacist"
                 fill
                 className="object-cover"
