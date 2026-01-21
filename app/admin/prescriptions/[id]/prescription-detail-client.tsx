@@ -635,7 +635,7 @@ export default function PrescriptionDetailClient({
                   Medications
                 </h2>
               </div>
-              {prescription.status === "processing" && (
+              {(prescription.status === "processing" || prescription.status === "partially_filled") && (
                 <button
                   onClick={() => setIsEditingMeds(!isEditingMeds)}
                   className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
