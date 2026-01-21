@@ -334,7 +334,7 @@ export default function InventoryManagementClient({
         ) : (
           <InventoryItemTable
             drugs={filteredDrugs}
-            onEdit={(drug) => {
+            onEdit={(drug: Drug) => {
               setEditingItem(drug);
               setShowForm(true);
             }}
