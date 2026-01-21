@@ -37,6 +37,8 @@ export default function PrescriptionDetailClient({
   const [prescriptionFileUploaded, setPrescriptionFileUploaded] = useState(false);
   const [prescriptionFilePreview, setPrescriptionFilePreview] = useState<string | null>(null);
   const [prescriptionFileName, setPrescriptionFileName] = useState<string | null>(null);
+  const [selectedPrescriptionFile, setSelectedPrescriptionFile] = useState<File | null>(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
@@ -455,6 +457,7 @@ export default function PrescriptionDetailClient({
     setPrescriptionFileUploaded(false);
     setPrescriptionFilePreview(null);
     setPrescriptionFileName(null);
+    setSelectedPrescriptionFile(null);
   };
 
   const handleQuantityFilledChange = (itemId: string, value: number) => {
@@ -464,11 +467,12 @@ export default function PrescriptionDetailClient({
     });
   };
 
-  const handlePrescriptionFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePrescriptionFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create preview
+    // Store the file and create preview
+    setSelectedPrescriptionFile(file);
     setPrescriptionFileName(file.name);
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
@@ -479,13 +483,17 @@ export default function PrescriptionDetailClient({
     } else if (file.type === "application/pdf") {
       setPrescriptionFilePreview("pdf");
     }
+  };
 
-    setIsLoading(true);
+  const handlePrescriptionFileUpload = async () => {
+    if (!selectedPrescriptionFile) return;
+
+    setIsUploadingFile(true);
     setMessage(null);
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", selectedPrescriptionFile);
       formData.append("prescriptionId", prescription.id);
 
       const response = await fetch(`/api/admin/prescriptions/${prescription.id}/upload-file`, {
@@ -510,6 +518,7 @@ export default function PrescriptionDetailClient({
       });
 
       setPrescriptionFileUploaded(true);
+      setSelectedPrescriptionFile(null);
       // Clear success message after 3 seconds
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
@@ -520,11 +529,7 @@ export default function PrescriptionDetailClient({
       });
       setPrescriptionFileUploaded(false);
     } finally {
-      setIsLoading(false);
-      // Reset the input so the same file can be uploaded again if needed
-      if (e.target) {
-        e.target.value = "";
-      }
+      setIsUploadingFile(false);
     }
   };
 
@@ -1044,18 +1049,25 @@ export default function PrescriptionDetailClient({
                   <label className="block text-sm font-medium text-gray-900 mb-3">
                     Update Prescription File <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex items-center gap-4 mb-4">
-                    <label className="flex-1 flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg cursor-pointer transition border border-blue-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <label className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg cursor-pointer transition border border-blue-200">
                       <Download className="w-4 h-4" />
                       <span className="text-sm font-medium">Choose File</span>
                       <input
                         type="file"
-                        onChange={handlePrescriptionFileUpload}
-                        disabled={isLoading}
+                        onChange={handlePrescriptionFileSelect}
+                        disabled={isUploadingFile}
                         className="hidden"
                         accept=".pdf,.jpg,.jpeg,.png"
                       />
                     </label>
+                    <button
+                      onClick={handlePrescriptionFileUpload}
+                      disabled={!selectedPrescriptionFile || isUploadingFile}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition"
+                    >
+                      {isUploadingFile ? "Uploading..." : "Upload File"}
+                    </button>
                     {prescriptionFileUploaded && (
                       <div className="flex items-center gap-2 text-green-600">
                         <CheckCircle className="w-5 h-5" />
