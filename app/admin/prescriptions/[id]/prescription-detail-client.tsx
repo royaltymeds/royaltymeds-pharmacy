@@ -35,6 +35,8 @@ export default function PrescriptionDetailClient({
   const [isFillingPrescription, setIsFillingPrescription] = useState(false);
   const [quantitiesBeingFilled, setQuantitiesBeingFilled] = useState<Record<string, number>>({});
   const [prescriptionFileUploaded, setPrescriptionFileUploaded] = useState(false);
+  const [prescriptionFilePreview, setPrescriptionFilePreview] = useState<string | null>(null);
+  const [prescriptionFileName, setPrescriptionFileName] = useState<string | null>(null);
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
@@ -451,6 +453,8 @@ export default function PrescriptionDetailClient({
     setIsFillingPrescription(false);
     setQuantitiesBeingFilled({});
     setPrescriptionFileUploaded(false);
+    setPrescriptionFilePreview(null);
+    setPrescriptionFileName(null);
   };
 
   const handleQuantityFilledChange = (itemId: string, value: number) => {
@@ -463,6 +467,18 @@ export default function PrescriptionDetailClient({
   const handlePrescriptionFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Create preview
+    setPrescriptionFileName(file.name);
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPrescriptionFilePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type === "application/pdf") {
+      setPrescriptionFilePreview("pdf");
+    }
 
     setIsLoading(true);
     setMessage(null);
@@ -1028,7 +1044,7 @@ export default function PrescriptionDetailClient({
                   <label className="block text-sm font-medium text-gray-900 mb-3">
                     Update Prescription File <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4 mb-4">
                     <label className="flex-1 flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg cursor-pointer transition border border-blue-200">
                       <Download className="w-4 h-4" />
                       <span className="text-sm font-medium">Choose File</span>
@@ -1047,7 +1063,32 @@ export default function PrescriptionDetailClient({
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-600 mt-2">
+
+                  {/* File Preview */}
+                  {prescriptionFilePreview && (
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-xs text-gray-600 uppercase tracking-wide font-medium mb-2">
+                        Preview
+                      </p>
+                      {prescriptionFilePreview === "pdf" ? (
+                        <div className="flex items-center gap-2 p-3 bg-white rounded border border-gray-200">
+                          <Download className="w-6 h-6 text-red-500" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{prescriptionFileName}</p>
+                            <p className="text-xs text-gray-600">PDF Document</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={prescriptionFilePreview}
+                          alt="Prescription preview"
+                          className="max-w-xs h-auto rounded border border-gray-200"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-600">
                     Accepted formats: PDF, JPG, PNG
                   </p>
                 </div>
