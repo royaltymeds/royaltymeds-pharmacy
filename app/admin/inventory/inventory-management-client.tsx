@@ -197,22 +197,22 @@ export default function InventoryManagementClient({
       )}
 
       {/* Tab Navigation */}
-      <div className="mb-6 border-b border-gray-200">
-        <div className="flex gap-8">
+      <div className="mb-6 border-b border-gray-200 overflow-x-auto">
+        <div className="flex gap-4 sm:gap-8">
           <button
             onClick={() => {
               setActiveTab('otc');
               setSelectedCategory('');
               setFilterStatus('all');
             }}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
+            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'otc'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
             }`}
           >
-            <Pill className="w-4 h-4" />
-            OTC Drugs ({otcDrugs.length})
+            <Pill className="w-4 h-4 flex-shrink-0" />
+            OTC ({otcDrugs.length})
           </button>
           <button
             onClick={() => {
@@ -220,20 +220,20 @@ export default function InventoryManagementClient({
               setSelectedCategory('');
               setFilterStatus('all');
             }}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
+            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'prescription'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
             }`}
           >
-            <Package className="w-4 h-4" />
-            Prescription Drugs ({prescriptionDrugs.length})
+            <Package className="w-4 h-4 flex-shrink-0" />
+            Prescription ({prescriptionDrugs.length})
           </button>
         </div>
       </div>
 
       {/* Toolbar */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+      <div className="mb-6 flex flex-col gap-3">
         {/* Search */}
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
@@ -246,47 +246,50 @@ export default function InventoryManagementClient({
           />
         </div>
 
-        {/* Category Filter */}
-        <div className="w-full sm:w-48">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Filters and Button Row */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Category Filter */}
+          <div className="flex-1 min-w-0">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Status Filter */}
-        <div className="w-full sm:w-40">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="low_stock">Low Stock</option>
-            <option value="out_of_stock">Out of Stock</option>
-          </select>
-        </div>
+          {/* Status Filter */}
+          <div className="flex-1 min-w-0">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as any)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="low_stock">Low Stock</option>
+              <option value="out_of_stock">Out of Stock</option>
+            </select>
+          </div>
 
-        {/* Add Item Button */}
-        <button
-          onClick={() => {
-            setEditingItem(null);
-            setShowForm(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Item
-        </button>
+          {/* Add Item Button */}
+          <button
+            onClick={() => {
+              setEditingItem(null);
+              setShowForm(true);
+            }}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap font-medium text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add Item
+          </button>
+        </div>
       </div>
 
       {/* Form Modal */}
@@ -345,26 +348,26 @@ export default function InventoryManagementClient({
       </div>
 
       {/* Stats */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-gray-600 text-sm font-medium">Total Items</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{filteredDrugs.length}</p>
+          <p className="text-gray-600 text-xs font-medium">Total Items</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{filteredDrugs.length}</p>
         </div>
         <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-gray-600 text-sm font-medium">Total Value</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
+          <p className="text-gray-600 text-xs font-medium">Total Value</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2 break-words">
             ${filteredDrugs
               .reduce((sum, drug) => sum + drug.unit_price * drug.quantity_on_hand, 0)
               .toFixed(2)}
           </p>
         </div>
         <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-gray-600 text-sm font-medium">Low Stock</p>
-          <p className="text-2xl font-bold text-yellow-600 mt-1">{lowStockCount}</p>
+          <p className="text-gray-600 text-xs font-medium">Low Stock</p>
+          <p className="text-2xl font-bold text-yellow-600 mt-2">{lowStockCount}</p>
         </div>
         <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-gray-600 text-sm font-medium">Out of Stock</p>
-          <p className="text-2xl font-bold text-red-600 mt-1">
+          <p className="text-gray-600 text-xs font-medium">Out of Stock</p>
+          <p className="text-2xl font-bold text-red-600 mt-2">
             {filteredDrugs.filter((d) => d.status === 'out_of_stock').length}
           </p>
         </div>
