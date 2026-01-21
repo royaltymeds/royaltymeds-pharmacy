@@ -68,9 +68,17 @@ export default function PatientOrdersPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
-          <p className="text-gray-600">View and track your orders</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
+            <p className="text-gray-600">View and track your orders</p>
+          </div>
+          <Link
+            href="/store"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            Place New Order
+          </Link>
         </div>
 
         {/* Error Message */}
@@ -337,7 +345,7 @@ export default function PatientOrdersPage() {
         {/* Back Button */}
         <div className="mt-8">
           <Link
-            href="/patient/dashboard"
+            href="/patient/home"
             className="inline-block px-6 py-2 text-blue-600 hover:text-blue-700 font-semibold"
           >
             ← Back to Dashboard

@@ -6,6 +6,8 @@ import { OTCDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
 import { ShoppingCart, Search, AlertCircle } from 'lucide-react';
 import { addToCart } from '@/app/actions/orders';
+import { toast } from 'sonner';
+import { useCart } from '@/lib/context/CartContext';
 
 interface Props {
   drugs: OTCDrug[];
@@ -15,8 +17,7 @@ export default function StoreClientComponent({ drugs }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const { addItem } = useCart();
 
   // Filter drugs by status (only active)
   const activeDrugs = useMemo(
@@ -46,15 +47,20 @@ export default function StoreClientComponent({ drugs }: Props) {
 
   const handleAddToCart = async (drug: OTCDrug) => {
     setAddingToCart(drug.id);
-    setError('');
-    setSuccess('');
 
     try {
       await addToCart(drug.id, 1);
-      setSuccess(`${drug.name} added to cart!`);
-      setTimeout(() => setSuccess(''), 3000);
+      addItem(drug.id, drug.name, 1);
+      toast.success(`${drug.name} added to cart!`, {
+        duration: 3000,
+        position: 'top-right',
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add to cart');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add to cart';
+      toast.error(errorMessage, {
+        duration: 3000,
+        position: 'top-right',
+      });
     } finally {
       setAddingToCart(null);
     }
@@ -62,19 +68,6 @@ export default function StoreClientComponent({ drugs }: Props) {
 
   return (
     <div className="space-y-8">
-      {/* Messages */}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
-          <AlertCircle size={20} />
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
-          {success}
-        </div>
-      )}
-
       {/* Search and Filter */}
       <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
         {/* Search */}
@@ -138,40 +131,45 @@ export default function StoreClientComponent({ drugs }: Props) {
           {filteredDrugs.map((drug) => (
             <div
               key={drug.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col h-72"
             >
-              {/* Product Image */}
-              <div className="relative w-full h-48 bg-gray-100">
-                <Image
-                  src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
-                  alt={drug.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              {/* Main Content Area */}
+              <div className="flex flex-1">
+                {/* Product Info */}
+                <div className="p-4 space-y-3 flex-1 flex flex-col">
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">{drug.name}</h3>
+                    {drug.active_ingredient && (
+                      <p className="text-sm text-gray-600">{drug.active_ingredient}</p>
+                    )}
+                  </div>
 
-              {/* Product Info */}
-              <div className="p-4 space-y-3">
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-900">{drug.name}</h3>
-                  {drug.active_ingredient && (
-                    <p className="text-sm text-gray-600">{drug.active_ingredient}</p>
+                  {/* Category and Manufacturer */}
+                  <div className="text-sm text-gray-600">
+                    <p>{drug.category}</p>
+                    {drug.manufacturer && <p className="text-xs">{drug.manufacturer}</p>}
+                  </div>
+
+                  {/* Description */}
+                  {drug.description && (
+                    <p className="text-sm text-gray-600 line-clamp-3">{drug.description}</p>
                   )}
                 </div>
 
-                {/* Category and Manufacturer */}
-                <div className="text-sm text-gray-600">
-                  <p>{drug.category}</p>
-                  {drug.manufacturer && <p className="text-xs">{drug.manufacturer}</p>}
+                {/* Product Image */}
+                <div className="relative w-32 h-32 bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <Image
+                    src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
+                    alt={drug.name}
+                    fill
+                    className="object-contain p-2"
+                  />
                 </div>
+              </div>
 
-                {/* Description */}
-                {drug.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2">{drug.description}</p>
-                )}
-
-                {/* Price */}
-                <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+              {/* Footer - Price and Button */}
+              <div className="p-4 space-y-2 border-t border-gray-100">
+                <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-2xl font-bold text-blue-600">${drug.unit_price.toFixed(2)}</p>
                     <p className="text-xs text-gray-500">{drug.pack_size || 'Standard'}</p>
@@ -181,7 +179,7 @@ export default function StoreClientComponent({ drugs }: Props) {
                   <button
                     onClick={() => handleAddToCart(drug)}
                     disabled={addingToCart === drug.id || drug.quantity_on_hand === 0}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0"
                   >
                     <ShoppingCart size={18} />
                     {addingToCart === drug.id ? 'Adding...' : 'Add'}

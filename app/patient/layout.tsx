@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { MobileSidebar } from "@/components/MobileSidebar";
+import { CartBadge } from "@/components/CartBadge";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
@@ -64,6 +65,7 @@ export default async function PatientLayout({
             </div>
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+              <CartBadge />
               <span className="hidden sm:inline text-xs md:text-sm text-green-100 truncate max-w-[150px]">{userEmail}</span>
               <LogoutButton className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap" />
             </div>
