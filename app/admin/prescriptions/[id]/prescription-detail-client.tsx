@@ -1147,6 +1147,7 @@ export default function PrescriptionDetailClient({
                           </div>
                         </div>
                       ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={prescriptionFilePreview}
                           alt="Prescription preview"
@@ -1454,6 +1455,7 @@ export default function PrescriptionDetailClient({
                     <p className="text-sm text-gray-600">PDF Document</p>
                   </div>
                 ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={prescription.file_url}
                     alt="Prescription preview"
@@ -1546,6 +1548,7 @@ export default function PrescriptionDetailClient({
                         </div>
                       </div>
                     ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={prescription.file_url}
                         alt="Prescription full view"

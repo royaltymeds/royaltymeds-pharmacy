@@ -85,6 +85,7 @@ export default function PrescriptionFileViewer({
               <p className="text-sm text-gray-600">PDF Document</p>
             </div>
           ) : (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={fileUrl}
               alt="Prescription preview"
@@ -185,6 +186,7 @@ export default function PrescriptionFileViewer({
                   </div>
                 </div>
               ) : (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={fileUrl}
                   alt="Prescription full view"
