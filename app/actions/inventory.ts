@@ -279,3 +279,88 @@ export async function searchInventory(query: string, drugType?: DrugType) {
     prescription: (rxData || []) as PrescriptionDrug[],
   };
 }
+
+// Upload image for inventory item
+export async function uploadDrugImage(
+  drugId: string,
+  drugType: DrugType,
+  file: File
+): Promise<string> {
+  const supabase = getAdminClient();
+
+  // Validate file
+  if (!file.type.startsWith('image/')) {
+    throw new Error('File must be an image');
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('Image must be less than 5MB');
+  }
+
+  // Create unique filename
+  const timestamp = Date.now();
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${drugType}/${drugId}/${timestamp}.${fileExt}`;
+
+  // Upload to storage
+  const { data, error: uploadError } = await supabase.storage
+    .from('royaltymeds_storage')
+    .upload(fileName, file, {
+      upsert: true,
+      cacheControl: '3600',
+    });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  // Get public URL
+  const { data: urlData } = supabase.storage
+    .from('royaltymeds_storage')
+    .getPublicUrl(data.path);
+
+  const fileUrl = urlData.publicUrl;
+
+  // Update database with file URL
+  const tableName = drugType === 'otc' ? 'otc_drugs' : 'prescription_drugs';
+  const { error: updateError } = await supabase
+    .from(tableName)
+    .update({ file_url: fileUrl, updated_at: new Date().toISOString() })
+    .eq('id', drugId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  revalidatePath('/admin/inventory');
+  return fileUrl;
+}
+
+// Delete image for inventory item
+export async function deleteDrugImage(
+  drugId: string,
+  drugType: DrugType,
+  fileUrl: string
+): Promise<void> {
+  const supabase = getAdminClient();
+
+  // Extract file path from URL
+  const url = new URL(fileUrl);
+  const pathParts = url.pathname.split('/');
+  const filePath = pathParts.slice(4).join('/'); // Skip /storage/v1/object/public/{bucket}/
+
+  // Delete from storage
+  const { error: deleteError } = await supabase.storage
+    .from('royaltymeds_storage')
+    .remove([filePath]);
+
+  if (deleteError) throw new Error(deleteError.message);
+
+  // Update database to remove file URL
+  const tableName = drugType === 'otc' ? 'otc_drugs' : 'prescription_drugs';
+  const { error: updateError } = await supabase
+    .from(tableName)
+    .update({ file_url: null, updated_at: new Date().toISOString() })
+    .eq('id', drugId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  revalidatePath('/admin/inventory');
+}
+

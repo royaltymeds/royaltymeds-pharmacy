@@ -74,6 +74,9 @@ export default function InventoryItemTable({
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Image
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
@@ -112,6 +115,21 @@ export default function InventoryItemTable({
 
               return (
                 <tr key={drug.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {drug.file_url ? (
+                      <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden">
+                        <img
+                          src={drug.file_url}
+                          alt={drug.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                        —
+                      </div>
+                    )}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <p className="text-sm font-medium text-gray-900">{drug.name}</p>
@@ -234,10 +252,23 @@ export default function InventoryItemTable({
                 className="w-full p-4 flex justify-between items-start gap-3 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex-1 min-w-0 text-left">
-                  <h3 className="font-semibold text-gray-900 break-words">{drug.name}</h3>
-                  {drug.active_ingredient && (
-                    <p className="text-xs text-gray-500 mt-1">{drug.active_ingredient}</p>
-                  )}
+                  <div className="flex items-start gap-3">
+                    {drug.file_url && (
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                        <img
+                          src={drug.file_url}
+                          alt={drug.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 break-words">{drug.name}</h3>
+                      {drug.active_ingredient && (
+                        <p className="text-xs text-gray-500 mt-1">{drug.active_ingredient}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span
@@ -259,6 +290,19 @@ export default function InventoryItemTable({
               {/* Expanded Content */}
               {isExpanded && (
                 <div className="border-t border-gray-200 p-4 space-y-3">
+                  {/* Image Preview if exists */}
+                  {drug.file_url && (
+                    <div className="flex justify-center">
+                      <div className="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                        <img
+                          src={drug.file_url}
+                          alt={drug.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Details Grid */}
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>

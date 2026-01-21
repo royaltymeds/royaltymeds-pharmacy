@@ -24,6 +24,7 @@ export interface OTCDrug {
   status: 'active' | 'discontinued' | 'out_of_stock';
   low_stock_alert: boolean;
   notes?: string;
+  file_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -55,6 +56,7 @@ export interface PrescriptionDrug {
   status: 'active' | 'discontinued' | 'out_of_stock';
   low_stock_alert: boolean;
   notes?: string;
+  file_url?: string;
   created_at: string;
   updated_at: string;
 }

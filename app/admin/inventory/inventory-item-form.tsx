@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
+import { uploadDrugImage, deleteDrugImage } from '@/app/actions/inventory';
+import { Upload, X } from 'lucide-react';
 
 type Drug = OTCDrug | PrescriptionDrug;
 type DrugType = 'otc' | 'prescription';
@@ -46,6 +48,7 @@ export default function InventoryItemForm({
     lot_number: initialData?.lot_number || '',
     status: initialData?.status || 'active',
     notes: initialData?.notes || '',
+    file_url: initialData?.file_url || null,
     ...(drugType === 'prescription' && {
       requires_refrigeration: (initialData as PrescriptionDrug)?.requires_refrigeration || false,
       controlled_substance: (initialData as PrescriptionDrug)?.controlled_substance || false,
@@ -53,7 +56,9 @@ export default function InventoryItemForm({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [error, setError] = useState('');
+  const [uploadError, setUploadError] = useState('');
 
   const availableSubcategories = useMemo(
     () => subcategories[formData.category] || [],
@@ -75,6 +80,54 @@ export default function InventoryItemForm({
           ? parseFloat(value) || 0
           : value,
       }));
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadError('');
+    setIsUploadingImage(true);
+
+    try {
+      // For new items, we need a temporary ID
+      if (!initialData?.id) {
+        setUploadError('Please save the item first before uploading an image');
+        setIsUploadingImage(false);
+        return;
+      }
+
+      const fileUrl = await uploadDrugImage(initialData.id, drugType, file);
+      setFormData((prev) => ({
+        ...prev,
+        file_url: fileUrl,
+      }));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Failed to upload image');
+    } finally {
+      setIsUploadingImage(false);
+      // Reset input
+      e.target.value = '';
+    }
+  };
+
+  const handleImageDelete = async () => {
+    if (!initialData?.id || !formData.file_url) return;
+
+    setUploadError('');
+    setIsUploadingImage(true);
+
+    try {
+      await deleteDrugImage(initialData.id, drugType, formData.file_url);
+      setFormData((prev) => ({
+        ...prev,
+        file_url: null,
+      }));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Failed to delete image');
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -103,6 +156,73 @@ export default function InventoryItemForm({
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {error}
+        </div>
+      )}
+
+      {uploadError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {uploadError}
+        </div>
+      )}
+
+      {/* Image Upload Section */}
+      {initialData?.id && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Item Image</h3>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+            {formData.file_url ? (
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative w-40 h-40 bg-gray-100 rounded-lg overflow-hidden">
+                  <img
+                    src={formData.file_url}
+                    alt={formData.name || 'Drug image'}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleImageDelete}
+                  disabled={isUploadingImage}
+                  className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <X size={18} />
+                  Delete Image
+                </button>
+                <label className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <Upload size={18} />
+                  <span>Replace Image</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={isUploadingImage}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
+                <Upload size={32} className="text-gray-400" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-gray-700">Upload Item Image</p>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={isUploadingImage}
+                  className="hidden"
+                />
+              </label>
+            )}
+            {isUploadingImage && (
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm text-gray-600">Uploading...</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
