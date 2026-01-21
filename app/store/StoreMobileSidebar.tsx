@@ -47,12 +47,9 @@ export function StoreMobileSidebar() {
             >
               Home
             </Link>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-full text-left"
-            >
-              <OrdersButton />
-            </button>
+            <div>
+              <OrdersButton onNavigate={() => setIsOpen(false)} />
+            </div>
           </nav>
         </div>
       </div>

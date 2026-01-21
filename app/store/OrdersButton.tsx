@@ -5,10 +5,14 @@ import { Package } from 'lucide-react';
 import { AuthRequiredModal } from './AuthRequiredModal';
 import { createClient } from '@/lib/supabase-browser';
 
-export function OrdersButton() {
+interface OrdersButtonProps {
+  onNavigate?: () => void;
+}
+
+export function OrdersButton({ onNavigate }: OrdersButtonProps) {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const handleClick = async (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+  const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     
     const supabase = createClient();
@@ -20,6 +24,7 @@ export function OrdersButton() {
     }
 
     // If authenticated, navigate to orders
+    onNavigate?.();
     window.location.href = '/patient/orders';
   };
 
