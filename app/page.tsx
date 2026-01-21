@@ -469,24 +469,24 @@ export default function HomePage() {
               </ul>
             </div>
 
-            {/* Support */}
+            {/* Contact */}
             <div className="text-center">
-              <h4 className="font-semibold text-white mb-4">Support</h4>
+              <h4 className="font-semibold text-white mb-4">Contact Us</h4>
               <ul className="space-y-3 text-sm flex flex-col items-center">
                 <li className="flex items-center gap-2">
                   <MailIcon className="w-4 h-4" />
-                  <a
-                    href="mailto:support@royaltymeds.com"
-                    className="hover:text-green-400 transition"
-                  >
-                    support@royaltymeds.com
+                  <span>Shop #8, 2 Auburn Terrace</span>
+                </li>
+                <li className="text-xs text-gray-400">
+                  Daytona Dr, Jamaica
+                </li>
+                <li className="flex items-center gap-2 mt-2">
+                  <PhoneIcon className="w-4 h-4" />
+                  <a href="tel:+18765723720" className="hover:text-green-400 transition">
+                    +1 876-572-3720
                   </a>
                 </li>
-                <li className="flex items-center gap-2">
-                  <PhoneIcon className="w-4 h-4" />
-                  <span>1-800-ROYALTY</span>
-                </li>
-                <li className="flex items-center gap-2">
+                <li className="flex items-center gap-2 mt-2">
                   <ClockIcon className="w-4 h-4" />
                   <span>24/7 Available</span>
                 </li>
