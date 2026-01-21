@@ -104,12 +104,13 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="relative h-96 lg:h-full min-h-96 rounded-xl overflow-hidden shadow-2xl">
+          <div className="relative rounded-xl overflow-hidden shadow-2xl">
             <Image
-              src="https://images.pexels.com/photos/3962286/pexels-photo-3962286.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
+              src="/homepage_pics/pharmacist_royaltymeds.png"
               alt="Pharmacist with medications"
-              fill
-              className="object-cover"
+              width={600}
+              height={600}
+              className="w-full h-auto"
             />
           </div>
         </div>
@@ -213,12 +214,13 @@ export default function HomePage() {
                 Order Prescriptions Now
               </Link>
             </div>
-            <div className="relative h-96 rounded-xl overflow-hidden shadow-lg">
+            <div className="relative rounded-xl overflow-hidden shadow-lg">
               <Image
-                src="https://images.pexels.com/photos/3683053/pexels-photo-3683053.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
+                src="/homepage_pics/pharmacy_medications.jpg"
                 alt="Prescription medications"
-                fill
-                className="object-cover"
+                width={600}
+                height={600}
+                className="w-full h-auto"
               />
             </div>
           </div>
@@ -229,12 +231,13 @@ export default function HomePage() {
       <section className="py-16 sm:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative h-96 rounded-xl overflow-hidden shadow-lg order-2 lg:order-1">
+            <div className="relative rounded-xl overflow-hidden shadow-lg order-2 lg:order-1">
               <Image
-                src="https://images.pexels.com/photos/3962287/pexels-photo-3962287.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
+                src="/homepage_pics/pharmacy_isle.jpeg"
                 alt="Over-the-counter medications"
-                fill
-                className="object-cover"
+                width={600}
+                height={600}
+                className="w-full h-auto"
               />
             </div>
             <div className="order-1 lg:order-2">
@@ -339,12 +342,13 @@ export default function HomePage() {
       <section className="bg-gray-50 py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative h-96 rounded-xl overflow-hidden shadow-lg">
+            <div className="relative rounded-xl overflow-hidden shadow-lg">
               <Image
-                src="https://images.pexels.com/photos/3962286/pexels-photo-3962286.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
+                src="/homepage_pics/pharmacist_on_computer.png"
                 alt="Professional pharmacist"
-                fill
-                className="object-cover"
+                width={600}
+                height={600}
+                className="w-full h-auto"
               />
             </div>
             <div>
