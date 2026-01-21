@@ -2,12 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, ShoppingCart } from 'lucide-react';
-import { useCart } from '@/lib/context/CartContext';
+import { Menu, X } from 'lucide-react';
 
 export function StoreMobileSidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { itemCount } = useCart();
 
   return (
     <>
@@ -54,19 +52,6 @@ export function StoreMobileSidebar() {
               className="block px-3 py-2 rounded-md text-green-100 hover:text-white hover:bg-green-600"
             >
               Orders
-            </Link>
-            <Link
-              href="/cart"
-              onClick={() => setIsOpen(false)}
-              className="block px-3 py-2 rounded-md text-green-100 hover:text-white hover:bg-green-600 flex items-center gap-2"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              View Cart
-              {itemCount > 0 && (
-                <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
             </Link>
           </nav>
         </div>
