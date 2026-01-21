@@ -106,7 +106,7 @@ export default function HomePage() {
           </div>
           <div className="hidden lg:block relative rounded-xl overflow-hidden shadow-2xl">
             <Image
-              src="/homepage_pics/pharmacist_royaltymeds.png"
+              src="/homepage_pics/royaltymeds_pharmacist2.jpeg"
               alt="Pharmacist with medications"
               width={600}
               height={600}
