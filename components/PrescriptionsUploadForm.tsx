@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Upload, AlertCircle, CheckCircle, FileText, X } from "lucide-react";
 import { revalidatePrescriptionsPath } from "@/lib/actions";
 import { generatePrescriptionNumber } from "@/lib/prescription-number";
@@ -127,9 +128,11 @@ export function PrescriptionsUploadForm() {
               </div>
             ) : (
               <div className="relative">
-                <img
+                <Image
                   src={preview}
                   alt="Preview"
+                  width={600}
+                  height={400}
                   className="w-full h-auto max-h-80 object-contain rounded"
                 />
                 <button

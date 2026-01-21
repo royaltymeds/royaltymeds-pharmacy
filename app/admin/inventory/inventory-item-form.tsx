@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { uploadDrugImage, deleteDrugImage } from '@/app/actions/inventory';
 import { Upload, X } from 'lucide-react';
@@ -173,10 +174,11 @@ export default function InventoryItemForm({
             {formData.file_url ? (
               <div className="flex flex-col items-center gap-4">
                 <div className="relative w-40 h-40 bg-gray-100 rounded-lg overflow-hidden">
-                  <img
+                  <Image
                     src={formData.file_url}
                     alt={formData.name || 'Drug image'}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <button

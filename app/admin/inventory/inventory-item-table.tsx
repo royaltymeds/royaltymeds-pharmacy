@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Edit2, Trash2, AlertTriangle, ChevronDown } from 'lucide-react';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 
@@ -117,11 +118,12 @@ export default function InventoryItemTable({
                 <tr key={drug.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     {drug.file_url ? (
-                      <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden">
-                        <img
+                      <div className="relative w-10 h-10 rounded bg-gray-100 overflow-hidden">
+                        <Image
                           src={drug.file_url}
                           alt={drug.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       </div>
                     ) : (
@@ -254,11 +256,12 @@ export default function InventoryItemTable({
                 <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-start gap-3">
                     {drug.file_url && (
-                      <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-                        <img
+                      <div className="relative w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                        <Image
                           src={drug.file_url}
                           alt={drug.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       </div>
                     )}
@@ -293,11 +296,12 @@ export default function InventoryItemTable({
                   {/* Image Preview if exists */}
                   {drug.file_url && (
                     <div className="flex justify-center">
-                      <div className="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
-                        <img
+                      <div className="relative w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                        <Image
                           src={drug.file_url}
                           alt={drug.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       </div>
                     </div>
