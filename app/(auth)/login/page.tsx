@@ -58,6 +58,9 @@ export default function LoginPage() {
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
+        <Link href="/" className="inline-flex items-center text-green-600 hover:text-green-700 mb-6 font-medium text-sm">
+          ← Back to Home
+        </Link>
           <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>

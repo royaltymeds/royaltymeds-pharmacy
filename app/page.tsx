@@ -5,7 +5,7 @@ import {
   ClockIcon,
   CreditCardIcon,
   PhoneIcon,
-  MailIcon,
+  MapPinIcon,
   CheckCircleIcon,
   Heart,
   Truck,
@@ -342,15 +342,7 @@ export default function HomePage() {
       <section className="bg-gray-50 py-12 sm:py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div className="hidden lg:block relative rounded-xl overflow-hidden shadow-lg">
-              <Image
-                src="/homepage_pics/pharmacist_on_computer.png"
-                alt="Professional pharmacist"
-                width={600}
-                height={600}
-                className="w-full h-auto"
-              />
-            </div>
+            <div></div>
             <div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Professional Pharmacist Care
@@ -416,7 +408,7 @@ export default function HomePage() {
           <p className="text-sm sm:text-base lg:text-lg text-green-50 max-w-2xl mx-auto">
             Join thousands of satisfied customers who trust RoyaltyMeds for convenient, professional prescription and OTC medication delivery.
           </p>
-          <div className="flex flex-col gap-2 sm:gap-3 max-w-xs sm:max-w-none sm:flex-row sm:justify-center">
+          <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:justify-center items-center">
             <Link
               href="/store"
               className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 lg:py-4 bg-white text-green-600 rounded-lg hover:bg-gray-100 transition font-semibold text-sm sm:text-base lg:text-lg text-center"
@@ -474,11 +466,8 @@ export default function HomePage() {
               <h4 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Contact Us</h4>
               <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm flex flex-col items-center">
                 <li className="flex items-center gap-2">
-                  <MailIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="text-xs">Shop #8, 2 Auburn Terrace</span>
-                </li>
-                <li className="text-xs text-gray-400">
-                  Daytona Dr, Jamaica
+                  <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs">Shop #8, 2 Auburn Terrace, Daytona Dr, Jamaica</span>
                 </li>
                 <li className="flex items-center gap-2 mt-2">
                   <PhoneIcon className="w-3 h-3 sm:w-4 sm:h-4" />
