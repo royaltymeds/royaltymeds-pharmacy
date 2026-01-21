@@ -95,7 +95,7 @@ export default function HomePage() {
                 <p className="text-xs sm:text-sm text-gray-600">Customer Support</p>
               </div>
               <div>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">2-3 Days</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">1Hr - 24Hr</p>
                 <p className="text-xs sm:text-sm text-gray-600">Fast Delivery</p>
               </div>
               <div>
@@ -145,7 +145,7 @@ export default function HomePage() {
                 Fast Delivery
               </h3>
               <p className="text-xs sm:text-sm text-gray-600">
-                Most prescriptions delivered within 2-3 days. Over-the-counter medications ready to ship immediately.
+                Delivered within 1 hour in Kingston and 12-24 hours outside Kingston. Over-the-counter medications ready to ship immediately.
               </p>
             </div>
 
@@ -331,7 +331,7 @@ export default function HomePage() {
                 Fast Delivery
               </h3>
               <p className="text-xs sm:text-sm text-gray-600">
-                Your medications are carefully prepared and delivered within 2-3 days. Track your order anytime.
+                Your medications are carefully prepared and delivered within 1 hour in Kingston and 12-24 hours outside Kingston. Track your order anytime.
               </p>
             </div>
           </div>
