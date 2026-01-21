@@ -364,3 +364,46 @@ export async function deleteDrugImage(
   revalidatePath('/admin/inventory');
 }
 
+// Get or upload default inventory image
+export async function getDefaultInventoryImageUrl(): Promise<string> {
+  const supabase = getAdminClient();
+  const defaultFileName = 'default_inventory.jpg';
+  const storagePath = `defaults/${defaultFileName}`;
+
+  // Check if default image already exists
+  const { data: existingFiles } = await supabase.storage
+    .from('royaltymeds_storage')
+    .list('defaults');
+
+  if (existingFiles?.some((file) => file.name === defaultFileName)) {
+    const { data } = supabase.storage
+      .from('royaltymeds_storage')
+      .getPublicUrl(storagePath);
+    return data.publicUrl;
+  }
+
+  // If not, upload the default image
+  try {
+    const response = await fetch('/default_inventory.jpg');
+    const blob = await response.blob();
+    const file = new File([blob], defaultFileName, { type: 'image/jpeg' });
+
+    const { data, error: uploadError } = await supabase.storage
+      .from('royaltymeds_storage')
+      .upload(storagePath, file, {
+        upsert: true,
+        cacheControl: '3600',
+      });
+
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { data: urlData } = supabase.storage
+      .from('royaltymeds_storage')
+      .getPublicUrl(data.path);
+
+    return urlData.publicUrl;
+  } catch (error) {
+    throw new Error(`Failed to get default image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+

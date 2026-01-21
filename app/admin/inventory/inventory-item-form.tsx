@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { uploadDrugImage, deleteDrugImage } from '@/app/actions/inventory';
+import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
 import { Upload, X } from 'lucide-react';
 
 type Drug = OTCDrug | PrescriptionDrug;
@@ -171,28 +172,30 @@ export default function InventoryItemForm({
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Item Image</h3>
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-            {formData.file_url ? (
+            {formData.file_url || !initialData.file_url ? (
               <div className="flex flex-col items-center gap-4">
                 <div className="relative w-40 h-40 bg-gray-100 rounded-lg overflow-hidden">
                   <Image
-                    src={formData.file_url}
+                    src={formData.file_url || DEFAULT_INVENTORY_IMAGE}
                     alt={formData.name || 'Drug image'}
                     fill
                     className="object-cover"
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={handleImageDelete}
-                  disabled={isUploadingImage}
-                  className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <X size={18} />
-                  Delete Image
-                </button>
+                {formData.file_url && (
+                  <button
+                    type="button"
+                    onClick={handleImageDelete}
+                    disabled={isUploadingImage}
+                    className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <X size={18} />
+                    Delete Image
+                  </button>
+                )}
                 <label className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
                   <Upload size={18} />
-                  <span>Replace Image</span>
+                  <span>{formData.file_url ? 'Replace Image' : 'Upload Image'}</span>
                   <input
                     type="file"
                     accept="image/*"
