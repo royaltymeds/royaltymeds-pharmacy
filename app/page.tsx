@@ -106,7 +106,7 @@ export default function HomePage() {
           </div>
           <div className="relative h-96 lg:h-full min-h-96 rounded-xl overflow-hidden shadow-2xl">
             <Image
-              src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=600&fit=crop"
+              src="https://images.pexels.com/photos/3962286/pexels-photo-3962286.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
               alt="Pharmacist with medications"
               fill
               className="object-cover"
@@ -215,7 +215,7 @@ export default function HomePage() {
             </div>
             <div className="relative h-96 rounded-xl overflow-hidden shadow-lg">
               <Image
-                src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=600&fit=crop"
+                src="https://images.pexels.com/photos/3683053/pexels-photo-3683053.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
                 alt="Prescription medications"
                 fill
                 className="object-cover"
@@ -231,7 +231,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative h-96 rounded-xl overflow-hidden shadow-lg order-2 lg:order-1">
               <Image
-                src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&h=600&fit=crop"
+                src="https://images.pexels.com/photos/3962287/pexels-photo-3962287.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
                 alt="Over-the-counter medications"
                 fill
                 className="object-cover"
@@ -341,7 +341,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative h-96 rounded-xl overflow-hidden shadow-lg">
               <Image
-                src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&h=600&fit=crop"
+                src="https://images.pexels.com/photos/3962286/pexels-photo-3962286.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
                 alt="Professional pharmacist"
                 fill
                 className="object-cover"
