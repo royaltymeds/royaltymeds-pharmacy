@@ -1,0 +1,360 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { CartItem } from '@/lib/types/orders';
+import { OTCDrug } from '@/lib/types/inventory';
+import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
+import { Trash2, Plus, Minus, ArrowLeft, AlertCircle } from 'lucide-react';
+import { getCart, removeFromCart, updateCartItem, createOrder } from '@/app/actions/orders';
+import { getOTCDrugById } from '@/app/actions/inventory';
+import { useCart } from '@/lib/context/CartContext';
+
+export default function CartPage() {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [drugDetails, setDrugDetails] = useState<Record<string, OTCDrug>>({});
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [checkoutForm, setCheckoutForm] = useState(false);
+  const [formData, setFormData] = useState({
+    shipping_address: '',
+    billing_address: '',
+    notes: '',
+  });
+  const [processingOrder, setProcessingOrder] = useState(false);
+  const { clearCart } = useCart();
+
+  // Load cart and drug details
+  useEffect(() => {
+    const loadCart = async () => {
+      try {
+        setLoading(true);
+        const items = await getCart();
+        setCartItems(items);
+
+        // Fetch drug details for all items
+        const details: Record<string, OTCDrug> = {};
+        for (const item of items) {
+          const drug = await getOTCDrugById(item.drug_id);
+          if (drug) {
+            details[item.drug_id] = drug;
+          }
+        }
+        setDrugDetails(details);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load cart');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCart();
+  }, []);
+
+  // Handle quantity change
+  const handleQuantityChange = async (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1) return;
+
+    setUpdating(itemId);
+    try {
+      await updateCartItem(itemId, newQuantity);
+      setCartItems((items) =>
+        items.map((item) =>
+          item.id === itemId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update quantity');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  // Handle remove item
+  const handleRemoveItem = async (itemId: string) => {
+    setUpdating(itemId);
+    try {
+      await removeFromCart(itemId);
+      setCartItems((items) => items.filter((item) => item.id !== itemId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove item');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  // Calculate totals
+  const subtotal = cartItems.reduce((sum, item) => {
+    const drug = drugDetails[item.drug_id];
+    return sum + (drug ? drug.unit_price * item.quantity : 0);
+  }, 0);
+
+  const tax = subtotal * 0.1; // 10% tax
+  const shipping = cartItems.length > 0 ? 10 : 0; // $10 shipping
+  const total = subtotal + tax + shipping;
+
+  // Handle checkout
+  const handleCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProcessingOrder(true);
+    setError('');
+
+    try {
+      if (!formData.shipping_address.trim()) {
+        throw new Error('Shipping address is required');
+      }
+      if (!formData.billing_address.trim()) {
+        throw new Error('Billing address is required');
+      }
+
+      const order = await createOrder(
+        formData.shipping_address,
+        formData.billing_address,
+        formData.notes || undefined
+      );
+
+      // Clear cart after successful order
+      clearCart();
+
+      // Redirect to order confirmation or success page
+      window.location.href = `/patient/orders/${order.id}?success=true`;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create order');
+    } finally {
+      setProcessingOrder(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-center text-gray-600">Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <Link
+          href="/store"
+          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
+        >
+          <ArrowLeft size={20} />
+          Back to Store
+        </Link>
+
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+
+        {/* Error Message */}
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 mb-6 flex items-center gap-2">
+            <AlertCircle size={20} />
+            {error}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Cart Items */}
+          <div className="lg:col-span-2 space-y-4">
+            {cartItems.length > 0 ? (
+              cartItems.map((item) => {
+                const drug = drugDetails[item.drug_id];
+                if (!drug) return null;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-lg shadow-md p-4 flex gap-4"
+                  >
+                    {/* Product Image */}
+                    <div className="relative w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0">
+                      <Image
+                        src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
+                        alt={drug.name}
+                        fill
+                        className="object-cover rounded-lg"
+                      />
+                    </div>
+
+                    {/* Product Details */}
+                    <div className="flex-grow">
+                      <h3 className="font-semibold text-gray-900">{drug.name}</h3>
+                      <p className="text-sm text-gray-600">{drug.category}</p>
+                      <p className="text-lg font-bold text-blue-600 mt-2">
+                        ${drug.unit_price.toFixed(2)} each
+                      </p>
+                    </div>
+
+                    {/* Quantity and Remove */}
+                    <div className="flex flex-col items-end justify-between">
+                      <button
+                        onClick={() => handleRemoveItem(item.id)}
+                        disabled={updating === item.id}
+                        className="text-red-600 hover:text-red-700 disabled:text-gray-400"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          disabled={updating === item.id || item.quantity === 1}
+                          className="p-1 text-gray-600 hover:text-gray-900 disabled:text-gray-400"
+                        >
+                          <Minus size={18} />
+                        </button>
+                        <span className="w-8 text-center font-semibold">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          disabled={updating === item.id}
+                          className="p-1 text-gray-600 hover:text-gray-900 disabled:text-gray-400"
+                        >
+                          <Plus size={18} />
+                        </button>
+                      </div>
+
+                      {/* Item Total */}
+                      <p className="text-lg font-bold text-gray-900">
+                        ${(drug.unit_price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                <p className="text-gray-600 mb-4">Your cart is empty</p>
+                <Link
+                  href="/store"
+                  className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Continue Shopping
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Order Summary and Checkout */}
+          {cartItems.length > 0 && (
+            <div className="space-y-6">
+              {/* Order Summary */}
+              <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+                <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
+                <div className="space-y-3 border-b border-gray-200 pb-3">
+                  <div className="flex justify-between text-gray-700">
+                    <span>Subtotal</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Tax (10%)</span>
+                    <span>${tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Shipping</span>
+                    <span>${shipping.toFixed(2)}</span>
+                  </div>
+                </div>
+                <div className="flex justify-between text-xl font-bold text-gray-900">
+                  <span>Total</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Checkout Form */}
+              {!checkoutForm ? (
+                <button
+                  onClick={() => setCheckoutForm(true)}
+                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                >
+                  Proceed to Checkout
+                </button>
+              ) : (
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Shipping & Billing</h2>
+                  <form onSubmit={handleCheckout} className="space-y-4">
+                    {/* Shipping Address */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Shipping Address *
+                      </label>
+                      <textarea
+                        value={formData.shipping_address}
+                        onChange={(e) =>
+                          setFormData({ ...formData, shipping_address: e.target.value })
+                        }
+                        placeholder="123 Main St, City, State 12345"
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+
+                    {/* Billing Address */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Billing Address *
+                      </label>
+                      <textarea
+                        value={formData.billing_address}
+                        onChange={(e) =>
+                          setFormData({ ...formData, billing_address: e.target.value })
+                        }
+                        placeholder="123 Main St, City, State 12345"
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Order Notes (Optional)
+                      </label>
+                      <textarea
+                        value={formData.notes}
+                        onChange={(e) =>
+                          setFormData({ ...formData, notes: e.target.value })
+                        }
+                        placeholder="Any special instructions..."
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutForm(false)}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        Back
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={processingOrder}
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
+                      >
+                        {processingOrder ? 'Processing...' : 'Place Order'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

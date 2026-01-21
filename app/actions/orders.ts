@@ -1,0 +1,355 @@
+'use server';
+
+import { Order, OrderItem, CartItem, OrderWithItems } from '@/lib/types/orders';
+import { revalidatePath } from 'next/cache';
+import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+
+// Create an admin client that bypasses RLS using service role key
+const getAdminClient = () => {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+};
+
+// Create a user client for auth-dependent operations
+const getUserClient = async () => {
+  return await createServerSupabaseClient();
+};
+
+// Generate unique order number
+function generateOrderNumber(): string {
+  const timestamp = Date.now().toString().slice(-6);
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `ORD-${timestamp}${random}`;
+}
+
+// ============ CART OPERATIONS ============
+
+export async function getCart(): Promise<CartItem[]> {
+  const supabase = await getUserClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('cart_items')
+    .select('*')
+    .eq('user_id', user.id);
+
+  if (error) throw new Error(error.message);
+  return data as CartItem[];
+}
+
+export async function addToCart(drugId: string, quantity: number): Promise<CartItem> {
+  const supabase = await getUserClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error('Not authenticated');
+  if (quantity <= 0) throw new Error('Quantity must be greater than 0');
+
+  // Check if item already in cart
+  const { data: existingItem } = await supabase
+    .from('cart_items')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('drug_id', drugId)
+    .single();
+
+  if (existingItem) {
+    // Update quantity
+    const { data, error } = await supabase
+      .from('cart_items')
+      .update({
+        quantity: existingItem.quantity + quantity,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingItem.id)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data as CartItem;
+  }
+
+  // Add new item
+  const { data, error } = await supabase
+    .from('cart_items')
+    .insert({
+      user_id: user.id,
+      drug_id: drugId,
+      quantity,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/cart');
+  return data as CartItem;
+}
+
+export async function updateCartItem(itemId: string, quantity: number): Promise<CartItem> {
+  const supabase = await getUserClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error('Not authenticated');
+  if (quantity <= 0) throw new Error('Quantity must be greater than 0');
+
+  const { data, error } = await supabase
+    .from('cart_items')
+    .update({
+      quantity,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', itemId)
+    .eq('user_id', user.id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/cart');
+  return data as CartItem;
+}
+
+export async function removeFromCart(itemId: string): Promise<void> {
+  const supabase = await getUserClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('cart_items')
+    .delete()
+    .eq('id', itemId)
+    .eq('user_id', user.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/cart');
+}
+
+export async function clearCart(): Promise<void> {
+  const supabase = await getUserClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('cart_items')
+    .delete()
+    .eq('user_id', user.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/cart');
+}
+
+// ============ ORDER OPERATIONS ============
+
+export async function createOrder(
+  shippingAddress: string,
+  billingAddress: string,
+  notes?: string
+): Promise<OrderWithItems> {
+  const supabase = await getUserClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error('Not authenticated');
+
+  // Get cart items
+  const { data: cartItems, error: cartError } = await supabase
+    .from('cart_items')
+    .select('*, otc_drugs(*)')
+    .eq('user_id', user.id);
+
+  if (cartError || !cartItems || cartItems.length === 0) {
+    throw new Error('Cart is empty');
+  }
+
+  // Calculate totals
+  let subtotal = 0;
+  const orderItems: Array<{
+    drug_id: string;
+    drug_name: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+  }> = [];
+
+  for (const item of cartItems) {
+    const drug = item.otc_drugs as any;
+    const totalPrice = drug.unit_price * item.quantity;
+    subtotal += totalPrice;
+
+    orderItems.push({
+      drug_id: item.drug_id,
+      drug_name: drug.name,
+      quantity: item.quantity,
+      unit_price: drug.unit_price,
+      total_price: totalPrice,
+    });
+  }
+
+  const tax = subtotal * 0.1; // 10% tax
+  const shipping = 10; // Fixed shipping cost
+  const total = subtotal + tax + shipping;
+
+  // Create order
+  const orderNumber = generateOrderNumber();
+  const { data: orderData, error: orderError } = await supabase
+    .from('orders')
+    .insert({
+      user_id: user.id,
+      order_number: orderNumber,
+      status: 'pending',
+      subtotal_amount: subtotal,
+      tax_amount: tax,
+      shipping_amount: shipping,
+      total_amount: total,
+      shipping_address: shippingAddress,
+      billing_address: billingAddress,
+      notes,
+    })
+    .select()
+    .single();
+
+  if (orderError) throw new Error(orderError.message);
+
+  // Create order items
+  const { error: itemsError } = await supabase
+    .from('order_items')
+    .insert(
+      orderItems.map((item) => ({
+        order_id: orderData.id,
+        ...item,
+      }))
+    );
+
+  if (itemsError) throw new Error(itemsError.message);
+
+  // Clear cart
+  await clearCart();
+
+  revalidatePath('/patient/orders');
+  revalidatePath('/admin/orders');
+
+  return {
+    ...(orderData as Order),
+    items: orderItems.map((item, idx) => ({
+      id: `temp-${idx}`,
+      order_id: orderData.id,
+      ...item,
+      created_at: new Date().toISOString(),
+    } as OrderItem)),
+  };
+}
+
+export async function getOrdersByUser(): Promise<Order[]> {
+  const supabase = await getUserClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data as Order[];
+}
+
+export async function getOrderWithItems(orderId: string): Promise<OrderWithItems> {
+  const supabase = await getUserClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error('Not authenticated');
+
+  // Get order
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', orderId)
+    .single();
+
+  if (orderError) throw new Error(orderError.message);
+
+  // Verify ownership
+  if (order.user_id !== user.id) {
+    throw new Error('Unauthorized');
+  }
+
+  // Get order items
+  const { data: items, error: itemsError } = await supabase
+    .from('order_items')
+    .select('*')
+    .eq('order_id', orderId);
+
+  if (itemsError) throw new Error(itemsError.message);
+
+  return {
+    ...(order as Order),
+    items: items as OrderItem[],
+  };
+}
+
+// ============ ADMIN OPERATIONS ============
+
+export async function getAllOrders(): Promise<Order[]> {
+  const supabase = getAdminClient();
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data as Order[];
+}
+
+export async function updateOrderStatus(
+  orderId: string,
+  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+): Promise<Order> {
+  const supabase = getAdminClient();
+
+  const { data, error } = await supabase
+    .from('orders')
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', orderId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/orders');
+  return data as Order;
+}
+
+export async function getAdminOrderWithItems(orderId: string): Promise<OrderWithItems> {
+  const supabase = getAdminClient();
+
+  // Get order
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', orderId)
+    .single();
+
+  if (orderError) throw new Error(orderError.message);
+
+  // Get order items
+  const { data: items, error: itemsError } = await supabase
+    .from('order_items')
+    .select('*')
+    .eq('order_id', orderId);
+
+  if (itemsError) throw new Error(itemsError.message);
+
+  return {
+    ...(order as Order),
+    items: items as OrderItem[],
+  };
+}

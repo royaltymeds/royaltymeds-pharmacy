@@ -1,6 +1,7 @@
 import "@/app/globals.css";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+import { CartProvider } from "@/lib/context/CartContext";
 
 export const metadata: Metadata = {
   title: "RoyaltyMeds - Prescription Platform",
@@ -18,8 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
-        <Toaster />
+        <CartProvider>
+          {children}
+          <Toaster />
+        </CartProvider>
       </body>
     </html>
   );

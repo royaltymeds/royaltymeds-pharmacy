@@ -1,12 +1,14 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ShieldCheckIcon,
   ClockIcon,
   CreditCardIcon,
   PhoneIcon,
   MailIcon,
-  MapPinIcon,
   CheckCircleIcon,
+  Heart,
+  Truck,
 } from "lucide-react";
 
 // Color palette: Green (primary), Blue (secondary), White (background/text)
@@ -19,10 +21,20 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <span className="text-2xl font-bold text-gray-900">
-          <span className="text-green-600">R</span>oyaltyMeds
-        </span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="relative w-10 h-10">
+              <Image
+                src="/royaltymeds_logo.jpeg"
+                alt="RoyaltyMeds Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <span className="text-2xl font-bold text-gray-900">
+              <span className="text-green-600">R</span>oyaltyMeds
+            </span>
+          </div>
           <div className="flex items-center gap-4">
             <a
               href="#features"
@@ -37,8 +49,14 @@ export default function HomePage() {
               How It Works
             </a>
             <Link
-              href="/login"
+              href="/store"
               className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+            >
+              Start Ordering
+            </Link>
+            <Link
+              href="/login"
+              className="px-6 py-2 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold"
             >
               Portal Login
             </Link>
@@ -48,23 +66,52 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-16 sm:py-24 flex flex-col justify-center">
-        <div className="text-center space-y-8">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-            Your Trusted Online{" "}
-            <span className="text-green-600">Pharmacy</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-            Fast, affordable prescription delivery with licensed pharmacists
-            available to answer your questions. Get your medications delivered
-            right to your door.
-          </p>
-          <div className="flex justify-center">
-            <Link
-              href="/login"
-              className="inline-block px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-lg"
-            >
-              Get Started
-            </Link>
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="space-y-8">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              Your Trusted Online{" "}
+              <span className="text-green-600">Pharmacy</span>
+            </h1>
+            <p className="text-lg sm:text-xl text-gray-600">
+              Fast, affordable prescription and over-the-counter medication delivery with licensed pharmacists available to answer your questions. Get your medications delivered right to your door.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                href="/store"
+                className="inline-block px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-lg text-center"
+              >
+                Start Ordering Now
+              </Link>
+              <Link
+                href="#how-it-works"
+                className="inline-block px-8 py-4 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-lg text-center"
+              >
+                Learn More
+              </Link>
+            </div>
+            <div className="flex gap-8 pt-8">
+              <div>
+                <p className="text-3xl font-bold text-green-600">24/7</p>
+                <p className="text-gray-600">Customer Support</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-green-600">2-3 Days</p>
+                <p className="text-gray-600">Fast Delivery</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-green-600">1000+</p>
+                <p className="text-gray-600">Medications Available</p>
+              </div>
+            </div>
+          </div>
+          <div className="relative rounded-xl overflow-hidden shadow-2xl">
+            <Image
+              src="/homepage_pics/pharmacist_royaltymeds.png"
+              alt="Pharmacist with medications"
+              width={600}
+              height={600}
+              className="w-full h-auto"
+            />
           </div>
         </div>
       </section>
@@ -85,22 +132,20 @@ export default function HomePage() {
                 Licensed Pharmacists
               </h3>
               <p className="text-gray-600">
-                All our pharmacists are fully licensed and verified for your
-                safety and peace of mind.
+                All our pharmacists are fully licensed, verified, and available to answer your medication questions anytime.
               </p>
             </div>
 
             {/* Feature 2 */}
             <div className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
               <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
-                <ClockIcon className="w-6 h-6 text-white" />
+                <Truck className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Fast Delivery
               </h3>
               <p className="text-gray-600">
-                Most prescriptions delivered within 24-48 hours to your home or
-                preferred location.
+                Most prescriptions delivered within 2-3 days. Over-the-counter medications ready to ship immediately.
               </p>
             </div>
 
@@ -113,23 +158,119 @@ export default function HomePage() {
                 Affordable Pricing
               </h3>
               <p className="text-gray-600">
-                Competitive prices and transparent billing with insurance
-                integration available.
+                Competitive prices on prescriptions and OTC medications with transparent billing and insurance integration.
               </p>
             </div>
 
             {/* Feature 4 */}
             <div className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
               <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
-                <PhoneIcon className="w-6 h-6 text-white" />
+                <Heart className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                24/7 Support
+                Patient Care First
               </h3>
               <p className="text-gray-600">
-                Our customer service team is available round-the-clock to help
-                you.
+                Secure, confidential service with 24/7 customer support dedicated to your health and wellness.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Prescriptions Section */}
+      <section className="py-16 sm:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+                Prescription Medications Made Easy
+              </h2>
+              <p className="text-lg text-gray-600 mb-6">
+                Stop waiting in long pharmacy lines. RoyaltyMeds brings prescription convenience directly to your home. Upload your prescription from your doctor and let our licensed pharmacists handle the rest.
+              </p>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Licensed pharmacist review</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Secure prescription handling</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Direct shipment to your door</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Insurance integration available</span>
+                </li>
+              </ul>
+              <Link
+                href="/store"
+                className="inline-block px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+              >
+                Order Prescriptions Now
+              </Link>
+            </div>
+            <div className="relative rounded-xl overflow-hidden shadow-lg">
+              <Image
+                src="/homepage_pics/pharmacy_medications.jpg"
+                alt="Prescription medications"
+                width={600}
+                height={600}
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* OTC Medications Section */}
+      <section className="py-16 sm:py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="relative rounded-xl overflow-hidden shadow-lg order-2 lg:order-1">
+              <Image
+                src="/homepage_pics/pharmacy_isle.jpeg"
+                alt="Over-the-counter medications"
+                width={600}
+                height={600}
+                className="w-full h-auto"
+              />
+            </div>
+            <div className="order-1 lg:order-2">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+                Over-The-Counter Medications & Wellness
+              </h2>
+              <p className="text-lg text-gray-600 mb-6">
+                Browse our extensive selection of OTC medications, vitamins, supplements, and wellness products. From pain relief to cold medicine, allergy medication to digestive aids, we have everything you need for your family&apos;s health.
+              </p>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">1000+ OTC products in stock</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Competitive pricing on all items</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Expert product recommendations</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Same-day processing available</span>
+                </li>
+              </ul>
+              <Link
+                href="/store"
+                className="inline-block px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+              >
+                Shop OTC Medications
+              </Link>
             </div>
           </div>
         </div>
@@ -139,7 +280,7 @@ export default function HomePage() {
       <section id="how-it-works" className="py-16 sm:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-12">
-            How It Works
+            Simple 4-Step Process
           </h2>
           <div className="grid md:grid-cols-4 gap-8">
             {/* Step 1 */}
@@ -151,8 +292,7 @@ export default function HomePage() {
                 Create Account
               </h3>
               <p className="text-gray-600">
-                Sign up in minutes with your personal information and medical
-                history.
+                Sign up in minutes with your personal information and medical history. Your data is secure and encrypted.
               </p>
             </div>
 
@@ -162,11 +302,10 @@ export default function HomePage() {
                 2
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Upload Prescription
+                Upload or Order
               </h3>
               <p className="text-gray-600">
-                Submit your prescription from your doctor via upload or have
-                them send it directly.
+                Submit your prescription via upload or order OTC medications directly from our store. Easy and hassle-free.
               </p>
             </div>
 
@@ -176,11 +315,10 @@ export default function HomePage() {
                 3
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Review & Checkout
+                Pharmacist Review
               </h3>
               <p className="text-gray-600">
-                Our pharmacists review your prescription and you pay securely
-                through our platform.
+                Our licensed pharmacists review your prescription and contact you if needed. Professional care every step.
               </p>
             </div>
 
@@ -190,31 +328,75 @@ export default function HomePage() {
                 4
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Receive Medication
+                Fast Delivery
               </h3>
               <p className="text-gray-600">
-                Your medications are carefully prepared and delivered to your
-                door.
+                Your medications are carefully prepared and delivered within 2-3 days. Track your order anytime.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
+      {/* Pharmacist Section */}
       <section className="bg-gray-50 py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="relative rounded-xl overflow-hidden shadow-lg">
+              <Image
+                src="/homepage_pics/pharmacist_on_computer.png"
+                alt="Professional pharmacist"
+                width={600}
+                height={600}
+                className="w-full h-auto"
+              />
+            </div>
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+                Professional Pharmacist Care
+              </h2>
+              <p className="text-lg text-gray-600 mb-6">
+                Every prescription is reviewed by our team of licensed, experienced pharmacists. We&apos;re not just filling orders—we&apos;re providing professional healthcare guidance to ensure your medications are right for you.
+              </p>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Medication interaction checks</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Dosage verification</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Allergy and side effect counseling</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Available for questions 24/7</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="bg-white py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-12">
-            What Our Customers Love
+            Why Customers Choose RoyaltyMeds
           </h2>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {[
-              "Easy prescription uploads and tracking",
-              "Secure platform with trusted pharmacists",
-              "Expert pharmacist consultations",
-              "Automatic refill reminders",
-              "Multiple payment options",
+              "Prescription uploads with automatic tracking",
+              "Secure, HIPAA-compliant platform",
+              "Expert pharmacist consultations available",
+              "Automatic refill reminders so you never run out",
+              "Multiple payment and insurance options",
               "Discreet and confidential service",
+              "Fast, reliable 2-3 day delivery",
+              "Browse and order 1000+ OTC products anytime",
             ].map((benefit, idx) => (
               <div key={idx} className="flex items-start gap-4">
                 <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
@@ -225,26 +407,29 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Reviews Section - Dynamic, shows only when reviews exist */}
-      {/* This section will be populated dynamically when customers submit reviews through the portal */}
-      {/* TODO: Connect to database reviews table and render scrolling carousel */}
-
       {/* CTA Section */}
       <section className="bg-gradient-to-r from-green-600 to-blue-600 py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-bold text-white">
-            Ready to Get Started?
+            Ready to Get Your Medications Delivered?
           </h2>
           <p className="text-lg text-green-50 max-w-2xl mx-auto">
-            Join thousands of satisfied customers who trust RoyaltyMeds for
-            their prescription needs.
+            Join thousands of satisfied customers who trust RoyaltyMeds for convenient, professional prescription and OTC medication delivery.
           </p>
-          <Link
-            href="/login"
-            className="inline-block px-8 py-4 bg-white text-green-600 rounded-lg hover:bg-gray-100 transition font-semibold text-lg"
-          >
-            Create Your Account Today
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              href="/store"
+              className="inline-block px-8 py-4 bg-white text-green-600 rounded-lg hover:bg-gray-100 transition font-semibold text-lg"
+            >
+              Start Ordering Now
+            </Link>
+            <Link
+              href="/login"
+              className="inline-block px-8 py-4 border-2 border-white text-white rounded-lg hover:bg-white/10 transition font-semibold text-lg"
+            >
+              Login to Account
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -257,8 +442,8 @@ export default function HomePage() {
               <span className="text-xl font-bold text-white">
                 <span className="text-green-400">R</span>oyaltyMeds
               </span>
-              <p className="text-sm text-gray-400">
-                Your trusted online pharmacy partner.
+              <p className="text-sm text-gray-400 mt-2">
+                Your trusted online pharmacy for prescriptions and OTC medications.
               </p>
             </div>
 
@@ -277,9 +462,9 @@ export default function HomePage() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-green-400 transition">
-                    About Us
-                  </a>
+                  <Link href="/store" className="hover:text-green-400 transition">
+                    Store
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -299,13 +484,11 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <PhoneIcon className="w-4 h-4" />
-                  <a href="tel:1-800-ROYALTY" className="hover:text-green-400 transition">
-                    1-800-ROYALTY
-                  </a>
+                  <span>1-800-ROYALTY</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <MapPinIcon className="w-4 h-4" />
-                  <span>Available 24/7</span>
+                  <ClockIcon className="w-4 h-4" />
+                  <span>24/7 Available</span>
                 </li>
               </ul>
             </div>
