@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -79,20 +80,54 @@ export default function AdminLoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
-      {/* Back to Homepage */}
-      <Link href="/" className="absolute top-4 left-4 text-green-600 hover:text-green-700 font-medium text-sm">
-        ← Back to Homepage
-      </Link>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="relative w-8 h-8 sm:w-10 sm:h-10">
+              <Image
+                src="/royaltymeds_logo.jpeg"
+                alt="RoyaltyMeds Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <Link href="/" className="text-lg sm:text-2xl font-bold text-gray-900 hover:text-green-600 transition">
+              <span className="text-green-600">R</span>oyaltyMeds
+            </Link>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link
+              href="/#features"
+              className="hidden md:block text-gray-700 hover:text-green-600 transition text-sm"
+            >
+              Features
+            </Link>
+            <Link
+              href="/#how-it-works"
+              className="hidden md:block text-gray-700 hover:text-green-600 transition text-sm"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="/store"
+              className="px-3 sm:px-6 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-xs sm:text-base"
+            >
+              Start Ordering
+            </Link>
+            <Link
+              href="/login"
+              className="px-3 sm:px-6 py-1.5 sm:py-2 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-xs sm:text-base"
+            >
+              Portal Login
+            </Link>
+          </div>
+        </div>
+      </header>
 
-      {/* Admin Badge */}
-      <div className="absolute top-4 right-4">
-        <span className="px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">
-          Pharmacist Only
-        </span>
-      </div>
-
-      <div className="w-full max-w-md">
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="bg-white border border-gray-200 rounded-xl shadow-xl p-8">
           {/* Admin Header */}
           <div className="text-center mb-8">
@@ -175,7 +210,7 @@ export default function AdminLoginPage() {
             </p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
