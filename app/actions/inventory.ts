@@ -1,6 +1,5 @@
 'use server';
 
-import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { OTCDrug, PrescriptionDrug, DrugType } from '@/lib/types/inventory';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
