@@ -127,37 +127,37 @@ export default function StoreClientComponent({ drugs }: Props) {
 
       {/* Products Grid */}
       {filteredDrugs.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredDrugs.map((drug) => (
             <div
               key={drug.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col h-72"
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col md:flex-row md:h-56 lg:h-72"
             >
               {/* Main Content Area */}
-              <div className="flex flex-1">
+              <div className="flex flex-1 flex-col">
                 {/* Product Info */}
-                <div className="p-4 space-y-3 flex-1 flex flex-col">
+                <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 flex-1 flex flex-col">
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-900">{drug.name}</h3>
+                    <h3 className="font-semibold text-base sm:text-lg text-gray-900">{drug.name}</h3>
                     {drug.active_ingredient && (
-                      <p className="text-sm text-gray-600">{drug.active_ingredient}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{drug.active_ingredient}</p>
                     )}
                   </div>
 
                   {/* Category and Manufacturer */}
-                  <div className="text-sm text-gray-600">
+                  <div className="text-xs sm:text-sm text-gray-600">
                     <p>{drug.category}</p>
                     {drug.manufacturer && <p className="text-xs">{drug.manufacturer}</p>}
                   </div>
 
                   {/* Description */}
                   {drug.description && (
-                    <p className="text-sm text-gray-600 line-clamp-3">{drug.description}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 sm:line-clamp-3">{drug.description}</p>
                   )}
                 </div>
 
-                {/* Product Image */}
-                <div className="relative w-32 h-32 bg-gray-100 flex items-center justify-center flex-shrink-0">
+                {/* Product Image - Hidden on mobile, shown on md+ */}
+                <div className="hidden md:flex relative w-full md:w-24 lg:w-32 h-24 lg:h-32 bg-gray-100 items-center justify-center flex-shrink-0">
                   <Image
                     src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
                     alt={drug.name}
@@ -167,11 +167,21 @@ export default function StoreClientComponent({ drugs }: Props) {
                 </div>
               </div>
 
+              {/* Mobile Product Image */}
+              <div className="md:hidden flex relative w-full h-24 bg-gray-100 items-center justify-center">
+                <Image
+                  src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
+                  alt={drug.name}
+                  fill
+                  className="object-contain p-2"
+                />
+              </div>
+
               {/* Footer - Price and Button */}
-              <div className="p-4 space-y-2 border-t border-gray-100">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-2xl font-bold text-blue-600">${drug.unit_price.toFixed(2)}</p>
+              <div className="p-3 sm:p-4 space-y-2 border-t border-gray-100 flex flex-col justify-between">
+                <div className="flex items-end justify-between gap-2 min-h-max">
+                  <div className="min-w-0">
+                    <p className="text-lg sm:text-2xl font-bold text-blue-600 truncate">${drug.unit_price.toFixed(2)}</p>
                     <p className="text-xs text-gray-500">{drug.pack_size || 'Standard'}</p>
                   </div>
 
@@ -179,16 +189,17 @@ export default function StoreClientComponent({ drugs }: Props) {
                   <button
                     onClick={() => handleAddToCart(drug)}
                     disabled={addingToCart === drug.id || drug.quantity_on_hand === 0}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0"
+                    className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap"
                   >
-                    <ShoppingCart size={18} />
-                    {addingToCart === drug.id ? 'Adding...' : 'Add'}
+                    <ShoppingCart size={16} />
+                    <span className="hidden sm:inline">{addingToCart === drug.id ? 'Adding...' : 'Add'}</span>
+                    <span className="sm:hidden">{addingToCart === drug.id ? '...' : 'Add'}</span>
                   </button>
                 </div>
 
                 {/* Stock Status */}
                 {drug.quantity_on_hand === 0 && (
-                  <p className="text-red-600 text-sm font-medium">Out of Stock</p>
+                  <p className="text-red-600 text-xs sm:text-sm font-medium">Out of Stock</p>
                 )}
               </div>
             </div>
