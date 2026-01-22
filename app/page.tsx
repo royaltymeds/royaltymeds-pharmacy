@@ -345,9 +345,18 @@ export default function HomePage() {
 
       {/* Pharmacist Section */}
       <section className="bg-gray-50 py-12 sm:py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-          <div className="w-full max-w-2xl">
-            <div className="text-center lg:text-left">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="hidden lg:block relative rounded-xl overflow-hidden shadow-lg order-1">
+              <Image
+                src="/homepage_pics/royaltymeds_pharmacist1.jpeg"
+                alt="Professional pharmacist"
+                width={600}
+                height={600}
+                className="w-full h-auto"
+              />
+            </div>
+            <div className="order-2 lg:order-2">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Professional Pharmacist Care
               </h2>
