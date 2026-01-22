@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
-import { ChevronDown, Package, Calendar, DollarSign, FileText, Edit2 } from 'lucide-react';
+import { ChevronDown, Package, Calendar, DollarSign, FileText, Edit2, X } from 'lucide-react';
 import { getOrdersByUser, getOrderWithItems } from '@/app/actions/orders';
 import { OrderPaymentSection } from '@/app/patient/components/OrderPaymentSection';
 import { getPaymentConfig } from '@/app/actions/payments';
@@ -17,6 +17,8 @@ export default function PatientOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [bankConfig, setBankConfig] = useState<PaymentConfig | null>(null);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
 
   // Load orders
   useEffect(() => {
@@ -263,16 +265,17 @@ export default function PatientOrdersPage() {
                                 <Edit2 size={16} />
                                 Update Receipt
                               </button>
-                              {/* Download Link */}
-                              <a 
-                                href={order.receipt_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
+                              {/* View Receipt Button */}
+                              <button
+                                onClick={() => {
+                                  setReceiptModalUrl(order.receipt_url || '');
+                                  setReceiptModalOpen(true);
+                                }}
                                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition font-medium text-sm"
                               >
                                 <FileText size={16} />
-                                View/Download Receipt
-                              </a>
+                                View Receipt
+                              </button>
                             </div>
                             {/* Receipt Thumbnail - Right side */}
                             <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center h-24 md:h-32">
@@ -436,6 +439,54 @@ export default function PatientOrdersPage() {
             ← Back to Dashboard
           </Link>
         </div>
+
+        {/* Receipt Modal */}
+        {receiptModalOpen && (
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="sticky top-0 flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-white">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900">Receipt</h2>
+                <button
+                  onClick={() => setReceiptModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-4 md:p-6">
+                {receiptModalUrl.includes('.pdf') ? (
+                  <div className="w-full h-96 bg-gradient-to-br from-red-50 to-red-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <FileText className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                      <p className="text-lg font-medium text-gray-700 mb-4">PDF Document</p>
+                      <a
+                        href={receiptModalUrl}
+                        download
+                        className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                      >
+                        Download PDF
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <Image
+                      src={receiptModalUrl}
+                      alt="Receipt"
+                      width={800}
+                      height={600}
+                      className="w-full h-auto rounded-lg"
+                      unoptimized
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
