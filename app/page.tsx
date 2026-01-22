@@ -132,7 +132,7 @@ export default function HomePage() {
                 Licensed Pharmacists
               </h3>
               <p className="text-xs sm:text-sm text-gray-600">
-                All our pharmacists are fully licensed, verified, and available to answer your medication questions anytime.
+                Our pharmacists are licensed, verified, and available to answer your medication questions whenever you need expert guidance.
               </p>
             </div>
 
@@ -187,7 +187,7 @@ export default function HomePage() {
                 Prescription Medications Made Easy
               </h2>
               <p className="text-sm sm:text-base lg:text-lg text-gray-600 mb-4 sm:mb-6">
-                Stop waiting in long pharmacy lines. RoyaltyMeds brings prescription convenience directly to your home. Upload your prescription from your doctor and let our licensed pharmacists handle the rest.
+                Everything you need for everyday health - pain relief, cold and allergy care, vitamins, supplements, and more - delivered with RoyaltyMeds convenience.
               </p>
               <ul className="space-y-3 mb-6 sm:mb-8">
                 <li className="flex items-center gap-3">
@@ -248,7 +248,9 @@ export default function HomePage() {
                 Over-The-Counter Medications & Wellness
               </h2>
               <p className="text-sm sm:text-base lg:text-lg text-gray-600 mb-4 sm:mb-6">
-                Browse our extensive selection of OTC medications, vitamins, supplements, and wellness products. From pain relief to cold medicine, allergy medication to digestive aids, we have everything you need for your family&apos;s health.
+                shop a wide selection of over-the-counter medications, vitamins, supplements, and wellness products online with RoyaltyMeds. We carry trusted OTC medicines for pain relief, cold and flu, allergy relief, digestive health and immune support. From daily vitamins and supplemnents to essential wellness products for the whole family, RoyaltyMeds makes it easy to find what you need - quickly and conveniently.
+
+                Order your OTC medications and wellness essentials online and enjoy reliable service, trusted products, and hassle-free delivery.
               </p>
               <ul className="space-y-3 mb-6 sm:mb-8">
                 <li className="flex items-center gap-3">
@@ -389,7 +391,7 @@ export default function HomePage() {
               "Automatic refill reminders so you never run out",
               "Multiple payment and insurance options",
               "Discreet and confidential service",
-              "Fast, reliable 2-3 day delivery",
+              "same day delivery",
               "Browse and order 1000+ OTC products anytime",
             ].map((benefit, idx) => (
               <div key={idx} className="flex items-start gap-3 sm:gap-4">
