@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
   try {
-    const { userId, fullName, email, role } = await request.json();
+    const { userId, fullName, email, role, phone, address, dateOfBirth } = await request.json();
 
-    console.log("[create-profile API] Request received:", { userId, fullName, email, role });
+    console.log("[create-profile API] Request received:", { userId, fullName, email, role, phone, address, dateOfBirth });
 
     if (!userId || !fullName) {
       console.warn("[create-profile API] Missing required fields");
@@ -51,13 +51,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Then create the profile
-    console.log("[create-profile API] Creating profile:", { userId, fullName });
+    console.log("[create-profile API] Creating profile:", { userId, fullName, phone, address, dateOfBirth });
     const { error: profileError } = await supabaseAdmin
       .from("user_profiles")
       .insert([
         {
           user_id: userId,
           full_name: fullName,
+          phone: phone || null,
+          address: address || null,
+          date_of_birth: dateOfBirth || null,
         },
       ]);
 

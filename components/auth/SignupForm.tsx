@@ -9,6 +9,9 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -26,7 +29,7 @@ export default function SignupForm() {
 
     // Log form data
     console.log("[SignupForm] ========== FORM SUBMISSION ==========");
-    console.log("[SignupForm] Form data:", { email, password, fullName, role: "patient" });
+    console.log("[SignupForm] Form data:", { email, password, fullName, phone, address, dateOfBirth, role: "patient" });
 
     try {
       console.log("[SignupForm] Step 1: Calling /api/auth/signup-rest");
@@ -86,6 +89,9 @@ export default function SignupForm() {
           fullName,
           email,
           role: "patient",
+          phone: phone || null,
+          address: address || null,
+          dateOfBirth: dateOfBirth || null,
         }),
       });
 
@@ -165,6 +171,47 @@ export default function SignupForm() {
           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
         <p className="text-xs text-gray-500 mt-0.5">Minimum 6 characters</p>
+      </div>
+
+      <div>
+        <label htmlFor="phone" className="block text-xs font-medium text-gray-700 mb-1">
+          Phone Number <span className="text-gray-500">(Optional)</span>
+        </label>
+        <input
+          id="phone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="(123) 456-7890"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="address" className="block text-xs font-medium text-gray-700 mb-1">
+          Address <span className="text-gray-500">(Optional)</span>
+        </label>
+        <input
+          id="address"
+          type="text"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="123 Main Street"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="dateOfBirth" className="block text-xs font-medium text-gray-700 mb-1">
+          Date of Birth <span className="text-gray-500">(Optional)</span>
+        </label>
+        <input
+          id="dateOfBirth"
+          type="date"
+          value={dateOfBirth}
+          onChange={(e) => setDateOfBirth(e.target.value)}
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
       </div>
 
       <button
