@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { MobileSidebar } from "@/components/MobileSidebar";
+import { DesktopNav } from "@/components/DesktopNav";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
@@ -50,17 +51,7 @@ export default async function AdminLayout({
               <Link href="/admin/dashboard" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap truncate flex-shrink-0">
                 <span className="text-green-300">R</span><span>oyaltyMeds</span>
               </Link>
-              <div className="hidden lg:flex space-x-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
+              <DesktopNav navLinks={navLinks} />
             </div>
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
