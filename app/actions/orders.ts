@@ -309,7 +309,7 @@ export async function getAllOrders(): Promise<Order[]> {
 
 export async function updateOrderStatus(
   orderId: string,
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  status: 'pending' | 'confirmed' | 'payment_pending' | 'payment_verified' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
 ): Promise<Order> {
   const supabase = getAdminClient();
 

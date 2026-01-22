@@ -106,7 +106,7 @@ export default function AdminOrdersPage() {
       await verifyPayment(orderId);
       setOrders((prev) =>
         prev.map((order) =>
-          order.id === orderId ? { ...order, payment_status: 'paid' } : order
+          order.id === orderId ? { ...order, status: 'payment_verified', payment_status: 'paid' } : order
         )
       );
       // Update cached details
@@ -115,6 +115,7 @@ export default function AdminOrdersPage() {
           ...prev,
           [orderId]: {
             ...prev[orderId],
+            status: 'payment_verified',
             payment_status: 'paid',
           },
         }));
@@ -127,7 +128,7 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+  const statuses = ['pending', 'confirmed', 'payment_pending', 'payment_verified', 'processing', 'shipped', 'delivered', 'cancelled'];
 
   if (loading) {
     return (

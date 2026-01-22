@@ -3,7 +3,7 @@ export interface Order {
   id: string;
   user_id: string;
   order_number: string;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'payment_pending' | 'payment_verified' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total_amount: number;
   subtotal_amount: number;
   tax_amount: number;
@@ -42,11 +42,13 @@ export interface OrderWithItems extends Order {
   items: OrderItem[];
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'confirmed' | 'payment_pending' | 'payment_verified' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
 export const ORDER_STATUSES: OrderStatus[] = [
   'pending',
   'confirmed',
+  'payment_pending',
+  'payment_verified',
   'processing',
   'shipped',
   'delivered',
@@ -56,6 +58,8 @@ export const ORDER_STATUSES: OrderStatus[] = [
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending: 'Pending',
   confirmed: 'Confirmed',
+  payment_pending: 'Payment Pending',
+  payment_verified: 'Payment Verified',
   processing: 'Processing',
   shipped: 'Shipped',
   delivered: 'Delivered',
@@ -65,6 +69,8 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   pending: '#FBBF24',
   confirmed: '#3B82F6',
+  payment_pending: '#EC4899',
+  payment_verified: '#8B5CF6',
   processing: '#A855F7',
   shipped: '#6366F1',
   delivered: '#10B981',

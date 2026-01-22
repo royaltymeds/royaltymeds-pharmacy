@@ -97,7 +97,10 @@ export async function updateOrderPaymentStatus(
   try {
     const supabase = await createServerAdminClient();
 
-    const updateData: any = { payment_status: paymentStatus };
+    const updateData: any = { 
+      payment_status: paymentStatus,
+      status: 'payment_pending' // Set order status to payment_pending when receipt is uploaded
+    };
     if (paymentMethod) updateData.payment_method = paymentMethod;
     if (receiptUrl) updateData.receipt_url = receiptUrl;
 
@@ -119,7 +122,10 @@ export async function verifyPayment(orderId: string): Promise<void> {
 
     const { error } = await (supabase as any)
       .from('orders')
-      .update({ payment_status: 'paid' })
+      .update({ 
+        payment_status: 'paid',
+        status: 'payment_verified' // Set order status to payment_verified when admin verifies
+      })
       .eq('id', orderId);
 
     if (error) throw error;
