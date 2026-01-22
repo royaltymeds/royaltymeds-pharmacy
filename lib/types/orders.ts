@@ -11,6 +11,9 @@ export interface Order {
   shipping_address?: string;
   billing_address?: string;
   notes?: string;
+  payment_status?: 'unpaid' | 'pending' | 'paid' | 'failed';
+  payment_method?: 'bank_transfer' | 'card' | null;
+  receipt_url?: string;
   created_at: string;
   updated_at: string;
 }

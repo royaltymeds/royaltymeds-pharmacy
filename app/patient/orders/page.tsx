@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { ChevronDown, Package, Calendar, DollarSign } from 'lucide-react';
 import { getOrdersByUser, getOrderWithItems } from '@/app/actions/orders';
+import { OrderPaymentSection } from '@/app/patient/components/OrderPaymentSection';
+import { getPaymentConfig } from '@/app/actions/payments';
+import { PaymentConfig } from '@/lib/types/payments';
 
 export default function PatientOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -12,6 +15,7 @@ export default function PatientOrdersPage() {
   const [orderDetails, setOrderDetails] = useState<Record<string, OrderWithItems>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [bankConfig, setBankConfig] = useState<PaymentConfig | null>(null);
 
   // Load orders
   useEffect(() => {
@@ -28,6 +32,20 @@ export default function PatientOrdersPage() {
     };
 
     loadOrders();
+  }, []);
+
+  // Load payment config
+  useEffect(() => {
+    const loadPaymentConfig = async () => {
+      try {
+        const config = await getPaymentConfig();
+        setBankConfig(config);
+      } catch (err) {
+        console.error('Failed to load payment config:', err);
+      }
+    };
+
+    loadPaymentConfig();
   }, []);
 
   // Load order details when expanded
@@ -52,6 +70,19 @@ export default function PatientOrdersPage() {
 
   const getStatusLabel = (status: string) => {
     return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
+  };
+
+  const handlePaymentInitiated = async (orderId: string) => {
+    // Refresh order details after payment
+    try {
+      const details = await getOrderWithItems(orderId);
+      setOrderDetails((prev) => ({ ...prev, [orderId]: details }));
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => (order.id === orderId ? { ...order, ...details } : order))
+      );
+    } catch (err) {
+      console.error('Failed to refresh order after payment:', err);
+    }
   };
 
   if (loading) {
@@ -209,6 +240,13 @@ export default function PatientOrdersPage() {
                           <span>${order.total_amount.toFixed(2)}</span>
                         </div>
                       </div>
+
+                      {/* Payment Section */}
+                      <OrderPaymentSection
+                        order={order}
+                        bankConfig={bankConfig}
+                        onPaymentInitiated={() => handlePaymentInitiated(order.id)}
+                      />
 
                       {/* Addresses */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
