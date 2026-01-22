@@ -37,7 +37,7 @@ export default async function AdminLayout({
     { href: "/admin/inventory", label: "Inventory" },
     { href: "/admin/doctors", label: "Doctors" },
     { href: "/admin/users", label: "Pharmacists" },
-    { href: "/admin/payments", label: "Payments" },
+    { href: "/admin/payments", label: "Payments Config" },
   ];
 
   return (
