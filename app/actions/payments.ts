@@ -112,3 +112,19 @@ export async function updateOrderPaymentStatus(
     throw error;
   }
 }
+
+export async function verifyPayment(orderId: string): Promise<void> {
+  try {
+    const supabase = await createServerAdminClient();
+
+    const { error } = await (supabase as any)
+      .from('orders')
+      .update({ payment_status: 'paid' })
+      .eq('id', orderId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    throw error;
+  }
+}

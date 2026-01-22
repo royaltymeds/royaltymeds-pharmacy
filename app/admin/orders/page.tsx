@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
-import { ChevronDown, Filter, Search } from 'lucide-react';
+import { ChevronDown, Filter, Search, FileText, Check, X } from 'lucide-react';
 import { getAllOrders, getAdminOrderWithItems, updateOrderStatus } from '@/app/actions/orders';
+import { verifyPayment } from '@/app/actions/payments';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -14,6 +16,9 @@ export default function AdminOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
+  const [verifyingPayment, setVerifyingPayment] = useState<string | null>(null);
 
   // Load orders
   useEffect(() => {
@@ -93,6 +98,33 @@ export default function AdminOrdersPage() {
 
   const getStatusLabel = (status: string) => {
     return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
+  };
+
+  const handleVerifyPayment = async (orderId: string) => {
+    setVerifyingPayment(orderId);
+    try {
+      await verifyPayment(orderId);
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, payment_status: 'paid' } : order
+        )
+      );
+      // Update cached details
+      if (orderDetails[orderId]) {
+        setOrderDetails((prev) => ({
+          ...prev,
+          [orderId]: {
+            ...prev[orderId],
+            payment_status: 'paid',
+          },
+        }));
+      }
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to verify payment');
+    } finally {
+      setVerifyingPayment(null);
+    }
   };
 
   const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -268,6 +300,83 @@ export default function AdminOrdersPage() {
                         </div>
                       </div>
 
+                      {/* Payment Information & Receipt */}
+                      {order.receipt_url && (
+                        <div className="bg-white rounded-lg p-4 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-semibold text-gray-900 text-sm md:text-base flex items-center gap-2">
+                                <FileText size={20} />
+                                Payment Receipt
+                              </h4>
+                              <p className="text-xs md:text-sm text-gray-600 mt-1">
+                                Status: <span className="font-medium">{order.payment_status}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                            {/* Verify Button - Left side */}
+                            <div className="md:col-span-2">
+                              <button
+                                onClick={() => handleVerifyPayment(order.id)}
+                                disabled={verifyingPayment === order.id || order.payment_status === 'paid'}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+                              >
+                                {verifyingPayment === order.id ? (
+                                  <>
+                                    <span className="inline-block animate-spin">⏳</span>
+                                    Verifying...
+                                  </>
+                                ) : order.payment_status === 'paid' ? (
+                                  <>
+                                    <Check size={16} />
+                                    Payment Verified
+                                  </>
+                                ) : (
+                                  <>
+                                    <Check size={16} />
+                                    Verify Payment
+                                  </>
+                                )}
+                              </button>
+                            </div>
+
+                            {/* Receipt Thumbnail - Right side */}
+                            <div>
+                              <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center h-24 md:h-32">
+                                {order.receipt_url.includes('.pdf') ? (
+                                  <div className="w-full h-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center cursor-pointer hover:from-red-100 hover:to-red-200 transition"
+                                    onClick={() => {
+                                      setReceiptModalUrl(order.receipt_url || '');
+                                      setReceiptModalOpen(true);
+                                    }}>
+                                    <FileText className="w-6 h-6 md:w-8 md:h-8 text-red-500" />
+                                  </div>
+                                ) : (
+                                  <div 
+                                    className="w-full h-full cursor-pointer hover:opacity-80 transition"
+                                    onClick={() => {
+                                      setReceiptModalUrl(order.receipt_url || '');
+                                      setReceiptModalOpen(true);
+                                    }}>
+                                    <Image
+                                      src={order.receipt_url}
+                                      alt="Payment receipt"
+                                      width={150}
+                                      height={128}
+                                      className="w-full h-full object-contain"
+                                      unoptimized
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2 text-center">Click to view receipt</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Order Items */}
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3 text-sm md:text-base">Items</h4>
@@ -363,6 +472,54 @@ export default function AdminOrdersPage() {
         ) : (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <p className="text-gray-600 text-lg">No orders found matching your filters.</p>
+          </div>
+        )}
+
+        {/* Receipt Modal */}
+        {receiptModalOpen && (
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="sticky top-0 flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-white">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900">Receipt</h2>
+                <button
+                  onClick={() => setReceiptModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-4 md:p-6">
+                {receiptModalUrl.includes('.pdf') ? (
+                  <div className="w-full h-96 bg-gradient-to-br from-red-50 to-red-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <FileText className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                      <p className="text-lg font-medium text-gray-700 mb-4">PDF Document</p>
+                      <a
+                        href={receiptModalUrl}
+                        download
+                        className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                      >
+                        Download PDF
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <Image
+                      src={receiptModalUrl}
+                      alt="Receipt"
+                      width={800}
+                      height={600}
+                      className="w-full h-auto rounded-lg"
+                      unoptimized
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
