@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, AlertCircle, Loader, Check } from 'lucide-react';
+import Image from 'next/image';
+import { X, Upload, AlertCircle, Loader, Check, Image as ImageIcon } from 'lucide-react';
 import { PaymentConfig } from '@/lib/types/payments';
 import { uploadPaymentReceipt, updateOrderPaymentStatus } from '@/app/actions/payments';
 
@@ -25,6 +26,7 @@ export function BankTransferModal({
   onPaymentInitiated,
 }: BankTransferModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -47,6 +49,13 @@ export function BankTransferModal({
       }
       setSelectedFile(file);
       setError('');
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFilePreview(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -73,6 +82,7 @@ export function BankTransferModal({
       setTimeout(() => {
         setSuccess(false);
         setSelectedFile(null);
+        setFilePreview('');
         onClose();
       }, 2000);
     } catch (err) {
@@ -200,6 +210,31 @@ export function BankTransferModal({
                 <h3 className="font-semibold text-gray-900 mb-3 text-sm md:text-base">
                   Upload Payment Receipt
                 </h3>
+                
+                {/* File Preview */}
+                {filePreview && (
+                  <div className="mb-4 rounded-lg overflow-hidden border border-gray-200">
+                    {selectedFile?.type.startsWith('image/') ? (
+                      <Image
+                        src={filePreview}
+                        alt="Receipt preview"
+                        width={800}
+                        height={256}
+                        className="w-full h-64 object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
+                        <div className="text-center">
+                          <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm text-gray-600 font-medium">{selectedFile?.name}</p>
+                          <p className="text-xs text-gray-500 mt-1">PDF Document</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-xs md:text-sm text-gray-600 mb-4">
