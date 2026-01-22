@@ -256,42 +256,41 @@ export default function PatientOrdersPage() {
                             <FileText size={20} />
                             Receipt Uploaded
                           </h5>
-                          <div className="space-y-3">
-                            {/* Receipt Thumbnail */}
-                            <div className="border border-gray-200 rounded-lg overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                            {/* Action Buttons - Left side */}
+                            <div className="md:col-span-2 space-y-3">
+                              <button className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm">
+                                <Edit2 size={16} />
+                                Update Receipt
+                              </button>
+                              {/* Download Link */}
+                              <a 
+                                href={order.receipt_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition font-medium text-sm"
+                              >
+                                <FileText size={16} />
+                                View/Download Receipt
+                              </a>
+                            </div>
+                            {/* Receipt Thumbnail - Right side */}
+                            <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center h-24 md:h-32">
                               {order.receipt_url.includes('.pdf') ? (
-                                <div className="w-full h-48 bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
-                                  <div className="text-center">
-                                    <FileText className="w-12 h-12 text-red-500 mx-auto mb-2" />
-                                    <p className="text-sm font-medium text-gray-700">PDF Document</p>
-                                  </div>
+                                <div className="w-full h-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+                                  <FileText className="w-6 h-6 md:w-8 md:h-8 text-red-500" />
                                 </div>
                               ) : (
                                 <Image
                                   src={order.receipt_url}
                                   alt="Payment receipt"
-                                  width={800}
-                                  height={192}
-                                  className="w-full h-48 object-cover"
+                                  width={150}
+                                  height={128}
+                                  className="w-full h-full object-contain"
                                   unoptimized
                                 />
                               )}
                             </div>
-                            {/* Action Button */}
-                            <button className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm">
-                              <Edit2 size={16} />
-                              Update Receipt
-                            </button>
-                            {/* Download Link */}
-                            <a 
-                              href={order.receipt_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition font-medium text-sm"
-                            >
-                              <FileText size={16} />
-                              View/Download Receipt
-                            </a>
                           </div>
                         </div>
                       )}
