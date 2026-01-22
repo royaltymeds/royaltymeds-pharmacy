@@ -7,6 +7,7 @@ import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from 
 import { ChevronDown, Package, Calendar, DollarSign, FileText, Edit2, X } from 'lucide-react';
 import { getOrdersByUser, getOrderWithItems } from '@/app/actions/orders';
 import { OrderPaymentSection } from '@/app/patient/components/OrderPaymentSection';
+import { UpdateReceiptModal } from '@/app/patient/components/UpdateReceiptModal';
 import { getPaymentConfig } from '@/app/actions/payments';
 import { PaymentConfig } from '@/lib/types/payments';
 
@@ -19,6 +20,8 @@ export default function PatientOrdersPage() {
   const [bankConfig, setBankConfig] = useState<PaymentConfig | null>(null);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
+  const [updateReceiptModalOpen, setUpdateReceiptModalOpen] = useState(false);
+  const [updateReceiptOrderId, setUpdateReceiptOrderId] = useState<string>('');
 
   // Load orders
   useEffect(() => {
@@ -261,7 +264,13 @@ export default function PatientOrdersPage() {
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                             {/* Action Buttons - Left side */}
                             <div className="md:col-span-2 space-y-3">
-                              <button className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm">
+                              <button 
+                                onClick={() => {
+                                  setUpdateReceiptOrderId(order.id);
+                                  setUpdateReceiptModalOpen(true);
+                                }}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+                              >
                                 <Edit2 size={16} />
                                 Update Receipt
                               </button>
@@ -486,6 +495,33 @@ export default function PatientOrdersPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Update Receipt Modal */}
+        {updateReceiptOrderId && (
+          <UpdateReceiptModal
+            isOpen={updateReceiptModalOpen}
+            onClose={() => {
+              setUpdateReceiptModalOpen(false);
+              setUpdateReceiptOrderId('');
+            }}
+            orderId={updateReceiptOrderId}
+            currentReceiptUrl={orders.find(o => o.id === updateReceiptOrderId)?.receipt_url || ''}
+            onReceiptUpdated={async () => {
+              // Refresh order details after receipt update
+              try {
+                const details = await getOrderWithItems(updateReceiptOrderId);
+                setOrderDetails((prev) => ({ ...prev, [updateReceiptOrderId]: details }));
+                setOrders((prevOrders) =>
+                  prevOrders.map((order) => 
+                    order.id === updateReceiptOrderId ? { ...order, ...details } : order
+                  )
+                );
+              } catch (err) {
+                console.error('Failed to refresh order after receipt update:', err);
+              }
+            }}
+          />
         )}
       </div>
     </div>
