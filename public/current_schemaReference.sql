@@ -73,7 +73,7 @@ CREATE TABLE public.orders (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   order_number text NOT NULL UNIQUE,
-  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'confirmed'::text, 'processing'::text, 'shipped'::text, 'delivered'::text, 'cancelled'::text])),
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'confirmed'::text, 'payment_pending'::text, 'payment_verified'::text, 'processing'::text, 'shipped'::text, 'delivered'::text, 'cancelled'::text])),
   total_amount numeric NOT NULL,
   subtotal_amount numeric NOT NULL,
   tax_amount numeric DEFAULT 0,
@@ -83,6 +83,9 @@ CREATE TABLE public.orders (
   notes text,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  payment_status character varying DEFAULT 'unpaid'::character varying,
+  payment_method character varying,
+  receipt_url text,
   CONSTRAINT orders_pkey PRIMARY KEY (id),
   CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
@@ -115,6 +118,19 @@ CREATE TABLE public.otc_drugs (
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   file_url text,
   CONSTRAINT otc_drugs_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.payment_config (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  bank_account_holder character varying NOT NULL,
+  bank_name character varying NOT NULL,
+  account_number character varying NOT NULL,
+  routing_number character varying,
+  iban character varying,
+  swift_code character varying,
+  additional_instructions text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT payment_config_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.prescription_drugs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
