@@ -1,6 +1,6 @@
 'use server';
 
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createServerSupabaseClient, createServerAdminClient } from '@/lib/supabase-server';
 import { PaymentConfig } from '@/lib/types/payments';
 
 export async function getPaymentConfig(): Promise<PaymentConfig | null> {
@@ -29,17 +29,17 @@ export async function getPaymentConfig(): Promise<PaymentConfig | null> {
 
 export async function updatePaymentConfig(config: Partial<PaymentConfig>): Promise<PaymentConfig> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = await createServerAdminClient();
 
     // First check if config exists
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from('payment_config')
       .select('id')
       .single();
 
     if (existing) {
       // Update existing
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('payment_config')
         .update(config)
         .eq('id', existing.id)
@@ -50,7 +50,7 @@ export async function updatePaymentConfig(config: Partial<PaymentConfig>): Promi
       return data;
     } else {
       // Create new
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('payment_config')
         .insert([config])
         .select()
@@ -67,17 +67,17 @@ export async function updatePaymentConfig(config: Partial<PaymentConfig>): Promi
 
 export async function uploadPaymentReceipt(file: File, orderId: string): Promise<string> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = await createServerAdminClient();
     const fileName = `receipts/${orderId}-${Date.now()}-${file.name}`;
 
-    const { data, error } = await supabase.storage
+    const { data, error } = await (supabase as any).storage
       .from('royaltymeds_storage')
       .upload(fileName, file);
 
     if (error) throw error;
 
     // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = (supabase as any).storage
       .from('royaltymeds_storage')
       .getPublicUrl(data.path);
 
@@ -95,13 +95,13 @@ export async function updateOrderPaymentStatus(
   receiptUrl?: string
 ): Promise<void> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = await createServerAdminClient();
 
     const updateData: any = { payment_status: paymentStatus };
     if (paymentMethod) updateData.payment_method = paymentMethod;
     if (receiptUrl) updateData.receipt_url = receiptUrl;
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('orders')
       .update(updateData)
       .eq('id', orderId);
