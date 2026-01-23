@@ -70,7 +70,7 @@ export default function HomePage() {
           <div className="space-y-4 sm:space-y-6 lg:space-y-8">
             <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
               Your Trusted Online{" "}
-              <span className="text-green-600">Pharmacy</span>
+              <span className="text-green-600">Pharmacy In Jamaica</span>
             </h1>
             <p className="text-sm sm:text-base lg:text-lg text-gray-600">
               Fast, affordable prescription and over-the-counter medication delivery with licensed pharmacists available to answer your questions. Get your medications delivered right to your door.
