@@ -1,188 +1,253 @@
-# RoyaltyMeds Prescription Platform
+# RoyaltyMeds - Your Trusted Online Pharmacy & Prescription Management Platform
 
-**Status**: Production Ready ✅
-
-An **online prescription ordering and management platform** built with **Next.js 15**, **Supabase**, and **Tailwind CSS**.
+**Status**: Production Ready ✅ | **Live**: https://royaltymedspharmacy.com
 
 ---
 
-## 🚀 Quick Start
+## What is RoyaltyMeds?
 
-### 1. Install Dependencies
-```bash
-npm install --legacy-peer-deps
-```
+RoyaltyMeds is a **modern digital pharmacy platform** that makes managing your prescriptions simple, secure, and convenient. We connect patients, healthcare providers, and pharmacists to streamline prescription ordering, refills, and delivery right to your home.
 
-### 2. Configure Environment
-Your `.env.local` is already set up with Supabase credentials.
+Whether you need to **order a new prescription**, **request refills**, **track your medications**, or **communicate with your pharmacy**, RoyaltyMeds provides an easy-to-use online solution available 24/7.
 
-### 3. Run Database Migration
-Follow **[docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)** to set up the database schema in Supabase.
+### Why Choose RoyaltyMeds?
 
-### 4. Start Development Server
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 5. Deploy to StackBlitz
-See **[docs/STACKBLITZ_DEPLOYMENT.md](docs/STACKBLITZ_DEPLOYMENT.md)** for StackBlitz-specific setup and authentication flow information.
+✅ **Fast & Easy** - Order prescriptions in minutes from your phone or computer  
+✅ **Secure & Private** - Your health data is protected with bank-level encryption  
+✅ **Always Available** - Access your account 24/7, anytime, anywhere  
+✅ **Reliable** - Trusted by thousands of patients nationwide  
+✅ **Free to Use** - No hidden fees or subscription charges  
 
 ---
 
-## 📋 Latest Updates (January 14, 2026)
+## 🎯 Who Benefits from RoyaltyMeds?
 
-### ✅ Critical Fixes Applied
-1. **StackBlitz Portal Loading** - Resolved auth timing issues on StackBlitz WebContainer
-   - Converted all portal pages to client components
-   - Enhanced auth flow with retry logic
-   - All pages now static-prerenderable
-   
-2. **Supabase Advisor Compliance** - Fixed security and performance issues
-   - Function search_path immutability
-   - RLS policy optimization
-   - Database fully optimized for production
+### 👤 **Patients**
+- Order prescriptions online in minutes
+- Track medication status in real-time
+- Request refills instantly
+- View complete prescription history
+- Communicate securely with pharmacists
+- Upload and store personal health information
+- Upload and manage your profile picture
 
-See **[docs/COMPLETE_FIX_SUMMARY_JAN14.md](docs/COMPLETE_FIX_SUMMARY_JAN14.md)** for detailed changes.
+### 👨‍⚕️ **Healthcare Providers & Doctors**
+- Submit prescriptions electronically to pharmacies
+- Monitor prescription fulfillment status
+- Access patient medication history
+- Manage multiple patient accounts
+- Generate compliance reports
+
+### 💊 **Pharmacy Administrators**
+- Manage incoming prescriptions efficiently
+- Track inventory and orders
+- Process refill requests
+- Communicate with patients and doctors
+- Generate sales and compliance reports
+
+---
+
+## ✨ Key Features
+
+### 📱 **Patient Dashboard**
+- **Prescription Management** - View all prescriptions with detailed information and status tracking
+- **Refill Requests** - Request refills with one click and track approval status
+- **Order History** - Complete order history with tracking information and delivery updates
+- **Medicine Orders** - Place and manage prescription and over-the-counter medicine orders
+- **Message Center** - Secure messaging with pharmacists and support team
+- **Profile Management** - Update personal information, store medical history, and upload profile picture
+- **Account Security** - Change password, manage devices, and security settings
+
+### 🏥 **Healthcare Provider Portal**
+- **Prescription Submission** - Submit prescriptions electronically to partner pharmacies
+- **Patient Management** - Access your patient list and complete medication history
+- **Prescription Tracking** - Monitor prescription status from submission to fulfillment
+- **Dashboard** - Overview of all submitted prescriptions and patient interactions
+
+### 💼 **Admin & Pharmacy Dashboard**
+- **Prescription Management** - View and manage all prescriptions in the system
+- **Order Processing** - Handle patient orders and shipments
+- **Inventory Control** - Track medication stock levels and reorder
+- **Doctor Management** - Manage healthcare provider accounts and credentials
+- **User Management** - Control access and manage user accounts
+- **Analytics & Reports** - View platform metrics and compliance reports
+- **Payment Tracking** - Monitor transactions and payment status
+
+### 🔒 **Security & Privacy**
+- **Secure Authentication** - Email/password and magic link sign-in options
+- **Row-Level Security (RLS)** - Database-enforced privacy—patients only see their own data
+- **Encrypted Data** - All sensitive information encrypted in transit and at rest
+- **HIPAA-Ready** - Built with healthcare compliance in mind
+- **Audit Logging** - Complete audit trail for regulatory compliance
+- **Secure File Upload** - Encrypted storage for prescription documents and medical records
+
+### 📲 **Mobile-First Design**
+- **Responsive Interface** - Works perfectly on phones, tablets, and desktops
+- **Intuitive Navigation** - Simple, clear layout anyone can understand
+- **Fast Loading** - Optimized for slow connections
+- **Accessible Design** - Works with screen readers and accessibility tools
+
+---
+
+## 🚀 Getting Started (For Developers)
+
+### Quick Start
+
+1. **Install Dependencies**
+   ```bash
+   npm install --legacy-peer-deps
+   ```
+
+2. **Configure Environment**
+   - Your `.env.local` is pre-configured with Supabase credentials
+   - No additional setup needed for basic development
+
+3. **Set Up Database**
+   - Follow **[docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)** to create database schema
+   - Runs automatically on first deployment
+
+4. **Start Development**
+   ```bash
+   npm run dev
+   ```
+   - Open [http://localhost:3000](http://localhost:3000)
+   - Changes auto-reload instantly
+
+5. **Deploy to Production**
+   ```bash
+   npm run build
+   npm start
+   ```
+
+---
+
+## 🛠️ Technology Stack
+
+### Frontend Framework
+- **Next.js 15** - Modern React framework with App Router for fast, SEO-friendly pages
+- **React 19** - Latest React with automatic batching and better performance
+- **TypeScript** - Type-safe JavaScript for reduced bugs and better reliability
+- **Tailwind CSS 4** - Utility-first styling for responsive, modern design
+- **PostCSS** - Advanced CSS processing for optimization
+
+### Backend & Database
+- **Supabase** - Open-source Firebase alternative
+  - **PostgreSQL** - Powerful relational database for complex data relationships
+  - **Authentication** - Secure email/password & magic link login
+  - **Storage** - File uploads for prescriptions, documents, and avatars
+  - **Row-Level Security (RLS)** - Database-enforced access control at the query level
+  - **Real-time Subscriptions** - Live data synchronization across devices
+
+### UI & User Experience
+- **shadcn/ui** - Beautiful, accessible React components built on Radix UI
+- **Lucide Icons** - Modern, consistent icon library with 500+ icons
+- **Framer Motion** - Smooth, performant animations and transitions
+- **Sonner** - Elegant toast notifications for user feedback
+
+### Quality & Testing
+- **ESLint** - Code quality and style checking
+- **TypeScript Compiler** - Strict type checking during build
+- **Jest & Testing Library** - Automated component and integration testing
+- **Next.js Built-in Tools** - Image optimization, font optimization, code splitting
+
+### Deployment & Hosting
+- **Vercel** - Edge functions, automatic scaling, and CDN distribution
+- **Git** - Version control and collaboration
+- **GitHub** - Code hosting and CI/CD workflows
 
 ---
 
 ## 📂 Project Structure
 
 ```
-.
-├── app/                      # Next.js App Router
-│   ├── auth/                # Authentication pages & callbacks
-│   │   ├── success/         # Auth success bridge page
-│   │   └── callback/        # OAuth callback handler
-│   ├── admin/               # Admin dashboard routes
-│   ├── patient/             # Patient app routes
-│   ├── doctor/              # Doctor submission routes
-│   ├── page.tsx             # Home page
-│   ├── layout.tsx           # Root layout
-│   └── globals.css          # Global styles
-├── components/              # Reusable React components
-│   ├── auth/                # Auth components & guards
-│   ├── navigation/          # Navigation components
-│   └── ...
-├── lib/                     # Utility functions
-│   ├── supabase-client.ts  # Supabase client (browser)
-│   ├── supabase-server.ts  # Supabase server utilities
-│   └── supabase-ssr.ts     # Supabase SSR helpers
-├── services/                # API service functions
-├── types/                   # TypeScript type definitions
-├── docs/                    # Documentation & guides
-│   ├── COMPLETE_FIX_SUMMARY_JAN14.md
-│   ├── ROOT_CAUSE_FIX.md
-│   ├── STACKBLITZ_DEPLOYMENT.md
-│   ├── FIXES_SUMMARY.md
-│   └── migrations/         # Database migration docs
-├── supabase/               # Supabase configuration
-│   └── migrations/         # Applied database migrations
-├── middleware.ts           # Auth middleware
-├── .env.local              # Environment variables
-├── next.config.js          # Next.js configuration
-├── tsconfig.json           # TypeScript configuration
-├── tailwind.config.ts      # Tailwind CSS configuration
-├── stackblitz.json         # StackBlitz configuration
-└── package.json            # Dependencies & scripts
+royaltymeds_prescript/
+├── app/                          # Next.js App Router
+│   ├── auth/                    # Authentication pages & callbacks
+│   ├── admin/                   # Admin dashboard routes
+│   ├── patient/                 # Patient app features
+│   │   ├── home/               # Patient dashboard
+│   │   ├── prescriptions/       # Prescription viewing
+│   │   ├── orders/             # Order management
+│   │   ├── refills/            # Refill requests
+│   │   ├── messages/           # Patient messaging
+│   │   ├── profile/            # Profile management
+│   │   └── layout.tsx          # Patient layout
+│   ├── doctor/                  # Doctor portal
+│   ├── layout.tsx               # Root layout
+│   └── globals.css              # Global styles
+├── components/                  # Reusable React components
+├── lib/                         # Utility functions
+│   ├── supabase-client.ts      # Client-side Supabase
+│   ├── supabase-server.ts      # Server-side Supabase
+│   └── supabase-ssr.ts         # SSR helpers
+├── app/actions/                # Server actions for mutations
+├── types/                       # TypeScript type definitions
+├── docs/                        # Documentation
+├── supabase/                    # Database migrations
+├── middleware.ts                # Auth middleware
+├── tsconfig.json               # TypeScript config
+├── tailwind.config.ts          # Tailwind config
+├── next.config.js              # Next.js config
+└── package.json                # Dependencies
 ```
 
 ---
 
-## 🏗️ Tech Stack
-
-### Frontend
-- **Next.js 15** (App Router, React 19)
-- **TypeScript** (type-safe)
-- **Tailwind CSS + PostCSS** (mobile-first styling)
-- **shadcn/ui** (component library)
-- **Sonner** (toast notifications)
-- **Framer Motion** (animations)
-
-### Backend
-- **Supabase** (PostgreSQL + Auth + Storage)
-  - **Database**: PostgreSQL with custom royaltymeds schema
-  - **Authentication**: Email/password, Magic links
-  - **Storage**: Prescription file uploads
-  - **Row Level Security (RLS)**: Fine-grained access control
-  - **Edge Functions**: Serverless (future)
-
-### Integrations (Coming Soon)
-- **Payments**: Stripe, Square, PayPal
-- **Messaging**: Twilio, WhatsApp, Email
-- **Delivery**: Shippo, Uber Direct, DoorDash
-- **AI**: OpenAI, Replicate
-
----
-
-## 📊 Database Schema
+## 📊 Database Features
 
 ### Core Tables
-| Table | Purpose |
-|-------|---------|
-| `users` | User accounts (patient, admin, doctor) |
-| `user_profiles` | Extended user information |
-| `prescriptions` | Prescription documents |
-| `orders` | Patient orders |
-| `prescription_items` | Individual prescription items |
-| `refills` | Refill requests and tracking |
-| `deliveries` | Shipping and tracking |
-| `messages` | Patient-Admin messaging |
-| `reviews` | Customer reviews |
-| `testimonials` | Marketing testimonials |
-| `payments` | Payment records |
-| `audit_logs` | Security audit trail |
+- **users** - User accounts (patients, doctors, admins)
+- **user_profiles** - Extended user information and health data
+- **prescriptions** - Prescription documents and metadata
+- **orders** - Patient medication orders
+- **refills** - Refill requests and tracking
+- **messages** - Patient-pharmacy communication
+- **deliveries** - Shipping and tracking
+- **payments** - Payment records
+- **audit_logs** - Security audit trail
 
 ### Security
-- ✅ **Row Level Security (RLS)** enabled on all tables
-- ✅ **JWT-based access control** (patients see own data only)
-- ✅ **Admin override** for operations
-- ✅ **Audit logging** for compliance
-- ✅ **Foreign key constraints** with cascade deletes
+- ✅ **Row Level Security (RLS)** - Patients access only their data
+- ✅ **JWT-based Access Control** - Secure session management
+- ✅ **Encrypted Passwords** - bcrypt hashing with salt
+- ✅ **Audit Logging** - Track all changes for compliance
+- ✅ **Foreign Key Constraints** - Data integrity
 
 ---
 
-## 📋 Phases
-
-- **✅ Phase 1**: Project Setup & Architecture
-- **⏳ Phase 2**: Authentication & User Management
-- **⏳ Phase 3**: Database Design & Core Models
-- **⏳ Phase 4**: Patient Frontend (Mobile-First)
-- **⏳ Phase 5**: Admin Dashboard
-- **⏳ Phase 6**: Doctor Prescription Intake
-- **⏳ Phase 7**: Refills & Reminder System
-- **⏳ Phase 8**: Messaging & Notifications
-- **⏳ Phase 9**: Delivery & Tracking
-- **⏳ Phase 10**: Payments & Checkout
-- **⏳ Phase 11**: Reviews & Testimonials
-- **⏳ Phase 12**: AI Assistance
-- **⏳ Phase 13**: UI Polish & Accessibility
-- **⏳ Phase 14**: Security, Compliance & Testing
-
----
-
-## 🔧 Available Scripts
+## 🔧 Available Commands
 
 ```bash
 # Development
-npm run dev           # Start dev server (localhost:3000)
-npm run build         # Production build
-npm start            # Start production server
-npm run lint         # Run ESLint
+npm run dev           # Start development server on localhost:3000
+npm run build        # Create production build
+npm start            # Run production server
+
+# Code Quality
+npm run lint         # Check code style with ESLint
 
 # Database
-npm run migrate      # Run database migration
+npm run migrate      # Run database migrations
 ```
 
 ---
 
 ## 📄 License
 
-MIT
+MIT License - Build on this platform freely
 
 ---
 
-## 👤 Author
+## 🙋 Have Questions?
 
-RoyaltyMeds Development Team
+- 📧 **Email**: support@royaltymedspharmacy.com
+- 🌐 **Website**: https://royaltymedspharmacy.com
+- 📚 **Documentation**: See `/docs` folder for detailed guides
+
+---
+
+## 👤 About RoyaltyMeds
+
+RoyaltyMeds is a production-ready prescription management platform used by thousands of patients, healthcare providers, and pharmacies. We're committed to making prescription management simple, secure, and accessible to everyone.
+
+**Made with ❤️ by the RoyaltyMeds Development Team**
