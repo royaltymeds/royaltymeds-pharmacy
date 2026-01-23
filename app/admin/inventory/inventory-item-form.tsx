@@ -146,7 +146,13 @@ export default function InventoryItemForm({
         return;
       }
 
-      await onSubmit(formData);
+      // Convert empty date strings to null
+      const cleanedData = {
+        ...formData,
+        expiration_date: formData.expiration_date || null,
+      };
+
+      await onSubmit(cleanedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setIsSubmitting(false);
