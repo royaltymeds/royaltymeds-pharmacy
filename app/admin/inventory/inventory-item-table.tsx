@@ -244,12 +244,12 @@ export default function InventoryItemTable({
 
           return (
             <div key={drug.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              {/* Collapsed Header - Always Visible */}
-              <button
-                onClick={() => toggleCardExpanded(drug.id)}
-                className="w-full p-4 flex justify-between items-start gap-3 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex-1 min-w-0 text-left">
+              {/* Card Header */}
+              <div className="p-4 flex justify-between items-start gap-3">
+                <button
+                  onClick={() => toggleCardExpanded(drug.id)}
+                  className="flex-1 text-left hover:bg-gray-50 rounded transition-colors"
+                >
                   <div className="flex items-start gap-3">
                     <div className="relative w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
                       <Image
@@ -266,7 +266,7 @@ export default function InventoryItemTable({
                       )}
                     </div>
                   </div>
-                </div>
+                </button>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span
                     className={`inline-flex px-2 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getStatusColor(
@@ -280,9 +280,28 @@ export default function InventoryItemTable({
                     className={`w-5 h-5 text-gray-400 transition-transform ${
                       isExpanded ? 'rotate-180' : ''
                     }`}
+                    onClick={() => toggleCardExpanded(drug.id)}
                   />
                 </div>
-              </button>
+              </div>
+
+              {/* Action Buttons - Always Visible */}
+              <div className="flex gap-2 px-4 pb-4 border-t border-gray-200 pt-3">
+                <button
+                  onClick={() => onEdit(drug)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors text-sm font-medium"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => onDelete(drug.id)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors text-sm font-medium"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              </div>
 
               {/* Expanded Content */}
               {isExpanded && (
@@ -386,24 +405,6 @@ export default function InventoryItemTable({
                         </div>
                       </div>
                     )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 border-t border-gray-200 pt-3">
-                    <button
-                      onClick={() => onEdit(drug)}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors text-sm font-medium"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => onDelete(drug.id)}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors text-sm font-medium"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </button>
                   </div>
                 </div>
               )}
