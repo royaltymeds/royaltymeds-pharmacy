@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Edit2, Trash2, AlertTriangle, ChevronDown } from 'lucide-react';
+import { Edit2, Trash2, AlertTriangle, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
 
@@ -15,6 +15,8 @@ interface Props {
   onEditQuantity: (drugId: string, newQuantity: number) => Promise<void>;
 }
 
+const ITEMS_PER_PAGE = 20;
+
 export default function InventoryItemTable({
   drugs,
   onEdit,
@@ -23,6 +25,7 @@ export default function InventoryItemTable({
 }: Props) {
   const [editingQuantity, setEditingQuantity] = useState<{ drugId: string; value: number } | null>(null);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
 
   const toggleCardExpanded = (drugId: string) => {
     const newExpanded = new Set(expandedCards);
@@ -68,79 +71,140 @@ export default function InventoryItemTable({
     }
   };
 
+  // Pagination logic
+  const totalPages = Math.ceil(drugs.length / ITEMS_PER_PAGE);
+  const validPage = Math.min(currentPage, Math.max(1, totalPages));
+  const startIndex = (validPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedDrugs = drugs.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-4">
-      {/* Card View for All Screen Sizes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {drugs.map((drug) => {
-          const isEditingQty = editingQuantity?.drugId === drug.id;
-          const stockStatus = getStockStatus(drug);
-          const isExpanded = expandedCards.has(drug.id);
-
-          return (
-            <div key={drug.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              {/* Card Header */}
-              <div className="p-4 flex justify-between items-start gap-3">
+      {drugs.length > 0 ? (
+        <>
+          {/* Top Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <p className="text-xs sm:text-sm text-gray-600">
+                Page {validPage} of {totalPages}
+              </p>
+              <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => toggleCardExpanded(drug.id)}
-                  className="flex-1 text-left hover:bg-gray-50 rounded transition-colors"
+                  onClick={() => setCurrentPage(validPage - 1)}
+                  disabled={validPage === 1}
+                  className={`flex items-center gap-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition ${
+                    validPage === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-green-50 text-green-600 hover:bg-green-100"
+                  }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="relative w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-                      <Image
-                        src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
-                        alt={drug.name}
-                        fill
-                        className="object-cover"
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Previous</span>
+                </button>
+                
+                <div className="flex gap-1 items-center">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-2.5 sm:px-3 py-2 rounded text-xs sm:text-sm font-medium transition ${
+                        page === validPage
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(validPage + 1)}
+                  disabled={validPage === totalPages}
+                  className={`flex items-center gap-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition ${
+                    validPage === totalPages
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-green-50 text-green-600 hover:bg-green-100"
+                  }`}
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Card View - Vertically Stacked */}
+          <div className="space-y-3">
+            {paginatedDrugs.map((drug) => {
+              const isEditingQty = editingQuantity?.drugId === drug.id;
+              const stockStatus = getStockStatus(drug);
+              const isExpanded = expandedCards.has(drug.id);
+
+              return (
+                <div key={drug.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  {/* Card Header */}
+                  <div className="p-4 flex justify-between items-start gap-3">
+                    <button
+                      onClick={() => toggleCardExpanded(drug.id)}
+                      className="flex-1 text-left hover:bg-gray-50 rounded transition-colors"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="relative w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                          <Image
+                            src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
+                            alt={drug.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 break-words">{drug.name}</h3>
+                          {drug.active_ingredient && (
+                            <p className="text-xs text-gray-500 mt-1">{drug.active_ingredient}</p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getStatusColor(
+                          drug.status
+                        )}`}
+                      >
+                        {drug.status.replace(/_/g, ' ').charAt(0).toUpperCase() +
+                          drug.status.replace(/_/g, ' ').slice(1)}
+                      </span>
+                      <ChevronDown
+                        className={`w-5 h-5 text-gray-400 transition-transform cursor-pointer ${
+                          isExpanded ? 'rotate-180' : ''
+                        }`}
+                        onClick={() => toggleCardExpanded(drug.id)}
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 break-words">{drug.name}</h3>
-                      {drug.active_ingredient && (
-                        <p className="text-xs text-gray-500 mt-1">{drug.active_ingredient}</p>
-                      )}
-                    </div>
                   </div>
-                </button>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span
-                    className={`inline-flex px-2 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getStatusColor(
-                      drug.status
-                    )}`}
-                  >
-                    {drug.status.replace(/_/g, ' ').charAt(0).toUpperCase() +
-                      drug.status.replace(/_/g, ' ').slice(1)}
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-gray-400 transition-transform ${
-                      isExpanded ? 'rotate-180' : ''
-                    }`}
-                    onClick={() => toggleCardExpanded(drug.id)}
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons - Always Visible */}
-              <div className="flex gap-2 px-4 pb-4 border-t border-gray-200 pt-3">
-                <button
-                  onClick={() => onEdit(drug)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors text-sm font-medium"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete(drug.id)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors text-sm font-medium"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
-              </div>
 
               {/* Expanded Content */}
               {isExpanded && (
                 <div className="border-t border-gray-200 p-4 space-y-3">
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onEdit(drug)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors text-sm font-medium"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete(drug.id)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors text-sm font-medium"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </div>
+
                   {/* Image Preview */}
                   <div className="flex justify-center">
                     <div className="relative w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
@@ -246,7 +310,65 @@ export default function InventoryItemTable({
             </div>
           );
         })}
-      </div>
+          </div>
+
+          {/* Bottom Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <p className="text-xs sm:text-sm text-gray-600">
+                Page {validPage} of {totalPages}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setCurrentPage(validPage - 1)}
+                  disabled={validPage === 1}
+                  className={`flex items-center gap-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition ${
+                    validPage === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-green-50 text-green-600 hover:bg-green-100"
+                  }`}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Previous</span>
+                </button>
+                
+                <div className="flex gap-1 items-center">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-2.5 sm:px-3 py-2 rounded text-xs sm:text-sm font-medium transition ${
+                        page === validPage
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(validPage + 1)}
+                  disabled={validPage === totalPages}
+                  className={`flex items-center gap-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition ${
+                    validPage === totalPages
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-green-50 text-green-600 hover:bg-green-100"
+                  }`}
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="text-center text-gray-600 py-8 text-sm">
+          No medications found.
+        </p>
+      )}
     </div>
   );
 }
