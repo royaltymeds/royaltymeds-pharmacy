@@ -89,91 +89,6 @@ Whether you need to **order a new prescription**, **request refills**, **track y
 
 ---
 
-## 🚀 Getting Started (For Developers)
-
-### Quick Start
-
-1. **Install Dependencies**
-   ```bash
-   npm install --legacy-peer-deps
-   ```
-
-2. **Configure Environment**
-   - Your `.env.local` is pre-configured with Supabase credentials
-   - No additional setup needed for basic development
-
-3. **Set Up Database**
-   - Follow **[docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)** to create database schema
-   - Runs automatically on first deployment
-
-4. **Start Development**
-   ```bash
-   npm run dev
-   ```
-   - Open [http://localhost:3000](http://localhost:3000)
-   - Changes auto-reload instantly
-
-5. **Deploy to Production**
-   ```bash
-   npm run build
-   npm start
-   ```
-
----
-
-## 📂 Project Structure
-
-```
-royaltymeds_prescript/
-├── app/                          # Next.js App Router
-│   ├── auth/                    # Authentication pages & callbacks
-│   ├── admin/                   # Admin dashboard routes
-│   ├── patient/                 # Patient app features
-│   │   ├── home/               # Patient dashboard
-│   │   ├── prescriptions/       # Prescription viewing
-│   │   ├── orders/             # Order management
-│   │   ├── refills/            # Refill requests
-│   │   ├── messages/           # Patient messaging
-│   │   ├── profile/            # Profile management
-│   │   └── layout.tsx          # Patient layout
-│   ├── doctor/                  # Doctor portal
-│   ├── layout.tsx               # Root layout
-│   └── globals.css              # Global styles
-├── components/                  # Reusable React components
-├── lib/                         # Utility functions
-│   ├── supabase-client.ts      # Client-side Supabase
-│   ├── supabase-server.ts      # Server-side Supabase
-│   └── supabase-ssr.ts         # SSR helpers
-├── app/actions/                # Server actions for mutations
-├── types/                       # TypeScript type definitions
-├── docs/                        # Documentation
-├── supabase/                    # Database migrations
-├── middleware.ts                # Auth middleware
-├── tsconfig.json               # TypeScript config
-├── tailwind.config.ts          # Tailwind config
-├── next.config.js              # Next.js config
-└── package.json                # Dependencies
-```
-
----
-
-## 🔧 Available Commands
-
-```bash
-# Development
-npm run dev           # Start development server on localhost:3000
-npm run build        # Create production build
-npm start            # Run production server
-
-# Code Quality
-npm run lint         # Check code style with ESLint
-
-# Database
-npm run migrate      # Run database migrations
-```
-
----
-
 ## 📄 License
 
 MIT License - Build on this platform freely
@@ -182,7 +97,7 @@ MIT License - Build on this platform freely
 
 ## 🙋 Have Questions?
 
-- 📧 **Email**: support@royaltymedspharmacy.com
+- 📧 **Email**: nicholas.mckay@royaltymedspharmacy.com
 - 🌐 **Website**: https://royaltymedspharmacy.com
 - 📚 **Documentation**: See `/docs` folder for detailed guides
 
