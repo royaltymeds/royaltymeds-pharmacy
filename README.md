@@ -121,42 +121,6 @@ Whether you need to **order a new prescription**, **request refills**, **track y
 
 ---
 
-## 🛠️ Technology Stack
-
-### Frontend Framework
-- **Next.js 15** - Modern React framework with App Router for fast, SEO-friendly pages
-- **React 19** - Latest React with automatic batching and better performance
-- **TypeScript** - Type-safe JavaScript for reduced bugs and better reliability
-- **Tailwind CSS 4** - Utility-first styling for responsive, modern design
-- **PostCSS** - Advanced CSS processing for optimization
-
-### Backend & Database
-- **Supabase** - Open-source Firebase alternative
-  - **PostgreSQL** - Powerful relational database for complex data relationships
-  - **Authentication** - Secure email/password & magic link login
-  - **Storage** - File uploads for prescriptions, documents, and avatars
-  - **Row-Level Security (RLS)** - Database-enforced access control at the query level
-  - **Real-time Subscriptions** - Live data synchronization across devices
-
-### UI & User Experience
-- **shadcn/ui** - Beautiful, accessible React components built on Radix UI
-- **Lucide Icons** - Modern, consistent icon library with 500+ icons
-- **Framer Motion** - Smooth, performant animations and transitions
-- **Sonner** - Elegant toast notifications for user feedback
-
-### Quality & Testing
-- **ESLint** - Code quality and style checking
-- **TypeScript Compiler** - Strict type checking during build
-- **Jest & Testing Library** - Automated component and integration testing
-- **Next.js Built-in Tools** - Image optimization, font optimization, code splitting
-
-### Deployment & Hosting
-- **Vercel** - Edge functions, automatic scaling, and CDN distribution
-- **Git** - Version control and collaboration
-- **GitHub** - Code hosting and CI/CD workflows
-
----
-
 ## 📂 Project Structure
 
 ```
@@ -190,28 +154,6 @@ royaltymeds_prescript/
 ├── next.config.js              # Next.js config
 └── package.json                # Dependencies
 ```
-
----
-
-## 📊 Database Features
-
-### Core Tables
-- **users** - User accounts (patients, doctors, admins)
-- **user_profiles** - Extended user information and health data
-- **prescriptions** - Prescription documents and metadata
-- **orders** - Patient medication orders
-- **refills** - Refill requests and tracking
-- **messages** - Patient-pharmacy communication
-- **deliveries** - Shipping and tracking
-- **payments** - Payment records
-- **audit_logs** - Security audit trail
-
-### Security
-- ✅ **Row Level Security (RLS)** - Patients access only their data
-- ✅ **JWT-based Access Control** - Secure session management
-- ✅ **Encrypted Passwords** - bcrypt hashing with salt
-- ✅ **Audit Logging** - Track all changes for compliance
-- ✅ **Foreign Key Constraints** - Data integrity
 
 ---
 
