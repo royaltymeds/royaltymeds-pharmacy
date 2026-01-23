@@ -66,7 +66,12 @@ export async function createOTCDrug(drug: Omit<OTCDrug, 'id' | 'created_at' | 'u
     .select()
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.message.includes('duplicate key value') || error.message.includes('otc_drugs_name_key')) {
+      throw new Error(`An OTC medication named "${drug.name}" already exists. Please use a different name.`);
+    }
+    throw new Error(error.message);
+  }
   revalidatePath('/admin/inventory');
   return data as OTCDrug;
 }
@@ -79,7 +84,12 @@ export async function createPrescriptionDrug(drug: Omit<PrescriptionDrug, 'id' |
     .select()
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.message.includes('duplicate key value') || error.message.includes('prescription_drugs_name_key')) {
+      throw new Error(`A prescription medication named "${drug.name}" already exists. Please use a different name.`);
+    }
+    throw new Error(error.message);
+  }
   revalidatePath('/admin/inventory');
   return data as PrescriptionDrug;
 }
