@@ -165,6 +165,13 @@ export async function createOrder(
     throw new Error('Cart is empty');
   }
 
+  // Fetch payment config for tax and shipping settings
+  const adminClient = getAdminClient();
+  const { data: paymentConfig } = await adminClient
+    .from('payment_config')
+    .select('*')
+    .single();
+
   // Calculate totals
   let subtotal = 0;
   const orderItems: Array<{
@@ -189,8 +196,13 @@ export async function createOrder(
     });
   }
 
-  const tax = subtotal * 0.1; // 10% tax
-  const shipping = 10; // Fixed shipping cost
+  // Use payment config for tax and shipping calculations
+  // Tax: if inclusive, don't add extra tax (already in price); otherwise 0
+  const tax = paymentConfig && paymentConfig.tax_type === 'inclusive' ? 0 : 0;
+  
+  // Shipping: use Kingston delivery cost from config
+  const shipping = paymentConfig ? paymentConfig.kingston_delivery_cost : 0;
+  
   const total = subtotal + tax + shipping;
 
   // Create order
