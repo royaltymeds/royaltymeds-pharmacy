@@ -100,7 +100,6 @@ export default function AdminOrdersPage() {
   };
 
   const handleUpdateShipping = async (orderId: string) => {
-    setEditingShipping(orderId);
     try {
       const newAmount = parseFloat(shippingValues[orderId] || '0');
       if (newAmount < 0) {
@@ -108,6 +107,7 @@ export default function AdminOrdersPage() {
         return;
       }
       
+      setEditingShipping(orderId);
       await updateOrderShipping(orderId, newAmount);
       
       // Update orders list
@@ -137,9 +137,9 @@ export default function AdminOrdersPage() {
         delete updated[orderId];
         return updated;
       });
+      setEditingShipping(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update shipping');
-    } finally {
       setEditingShipping(null);
     }
   };
@@ -481,7 +481,7 @@ export default function AdminOrdersPage() {
                               />
                               <button
                                 onClick={() => handleUpdateShipping(order.id)}
-                                disabled={editingShipping === order.id}
+                                disabled={editingShipping !== null}
                                 className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400"
                               >
                                 Save
