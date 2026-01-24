@@ -128,6 +128,9 @@ CREATE TABLE public.payment_config (
   iban character varying,
   swift_code character varying,
   additional_instructions text,
+  tax_type text DEFAULT 'inclusive' CHECK (tax_type IN ('none', 'inclusive')),
+  tax_rate numeric DEFAULT 15,
+  kingston_delivery_cost numeric DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT payment_config_pkey PRIMARY KEY (id)
