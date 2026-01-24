@@ -18,6 +18,9 @@ export default function PaymentConfigPage() {
     iban: '',
     swift_code: '',
     additional_instructions: '',
+    tax_type: 'inclusive' as 'none' | 'inclusive',
+    tax_rate: 15,
+    kingston_delivery_cost: 0,
   });
 
   // Load config
@@ -35,6 +38,9 @@ export default function PaymentConfigPage() {
             iban: data.iban || '',
             swift_code: data.swift_code || '',
             additional_instructions: data.additional_instructions || '',
+            tax_type: data.tax_type || 'inclusive',
+            tax_rate: data.tax_rate || 15,
+            kingston_delivery_cost: data.kingston_delivery_cost || 0,
           });
         }
       } catch (err) {
@@ -48,12 +54,14 @@ export default function PaymentConfigPage() {
   }, []);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === 'kingston_delivery_cost' || name === 'tax_rate' 
+        ? parseFloat(value) || 0 
+        : value,
     }));
   };
 
@@ -253,6 +261,98 @@ export default function PaymentConfigPage() {
               </div>
             </div>
 
+            {/* Tax Configuration Section */}
+            <div className="border-t border-gray-200 pt-6">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
+                Tax Configuration
+              </h2>
+              <div className="space-y-4 md:space-y-6">
+                {/* Tax Type */}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">
+                    Tax Type
+                  </label>
+                  <select
+                    name="tax_type"
+                    value={formData.tax_type}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
+                  >
+                    <option value="inclusive">Tax Included (15% GCT Inclusive)</option>
+                    <option value="none">No Tax</option>
+                  </select>
+                  <p className="text-xs md:text-sm text-gray-500 mt-2">
+                    {formData.tax_type === 'inclusive' 
+                      ? 'When "Tax Included" is selected, the item price already includes 15% GCT, and this will be displayed to customers.'
+                      : 'When "No Tax" is selected, no tax information will be displayed to customers.'}
+                  </p>
+                </div>
+
+                {/* Tax Rate (disabled for display) */}
+                {formData.tax_type === 'inclusive' && (
+                  <div>
+                    <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">
+                      Tax Rate (GCT %)
+                    </label>
+                    <input
+                      type="number"
+                      name="tax_rate"
+                      value={formData.tax_rate}
+                      onChange={handleInputChange}
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      className="w-full px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
+                    />
+                    <p className="text-xs md:text-sm text-gray-500 mt-2">
+                      The tax rate to display to customers (default: 15%)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Shipping/Delivery Configuration Section */}
+            <div className="border-t border-gray-200 pt-6">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
+                Shipping & Delivery Configuration
+              </h2>
+              <div className="space-y-4 md:space-y-6">
+                {/* Kingston Delivery Cost */}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">
+                    Standard Delivery Cost (Kingston) *
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-700 font-medium">JMD</span>
+                    <input
+                      type="number"
+                      name="kingston_delivery_cost"
+                      value={formData.kingston_delivery_cost}
+                      onChange={handleInputChange}
+                      placeholder="e.g., 500"
+                      step="0.01"
+                      min="0"
+                      className="flex-1 px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
+                    />
+                  </div>
+                  <p className="text-xs md:text-sm text-gray-500 mt-2">
+                    Fixed delivery cost for Kingston area orders
+                  </p>
+                </div>
+
+                {/* Custom Delivery Note */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
+                    Custom Delivery (Outside Kingston)
+                  </h3>
+                  <p className="text-xs md:text-sm text-gray-700">
+                    Custom delivery costs for orders outside Kingston can be set on a per-order basis by admins/pharmacists in the order management interface.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Submit Button */}
             <div className="border-t border-gray-200 pt-6">
               <button
@@ -274,16 +374,30 @@ export default function PaymentConfigPage() {
         </div>
 
         {/* Info Box */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4 md:p-6">
-          <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
-            How Bank Transfer Payments Work
-          </h3>
-          <ul className="space-y-2 text-xs md:text-sm text-gray-700">
-            <li>• Customers who choose to pay by bank transfer will receive these bank details</li>
-            <li>• They will be asked to make a payment and upload a receipt</li>
-            <li>• Admins can verify the payment by reviewing the uploaded receipt</li>
-            <li>• Once verified, you can update the order status to mark it as paid</li>
-          </ul>
+        <div className="mt-8 space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 md:p-6">
+            <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
+              How Bank Transfer Payments Work
+            </h3>
+            <ul className="space-y-2 text-xs md:text-sm text-gray-700">
+              <li>• Customers who choose to pay by bank transfer will receive these bank details</li>
+              <li>• They will be asked to make a payment and upload a receipt</li>
+              <li>• Admins can verify the payment by reviewing the uploaded receipt</li>
+              <li>• Once verified, you can update the order status to mark it as paid</li>
+            </ul>
+          </div>
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 md:p-6">
+            <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
+              Tax & Delivery Settings
+            </h3>
+            <ul className="space-y-2 text-xs md:text-sm text-gray-700">
+              <li>• Tax is set to &quot;inclusive&quot; by default - the item price includes 15% GCT</li>
+              <li>• Customers will see that GCT is included in the price, but no additional amount is added</li>
+              <li>• Standard delivery cost applies automatically to Kingston orders</li>
+              <li>• Custom delivery costs for outside Kingston are set per-order by admins/pharmacists</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

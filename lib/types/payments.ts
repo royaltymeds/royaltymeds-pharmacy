@@ -8,6 +8,11 @@ export interface PaymentConfig {
   iban?: string;
   swift_code?: string;
   additional_instructions?: string;
+  // Tax configuration
+  tax_type: 'none' | 'inclusive';
+  tax_rate: number;
+  // Shipping/Delivery configuration
+  kingston_delivery_cost: number;
   created_at: string;
   updated_at: string;
 }
