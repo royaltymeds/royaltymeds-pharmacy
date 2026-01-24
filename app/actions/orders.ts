@@ -340,6 +340,114 @@ export async function updateOrderStatus(
   return data as Order;
 }
 
+// Check if there's enough inventory for an order
+export async function checkInventoryAvailability(orderId: string): Promise<{ isAvailable: boolean; missingItems: Array<{ drug_name: string; required: number; available: number }> }> {
+  const supabase = getAdminClient();
+
+  // Get order items
+  const { data: orderItems, error: itemsError } = await supabase
+    .from('order_items')
+    .select('*')
+    .eq('order_id', orderId);
+
+  if (itemsError) throw new Error(itemsError.message);
+
+  if (!orderItems || orderItems.length === 0) {
+    return { isAvailable: true, missingItems: [] };
+  }
+
+  const missingItems = [];
+
+  // Check each item's inventory
+  for (const item of orderItems) {
+    const { data: drug, error: drugError } = await supabase
+      .from('otc_drugs')
+      .select('quantity_on_hand')
+      .eq('id', item.drug_id)
+      .single();
+
+    if (drugError) continue;
+
+    if (!drug || drug.quantity_on_hand < item.quantity) {
+      missingItems.push({
+        drug_name: item.drug_name,
+        required: item.quantity,
+        available: drug?.quantity_on_hand || 0,
+      });
+    }
+  }
+
+  return {
+    isAvailable: missingItems.length === 0,
+    missingItems,
+  };
+}
+
+// Update inventory when order is shipped
+export async function updateInventoryOnShipment(orderId: string): Promise<void> {
+  const supabase = getAdminClient();
+
+  // Get order items
+  const { data: orderItems, error: itemsError } = await supabase
+    .from('order_items')
+    .select('*')
+    .eq('order_id', orderId);
+
+  if (itemsError) throw new Error(itemsError.message);
+
+  if (!orderItems || orderItems.length === 0) {
+    return;
+  }
+
+  // Update inventory for each item and log transaction
+  for (const item of orderItems) {
+    // Get current inventory
+    const { data: drug, error: drugError } = await supabase
+      .from('otc_drugs')
+      .select('quantity_on_hand')
+      .eq('id', item.drug_id)
+      .single();
+
+    if (drugError) continue;
+
+    const quantityBefore = drug?.quantity_on_hand || 0;
+    const quantityAfter = Math.max(0, quantityBefore - item.quantity);
+
+    // Update OTC drug inventory
+    const { error: updateError } = await supabase
+      .from('otc_drugs')
+      .update({
+        quantity_on_hand: quantityAfter,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', item.drug_id);
+
+    if (updateError) {
+      console.error(`Failed to update inventory for drug ${item.drug_id}:`, updateError);
+      continue;
+    }
+
+    // Log inventory transaction
+    const { error: transError } = await supabase
+      .from('inventory_transactions')
+      .insert({
+        drug_id: item.drug_id,
+        drug_type: 'otc',
+        transaction_type: 'sale',
+        quantity_change: -item.quantity,
+        quantity_before: quantityBefore,
+        quantity_after: quantityAfter,
+        notes: `Order shipment - Order ID: ${orderId}`,
+        created_by: (await supabase.auth.getUser()).data.user?.id || null,
+      });
+
+    if (transError) {
+      console.error(`Failed to log transaction for drug ${item.drug_id}:`, transError);
+    }
+  }
+
+  revalidatePath('/admin/inventory');
+}
 export async function getAdminOrderWithItems(orderId: string): Promise<OrderWithItems> {
   const supabase = getAdminClient();
 

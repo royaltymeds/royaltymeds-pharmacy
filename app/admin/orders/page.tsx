@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
-import { ChevronDown, Filter, Search, FileText, Check, X } from 'lucide-react';
-import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping } from '@/app/actions/orders';
+import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle } from 'lucide-react';
+import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
 
@@ -20,6 +20,7 @@ export default function AdminOrdersPage() {
   const [editingShipping, setEditingShipping] = useState<string | null>(null);
   const [savingShipping, setSavingShipping] = useState<string | null>(null);
   const [shippingValues, setShippingValues] = useState<Record<string, string>>({});
+  const [inventoryWarnings, setInventoryWarnings] = useState<Record<string, Array<{ drug_name: string; required: number; available: number }>>>({});
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
   const [verifyingPayment, setVerifyingPayment] = useState<string | null>(null);
@@ -76,6 +77,22 @@ export default function AdminOrdersPage() {
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingStatus(orderId);
     try {
+      // If changing to "shipped", check inventory and update it
+      if (newStatus === 'shipped') {
+        const { isAvailable, missingItems } = await checkInventoryAvailability(orderId);
+        
+        // Store warning if items are missing
+        if (!isAvailable) {
+          setInventoryWarnings((prev) => ({
+            ...prev,
+            [orderId]: missingItems,
+          }));
+        }
+        
+        // Update inventory regardless of availability
+        await updateInventoryOnShipment(orderId);
+      }
+      
       await updateOrderStatus(orderId, newStatus as Order['status']);
       setOrders((prev) =>
         prev.map((order) =>
@@ -330,6 +347,27 @@ export default function AdminOrdersPage() {
                   {/* Order Details */}
                   {isExpanded && details && (
                     <div className="border-t border-gray-200 p-4 md:p-6 space-y-4 md:space-y-6 bg-gray-50">
+                      {/* Inventory Warning */}
+                      {inventoryWarnings[order.id] && inventoryWarnings[order.id].length > 0 && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-yellow-900 mb-2 text-sm md:text-base">
+                                Insufficient Inventory
+                              </h4>
+                              <ul className="space-y-1 text-xs md:text-sm text-yellow-800">
+                                {inventoryWarnings[order.id].map((item, idx) => (
+                                  <li key={idx}>
+                                    <strong>{item.drug_name}</strong>: Need {item.required} units, only {item.available} available
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Status Change */}
                       <div className="bg-white rounded-lg p-4">
                         <h4 className="font-semibold text-gray-900 mb-3 text-sm md:text-base">Update Status</h4>
