@@ -8,9 +8,7 @@ export const metadata = {
 };
 
 export default async function StorePage() {
-  const allDrugs = await getOTCDrugs();
-  // Filter to only show active drugs in the store
-  const activeDrugs = allDrugs.filter((drug) => drug.status === 'active');
+  const drugs = await getOTCDrugs();
 
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 pb-8">
@@ -24,7 +22,7 @@ export default async function StorePage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto">
-        <StoreClientComponent drugs={activeDrugs} />
+        <StoreClientComponent drugs={drugs} />
       </div>
     </div>
   );
