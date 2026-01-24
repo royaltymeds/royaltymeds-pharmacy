@@ -22,21 +22,15 @@ export default function StoreClientComponent({ drugs }: Props) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { addItem } = useCart();
 
-  // Filter drugs by status (only active)
-  const activeDrugs = useMemo(
-    () => drugs.filter((drug) => drug.status === 'active'),
-    [drugs]
-  );
-
-  // Get unique categories
+  // Get unique categories from all drugs (already filtered to active at server level)
   const categories = useMemo(
-    () => [...new Set(activeDrugs.map((drug) => drug.category))],
-    [activeDrugs]
+    () => [...new Set(drugs.map((drug) => drug.category))],
+    [drugs]
   );
 
   // Filter by search and category
   const filteredDrugs = useMemo(() => {
-    return activeDrugs.filter((drug) => {
+    return drugs.filter((drug) => {
       const matchesSearch =
         drug.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         drug.active_ingredient?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,7 +40,7 @@ export default function StoreClientComponent({ drugs }: Props) {
 
       return matchesSearch && matchesCategory;
     });
-  }, [activeDrugs, searchTerm, selectedCategory]);
+  }, [drugs, searchTerm, selectedCategory]);
 
   const handleAddToCart = async (drug: OTCDrug) => {
     // Check authentication

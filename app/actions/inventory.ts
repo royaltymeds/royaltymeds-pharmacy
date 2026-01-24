@@ -17,6 +17,7 @@ export async function getOTCDrugs() {
   const { data, error } = await supabase
     .from('otc_drugs')
     .select('*')
+    .eq('status', 'active')
     .order('name', { ascending: true });
 
   if (error) throw new Error(error.message);
