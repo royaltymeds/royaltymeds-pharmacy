@@ -372,10 +372,27 @@ export async function updateOrderShipping(
 ): Promise<Order> {
   const supabase = getAdminClient();
 
+  // First, get the current order to calculate subtotal correctly
+  const { data: currentOrder, error: fetchError } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', orderId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+
+  // Calculate subtotal (items + tax, without old shipping)
+  const subtotal = currentOrder.total_amount - currentOrder.shipping_amount;
+  
+  // Calculate new total
+  const newTotal = subtotal + shippingAmount;
+
+  // Update both shipping_amount and total_amount
   const { data, error } = await supabase
     .from('orders')
     .update({
       shipping_amount: shippingAmount,
+      total_amount: newTotal,
       updated_at: new Date().toISOString(),
     })
     .eq('id', orderId)
