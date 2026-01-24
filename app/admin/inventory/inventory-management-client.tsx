@@ -9,6 +9,7 @@ import {
   X,
   Search,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   OTCDrug,
   PrescriptionDrug,
@@ -103,9 +104,28 @@ export default function InventoryManagementClient({
         setPrescriptionDrugs([...prescriptionDrugs, newDrug]);
       }
       setShowForm(false);
+      toast.success('Item added successfully!', {
+        duration: 3000,
+        position: 'top-right',
+      });
     } catch (error) {
-      console.error('Failed to create drug:', error);
-      alert('Failed to create drug item');
+      // Close the modal
+      setShowForm(false);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create item';
+      
+      // Show error toast with custom action to reload page
+      toast.error(errorMessage, {
+        duration: 0, // Keep showing until dismissed
+        position: 'top-right',
+        action: {
+          label: 'Close',
+          onClick: () => {
+            // Reload page after closing the toast
+            window.location.reload();
+          },
+        },
+      });
     }
   };
 
