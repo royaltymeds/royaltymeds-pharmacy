@@ -18,6 +18,7 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [editingShipping, setEditingShipping] = useState<string | null>(null);
+  const [savingShipping, setSavingShipping] = useState<string | null>(null);
   const [shippingValues, setShippingValues] = useState<Record<string, string>>({});
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
@@ -107,7 +108,7 @@ export default function AdminOrdersPage() {
         return;
       }
       
-      setEditingShipping(orderId);
+      setSavingShipping(orderId);
       await updateOrderShipping(orderId, newAmount);
       
       // Update orders list
@@ -138,9 +139,10 @@ export default function AdminOrdersPage() {
         return updated;
       });
       setEditingShipping(null);
+      setSavingShipping(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update shipping');
-      setEditingShipping(null);
+      setSavingShipping(null);
     }
   };
 
@@ -481,10 +483,10 @@ export default function AdminOrdersPage() {
                               />
                               <button
                                 onClick={() => handleUpdateShipping(order.id)}
-                                disabled={editingShipping !== null}
+                                disabled={savingShipping === order.id}
                                 className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400"
                               >
-                                Save
+                                {savingShipping === order.id ? 'Saving...' : 'Save'}
                               </button>
                               <button
                                 onClick={() => {
