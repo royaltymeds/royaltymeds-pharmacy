@@ -113,11 +113,16 @@ export default function AdminOrdersPage() {
       
       // Update orders list
       setOrders((prev) =>
-        prev.map((order) =>
-          order.id === orderId 
-            ? { ...order, shipping_amount: newAmount, total_amount: (order.total_amount - order.shipping_amount + newAmount) }
-            : order
-        )
+        prev.map((order) => {
+          if (order.id === orderId) {
+            // Calculate subtotal (items + tax, without shipping)
+            const subtotal = order.total_amount - order.shipping_amount;
+            // New total = subtotal + new shipping
+            const newTotal = subtotal + newAmount;
+            return { ...order, shipping_amount: newAmount, total_amount: newTotal };
+          }
+          return order;
+        })
       );
       
       // Update cached details
