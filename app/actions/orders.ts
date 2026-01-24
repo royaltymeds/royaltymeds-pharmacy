@@ -353,3 +353,24 @@ export async function getAdminOrderWithItems(orderId: string): Promise<OrderWith
     items: items as OrderItem[],
   };
 }
+
+export async function updateOrderShipping(
+  orderId: string,
+  shippingAmount: number
+): Promise<Order> {
+  const supabase = getAdminClient();
+
+  const { data, error } = await supabase
+    .from('orders')
+    .update({
+      shipping_amount: shippingAmount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', orderId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/orders');
+  return data as Order;
+}

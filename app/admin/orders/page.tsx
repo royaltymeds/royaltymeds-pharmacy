@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { ChevronDown, Filter, Search, FileText, Check, X } from 'lucide-react';
-import { getAllOrders, getAdminOrderWithItems, updateOrderStatus } from '@/app/actions/orders';
+import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
 
@@ -17,6 +17,8 @@ export default function AdminOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [editingShipping, setEditingShipping] = useState<string | null>(null);
+  const [shippingValues, setShippingValues] = useState<Record<string, string>>({});
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
   const [verifyingPayment, setVerifyingPayment] = useState<string | null>(null);
@@ -95,6 +97,51 @@ export default function AdminOrdersPage() {
 
   const getStatusColor = (status: string) => {
     return ORDER_STATUS_COLORS[status as keyof typeof ORDER_STATUS_COLORS] || '#6B7280';
+  };
+
+  const handleUpdateShipping = async (orderId: string) => {
+    setEditingShipping(orderId);
+    try {
+      const newAmount = parseFloat(shippingValues[orderId] || '0');
+      if (newAmount < 0) {
+        setError('Shipping amount cannot be negative');
+        return;
+      }
+      
+      await updateOrderShipping(orderId, newAmount);
+      
+      // Update orders list
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId 
+            ? { ...order, shipping_amount: newAmount, total_amount: (order.total_amount - order.shipping_amount + newAmount) }
+            : order
+        )
+      );
+      
+      // Update cached details
+      if (orderDetails[orderId]) {
+        setOrderDetails((prev) => ({
+          ...prev,
+          [orderId]: {
+            ...prev[orderId],
+            shipping_amount: newAmount,
+            total_amount: (prev[orderId].total_amount - prev[orderId].shipping_amount + newAmount),
+          },
+        }));
+      }
+      
+      setError('');
+      setShippingValues((prev) => {
+        const updated = { ...prev };
+        delete updated[orderId];
+        return updated;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update shipping');
+    } finally {
+      setEditingShipping(null);
+    }
   };
 
   const getStatusLabel = (status: string) => {
@@ -420,9 +467,51 @@ export default function AdminOrdersPage() {
                           <span>Tax (10%)</span>
                           <span>{formatCurrency(order.tax_amount)}</span>
                         </div>
-                        <div className="flex justify-between text-gray-700">
-                          <span>Shipping</span>
-                          <span>{formatCurrency(order.shipping_amount)}</span>
+                        <div className="flex justify-between text-gray-700 items-center">
+                          <span>Delivery/Shipping</span>
+                          {editingShipping === order.id ? (
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                value={shippingValues[order.id] ?? order.shipping_amount}
+                                onChange={(e) => setShippingValues({ ...shippingValues, [order.id]: e.target.value })}
+                                step="0.01"
+                                min="0"
+                                className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
+                              />
+                              <button
+                                onClick={() => handleUpdateShipping(order.id)}
+                                disabled={editingShipping === order.id}
+                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingShipping(null);
+                                  setShippingValues((prev) => {
+                                    const updated = { ...prev };
+                                    delete updated[order.id];
+                                    return updated;
+                                  });
+                                }}
+                                className="px-2 py-1 bg-gray-400 text-white rounded text-xs hover:bg-gray-500"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setEditingShipping(order.id);
+                                setShippingValues({ ...shippingValues, [order.id]: order.shipping_amount.toString() });
+                              }}
+                              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                              {formatCurrency(order.shipping_amount)}
+                              <span className="text-xs">(edit)</span>
+                            </button>
+                          )}
                         </div>
                         <div className="flex justify-between text-base md:text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
                           <span>Total</span>

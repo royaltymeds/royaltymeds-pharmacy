@@ -6,15 +6,18 @@ import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils/currency';
 import { CartItem } from '@/lib/types/orders';
 import { OTCDrug } from '@/lib/types/inventory';
+import { PaymentConfig } from '@/lib/types/payments';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
 import { Trash2, Plus, Minus, ArrowLeft, AlertCircle } from 'lucide-react';
 import { getCart, removeFromCart, updateCartItem, createOrder } from '@/app/actions/orders';
 import { getOTCDrugById } from '@/app/actions/inventory';
+import { getPaymentConfig } from '@/app/actions/payments';
 import { useCart } from '@/lib/context/CartContext';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [drugDetails, setDrugDetails] = useState<Record<string, OTCDrug>>({});
+  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -44,6 +47,10 @@ export default function CartPage() {
           }
         }
         setDrugDetails(details);
+
+        // Fetch payment config for tax and shipping settings
+        const config = await getPaymentConfig();
+        setPaymentConfig(config);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load cart');
       } finally {
@@ -92,8 +99,12 @@ export default function CartPage() {
     return sum + (drug ? drug.unit_price * item.quantity : 0);
   }, 0);
 
-  const tax = subtotal * 0.1; // 10% tax
-  const shipping = cartItems.length > 0 ? 10 : 0; // $10 shipping
+  // Tax handling: if tax_type is 'inclusive', don't add extra tax (it's already in the price)
+  const tax = paymentConfig && paymentConfig.tax_type === 'inclusive' ? 0 : 0;
+  
+  // Shipping: use Kingston delivery cost from config if available, otherwise 0
+  const shipping = cartItems.length > 0 && paymentConfig ? paymentConfig.kingston_delivery_cost : 0;
+  
   const total = subtotal + tax + shipping;
 
   // Handle checkout
@@ -255,14 +266,18 @@ export default function CartPage() {
                     <span>Subtotal</span>
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-700">
-                    <span>Tax (10%)</span>
-                    <span>{formatCurrency(tax)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-700">
-                    <span>Shipping</span>
-                    <span>{formatCurrency(shipping)}</span>
-                  </div>
+                  {paymentConfig && paymentConfig.tax_type === 'inclusive' && (
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>({paymentConfig.tax_rate}% GCT Inclusive)</span>
+                      <span></span>
+                    </div>
+                  )}
+                  {shipping > 0 && (
+                    <div className="flex justify-between text-gray-700">
+                      <span>Delivery (Kingston)</span>
+                      <span>{formatCurrency(shipping)}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-between text-xl font-bold text-gray-900">
                   <span>Total</span>
