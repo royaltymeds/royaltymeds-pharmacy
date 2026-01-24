@@ -64,6 +64,15 @@ export default function AdminOrdersPage() {
       try {
         const details = await getAdminOrderWithItems(orderId);
         setOrderDetails((prev) => ({ ...prev, [orderId]: details }));
+        
+        // Check inventory availability for this order
+        const { isAvailable, missingItems } = await checkInventoryAvailability(orderId);
+        if (!isAvailable) {
+          setInventoryWarnings((prev) => ({
+            ...prev,
+            [orderId]: missingItems,
+          }));
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load order details');
         return;
@@ -77,19 +86,8 @@ export default function AdminOrdersPage() {
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingStatus(orderId);
     try {
-      // If changing to "shipped", check inventory and update it
+      // If changing to "shipped", update inventory
       if (newStatus === 'shipped') {
-        const { isAvailable, missingItems } = await checkInventoryAvailability(orderId);
-        
-        // Store warning if items are missing
-        if (!isAvailable) {
-          setInventoryWarnings((prev) => ({
-            ...prev,
-            [orderId]: missingItems,
-          }));
-        }
-        
-        // Update inventory regardless of availability
         await updateInventoryOnShipment(orderId);
       }
       
@@ -372,25 +370,40 @@ export default function AdminOrdersPage() {
                       <div className="bg-white rounded-lg p-4">
                         <h4 className="font-semibold text-gray-900 mb-3 text-sm md:text-base">Update Status</h4>
                         <div className="flex flex-wrap gap-2">
-                          {statuses.map((status) => (
-                            <button
-                              key={status}
-                              onClick={() => handleStatusUpdate(order.id, status)}
-                              disabled={updatingStatus === order.id || order.status === status}
-                              className={`px-3 md:px-4 py-2 rounded-lg transition-colors font-medium text-xs md:text-sm ${
-                                order.status === status
-                                  ? 'ring-2 ring-offset-2'
-                                  : 'hover:opacity-80'
-                              }`}
-                              style={{
-                                backgroundColor: getStatusColor(status),
-                                color: 'white',
-                                opacity: order.status === status ? 1 : 0.7,
-                              }}
-                            >
-                              {updatingStatus === order.id ? 'Updating...' : getStatusLabel(status)}
-                            </button>
-                          ))}
+                          {statuses.map((status) => {
+                            const isCurrentStatus = order.status === status;
+                            const isUpdating = updatingStatus === order.id;
+                            const hasInventoryWarning = inventoryWarnings[order.id] && inventoryWarnings[order.id].length > 0;
+                            const isShippingOrProcessing = status === 'shipped' || status === 'processing';
+                            const isDisabled = isUpdating || isCurrentStatus || (hasInventoryWarning && isShippingOrProcessing);
+                            
+                            return (
+                              <div key={status} className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleStatusUpdate(order.id, status)}
+                                  disabled={isDisabled}
+                                  className={`px-3 md:px-4 py-2 rounded-lg transition-colors font-medium text-xs md:text-sm ${
+                                    isCurrentStatus
+                                      ? 'ring-2 ring-offset-2'
+                                      : 'hover:opacity-90'
+                                  } ${
+                                    isDisabled
+                                      ? 'opacity-50 cursor-not-allowed'
+                                      : 'opacity-100'
+                                  }`}
+                                  style={{
+                                    backgroundColor: isDisabled ? '#9CA3AF' : getStatusColor(status),
+                                    color: 'white',
+                                  }}
+                                >
+                                  {isUpdating ? 'Updating...' : getStatusLabel(status)}
+                                </button>
+                                {isDisabled && hasInventoryWarning && isShippingOrProcessing && (
+                                  <span className="text-xs text-gray-600 font-medium">disabled</span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
