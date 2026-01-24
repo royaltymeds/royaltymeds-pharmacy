@@ -112,8 +112,6 @@ export default function InventoryManagementClient({
       // Close the modal
       setShowForm(false);
       
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create item';
-      
       // Show error toast with custom action to reload page
       toast.error('The item you are trying to add, is already in the inventory!', {
         duration: 0, // Keep showing until dismissed
