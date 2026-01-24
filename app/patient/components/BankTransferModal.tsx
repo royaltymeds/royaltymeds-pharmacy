@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { X, Upload, AlertCircle, Loader, Check, Image as ImageIcon } from 'lucide-react';
 import { PaymentConfig } from '@/lib/types/payments';
 import { uploadPaymentReceipt, updateOrderPaymentStatus } from '@/app/actions/payments';
+import { formatCurrency } from '@/lib/utils/currency';
 
 interface BankTransferModalProps {
   isOpen: boolean;
@@ -150,7 +151,7 @@ export function BankTransferModal({
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-700 font-medium">Amount Due</span>
-                  <span className="text-2xl font-bold text-green-600">${amount.toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-green-600">{formatCurrency(amount)}</span>
                 </div>
               </div>
 

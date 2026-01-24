@@ -6,6 +6,7 @@ import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from 
 import { ChevronDown, Filter, Search, FileText, Check, X } from 'lucide-react';
 import { getAllOrders, getAdminOrderWithItems, updateOrderStatus } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
+import { formatCurrency } from '@/lib/utils/currency';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -249,7 +250,7 @@ export default function AdminOrdersPage() {
                             {new Date(order.created_at).toLocaleDateString()}
                           </p>
                           <p className="text-xl md:text-2xl font-bold text-gray-900">
-                            ${order.total_amount.toFixed(2)}
+                            {formatCurrency(order.total_amount)}
                           </p>
                         </div>
                       </div>
@@ -392,11 +393,11 @@ export default function AdminOrdersPage() {
                                   {item.drug_name}
                                 </h5>
                                 <p className="text-xs md:text-sm text-gray-600 mt-1">
-                                  Qty: {item.quantity} × ${item.unit_price.toFixed(2)}
+                                  Qty: {item.quantity} × {formatCurrency(item.unit_price)}
                                 </p>
                               </div>
                               <p className="text-lg md:text-lg font-bold text-gray-900">
-                                ${(item.unit_price * item.quantity).toFixed(2)}
+                                {formatCurrency(item.unit_price * item.quantity)}
                               </p>
                             </div>
                           ))}
@@ -417,15 +418,15 @@ export default function AdminOrdersPage() {
                         </div>
                         <div className="flex justify-between text-gray-700">
                           <span>Tax (10%)</span>
-                          <span>${order.tax_amount.toFixed(2)}</span>
+                          <span>{formatCurrency(order.tax_amount)}</span>
                         </div>
                         <div className="flex justify-between text-gray-700">
                           <span>Shipping</span>
-                          <span>${order.shipping_amount.toFixed(2)}</span>
+                          <span>{formatCurrency(order.shipping_amount)}</span>
                         </div>
                         <div className="flex justify-between text-base md:text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
                           <span>Total</span>
-                          <span>${order.total_amount.toFixed(2)}</span>
+                          <span>{formatCurrency(order.total_amount)}</span>
                         </div>
                       </div>
 

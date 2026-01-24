@@ -10,6 +10,7 @@ import { OrderPaymentSection } from '@/app/patient/components/OrderPaymentSectio
 import { UpdateReceiptModal } from '@/app/patient/components/UpdateReceiptModal';
 import { getPaymentConfig } from '@/app/actions/payments';
 import { PaymentConfig } from '@/lib/types/payments';
+import { formatCurrency } from '@/lib/utils/currency';
 
 export default function PatientOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -155,7 +156,7 @@ export default function PatientOrdersPage() {
                             </div>
                             <div className="flex items-center gap-1">
                               <DollarSign size={16} />
-                              ${order.total_amount.toFixed(2)}
+                              {formatCurrency(order.total_amount)}
                             </div>
                           </div>
                         </div>
@@ -207,12 +208,12 @@ export default function PatientOrdersPage() {
                                 <div className="flex gap-4 text-sm text-gray-600 mt-2">
                                   <span>Qty: {item.quantity}</span>
                                   <span>
-                                    Unit Price: ${item.unit_price.toFixed(2)}
+                                    Unit Price: {formatCurrency(item.unit_price)}
                                   </span>
                                   <span>
-                                    Subtotal: ${(
+                                    Subtotal: {formatCurrency(
                                       item.unit_price * item.quantity
-                                    ).toFixed(2)}
+                                    )}
                                   </span>
                                 </div>
                               </div>
@@ -226,24 +227,24 @@ export default function PatientOrdersPage() {
                         <div className="flex justify-between text-gray-700">
                           <span>Subtotal</span>
                           <span>
-                            ${(
+                            {formatCurrency(
                               order.total_amount -
                               order.tax_amount -
                               order.shipping_amount
-                            ).toFixed(2)}
+                            )}
                           </span>
                         </div>
                         <div className="flex justify-between text-gray-700">
                           <span>Tax</span>
-                          <span>${order.tax_amount.toFixed(2)}</span>
+                          <span>{formatCurrency(order.tax_amount)}</span>
                         </div>
                         <div className="flex justify-between text-gray-700">
                           <span>Shipping</span>
-                          <span>${order.shipping_amount.toFixed(2)}</span>
+                          <span>{formatCurrency(order.shipping_amount)}</span>
                         </div>
                         <div className="flex justify-between text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
                           <span>Total</span>
-                          <span>${order.total_amount.toFixed(2)}</span>
+                          <span>{formatCurrency(order.total_amount)}</span>
                         </div>
                       </div>
 

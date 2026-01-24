@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Edit2, Trash2, AlertTriangle, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
+import { formatCurrency } from '@/lib/utils/currency';
 
 type Drug = OTCDrug | PrescriptionDrug;
 
@@ -240,12 +241,12 @@ export default function InventoryItemTable({
                   <div className="grid grid-cols-2 gap-3 text-sm border-t border-gray-200 pt-3">
                     <div>
                       <p className="text-gray-500 text-xs">Unit Price</p>
-                      <p className="font-medium text-gray-900">${drug.unit_price.toFixed(2)}</p>
+                      <p className="font-medium text-gray-900">{formatCurrency(drug.unit_price)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500 text-xs">Total Value</p>
                       <p className="font-medium text-gray-900">
-                        ${(drug.quantity_on_hand * drug.unit_price).toFixed(2)}
+                        {formatCurrency(drug.quantity_on_hand * drug.unit_price)}
                       </p>
                     </div>
                   </div>

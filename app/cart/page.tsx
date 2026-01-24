@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { formatCurrency } from '@/lib/utils/currency';
 import { CartItem } from '@/lib/types/orders';
 import { OTCDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
@@ -187,7 +188,7 @@ export default function CartPage() {
                       <h3 className="font-semibold text-gray-900">{drug.name}</h3>
                       <p className="text-sm text-gray-600">{drug.category}</p>
                       <p className="text-lg font-bold text-blue-600 mt-2">
-                        ${drug.unit_price.toFixed(2)} each
+                        {formatCurrency(drug.unit_price)} each
                       </p>
                     </div>
 
@@ -224,7 +225,7 @@ export default function CartPage() {
 
                       {/* Item Total */}
                       <p className="text-lg font-bold text-gray-900">
-                        ${(drug.unit_price * item.quantity).toFixed(2)}
+                        {formatCurrency(drug.unit_price * item.quantity)}
                       </p>
                     </div>
                   </div>
@@ -252,20 +253,20 @@ export default function CartPage() {
                 <div className="space-y-3 border-b border-gray-200 pb-3">
                   <div className="flex justify-between text-gray-700">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-gray-700">
                     <span>Tax (10%)</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>{formatCurrency(tax)}</span>
                   </div>
                   <div className="flex justify-between text-gray-700">
                     <span>Shipping</span>
-                    <span>${shipping.toFixed(2)}</span>
+                    <span>{formatCurrency(shipping)}</span>
                   </div>
                 </div>
                 <div className="flex justify-between text-xl font-bold text-gray-900">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatCurrency(total)}</span>
                 </div>
               </div>
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
+import { formatCurrency } from "@/lib/utils/currency";
 
 interface DashboardData {
   user: any;
@@ -203,7 +204,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
                   <div>
                     <p className="font-semibold text-gray-900">Order #{order.id.slice(0, 8)}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      ${order.total_amount?.toFixed(2) || "0.00"}
+                      {formatCurrency(order.total_amount || 0)}
                     </p>
                   </div>
                   <span className="px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-blue-100 text-blue-800 capitalize">
