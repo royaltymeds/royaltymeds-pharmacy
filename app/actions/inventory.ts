@@ -73,6 +73,7 @@ export async function createOTCDrug(drug: Omit<OTCDrug, 'id' | 'created_at' | 'u
     throw new Error(error.message);
   }
   revalidatePath('/admin/inventory');
+  revalidatePath('/store');
   return data as OTCDrug;
 }
 
@@ -91,6 +92,7 @@ export async function createPrescriptionDrug(drug: Omit<PrescriptionDrug, 'id' |
     throw new Error(error.message);
   }
   revalidatePath('/admin/inventory');
+  revalidatePath('/store');
   return data as PrescriptionDrug;
 }
 
@@ -108,6 +110,7 @@ export async function updateOTCDrug(id: string, updates: Partial<Omit<OTCDrug, '
 
   if (error) throw new Error(error.message);
   revalidatePath('/admin/inventory');
+  revalidatePath('/store');
   return data as OTCDrug;
 }
 
@@ -125,6 +128,7 @@ export async function updatePrescriptionDrug(id: string, updates: Partial<Omit<P
 
   if (error) throw new Error(error.message);
   revalidatePath('/admin/inventory');
+  revalidatePath('/store');
   return data as PrescriptionDrug;
 }
 
@@ -137,6 +141,7 @@ export async function deleteOTCDrug(id: string) {
 
   if (error) throw new Error(error.message);
   revalidatePath('/admin/inventory');
+  revalidatePath('/store');
 }
 
 export async function deletePrescriptionDrug(id: string) {
@@ -148,6 +153,7 @@ export async function deletePrescriptionDrug(id: string) {
 
   if (error) throw new Error(error.message);
   revalidatePath('/admin/inventory');
+  revalidatePath('/store');
 }
 
 export async function updateInventoryQuantity(
@@ -200,6 +206,7 @@ export async function updateInventoryQuantity(
 
   if (txError) throw new Error(txError.message);
   revalidatePath('/admin/inventory');
+  revalidatePath('/store');
 }
 
 export async function getInventoryTransactions(drugId?: string, drugType?: DrugType) {

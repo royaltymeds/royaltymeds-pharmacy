@@ -7,6 +7,10 @@ export const metadata = {
   description: 'Browse and purchase OTC medications',
 };
 
+// Force dynamic rendering to prevent caching issues
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function StorePage() {
   const drugs = await getOTCDrugs();
 
