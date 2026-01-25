@@ -193,17 +193,9 @@ export default function StoreClientComponent({ drugs }: Props) {
 
                 {/* Price and Stock Section */}
                 <div className="space-y-3 border-t border-gray-100 pt-3 mt-auto">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-gray-500 font-medium">Unit Price</p>
-                      <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(drug.unit_price)}</p>
-                    </div>
-                    {drug.quantity_on_hand > 0 && (
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500 font-medium">Available</p>
-                        <p className="text-lg font-semibold text-green-600 mt-1">{drug.quantity_on_hand}</p>
-                      </div>
-                    )}
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Unit Price</p>
+                    <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(drug.unit_price)}</p>
                   </div>
 
                   {/* Stock Status */}
