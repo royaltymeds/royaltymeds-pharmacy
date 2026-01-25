@@ -32,6 +32,42 @@ export default function SignupForm() {
     console.log("[SignupForm] Form data:", { email, password, fullName, phone, address, dateOfBirth, role: "patient" });
 
     try {
+      console.log("[SignupForm] Step 0: Checking for existing user with email or phone");
+
+      // Step 0: Check if user already exists
+      const checkResponse = await fetch("/api/auth/check-existing-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          phone: phone || null,
+        }),
+      });
+
+      const checkData = await checkResponse.json();
+      console.log("[SignupForm] Check response:", checkData);
+
+      if (checkData.exists) {
+        let errorMessage = "An account already exists with ";
+        if (checkData.emailExists && checkData.phoneExists) {
+          errorMessage += `this email and phone number`;
+        } else if (checkData.emailExists) {
+          errorMessage += `this email address`;
+        } else {
+          errorMessage += `this phone number`;
+        }
+        if (checkData.existingUserName) {
+          errorMessage += ` (${checkData.existingUserName})`;
+        }
+        errorMessage += ".";
+        console.warn("[SignupForm] User already exists:", errorMessage);
+        setError(errorMessage);
+        setIsLoading(false);
+        return;
+      }
+
       console.log("[SignupForm] Step 1: Calling /api/auth/signup-rest");
 
       // Step 1: Create auth user via server API (using REST API directly)
