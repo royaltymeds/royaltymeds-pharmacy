@@ -32,9 +32,15 @@ export default function SignupForm() {
     console.log("[SignupForm] Form data:", { email, password, fullName, phone, address, dateOfBirth, role: "patient" });
 
     try {
-      // Validate phone is provided
+      // Validate phone and address are provided
       if (!phone || phone.trim() === "") {
         setError("Phone number is required");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!address || address.trim() === "") {
+        setError("Address is required");
         setIsLoading(false);
         return;
       }
@@ -133,7 +139,7 @@ export default function SignupForm() {
           email,
           role: "patient",
           phone,
-          address: address || null,
+          address,
           dateOfBirth: dateOfBirth || null,
         }),
       });
@@ -233,7 +239,7 @@ export default function SignupForm() {
 
       <div>
         <label htmlFor="address" className="block text-xs font-medium text-gray-700 mb-1">
-          Address <span className="text-gray-500">(Optional)</span>
+          Address <span className="text-red-500">*</span>
         </label>
         <input
           id="address"
@@ -241,6 +247,7 @@ export default function SignupForm() {
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="123 Main Street"
+          required
           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>

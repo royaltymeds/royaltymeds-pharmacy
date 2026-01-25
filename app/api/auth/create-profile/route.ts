@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
 
     console.log("[create-profile API] Request received:", { userId, fullName, email, role, phone, address, dateOfBirth });
 
-    if (!userId || !fullName || !phone) {
+    if (!userId || !fullName || !phone || !address) {
       console.warn("[create-profile API] Missing required fields");
       return NextResponse.json(
-        { error: "Missing userId, fullName, or phone" },
+        { error: "Missing userId, fullName, phone, or address" },
         { status: 400 }
       );
     }
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
           user_id: userId,
           full_name: fullName,
           phone: phone || null,
-          address: address || null,
+          address,
           date_of_birth: dateOfBirth || null,
         },
       ]);
