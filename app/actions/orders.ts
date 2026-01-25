@@ -310,17 +310,18 @@ export async function getOrderWithItems(orderId: string): Promise<OrderWithItems
 export async function getAllOrders(): Promise<Order[]> {
   const supabase = getAdminClient();
 
-  // Fetch orders with nested join: orders -> users (via user_id) -> user_profiles (via id) -> full_name
+  // Fetch orders with nested join through auth.users (not public.users)
+  // orders.user_id -> auth.users.id -> user_profiles.id (via auth.users.id)
   const { data: orders, error } = await supabase
     .from('orders')
-    .select('*, users!user_id(user_profiles(full_name))')
+    .select('*, user_profiles!orders_user_id(full_name)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
 
   return (orders as any[]).map(order => ({
     ...order,
-    customer_name: (order as any).users?.user_profiles?.full_name || 'Unknown Customer'
+    customer_name: (order as any).user_profiles?.full_name || 'Unknown Customer'
   })) as Order[];
 }
 
