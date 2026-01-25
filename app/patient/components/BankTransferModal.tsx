@@ -221,7 +221,7 @@ export function BankTransferModal({
                         alt="Receipt preview"
                         width={800}
                         height={256}
-                        className="w-full h-64 object-cover"
+                        className="w-full h-64 object-contain bg-gray-50"
                         unoptimized
                       />
                     ) : (

@@ -401,10 +401,10 @@ export async function updateInventoryOnShipment(orderId: string): Promise<void> 
 
   // Update inventory for each item and log transaction
   for (const item of orderItems) {
-    // Get current inventory
+    // Get current inventory and reorder level
     const { data: drug, error: drugError } = await supabase
       .from('otc_drugs')
-      .select('quantity_on_hand')
+      .select('quantity_on_hand, reorder_level')
       .eq('id', item.drug_id)
       .single();
 
@@ -412,12 +412,15 @@ export async function updateInventoryOnShipment(orderId: string): Promise<void> 
 
     const quantityBefore = drug?.quantity_on_hand || 0;
     const quantityAfter = Math.max(0, quantityBefore - item.quantity);
+    const reorderLevel = drug?.reorder_level || 10;
+    const isLowStock = quantityAfter <= reorderLevel;
 
-    // Update OTC drug inventory
+    // Update OTC drug inventory and low stock alert
     const { error: updateError } = await supabase
       .from('otc_drugs')
       .update({
         quantity_on_hand: quantityAfter,
+        low_stock_alert: isLowStock,
         updated_at: new Date().toISOString(),
       })
       .eq('id', item.drug_id);

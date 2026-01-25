@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { toast } from 'sonner';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle } from 'lucide-react';
 import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
@@ -92,6 +93,18 @@ export default function AdminOrdersPage() {
       }
       
       await updateOrderStatus(orderId, newStatus as Order['status']);
+      
+      // Show success toast
+      toast.success(`Order status updated to ${getStatusLabel(newStatus)}!`, {
+        duration: 2000,
+        position: 'top-right',
+      });
+      
+      // Reload page after toast
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      
       setOrders((prev) =>
         prev.map((order) =>
           order.id === orderId ? { ...order, status: newStatus as Order['status'] } : order
@@ -106,6 +119,10 @@ export default function AdminOrdersPage() {
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update status');
+      toast.error(err instanceof Error ? err.message : 'Failed to update status', {
+        duration: 3000,
+        position: 'top-right',
+      });
     } finally {
       setUpdatingStatus(null);
     }
