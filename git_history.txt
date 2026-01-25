@@ -1,0 +1,348 @@
+﻿6894190|2026-01-24 21:07:46 -0500|princewebclient|Add search and pagination to both patient and admin order pages
+9327aa4|2026-01-24 20:52:20 -0500|princewebclient|Persist order card selection highlight independently of expanded state
+e26f02e|2026-01-24 20:46:43 -0500|princewebclient|Optimize payment_config RLS auth.uid() calls - wrap with SELECT to evaluate once per query instead of per-row
+472879b|2026-01-24 20:35:54 -0500|princewebclient|Optimize payment_config RLS performance - wrap auth.role() with SELECT to evaluate once per query instead of per-row
+da8bf54|2026-01-24 20:28:55 -0500|princewebclient|Fix payment_config RLS security - restrict CRUD operations to admins only while allowing all users to read
+45cd2eb|2026-01-24 20:16:16 -0500|princewebclient|Add uniform loading icons to all buttons across platform, highlight selected order card
+d3cd583|2026-01-24 20:01:31 -0500|princewebclient|Improve UX: reset order card on status update, add uniform loading states and fix verify payment button
+e008efe|2026-01-24 19:45:57 -0500|princewebclient|Fix bank transfer modal image display, add toast on status update with page reload, fix low stock alert on shipment
+799fdfc|2026-01-24 19:15:52 -0500|princewebclient|Remove quantity display from store product cards
+c0bb98d|2026-01-24 19:04:15 -0500|princewebclient|Refine inventory warning display: remove disabled label, hide warning for processed orders, disable all buttons when delivered
+b855d7d|2026-01-24 18:53:30 -0500|princewebclient|Move inventory warning check to order load, disable shipped/processing buttons if insufficient stock
+f4e51f9|2026-01-24 18:34:30 -0500|princewebclient|Add inventory tracking for shipped orders with insufficiency warnings
+5b037b3|2026-01-24 18:19:32 -0500|princewebclient|Fix server-side shipping update to also update total_amount correctly
+6fbe28d|2026-01-24 18:00:43 -0500|princewebclient|Fix shipping total calculation - preserve subtotal when updating shipping
+3e9d3f2|2026-01-24 12:35:05 -0500|princewebclient|Fix shipping save button - separate save state from edit state
+d54a427|2026-01-24 12:28:43 -0500|princewebclient|Fix custom shipping cost save button - remove button disable that was blocking saves
+c5b8875|2026-01-24 12:02:38 -0500|princewebclient|Update createOrder to use payment config for tax and shipping values
+ddf31b8|2026-01-24 11:49:07 -0500|princewebclient|Add tax_type, tax_rate, and kingston_delivery_cost columns to payment_config table
+ac84e55|2026-01-24 11:20:55 -0500|princewebclient|Add tax and shipping configuration with admin controls for custom delivery costs
+6c16ca9|2026-01-24 11:18:07 -0500|princewebclient|Add tax and shipping/delivery configuration to payments config page
+ac5aa77|2026-01-24 09:42:27 -0500|princewebclient|Remove unused error variable
+4816444|2026-01-24 09:40:33 -0500|princewebclient|Update duplicate inventory error message to custom text
+81e0acc|2026-01-24 09:23:30 -0500|princewebclient|Improve duplicate inventory error handling with toast notifications and auto-reload
+53de126|2026-01-24 01:11:48 -0500|princewebclient|Add currency formatting utility and update all dollar displays to use proper comma formatting - \,000.00 format across store, cart, and orders pages
+8e4e508|2026-01-24 00:54:16 -0500|princewebclient|Fix: Force dynamic rendering and add store cache invalidation - prevents server-side caching of stale inventory data
+5044e6d|2026-01-24 00:32:54 -0500|princewebclient|Fix: Move active drug filtering back to store-client component
+9da81d9|2026-01-24 00:20:19 -0500|princewebclient|Fix: Move active drug filtering to store page - keeps getOTCDrugs() returning all drugs for admin inventory
+fcb6797|2026-01-24 00:13:50 -0500|princewebclient|Fix: Filter active OTC drugs at server level in getOTCDrugs() - ensures store displays only active products from database
+ad8fd2f|2026-01-23 16:57:01 -0500|princewebclient|Add pagination (20 items/page) and move edit/delete buttons to expanded view only - vertically stacked cards
+58b635e|2026-01-23 16:48:39 -0500|princewebclient|Replace desktop table with card layout for all screen sizes - edit/delete buttons always visible
+2c1f5ac|2026-01-23 16:41:13 -0500|princewebclient|Fix: Show Edit/Delete buttons on mobile cards - moved to always visible header
+96f2a93|2026-01-23 16:35:43 -0500|princewebclient|Improve error handling for duplicate inventory items - show user-friendly message
+5cb77db|2026-01-23 16:23:34 -0500|princewebclient|Fix: Handle empty expiration_date field in inventory form - convert to null instead of empty string
+ba8563b|2026-01-23 09:18:47 -0500|princewebclient|Update hero heading to 'Your Trusted Online Pharmacy In Jamaica'
+c2380f4|2026-01-23 08:08:06 -0500|princewebclient|updated readme
+e75f13f|2026-01-23 08:04:03 -0500|princewebclient|Remove tech stack and database features sections from README
+a94093e|2026-01-23 07:39:04 -0500|princewebclient|Update README with comprehensive platform overview, features, and tech stack
+d3ec726|2026-01-22 19:03:17 -0500|princewebclient|Add patient profile page with avatar upload functionality
+81ac150|2026-01-22 18:44:35 -0500|princewebclient|updated signup form to include phone, address, and date of birth updated create-profile API to handle new fields
+465fa49|2026-01-22 18:37:31 -0500|princewebclient|update current schema reference
+6b03b29|2026-01-22 18:19:47 -0500|princewebclient|chat history updated
+3d9beaf|2026-01-22 13:57:18 -0500|princewebclient|Integrate payment status into main order status workflow
+bd89354|2026-01-22 13:18:27 -0500|princewebclient|Add pharmacist image to Professional Pharmacist Care section on homepage
+b0fa6f9|2026-01-22 13:10:45 -0500|princewebclient|updated homepage content with requested changes
+46ebe6e|2026-01-22 11:26:13 -0500|princewebclient|Add admin payment verification UI with receipt display and responsive navigation improvements
+be56d7a|2026-01-22 11:13:49 -0500|princewebclient|modified admin layout to add desktop nav
+daf1b6c|2026-01-22 10:46:35 -0500|princewebclient|Implement update receipt functionality - allow users to replace uploaded receipts
+e1c3343|2026-01-22 10:27:20 -0500|princewebclient|Document payment system implementation and recent changes
+14d61c6|2026-01-22 10:02:09 -0500|princewebclient|modified:   app/patient/orders/page.tsx
+5363aec|2026-01-22 09:24:02 -0500|princewebclient|Add receipt thumbnail previews and update receipt display on patient orders - use Next.js Image component for optimization
+03b16d6|2026-01-22 08:54:46 -0500|princewebclient|updated text on admin portal header
+6972807|2026-01-22 08:43:53 -0500|princewebclient|Fix payment system RLS policies - use service role key for admin operations
+e34d1f5|2026-01-22 08:01:00 -0500|princewebclient|added more images for homepage
+6b9da97|2026-01-22 07:38:35 -0500|princewebclient|Merge branch 'dev'
+0d71145|2026-01-22 07:33:46 -0500|princewebclient|Implement payment system with bank transfer and card options
+3d5dd32|2026-01-21 18:15:09 -0500|princewebclient|feat: optimize admin orders page for mobile - vertical stacking, responsive text, no overflow
+0763879|2026-01-21 17:57:46 -0500|princewebclient|feat: show pharmacist image on mobile homepage
+8537aef|2026-01-21 17:46:54 -0500|princewebclient|fix: remove nested button error in mobile sidebar
+3b6e8ca|2026-01-21 17:36:26 -0500|princewebclient|feat: add advisory text below order prescription medications button
+d37460d|2026-01-21 17:30:50 -0500|princewebclient|feat: add auth modal to Orders button, fix pharmacist section layout, update homepage prescription button
+473ef45|2026-01-21 17:16:15 -0500|princewebclient|feat: update shipping messaging - 1 hour Kingston, 12-24 hours outside Kingston
+4dc0364|2026-01-21 17:10:15 -0500|princewebclient|fix: remove view cart link from mobile sidebar menu
+41910a1|2026-01-21 17:05:25 -0500|princewebclient|fix: footer address formatting, center CTA buttons on mobile, change footer icon to map pin, remove pharmacist image
+ba10a93|2026-01-21 16:54:46 -0500|princewebclient|feat: add homepage header to signup, login, and admin-login pages
+301f908|2026-01-21 16:32:43 -0500|princewebclient|replace hero image with royaltymeds_pharmacist2.jpeg
+0151f00|2026-01-21 16:11:18 -0500|princewebclient|fix: change store header dashboard button to home button and link royaltymeds text to homepage
+7583b2a|2026-01-21 16:01:38 -0500|princewebclient|fix: remove unused imports and state variables
+49e019e|2026-01-21 15:47:48 -0500|princewebclient|fix: optimize homepage for mobile and portrait layouts with responsive design
+a22ef45|2026-01-21 15:29:31 -0500|princewebclient|Merge main into dev - keep dev images
+c3b94f5|2026-01-21 15:29:18 -0500|princewebclient|Add homepage images
+1dcc867|2026-01-21 15:19:57 -0500|princewebclient|fix: update footer contact information on dev branch
+d8ab02d|2026-01-21 15:15:53 -0500|princewebclient|feat: add authentication modal for cart actions
+504b977|2026-01-21 15:11:24 -0500|princewebclient|fix: update footer contact information
+aa2d8c9|2026-01-21 15:04:42 -0500|princewebclient|Merge branch 'dev' into main - local pharmacy images for homepage
+43756e4|2026-01-21 14:50:22 -0500|princewebclient|feat: replace external images with local pharmacy photos
+4ee9936|2026-01-21 14:23:45 -0500|princewebclient|feat: switch from Unsplash to Pexels for all homepage images
+76bed57|2026-01-21 14:17:33 -0500|princewebclient|fix: use confirmed working Unsplash photo IDs
+7d10964|2026-01-21 14:14:41 -0500|princewebclient|fix: replace Unsplash image URLs with valid photo IDs
+c2db89d|2026-01-21 14:12:43 -0500|princewebclient|fix: resolve syntax error in Image component (literal newlines)
+7ab5297|2026-01-21 14:07:36 -0500|princewebclient|fix: replace broken Unsplash image URLs with working ones
+c9c62c1|2026-01-21 14:02:38 -0500|princewebclient|fix: configure Unsplash images in Next.js config
+4315f9d|2026-01-21 13:59:36 -0500|princewebclient|fix: resolve build errors - escape HTML entities and remove unused imports
+fbf1557|2026-01-21 13:54:59 -0500|princewebclient|feat: enhance homepage with logo, store button, and rich content
+df71299|2026-01-21 13:42:46 -0500|princewebclient|feat: update store product cards layout and clear cart on order placement
+d059478|2026-01-21 13:24:49 -0500|princewebclient|feat: add store navigation with cart functionality and mobile sidebar
+29035a8|2026-01-21 13:09:18 -0500|princewebclient|refactor: optimize mobile responsiveness across order and store pages
+69bb66d|2026-01-21 13:00:29 -0500|princewebclient|making changes to online store pages
+99e84bb|2026-01-21 12:39:03 -0500|princewebclient|misc update
+df0b3f6|2026-01-21 12:03:39 -0500|princewebclient|moved docs to public folder
+daea9e2|2026-01-21 11:54:56 -0500|princewebclient|docs: add completion report for Supabase Advisor RLS optimization
+fc5664e|2026-01-21 11:53:24 -0500|princewebclient|docs: add RLS optimization and Supabase Advisor resolution documentation
+a2e2e3c|2026-01-21 11:35:29 -0500|princewebclient|updated current_schemaReference.sql
+408e60a|2026-01-21 10:59:47 -0500|princewebclient|feat: complete ecommerce system implementation
+594dfa3|2026-01-21 10:27:47 -0500|princewebclient|Merge branch 'dev'
+62f3457|2026-01-21 10:19:32 -0500|princewebclient|Add default inventory image for items without uploaded images
+05e4b13|2026-01-21 10:12:27 -0500|princewebclient|added image file to public for inventory items default
+50f01c1|2026-01-21 10:00:15 -0500|princewebclient|Configure Supabase domain for Next.js Image component
+81fb5f1|2026-01-21 09:50:20 -0500|princewebclient|Replace img tags with Next.js Image component to resolve build warnings
+b61e834|2026-01-21 09:45:15 -0500|princewebclient|Add image upload functionality for inventory items: file_url column, upload/delete actions, form UI, and display in table/cards
+9ea67b4|2026-01-21 09:39:35 -0500|princewebclient|Update chat history: Phase 6 complete with RLS fixes, mobile UI, collapsible cards, modal styling - 95% overall
+e954e4e|2026-01-21 09:00:03 -0500|princewebclient|Update modal overlays to show page beneath with blur effect instead of dark background
+81f8d81|2026-01-21 08:47:28 -0500|princewebclient|Make drug cards collapsible on mobile - collapsed by default
+404cdcf|2026-01-21 08:44:40 -0500|princewebclient|Use admin client for all inventory operations and remove unused import
+a295478|2026-01-21 08:43:45 -0500|princewebclient|Use admin client for all inventory read operations to bypass RLS
+4c7881b|2026-01-21 08:25:18 -0500|princewebclient|Refactor inventory UI for mobile responsiveness: replace table with cards, prevent overflow, fit buttons to content
+6a67658|2026-01-21 08:14:52 -0500|princewebclient|Fix RLS violations: use admin client for inventory CRUD operations
+84497fb|2026-01-21 08:01:28 -0500|princewebclient|current schema updated to reflect latest database changes.
+0cef824|2026-01-21 07:59:12 -0500|princewebclient|Add inventory management link to admin portal navigation
+3d195e6|2026-01-20 23:27:49 -0500|princewebclient|fix: Add proper type annotation for drug parameter in inventory edit callback
+a378d47|2026-01-20 23:10:57 -0500|princewebclient|docs: Add inventory quick reference guide
+63a1216|2026-01-20 23:08:48 -0500|princewebclient|docs: Add comprehensive inventory management system documentation
+8f10a31|2026-01-20 23:05:51 -0500|princewebclient|feat: Add comprehensive inventory management system for OTC and prescription drugs
+ab8ab46|2026-01-20 21:52:04 -0500|princewebclient|fix: Suppress ESLint warnings for img elements in file viewer components
+ed62ccb|2026-01-20 21:47:48 -0500|princewebclient|feat: Add file preview thumbnails and modal viewer with zoom and pan for prescriptions
+d5805e2|2026-01-20 21:29:06 -0500|princewebclient|feat: Make file upload manual with upload button instead of automatic
+5ec7951|2026-01-20 21:02:25 -0500|princewebclient|feat: Add file preview thumbnail when uploading prescription
+084f703|2026-01-20 20:54:16 -0500|princewebclient|feat: Allow make changes for medications in partially_filled status
+8248fd4|2026-01-20 17:40:59 -0500|princewebclient|fix: Use correct storage bucket and update prescription file_url on admin upload
+c3cf2c1|2026-01-20 17:34:49 -0500|princewebclient|feat: Add prescription file upload requirement for filling prescriptions
+feb5046|2026-01-20 17:21:18 -0500|princewebclient|feat: Disable fill prescription button while in edit mode
+0a30472|2026-01-20 17:16:22 -0500|princewebclient|feat: Disable fill prescription button until medications are added
+cd6c30e|2026-01-20 16:51:05 -0500|princewebclient|schema updated to include total_amount in prescription_items table
+7104324|2026-01-20 16:27:49 -0500|princewebclient|feat: Add total_amount tracking to prescription items for medication fill tracking
+6e4689f|2026-01-20 16:09:07 -0500|princewebclient|feat: Add quantity validation and input field improvements for prescription fill
+b679527|2026-01-20 15:56:53 -0500|princewebclient|fix: Add page refresh after prescription fill to ensure UI updates with fresh data
+c3eeffe|2026-01-20 15:39:14 -0500|princewebclient|fix: Add pharmacist_name and filled_at fields to patient details page and admin queries for persistence
+4c92964|2026-01-20 15:10:17 -0500|princewebclient|fix: Include doctor details fields in prescription data fetch queries
+5e756fc|2026-01-20 08:26:16 -0500|yueniqdevteam|fix: Move fill timestamp to bottom of medications card and add status badge colors
+f28eee5|2026-01-20 08:17:49 -0500|yueniqdevteam|chore: Add pharmacist fill status display to Actions card
+c58890e|2026-01-20 07:52:09 -0500|yueniqdevteam|Implement prescription filling feature
+8f8bfe8|2026-01-20 07:48:53 -0500|yueniqdevteam|Add prescription filling feature schema and implementation plan
+fcfbc3f|2026-01-19 22:31:10 -0500|yueniqdevteam|Add patient prescription details page with server-side rendering and proper button design
+7e74886|2026-01-19 14:29:05 -0500|yueniqdevteam|Fix API route params type for Next.js 15 compatibility
+f0bd4fa|2026-01-19 14:24:57 -0500|yueniqdevteam|Remove redundant Notes field from Prescription Details section
+9f401f0|2026-01-19 14:12:25 -0500|yueniqdevteam|Add admin notes and doctor details management on prescription details page
+3900065|2026-01-19 13:42:48 -0500|yueniqdevteam|Fix RLS issue: Use service role key for admin prescription_items operations
+7ccbd59|2026-01-19 13:34:03 -0500|yueniqdevteam|Keep 'Actions' title on status confirmation card
+c6908d1|2026-01-19 13:29:31 -0500|yueniqdevteam|changes made to prescription-detail-client.tsx file.
+acef348|2026-01-19 13:28:05 -0500|yueniqdevteam|Change 'Edit Details' button text to 'Make Changes'
+a789be4|2026-01-19 13:24:55 -0500|yueniqdevteam|Restrict 'Edit Details' button to processing status prescriptions
+8427b41|2026-01-19 13:19:01 -0500|yueniqdevteam|Add admin medication management UI to prescription details page
+407c75e|2026-01-19 08:30:35 -0500|yueniqdevteam|add count to prescription status update options
+2efd727|2026-01-19 08:16:51 -0500|yueniqdevteam|Allow processing status in prescription API endpoint
+91beccb|2026-01-19 08:13:04 -0500|yueniqdevteam|Add Process Prescription button for approved prescriptions - changes status to processing with blue styling
+ea650bf|2026-01-19 08:12:54 -0500|yueniqdevteam|Add Process Prescription button for approved prescriptions - changes status to processing with blue styling
+cd4d635|2026-01-19 07:54:53 -0500|yueniqdevteam|Position approve/reject buttons on opposite sides - approve left, reject right
+ea6c318|2026-01-19 07:53:53 -0500|yueniqdevteam|Fix approve/reject button width - remove flex flex-col from parent container so inline-block works properly
+e6226db|2026-01-19 07:47:44 -0500|yueniqdevteam|Fix button width styling across app - use inline-block instead of block, remove w-auto, center footer sections, update homepage CTA buttons
+b57bf3a|2026-01-19 07:12:26 -0500|yueniqdevteam|Add approve/reject functionality to prescription detail page with API endpoint
+ee9813c|2026-01-18 17:12:43 -0500|yueniqdevteam|Update prescription detail queries to match actual database schema with prescription_items
+2588cdf|2026-01-18 17:00:49 -0500|yueniqdevteam|Fix prescription detail queries to use correct database columns
+843dcc0|2026-01-18 16:54:24 -0500|yueniqdevteam|Add debug logging to prescription detail page to diagnose 404 issue
+917ad69|2026-01-18 16:47:06 -0500|yueniqdevteam|Fix prescription detail page to use maybeSingle() instead of single() to handle not found cases properly
+c0f7aa9|2026-01-18 16:27:12 -0500|yueniqdevteam|Refactor admin prescription detail page to server-side rendering with server-side data fetching
+abba55d|2026-01-18 16:10:28 -0500|yueniqdevteam|Redesign admin prescriptions page with paginated list layout matching patient portal
+489be4d|2026-01-18 15:46:54 -0500|yueniqdevteam|Improve admin dashboard responsive layout and handle optional medication_name fields
+dc447ef|2026-01-18 15:44:56 -0500|yueniqdevteam|Optimize admin prescriptions page for mobile: responsive card layout, no horizontal scroll
+6f3a52d|2026-01-18 15:29:15 -0500|yueniqdevteam|update doctor prescription upload form
+7814e15|2026-01-18 15:24:30 -0500|yueniqdevteam|Fix admin dashboard: remove medication_name from prescriptions table query (moved to prescription_items)
+41f5bdc|2026-01-18 15:16:09 -0500|yueniqdevteam|Fix admin dashboard: improve data fetching, adjust grid to 2 columns on mobile, remove unnecessary role check
+39f4272|2026-01-18 15:05:51 -0500|yueniqdevteam|Fix null safety checks in admin prescriptions page
+a82bc93|2026-01-18 15:04:18 -0500|yueniqdevteam|Refactor admin pages to combine data from both prescription tables - align with server-side component architecture
+8ab73d6|2026-01-18 14:49:48 -0500|yueniqdevteam|Use browser time for prescription_number generation instead of server time
+a0ad6f8|2026-01-18 14:31:46 -0500|yueniqdevteam|Move prescription upload success message to bottom of card
+d5cc1c8|2026-01-18 14:21:31 -0500|yueniqdevteam|Add prescription_number to both prescriptions and doctor_prescriptions tables
+d89e6ef|2026-01-18 13:54:06 -0500|yueniqdevteam|Add prescription numbering system - DDDMMMDD-HHMMSS format (e.g., MONJAN12-103055)
+d445877|2026-01-18 13:05:10 -0500|yueniqdevteam|docs: Add analysis confirmations to key documentation files
+8ea508b|2026-01-18 13:01:18 -0500|yueniqdevteam|docs: Update chat_history with Phase 5.7 - UI Polish & Prescription Features
+7120414|2026-01-18 12:14:59 -0500|yueniqdevteam|fix: Remove onClick handlers from pagination links in server component
+54e7d69|2026-01-18 12:08:14 -0500|yueniqdevteam|feat: Add pagination to prescriptions list (10 items per page)
+1dd4da6|2026-01-18 12:01:10 -0500|yueniqdevteam|feat: Add file thumbnail preview to prescription upload form
+7ddf7ae|2026-01-18 11:46:09 -0500|yueniqdevteam|feat: Auto-refresh prescriptions list after successful upload
+f599aef|2026-01-18 11:33:54 -0500|yueniqdevteam|docs: Add button width fix documentation for Jan 18 2026 changes
+5822275|2026-01-18 11:33:27 -0500|yueniqdevteam|Fix button widths - change w-full to w-auto so buttons fit text content
+bc03907|2026-01-18 11:12:59 -0500|yueniqdevteam|Add comprehensive documentation index and navigation guide
+f8a6c12|2026-01-18 11:12:20 -0500|yueniqdevteam|Add quick status reference guide for project completion
+30d6c77|2026-01-18 11:11:09 -0500|yueniqdevteam|Add comprehensive implementation completion summary to documentation
+05fb257|2026-01-18 11:10:24 -0500|yueniqdevteam|Mobile-friendly design for all portals - responsive layouts, sidebars, and comprehensive documentation
+5e61ca4|2026-01-18 11:03:38 -0500|yueniqdevteam|Mobile-friendly patient dashboard with animated sidebar navigation
+03b069b|2026-01-18 10:19:19 -0500|yueniqdevteam|Phase 5-7 Complete: Full architectural refactoring to server-side rendering
+632e610|2026-01-18 10:09:59 -0500|yueniqdevteam|refactor: Convert dashboards to server-side rendering (REFERENCE_APP pattern)
+5392f1f|2026-01-18 09:08:25 -0500|yueniqdevteam|docs: Add comprehensive functionality index and master documentation guide
+aa37b66|2026-01-16 17:53:52 -0500|princewebclient|Update chat_history and ai_prompt_pretext with Phase 5.6 prescription workflow restructuring - January 16, 2026
+e41d645|2026-01-16 17:41:31 -0500|princewebclient|Remove medication requirement from prescription upload API - patients now submit file only
+e670eb5|2026-01-16 17:33:05 -0500|princewebclient|Remove medication form from patient prescription upload page
+a7b9573|2026-01-16 17:09:43 -0500|princewebclient|Update to Next.js 15.1.6, React 19.2.3, and match REFERENCE_APP versions
+851c3de|2026-01-16 16:59:25 -0500|princewebclient|Remove client-side fetching - use server-side data fetching with router.refresh()
+2f38ae7|2026-01-16 16:53:09 -0500|princewebclient|Use useCallback to stabilize loadDashboardData function
+a8718af|2026-01-16 16:17:56 -0500|princewebclient|Simplify dashboard to use straightforward fetch like prescription page
+f193a2d|2026-01-16 16:10:02 -0500|princewebclient|Simplify data fetching - remove circular dependency causing infinite refresh
+c1ec52c|2026-01-16 15:58:42 -0500|princewebclient|Fix ESLint exhaustive-deps warning by using useCallback
+cc8d143|2026-01-16 15:37:40 -0500|princewebclient|Remove SSR data caching - always fetch fresh data from API on mount
+7ccea45|2026-01-16 13:34:03 -0500|princewebclient|Auto-trigger refresh on page load in PatientDashboardClient
+7ce8b50|2026-01-16 13:22:25 -0500|princewebclient|Fix PatientDashboardClient data refresh implementation with proper state management
+04a5acb|2026-01-16 13:01:30 -0500|princewebclient|Remove unused Loader import and unused state setters in PatientDashboardClient
+186961d|2026-01-16 12:33:02 -0500|princewebclient|fix: Use router.refresh() for dashboard data refresh
+9cd1edd|2026-01-16 12:21:20 -0500|princewebclient|fix: Dashboard auto-refresh with window focus and no-store cache
+8626095|2026-01-16 12:05:13 -0500|princewebclient|fix: Auto-refresh patient dashboard when returning to page
+14a753c|2026-01-16 09:55:03 -0500|princewebclient|feat: Add medication storage to prescription_items and update upload API
+9714ae2|2026-01-16 09:50:27 -0500|princewebclient|fix: Store medications in prescriptions table matching actual schema
+992302f|2026-01-16 09:34:03 -0500|princewebclient|fix: Remove brand/generic choice UI from prescription form
+b1fcb5f|2026-01-16 09:24:32 -0500|princewebclient|fix: Remove brand_preferred column reference from prescription_items insert
+4c1b940|2026-01-16 09:01:19 -0500|princewebclient|fix: Store all medications in prescription_items table on upload
+1a6515b|2026-01-16 08:34:37 -0500|princewebclient|security: Redact exposed secrets in documentation files
+34a5d51|2026-01-16 08:22:30 -0500|princewebclient|docs: Add final update summary of all documentation changes
+eff7411|2026-01-16 08:15:15 -0500|princewebclient|docs: Add summary of documentation updates completed
+d9b784f|2026-01-16 08:14:52 -0500|princewebclient|docs: Update documentation to reflect all auth fixes and current production state
+051f757|2026-01-16 06:18:35 -0500|princewebclient|fix: Replace logout Link with client-side LogoutButton to prevent automatic RSC prefetch
+599d335|2026-01-16 05:51:21 -0500|princewebclient|debug: Add detailed logging to middleware and logout endpoint
+6bdcc89|2026-01-16 05:39:06 -0500|princewebclient|fix: Add 200ms delay after login and call router.refresh() to ensure cookies persist before server auth check
+e51cf82|2026-01-16 05:25:06 -0500|princewebclient|logs and docs
+afee16b|2026-01-16 00:35:04 -0500|princewebclient|debug: Add logging to diagnose auth issues on Vercel
+19fb4b3|2026-01-16 00:27:54 -0500|princewebclient|fix: Simplify login flow to redirect directly to portal instead of intermediate success page
+20d1e2d|2026-01-16 00:17:19 -0500|princewebclient|fix: Simplify createServerSupabaseClient to match reference app pattern - remove defensive error handling
+94c59e5|2026-01-16 00:08:05 -0500|princewebclient|refactor: Convert layouts to server components with server-side auth checks - removes problematic AuthGuard
+2c07638|2026-01-15 23:57:47 -0500|princewebclient|refactor: Adopt reference app patterns - use createBrowserClient and simplified middleware matcher
+95c074a|2026-01-15 23:46:13 -0500|princewebclient|fix: Ensure auth cookies are properly set and returned in auth callback response
+c1c9f91|2026-01-15 23:33:26 -0500|princewebclient|fix: Include API routes in middleware matcher so auth cookies are properly refreshed before API calls
+1105026|2026-01-15 23:25:44 -0500|princewebclient|fix: Add force-dynamic to all patient and admin API routes for proper auth cookie handling on Vercel/Netlify
+80b15bb|2026-01-15 23:05:41 -0500|princewebclient|fix: Remove unused variables that prevent build on Vercel
+e60abe0|2026-01-15 21:51:09 -0500|princewebclient|feat: Add multiple medications and file upload to doctor submit prescription page
+9db76d4|2026-01-15 21:25:21 -0500|princewebclient|feat: Add admin prescription detail page with file viewing
+2fcb5f4|2026-01-15 21:22:22 -0500|princewebclient|fix: Add signed URL generation to admin prescriptions endpoint
+0374740|2026-01-15 21:20:29 -0500|princewebclient|docs: Add Problem 21 - Signed URLs for Private Bucket File Access
+309feb7|2026-01-15 21:20:23 -0500|princewebclient|docs: Add Problem 21 - Signed URLs for Private Bucket File Access
+45a8bc1|2026-01-15 21:04:41 -0500|princewebclient|Fix: Generate signed URLs for private bucket file access instead of using public URLs
+d9de854|2026-01-15 20:52:49 -0500|princewebclient|Feature: Add dual-tab prescriptions page with upload and view functionality
+a01d63a|2026-01-15 20:39:08 -0500|princewebclient|Fix: Correct relationship paths in admin API endpoints and pages - prescriptions join through users to user_profiles
+1addab7|2026-01-15 20:30:33 -0500|princewebclient|Fix: Add API endpoints for admin prescriptions, orders, and refills pages using service role key to bypass RLS
+e2f3376|2026-01-15 20:24:14 -0500|princewebclient|Fix: Admin dashboard now uses service role key to bypass RLS policies and properly fetch prescription counts
+90624b1|2026-01-15 20:17:12 -0500|princewebclient|Fix: Admin dashboard now displays prescription counts correctly; Recent prescriptions list includes both approved and pending prescriptions
+66ccfd1|2026-01-15 19:37:13 -0500|princewebclient|moved docs
+4cf8f36|2026-01-15 19:35:03 -0500|princewebclient|Add watchPathIgnorePatterns to next.config.js
+7064c6b|2026-01-15 19:27:09 -0500|princewebclient|new staging for app development
+e3d5a54|2026-01-15 19:22:36 -0500|princewebclient|Move all scripts to scripts/ folder
+02633fa|2026-01-15 19:21:05 -0500|princewebclient|Fix storage RLS policies and comprehensive documentation
+e523803|2026-01-15 15:25:13 -0500|princewebclient|Add multi-medication support to patient prescription upload
+edb6001|2026-01-15 12:40:02 -0500|princewebclient|updated docs
+23bcbc9|2026-01-15 12:00:03 -0500|princewebclient|Fix 401 auth errors and doctor patients filtering
+b145c29|2026-01-15 11:39:16 -0500|princewebclient|fix security issue
+7b194ad|2026-01-15 11:32:00 -0500|princewebclient|fixing multiple issues
+b65d7c2|2026-01-15 11:05:38 -0500|princewebclient|linked to vercel
+e371784|2026-01-15 09:11:52 -0500|princewebclient|attempting fixes with code runs on deployment
+bde8a61|2026-01-15 08:44:08 -0500|princewebclient|attempting fixes on netlify deployment
+a17730b|2026-01-14 20:42:26 -0500|princewebclient|attempting to fix issues with doctor portal
+0161d5f|2026-01-14 20:33:51 -0500|princewebclient|fix doctor patient load issue
+b2239f9|2026-01-14 19:20:28 -0500|princewebclient|attempting to fix netlify deployment issues
+8fc5a0a|2026-01-14 18:51:19 -0500|princewebclient|build optimized for Netlify deployment
+7c64cd3|2026-01-14 18:42:46 -0500|princewebclient|update navigation implementation
+d97e1e0|2026-01-14 15:34:40 -0500|princewebclient|Add: Complete RLS policy optimization migration
+e1c5c8d|2026-01-14 15:30:05 -0500|princewebclient|Fix: Wrap auth.uid() in subquery to resolve remaining RLS initialization warning
+b8abaaf|2026-01-14 15:25:43 -0500|princewebclient|Docs: Comprehensive update of project documentation with all Jan 14 fixes
+26a708b|2026-01-14 15:23:18 -0500|princewebclient|Update: Document RLS policy optimization in original migration file
+58cc065|2026-01-14 15:18:01 -0500|princewebclient|Fix: Add search_path to cleanup_expired_sessions function
+87706db|2026-01-13 15:45:02 -0500|princewebclient|Fix: Enhanced auth session initialization on StackBlitz with timestamp tracking
+8cb9731|2026-01-13 15:29:58 -0500|princewebclient|Fix: Improve auth flow resilience on StackBlitz with retries and longer delays
+55c7a25|2026-01-13 15:14:36 -0500|princewebclient|Fix: Convert admin dashboard to client component
+ec9f368|2026-01-13 15:11:33 -0500|princewebclient|Fix: Convert patient portal pages to client components to eliminate cookies() errors
+fea5a88|2026-01-13 15:01:42 -0500|princewebclient|Fix: Apply auth success page redirect to admin login flow
+d15d330|2026-01-13 14:59:17 -0500|princewebclient|docs: Add comprehensive summary of authentication and portal loading fixes
+02e685a|2026-01-13 14:58:18 -0500|princewebclient|Merge branch 'main' of https://github.com/royaltymeds/royaltymeds-pharmacy
+05b0884|2026-01-13 14:57:44 -0500|princewebclient|Fix: Implement intermediate auth success page to resolve SSR token handling issue
+6547742|2026-01-13 14:44:34 -0500|royaltymeds|Deleted .env copy.example
+0ec0252|2026-01-13 14:44:22 -0500|royaltymeds|Added .env copy.example
+90df343|2026-01-13 14:37:29 -0500|princewebclient|Improve: Simplify AuthGuard with better logging and cleaner redirect logic
+d7d767a|2026-01-13 14:28:32 -0500|princewebclient|Major: Switch portals to client-side auth with AuthGuard component
+aedef7a|2026-01-13 14:21:24 -0500|princewebclient|Improve: Better fallback handling for cookies in server components
+30d6d6f|2026-01-13 14:11:11 -0500|princewebclient|Fix: Revert to direct Supabase auth for proper client session
+3f466fe|2026-01-13 14:04:17 -0500|princewebclient|fixing issues on stackblitz deployment
+d9087a2|2026-01-13 14:02:08 -0500|princewebclient|Fix: Handle cookies unavailable in StackBlitz environment
+ebb7878|2026-01-13 13:37:29 -0500|princewebclient|Merge branch 'main' of https://github.com/royaltymeds/royaltymeds-pharmacy
+b638e8e|2026-01-13 13:36:11 -0500|princewebclient|Fix: Use API endpoint for login role determination instead of direct Supabase query
+057409e|2026-01-13 13:21:07 -0500|royaltymeds|deployed on stackblitz
+3857618|2026-01-13 13:09:49 -0500|princewebclient|Fix: Downgrade to Next.js 14.2 for StackBlitz compatibility (fixes async storage errors)
+8595111|2026-01-13 13:03:16 -0500|princewebclient|Prepare for StackBlitz deployment: remove pg, add config files and guide
+c8e073d|2026-01-13 12:55:53 -0500|princewebclient|Add StackBlitz configuration and deployment helper
+e044ced|2026-01-13 12:35:09 -0500|princewebclient|Fix: Patient portal pages now use unified auth context for consistent session persistence
+6a66188|2026-01-13 12:02:45 -0500|princewebclient|changed auth implementation to use Supabase auth and removed custom session management
+5daafce|2026-01-13 09:17:50 -0500|princewebclient|Option C: Implement Authorization Header-based session management
+04b38c2|2026-01-13 09:11:02 -0500|princewebclient|Fix: Exclude netlify.toml from secrets scanning
+b553a8b|2026-01-13 09:04:12 -0500|princewebclient|Fix: Add SUPABASE_REF to secrets scan omit keys
+f5e72e1|2026-01-13 08:54:53 -0500|princewebclient|Option B: Implement Netlify Blobs session store for Netlify compatibility
+3871b94|2026-01-13 08:42:15 -0500|princewebclient|docs update
+ccba377|2026-01-13 08:34:32 -0500|princewebclient|working on session management and data fetching in protected routes.
+7c99a31|2026-01-13 08:20:28 -0500|princewebclient|fix: remove problematic getUser() auth checks and redirect calls from pages - middleware is sole authority for route protection
+0e4357b|2026-01-13 08:01:29 -0500|princewebclient|security: remove exposed credentials
+e0f8f4c|2026-01-13 07:50:27 -0500|princewebclient|netlify fix
+a6967bd|2026-01-13 07:41:53 -0500|princewebclient|fix: remove problematic auth checks from layouts, rely on middleware for protection instead
+d1df73f|2026-01-13 07:22:35 -0500|princewebclient|docs: update ai_prompt_pretext with deployment fixes and session persistence solutions (Jan 13, 2026)
+4ea98f0|2026-01-12 23:35:48 -0500|princewebclient|fix: use server client with proper cookie management in auth callback to fix session persistence
+335d604|2026-01-12 23:29:42 -0500|princewebclient|feat: add Rx symbol favicon
+236c1d1|2026-01-12 23:20:12 -0500|princewebclient|fix: add cookie storage configuration to browser clients for proper session persistence on Netlify
+8bf1a90|2026-01-12 23:14:18 -0500|princewebclient|netlify login fixed
+7e93963|2026-01-12 23:08:59 -0500|princewebclient|fix: populate netlify.toml with public supabase environment variables for build
+72afb66|2026-01-12 22:58:47 -0500|princewebclient|added logo source file
+40ed4ca|2026-01-12 22:41:51 -0500|princewebclient|fixing: make API routes dynamic to avoid build-time execution
+19ef41f|2026-01-12 22:35:48 -0500|princewebclient|fixed netlify build error due to supabase client being created at build time
+3e94839|2026-01-12 22:28:37 -0500|princewebclient|netlify.toml: update docs and add env setup guide
+7cce4ff|2026-01-12 21:33:23 -0500|royaltymeds|Delete app/devtools directory
+8fe3613|2026-01-12 21:32:49 -0500|royaltymeds|Delete scripts directory
+a03d1bf|2026-01-12 21:32:25 -0500|royaltymeds|Delete __tests__ directory
+e6ab1b1|2026-01-12 21:30:00 -0500|princewebclient|updates
+6bd0fe5|2026-01-12 21:29:04 -0500|princewebclient|docs: add .env.example template with required variables
+b306d40|2026-01-12 21:28:39 -0500|princewebclient|feat: add netlify.toml to configure secrets scanning
+f22048d|2026-01-12 21:16:36 -0500|princewebclient|fix: update framer-motion to v11 for React 19 compatibility
+af37d9e|2026-01-12 20:57:52 -0500|princewebclient|UI updates and styling improvements
+bb0112f|2026-01-12 20:42:02 -0500|princewebclient|UI updates and styling improvements
+ef3a6d6|2026-01-12 20:16:49 -0500|princewebclient|responsive design adjustments and color scheme updates to enhance user experience across various sections of the application.
+9b5b822|2026-01-12 20:01:16 -0500|princewebclient|layout updates and color scheme adjustments
+4cfba09|2026-01-12 19:49:27 -0500|princewebclient|changes to layout
+7c50085|2026-01-12 19:26:41 -0500|princewebclient|UI and theme improvements
+0ed66df|2026-01-12 15:55:41 -0500|princewebclient|updated pretext prompt file
+724046a|2026-01-12 15:50:32 -0500|princewebclient|moved docs
+aa486ae|2026-01-12 15:49:01 -0500|princewebclient|theme updates
+8b0e194|2026-01-12 15:28:41 -0500|princewebclient|UI navigation issues being worked on
+65e6b7a|2026-01-12 15:16:44 -0500|princewebclient|modify old code
+95a1aec|2026-01-12 14:59:13 -0500|princewebclient|UI theme updates to dashboards
+1189768|2026-01-12 14:21:09 -0500|princewebclient|theme and naviagtion improvement
+0d65a28|2026-01-12 14:12:52 -0500|princewebclient|theme improvements
+1131f0e|2026-01-12 13:49:44 -0500|princewebclient|applied royalty meds theme
+216e49e|2026-01-12 13:03:41 -0500|princewebclient|update docs
+890d144|2026-01-12 12:39:32 -0500|princewebclient|updated admin to pharmacist where applicable
+9922c1c|2026-01-12 12:28:57 -0500|princewebclient|admin dashboard now works correctly
+283c113|2026-01-12 11:53:01 -0500|princewebclient|fix additional issues
+bd0e063|2026-01-12 11:41:08 -0500|princewebclient|working on admin login and dashboard pages
+c401202|2026-01-12 11:07:01 -0500|princewebclient|fixed admin login route
+42e0a7f|2026-01-12 10:09:51 -0500|princewebclient|moved docs to docs/ folder
+0791829|2026-01-12 10:08:35 -0500|princewebclient|update admin portal layout to add doctors link
+22cfcdf|2026-01-12 08:27:12 -0500|princewebclient|doctor and admin interfaces and APIs
+2fb82c9|2026-01-11 23:02:26 -0500|princewebclient|patient home route fixed
+7e96998|2026-01-11 09:25:05 -0500|princewebclient|fixing portal loading from LoginForm
+724d64f|2026-01-11 09:20:29 -0500|princewebclient|organized docs
+9a74067|2026-01-11 09:18:37 -0500|princewebclient|fixing patient portal issues
+085d8d3|2026-01-11 08:33:24 -0500|princewebclient|update patient portal access
+3a9bd23|2026-01-11 08:25:43 -0500|princewebclient|phase 3: Patient Portal - Initial Staging
+65920e9|2026-01-11 07:46:51 -0500|princewebclient|docs updated
+d31565d|2026-01-10 23:40:01 -0500|princewebclient|dashboard now working with Supabase user data.
+302296a|2026-01-10 23:08:40 -0500|princewebclient|fixing user signup workflow
+e9a31fb|2026-01-10 22:58:56 -0500|princewebclient|fixed typos and updated user data fetching to use the correct user object.
+f8b7b04|2026-01-10 17:42:12 -0500|princewebclient|phase 2 initialized
+40277ae|2026-01-10 07:52:05 -0500|princewebclient|updated RLS policies for better security
+954eb00|2026-01-10 07:46:10 -0500|princewebclient|updated chat_history
+c54b525|2026-01-10 07:42:36 -0500|princewebclient|update chat_history
+6708787|2026-01-10 07:30:00 -0500|princewebclient|fix
+d9f8cf0|2026-01-08 11:24:06 -0500|princewebclient|build fix
+ed600da|2026-01-08 11:18:19 -0500|princewebclient|supabase linked
+b6f1808|2026-01-08 10:54:01 -0500|princewebclient|first update
+b7838fa|2026-01-08 10:50:23 -0500|princewebclient|initial commit
