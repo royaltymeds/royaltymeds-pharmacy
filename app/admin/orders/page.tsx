@@ -346,7 +346,7 @@ export default function AdminOrdersPage() {
                   {isExpanded && details && (
                     <div className="border-t border-gray-200 p-4 md:p-6 space-y-4 md:space-y-6 bg-gray-50">
                       {/* Inventory Warning */}
-                      {inventoryWarnings[order.id] && inventoryWarnings[order.id].length > 0 && (
+                      {inventoryWarnings[order.id] && inventoryWarnings[order.id].length > 0 && !['processing', 'shipped', 'delivered', 'cancelled'].includes(order.status) && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                           <div className="flex items-start gap-3">
                             <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -375,7 +375,8 @@ export default function AdminOrdersPage() {
                             const isUpdating = updatingStatus === order.id;
                             const hasInventoryWarning = inventoryWarnings[order.id] && inventoryWarnings[order.id].length > 0;
                             const isShippingOrProcessing = status === 'shipped' || status === 'processing';
-                            const isDisabled = isUpdating || isCurrentStatus || (hasInventoryWarning && isShippingOrProcessing);
+                            const isDelivered = order.status === 'delivered';
+                            const isDisabled = isUpdating || isCurrentStatus || (hasInventoryWarning && isShippingOrProcessing) || isDelivered;
                             
                             return (
                               <div key={status} className="flex items-center gap-2">
@@ -398,9 +399,6 @@ export default function AdminOrdersPage() {
                                 >
                                   {isUpdating ? 'Updating...' : getStatusLabel(status)}
                                 </button>
-                                {isDisabled && hasInventoryWarning && isShippingOrProcessing && (
-                                  <span className="text-xs text-gray-600 font-medium">disabled</span>
-                                )}
                               </div>
                             );
                           })}
