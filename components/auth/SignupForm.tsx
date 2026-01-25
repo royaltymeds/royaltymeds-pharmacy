@@ -32,6 +32,13 @@ export default function SignupForm() {
     console.log("[SignupForm] Form data:", { email, password, fullName, phone, address, dateOfBirth, role: "patient" });
 
     try {
+      // Validate phone is provided
+      if (!phone || phone.trim() === "") {
+        setError("Phone number is required");
+        setIsLoading(false);
+        return;
+      }
+
       console.log("[SignupForm] Step 0: Checking for existing user with email or phone");
 
       // Step 0: Check if user already exists
@@ -42,7 +49,7 @@ export default function SignupForm() {
         },
         body: JSON.stringify({
           email,
-          phone: phone || null,
+          phone,
         }),
       });
 
@@ -125,7 +132,7 @@ export default function SignupForm() {
           fullName,
           email,
           role: "patient",
-          phone: phone || null,
+          phone,
           address: address || null,
           dateOfBirth: dateOfBirth || null,
         }),
@@ -211,7 +218,7 @@ export default function SignupForm() {
 
       <div>
         <label htmlFor="phone" className="block text-xs font-medium text-gray-700 mb-1">
-          Phone Number <span className="text-gray-500">(Optional)</span>
+          Phone Number <span className="text-red-500">*</span>
         </label>
         <input
           id="phone"
@@ -219,6 +226,7 @@ export default function SignupForm() {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="(123) 456-7890"
+          required
           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>

@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
 
     console.log("[check-existing-user API] Checking for existing user:", { email, phone });
 
-    if (!email && !phone) {
+    if (!email || !phone) {
       return NextResponse.json(
-        { error: "Email or phone is required" },
+        { error: "Email and phone are required" },
         { status: 400 }
       );
     }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if phone exists in user_profiles
-    if (phone && !duplicates.emailExists) {
+    if (phone) {
       const { data: profilesByPhone, error: phoneError } = await supabaseAdmin
         .from("user_profiles")
         .select("user_id, full_name")
