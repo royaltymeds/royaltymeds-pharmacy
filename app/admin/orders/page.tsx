@@ -419,7 +419,9 @@ export default function AdminOrdersPage() {
                             const hasInventoryWarning = inventoryWarnings[order.id] && inventoryWarnings[order.id].length > 0;
                             const isShippingOrProcessing = status === 'shipped' || status === 'processing';
                             const isDelivered = order.status === 'delivered';
-                            const isDisabled = isUpdating || isCurrentStatus || (hasInventoryWarning && isShippingOrProcessing) || isDelivered;
+                            const isDeliveredButton = status === 'delivered';
+                            const deliveredButtonDisabled = order.status !== 'shipped';
+                            const isDisabled = isUpdating || isCurrentStatus || (hasInventoryWarning && isShippingOrProcessing) || isDelivered || (isDeliveredButton && deliveredButtonDisabled);
                             
                             return (
                               <div key={status} className="flex items-center gap-2">
