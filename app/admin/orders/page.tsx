@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
-import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle } from 'lucide-react';
+import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader } from 'lucide-react';
 import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
@@ -94,28 +94,29 @@ export default function AdminOrdersPage() {
       
       await updateOrderStatus(orderId, newStatus as Order['status']);
       
-      // Show success toast
-      toast.success(`Order status updated to ${getStatusLabel(newStatus)}!`, {
-        duration: 2000,
-        position: 'top-right',
-      });
-      
-      // Reload page after toast
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-      
+      // Update the order status in the list
       setOrders((prev) =>
         prev.map((order) =>
           order.id === orderId ? { ...order, status: newStatus as Order['status'] } : order
         )
       );
-      // Clear cached details to refetch on next expand
+      
+      // Clear cached details to close the expanded view
       setOrderDetails((prev) => {
         const updated = { ...prev };
         delete updated[orderId];
         return updated;
       });
+      
+      // Reset the expanded order ID to collapse the card
+      setExpandedOrderId(null);
+      
+      // Show success toast
+      toast.success(`Order status updated to ${getStatusLabel(newStatus)}!`, {
+        duration: 3000,
+        position: 'top-right',
+      });
+      
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update status');
@@ -400,7 +401,7 @@ export default function AdminOrdersPage() {
                                 <button
                                   onClick={() => handleStatusUpdate(order.id, status)}
                                   disabled={isDisabled}
-                                  className={`px-3 md:px-4 py-2 rounded-lg transition-colors font-medium text-xs md:text-sm ${
+                                  className={`px-3 md:px-4 py-2 rounded-lg transition-colors font-medium text-xs md:text-sm flex items-center gap-2 ${
                                     isCurrentStatus
                                       ? 'ring-2 ring-offset-2'
                                       : 'hover:opacity-90'
@@ -414,7 +415,14 @@ export default function AdminOrdersPage() {
                                     color: 'white',
                                   }}
                                 >
-                                  {isUpdating ? 'Updating...' : getStatusLabel(status)}
+                                  {isUpdating ? (
+                                    <>
+                                      <Loader className="w-3 h-3 animate-spin" />
+                                      Updating...
+                                    </>
+                                  ) : (
+                                    getStatusLabel(status)
+                                  )}
                                 </button>
                               </div>
                             );
@@ -443,11 +451,11 @@ export default function AdminOrdersPage() {
                               <button
                                 onClick={() => handleVerifyPayment(order.id)}
                                 disabled={verifyingPayment === order.id || order.payment_status === 'paid'}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-auto"
                               >
                                 {verifyingPayment === order.id ? (
                                   <>
-                                    <span className="inline-block animate-spin">⏳</span>
+                                    <Loader className="w-4 h-4 animate-spin" />
                                     Verifying...
                                   </>
                                 ) : order.payment_status === 'paid' ? (
@@ -555,9 +563,16 @@ export default function AdminOrdersPage() {
                               <button
                                 onClick={() => handleUpdateShipping(order.id)}
                                 disabled={savingShipping === order.id}
-                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400"
+                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-1"
                               >
-                                {savingShipping === order.id ? 'Saving...' : 'Save'}
+                                {savingShipping === order.id ? (
+                                  <>
+                                    <Loader className="w-3 h-3 animate-spin" />
+                                    Saving...
+                                  </>
+                                ) : (
+                                  'Save'
+                                )}
                               </button>
                               <button
                                 onClick={() => {
