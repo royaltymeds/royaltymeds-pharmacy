@@ -310,18 +310,35 @@ export async function getOrderWithItems(orderId: string): Promise<OrderWithItems
 export async function getAllOrders(): Promise<Order[]> {
   const supabase = getAdminClient();
 
-  // Fetch orders with nested join through auth.users (not public.users)
-  // orders.user_id -> auth.users.id -> user_profiles.id (via auth.users.id)
-  const { data: orders, error } = await supabase
+  // Fetch all orders
+  const { data: orders, error: ordersError } = await supabase
     .from('orders')
-    .select('*, user_profiles!orders_user_id(full_name)')
+    .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) throw new Error(error.message);
+  if (ordersError) throw new Error(ordersError.message);
+  if (!orders || orders.length === 0) return [];
 
+  // Get unique user IDs from orders
+  const userIds = [...new Set((orders as any[]).map(o => o.user_id))];
+
+  // Fetch user_profiles for those user IDs
+  const { data: profiles, error: profilesError } = await supabase
+    .from('user_profiles')
+    .select('user_id, full_name')
+    .in('user_id', userIds);
+
+  if (profilesError) throw new Error(profilesError.message);
+
+  // Create map for O(1) lookup: user_id -> full_name
+  const profileMap = new Map(
+    (profiles as any[]).map(p => [p.user_id, p.full_name])
+  );
+
+  // Add customer_name to each order
   return (orders as any[]).map(order => ({
     ...order,
-    customer_name: (order as any).user_profiles?.full_name || 'Unknown Customer'
+    customer_name: profileMap.get(order.user_id) || 'Unknown Customer'
   })) as Order[];
 }
 
