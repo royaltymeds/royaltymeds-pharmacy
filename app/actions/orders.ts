@@ -312,15 +312,15 @@ export async function getAllOrders(): Promise<Order[]> {
 
   const { data, error } = await supabase
     .from('orders')
-    .select('*, users(raw_user_meta_data)')
+    .select('*, user_profiles(full_name)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
   
-  // Map customer name from user metadata
+  // Map customer name from user_profiles
   return (data as any[]).map(order => ({
     ...order,
-    customer_name: order.users?.raw_user_meta_data?.full_name || 'Unknown Customer'
+    customer_name: order.user_profiles?.full_name || 'Unknown Customer'
   })) as Order[];
 }
 
