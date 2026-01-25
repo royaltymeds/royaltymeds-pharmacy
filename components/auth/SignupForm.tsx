@@ -45,6 +45,12 @@ export default function SignupForm() {
         return;
       }
 
+      if (!dateOfBirth || dateOfBirth.trim() === "") {
+        setError("Date of birth is required");
+        setIsLoading(false);
+        return;
+      }
+
       console.log("[SignupForm] Step 0: Checking for existing user with email or phone");
 
       // Step 0: Check if user already exists
@@ -140,7 +146,7 @@ export default function SignupForm() {
           role: "patient",
           phone,
           address,
-          dateOfBirth: dateOfBirth || null,
+          dateOfBirth,
         }),
       });
 
@@ -254,13 +260,14 @@ export default function SignupForm() {
 
       <div>
         <label htmlFor="dateOfBirth" className="block text-xs font-medium text-gray-700 mb-1">
-          Date of Birth <span className="text-gray-500">(Optional)</span>
+          Date of Birth <span className="text-red-500">*</span>
         </label>
         <input
           id="dateOfBirth"
           type="date"
           value={dateOfBirth}
           onChange={(e) => setDateOfBirth(e.target.value)}
+          required
           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
