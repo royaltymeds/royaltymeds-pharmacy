@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
-import { ChevronDown, Package, Calendar, DollarSign, FileText, Edit2, X } from 'lucide-react';
+import { ChevronDown, Package, Calendar, DollarSign, FileText, Edit2, X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getOrdersByUser, getOrderWithItems } from '@/app/actions/orders';
 import { OrderPaymentSection } from '@/app/patient/components/OrderPaymentSection';
 import { UpdateReceiptModal } from '@/app/patient/components/UpdateReceiptModal';
 import { getPaymentConfig } from '@/app/actions/payments';
 import { PaymentConfig } from '@/lib/types/payments';
 import { formatCurrency } from '@/lib/utils/currency';
+
+const ITEMS_PER_PAGE = 10;
 
 export default function PatientOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -23,6 +25,8 @@ export default function PatientOrdersPage() {
   const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
   const [updateReceiptModalOpen, setUpdateReceiptModalOpen] = useState(false);
   const [updateReceiptOrderId, setUpdateReceiptOrderId] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Load orders
   useEffect(() => {
@@ -79,6 +83,28 @@ export default function PatientOrdersPage() {
     return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
   };
 
+  // Filter orders based on search
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const matchesSearch =
+        order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.total_amount.toString().includes(searchTerm);
+      return matchesSearch;
+    });
+  }, [orders, searchTerm]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search term changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const handlePaymentInitiated = async (orderId: string) => {
     // Refresh order details after payment
     try {
@@ -126,18 +152,43 @@ export default function PatientOrdersPage() {
           </div>
         )}
 
-        {/* Orders List */}
-        {orders.length > 0 ? (
-          <div className="space-y-4">
-            {orders.map((order) => {
-              const isExpanded = expandedOrderId === order.id;
-              const details = orderDetails[order.id];
+        {/* Search and Filter */}
+        {orders.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-4 md:p-6 mb-6">
+            <div>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                Search Orders
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="Search by order number or amount..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+                />
+              </div>
+            </div>
+            <p className="text-xs md:text-sm text-gray-600 mt-3">
+              Found {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
 
-              return (
-                <div
-                  key={order.id}
-                  className="bg-white rounded-lg shadow-md overflow-hidden"
-                >
+        {/* Orders List */}
+        {filteredOrders.length > 0 ? (
+          <>
+            <div className="space-y-4">
+              {paginatedOrders.map((order) => {
+                const isExpanded = expandedOrderId === order.id;
+                const details = orderDetails[order.id];
+
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-white rounded-lg shadow-md overflow-hidden"
+                  >
                   {/* Order Header */}
                   <button
                     onClick={() => handleExpandOrder(order.id)}
@@ -426,6 +477,57 @@ export default function PatientOrdersPage() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-2 rounded-lg font-medium transition ${
+                      currentPage === page
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                aria-label="Next page"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
+        </>
+        ) : searchTerm ? (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <Package size={48} className="mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-600 text-lg mb-4">No orders found matching your search</p>
+            <button
+              onClick={() => setSearchTerm('')}
+              className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Clear Search
+            </button>
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">

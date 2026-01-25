@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
-import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader } from 'lucide-react';
+import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
+
+const ITEMS_PER_PAGE = 10;
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -26,6 +28,7 @@ export default function AdminOrdersPage() {
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
   const [verifyingPayment, setVerifyingPayment] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Load orders
   useEffect(() => {
@@ -45,15 +48,28 @@ export default function AdminOrdersPage() {
   }, []);
 
   // Filter orders
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.user_id.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const matchesSearch =
+        order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.user_id.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter ? order.status === statusFilter : true;
+      const matchesStatus = statusFilter ? order.status === statusFilter : true;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, searchTerm, statusFilter]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   // Load order details when expanded
   const handleExpandOrder = async (orderId: string) => {
@@ -311,8 +327,9 @@ export default function AdminOrdersPage() {
 
         {/* Orders List */}
         {filteredOrders.length > 0 ? (
-          <div className="space-y-4">
-            {filteredOrders.map((order) => {
+          <>
+            <div className="space-y-4">
+              {paginatedOrders.map((order) => {
               const isExpanded = expandedOrderId === order.id;
               const isSelected = selectedOrderId === order.id;
               const details = orderDetails[order.id];
@@ -655,7 +672,47 @@ export default function AdminOrdersPage() {
                 </div>
               );
             })}
-          </div>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-2 rounded-lg font-medium transition ${
+                        currentPage === page
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  aria-label="Next page"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <p className="text-gray-600 text-lg">No orders found matching your filters.</p>
