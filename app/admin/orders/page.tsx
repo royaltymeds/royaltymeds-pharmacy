@@ -357,7 +357,7 @@ export default function AdminOrdersPage() {
                           </p>
                         </div>
 
-                        <div className="text-center">
+                        <div className="text-left md:text-left">
                           <p className="text-xs md:text-sm text-gray-600 mb-1">
                             {new Date(order.created_at).toLocaleDateString()}
                           </p>
