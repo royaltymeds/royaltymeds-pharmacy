@@ -310,38 +310,17 @@ export async function getOrderWithItems(orderId: string): Promise<OrderWithItems
 export async function getAllOrders(): Promise<Order[]> {
   const supabase = getAdminClient();
 
-  // Fetch all orders
-  const { data: orders, error: ordersError } = await supabase
+  // Fetch orders with customer full names via user_id relationship
+  const { data: orders, error } = await supabase
     .from('orders')
-    .select('*')
+    .select('*, users!user_id(full_name)')
     .order('created_at', { ascending: false });
 
-  if (ordersError) throw new Error(ordersError.message);
-  
-  // Get unique user IDs
-  const userIds = [...new Set((orders as any[]).map(o => o.user_id))];
-  
-  if (userIds.length === 0) {
-    return orders as Order[];
-  }
-  
-  // Fetch user profiles for those user IDs
-  const { data: profiles, error: profilesError } = await supabase
-    .from('user_profiles')
-    .select('id, full_name')
-    .in('id', userIds);
+  if (error) throw new Error(error.message);
 
-  if (profilesError) throw new Error(profilesError.message);
-  
-  // Create a map of user_id -> full_name
-  const profileMap = new Map(
-    (profiles as any[]).map(p => [p.id, p.full_name])
-  );
-  
-  // Map customer names to orders
   return (orders as any[]).map(order => ({
     ...order,
-    customer_name: profileMap.get(order.user_id) || 'Unknown Customer'
+    customer_name: (order as any).users?.full_name || 'Unknown Customer'
   })) as Order[];
 }
 
