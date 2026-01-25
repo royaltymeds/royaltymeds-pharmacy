@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { OTCDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
-import { ShoppingCart, Search } from 'lucide-react';
+import { ShoppingCart, Search, Loader } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/currency';
 import { addToCart } from '@/app/actions/orders';
 import { toast } from 'sonner';
@@ -207,10 +207,19 @@ export default function StoreClientComponent({ drugs }: Props) {
                     <button
                       onClick={() => handleAddToCart(drug)}
                       disabled={addingToCart === drug.id}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-auto"
                     >
-                      <ShoppingCart size={18} />
-                      {addingToCart === drug.id ? 'Adding...' : 'Add to Cart'}
+                      {addingToCart === drug.id ? (
+                        <>
+                          <Loader className="w-4 h-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart size={18} />
+                          Add to Cart
+                        </>
+                      )}
                     </button>
                   )}
                 </div>

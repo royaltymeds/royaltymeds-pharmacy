@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { Upload, AlertCircle, CheckCircle, FileText, X } from "lucide-react";
+import { Upload, AlertCircle, CheckCircle, FileText, X, Loader } from "lucide-react";
 import { revalidatePrescriptionsPath } from "@/lib/actions";
 import { generatePrescriptionNumber } from "@/lib/prescription-number";
 
@@ -183,9 +183,16 @@ export function PrescriptionsUploadForm() {
         <button
           type="submit"
           disabled={isLoading || !file}
-          className="px-6 py-2 sm:py-3 text-sm sm:text-base bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition w-auto"
+          className="px-6 py-2 sm:py-3 text-sm sm:text-base bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition w-auto flex items-center gap-2"
         >
-          {isLoading ? "Uploading..." : "Upload Prescription"}
+          {isLoading ? (
+            <>
+              <Loader className="w-4 h-4 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            'Upload Prescription'
+          )}
         </button>
       </form>
 

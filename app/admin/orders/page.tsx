@@ -314,7 +314,9 @@ export default function AdminOrdersPage() {
               return (
                 <div
                   key={order.id}
-                  className="bg-white rounded-lg shadow-md overflow-hidden"
+                  className={`bg-white rounded-lg shadow-md overflow-hidden transition-all ${
+                    isExpanded ? 'ring-2 ring-blue-500 shadow-lg' : 'shadow-md'
+                  }`}
                 >
                   {/* Order Header */}
                   <button

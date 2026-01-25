@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle, X, AlertCircle, Download, Edit2, Plus, Trash2 } from "lucide-react";
+import { CheckCircle, X, AlertCircle, Download, Edit2, Plus, Trash2, Loader } from "lucide-react";
 import { useState } from "react";
 
 interface PrescriptionDetailClientProps {
@@ -1120,9 +1120,16 @@ export default function PrescriptionDetailClient({
                     <button
                       onClick={handlePrescriptionFileUpload}
                       disabled={!selectedPrescriptionFile || isUploadingFile}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition"
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition flex items-center gap-2 w-auto"
                     >
-                      {isUploadingFile ? "Uploading..." : "Upload File"}
+                      {isUploadingFile ? (
+                        <>
+                          <Loader className="w-4 h-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        'Upload File'
+                      )}
                     </button>
                     {prescriptionFileUploaded && (
                       <div className="flex items-center gap-2 text-green-600">
@@ -1168,9 +1175,16 @@ export default function PrescriptionDetailClient({
                     disabled={isLoading || !prescriptionFileUploaded || prescription.prescription_items?.some(
                       (item: any) => (quantitiesBeingFilled[item.id] || 0) > item.quantity
                     )}
-                    className="inline-block px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                    className="inline-block px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition flex items-center gap-2 w-auto"
                   >
-                    {isLoading ? "Processing..." : "Done Filling"}
+                    {isLoading ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      'Done Filling'
+                    )}
                   </button>
                   <button
                     onClick={handleCancelFilling}
@@ -1618,16 +1632,30 @@ export default function PrescriptionDetailClient({
                 <button
                   onClick={() => handleUpdateStatus("approved")}
                   disabled={isLoading}
-                  className="inline-block px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition"
+                  className="inline-block px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition flex items-center gap-2 w-auto"
                 >
-                  {isLoading ? "Processing..." : "Approve"}
+                  {isLoading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Approve'
+                  )}
                 </button>
                 <button
                   onClick={() => handleUpdateStatus("rejected")}
                   disabled={isLoading}
-                  className="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition"
+                  className="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition flex items-center gap-2 w-auto"
                 >
-                  {isLoading ? "Processing..." : "Reject"}
+                  {isLoading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Reject'
+                  )}
                 </button>
               </div>
             </div>
