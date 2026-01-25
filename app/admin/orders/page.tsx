@@ -347,8 +347,8 @@ export default function AdminOrdersPage() {
                     className="w-full p-4 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between hover:bg-gray-50 transition-colors gap-4 md:gap-6"
                   >
                     <div className="flex-grow text-left w-full md:w-auto">
-                      <div className="flex flex-col md:flex-row md:items-center md:gap-6 gap-3">
-                        <div className="flex-1 min-w-0">
+                      <div className="flex flex-col md:flex-row md:items-center md:gap-2 gap-3">
+                        <div className="md:flex-none">
                           <h3 className="font-semibold text-gray-900 text-base md:text-lg break-words">
                             {order.order_number}
                           </h3>
