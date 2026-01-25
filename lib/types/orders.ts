@@ -2,6 +2,7 @@
 export interface Order {
   id: string;
   user_id: string;
+  customer_name?: string;
   order_number: string;
   status: 'pending' | 'confirmed' | 'payment_pending' | 'payment_verified' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total_amount: number;

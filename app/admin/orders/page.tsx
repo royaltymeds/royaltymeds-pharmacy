@@ -353,11 +353,11 @@ export default function AdminOrdersPage() {
                             {order.order_number}
                           </h3>
                           <p className="text-xs md:text-sm text-gray-600 mt-1 break-words">
-                            Customer: {order.user_id}
+                            Customer: {order.customer_name || order.user_id}
                           </p>
                         </div>
 
-                        <div className="text-left md:text-right">
+                        <div className="text-center">
                           <p className="text-xs md:text-sm text-gray-600 mb-1">
                             {new Date(order.created_at).toLocaleDateString()}
                           </p>

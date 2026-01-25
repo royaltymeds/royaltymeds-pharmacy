@@ -312,11 +312,16 @@ export async function getAllOrders(): Promise<Order[]> {
 
   const { data, error } = await supabase
     .from('orders')
-    .select('*')
+    .select('*, users(raw_user_meta_data)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return data as Order[];
+  
+  // Map customer name from user metadata
+  return (data as any[]).map(order => ({
+    ...order,
+    customer_name: order.users?.raw_user_meta_data?.full_name || 'Unknown Customer'
+  })) as Order[];
 }
 
 export async function updateOrderStatus(
