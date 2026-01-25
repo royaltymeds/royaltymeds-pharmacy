@@ -12,6 +12,7 @@ import { formatCurrency } from '@/lib/utils/currency';
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [orderDetails, setOrderDetails] = useState<Record<string, OrderWithItems>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -61,6 +62,9 @@ export default function AdminOrdersPage() {
       return;
     }
 
+    // Set as selected when expanding
+    setSelectedOrderId(orderId);
+
     if (!orderDetails[orderId]) {
       try {
         const details = await getAdminOrderWithItems(orderId);
@@ -108,8 +112,9 @@ export default function AdminOrdersPage() {
         return updated;
       });
       
-      // Reset the expanded order ID to collapse the card
+      // Reset the expanded order ID to collapse the card, but keep it selected
       setExpandedOrderId(null);
+      // Keep selectedOrderId to maintain the highlight
       
       // Show success toast
       toast.success(`Order status updated to ${getStatusLabel(newStatus)}!`, {
@@ -309,13 +314,14 @@ export default function AdminOrdersPage() {
           <div className="space-y-4">
             {filteredOrders.map((order) => {
               const isExpanded = expandedOrderId === order.id;
+              const isSelected = selectedOrderId === order.id;
               const details = orderDetails[order.id];
 
               return (
                 <div
                   key={order.id}
                   className={`bg-white rounded-lg shadow-md overflow-hidden transition-all ${
-                    isExpanded ? 'ring-2 ring-blue-500 shadow-lg' : 'shadow-md'
+                    isSelected ? 'ring-2 ring-blue-500 shadow-lg' : 'shadow-md'
                   }`}
                 >
                   {/* Order Header */}
