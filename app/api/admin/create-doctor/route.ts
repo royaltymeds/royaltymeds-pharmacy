@@ -42,13 +42,13 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { data: adminProfile } = await adminClient
-      .from("user_profiles")
+    const { data: adminUser_ } = await adminClient
+      .from("users")
       .select("role")
-      .eq("user_id", adminUser.id)
+      .eq("id", adminUser.id)
       .single();
 
-    if (adminProfile?.role !== "admin") {
+    if (adminUser_?.role !== "admin") {
       return NextResponse.json(
         { error: "Only admins can create doctor accounts" },
         { status: 403 }
