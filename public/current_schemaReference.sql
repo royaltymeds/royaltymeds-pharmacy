@@ -128,11 +128,11 @@ CREATE TABLE public.payment_config (
   iban character varying,
   swift_code character varying,
   additional_instructions text,
-  tax_type text DEFAULT 'inclusive' CHECK (tax_type IN ('none', 'inclusive')),
-  tax_rate numeric DEFAULT 15,
-  kingston_delivery_cost numeric DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  tax_type text DEFAULT 'inclusive'::text CHECK (tax_type = ANY (ARRAY['none'::text, 'inclusive'::text])),
+  tax_rate numeric DEFAULT 15,
+  kingston_delivery_cost numeric DEFAULT 0,
   CONSTRAINT payment_config_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.prescription_drugs (
