@@ -101,12 +101,30 @@ export async function POST(request: NextRequest) {
 
     if (userError) {
       console.error("User record creation error:", userError);
-      // Delete the auth user if we fail to create the user record
-      await adminClient.auth.admin.deleteUser(doctorId);
-      return NextResponse.json(
-        { error: "Failed to create doctor user record" },
-        { status: 500 }
-      );
+      // If user already exists (likely from trigger), update the role instead
+      if (userError.code === '23505') {
+        console.log("User record already exists, updating role to doctor...");
+        const { error: updateError } = await adminClient
+          .from("users")
+          .update({ role: "doctor", is_active: true })
+          .eq("id", doctorId);
+        
+        if (updateError) {
+          console.error("Failed to update user role:", updateError);
+          await adminClient.auth.admin.deleteUser(doctorId);
+          return NextResponse.json(
+            { error: "Failed to update user role" },
+            { status: 500 }
+          );
+        }
+      } else {
+        // Delete the auth user if we fail to create the user record
+        await adminClient.auth.admin.deleteUser(doctorId);
+        return NextResponse.json(
+          { error: "Failed to create doctor user record" },
+          { status: 500 }
+        );
+      }
     }
 
     console.log("User record created, creating profile...");
