@@ -4,38 +4,47 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("Create doctor request body:", body);
+    
     const { email, password, fullName, specialization, addressOfPractice, contactNumber } = body;
 
     if (!email) {
+      console.log("Missing email");
       return NextResponse.json(
         { error: "Email is required" },
         { status: 400 }
       );
     }
     if (!password) {
+      console.log("Missing password");
       return NextResponse.json(
         { error: "Password is required" },
         { status: 400 }
       );
     }
     if (!fullName) {
+      console.log("Missing fullName");
       return NextResponse.json(
         { error: "Full name is required" },
         { status: 400 }
       );
     }
     if (!addressOfPractice) {
+      console.log("Missing addressOfPractice");
       return NextResponse.json(
         { error: "Address of practice is required" },
         { status: 400 }
       );
     }
     if (!contactNumber) {
+      console.log("Missing contactNumber");
       return NextResponse.json(
         { error: "Contact number is required" },
         { status: 400 }
       );
     }
+
+    console.log("All required fields present, creating doctor...");
 
     // Create service role client to bypass RLS
     const adminClient = createClient(
