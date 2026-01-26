@@ -78,13 +78,13 @@ export default function HomePage() {
             <div className="flex flex-col gap-2 sm:gap-3">
               <Link
                 href="/store"
-                className="inline-block px-4 sm:px-8 py-2.5 sm:py-3 lg:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base lg:text-lg"
+                className="w-fit px-4 sm:px-8 py-2.5 sm:py-3 lg:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base lg:text-lg"
               >
                 Start Ordering Now
               </Link>
               <Link
                 href="#how-it-works"
-                className="inline-block px-4 sm:px-8 py-2.5 sm:py-3 lg:py-4 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-sm sm:text-base lg:text-lg"
+                className="w-fit px-4 sm:px-8 py-2.5 sm:py-3 lg:py-4 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-sm sm:text-base lg:text-lg"
               >
                 Learn More
               </Link>
