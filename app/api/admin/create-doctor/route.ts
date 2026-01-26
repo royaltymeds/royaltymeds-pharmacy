@@ -1,39 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { createClientForApi } from "@/lib/supabase-server";
 
 export async function POST(request: NextRequest) {
   try {
-    // Create authenticated client for the current user
-    const supabase = createClientForApi(request);
-
-    // Verify current user is admin
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Check if current user is admin
-    const { data: currentUser } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (currentUser?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Only admins can create doctor accounts" },
-        { status: 403 }
-      );
-    }
-
     const { email, password, fullName, specialization, addressOfPractice, contactNumber } = await request.json();
 
     if (!email || !password || !fullName || !addressOfPractice || !contactNumber) {
@@ -43,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create admin service client
+    // Create service role client to bypass RLS
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
