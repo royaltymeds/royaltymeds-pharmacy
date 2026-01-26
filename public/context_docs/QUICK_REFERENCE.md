@@ -7,8 +7,9 @@
 **Status:** ✅ LIVE IN PRODUCTION  
 **URL:** https://royaltymedsprescript.vercel.app  
 **Build:** Passing (0 errors)  
-**Commits:** 348 across 17 days  
-**Features:** 60+ fully functional  
+**Commits:** 365 across 19 days  
+**Features:** 120+ fully functional  
+**Latest Update:** Jan 25-26, 2026 - Signup validation & order card polish  
 
 ---
 
@@ -30,12 +31,14 @@
 
 **Key Features:**
 - Dashboard with system statistics
-- Inventory management interface
+- Inventory management interface with pagination (20 items/page)
 - Doctor/Patient directories
-- Order tracking and processing
+- Order tracking and processing (with search and pagination - 10 items/page)
 - Payment verification UI with receipt display
 - Tax and delivery cost configuration
 - Prescription fulfillment interface
+- Customer name display on order cards
+- Order card selection with persistent highlighting
 
 ---
 
@@ -72,11 +75,12 @@
 **Key Features:**
 - Online store with search and filtering
 - Shopping cart with persistent storage
-- Order tracking (real-time status)
+- Order tracking (real-time status) with search and pagination (10 items/page)
 - Prescription viewing and refill requests
 - Payment receipt upload and management
 - Profile management with avatar
 - Order history with receipt view
+- Duplicate signup prevention (email and phone check)
 
 ---
 
@@ -92,12 +96,17 @@
 - RLS policies for data isolation
 - Automatic logout on session expiry
 - Auth modals for guest interactions
+- Duplicate user prevention (email & phone validation)
+- Mandatory signup fields (name, email, phone, address, DOB)
 
 **Security:**
 - Secure password hashing (Supabase)
 - JWT-based sessions
 - Row-level security policies
 - Role-based access control
+- Duplicate account prevention
+- Complete user profile validation
+
 - Service role for admin operations
 
 ---

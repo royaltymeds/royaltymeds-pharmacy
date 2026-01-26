@@ -1,9 +1,9 @@
 # Complete Git History & Feature Analysis
-**RoyaltyMeds Prescription Platform - 348 Total Commits**
+**RoyaltyMeds Prescription Platform - 365 Total Commits**
 
-**Analysis Date:** January 25, 2026  
+**Analysis Date:** January 26, 2026  
 **Repository:** royaltymeds_prescript  
-**Time Period:** January 8, 2026 - January 24, 2026 (17 days)  
+**Time Period:** January 8, 2026 - January 26, 2026 (19 days)  
 **Active Contributors:** 3 (princewebclient, yueniqdevteam, royaltymeds)
 
 ---
@@ -12,14 +12,15 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Commits** | 348 |
-| **Project Duration** | 17 days |
-| **Active Days** | 14 days |
+| **Total Commits** | 365 |
+| **Project Duration** | 19 days |
+| **Active Days** | 16 days |
 | **Busiest Day** | Jan 24, 2026 (27 commits in 20 hours) |
-| **Average Commits/Day** | ~25 commits |
-| **Lead Developer** | princewebclient (~340 commits) |
+| **Average Commits/Day** | ~19 commits |
+| **Lead Developer** | princewebclient (~340+ commits), yueniqdevteam (~25+ commits) |
 | **Build Status** | ✅ Passing |
 | **Deployment Status** | ✅ Vercel Production |
+| **Latest Update** | Jan 25-26, 2026 - Signup validation & order management |
 
 ---
 
@@ -686,6 +687,117 @@ Based on current implementation, potential next phases could include:
 ---
 
 ## 📊 Code Statistics
+
+---
+
+### **Phase 10: Signup Validation & Order Management Polish (Jan 25-26, 2026)**
+**Status:** ✅ Complete | **Commits:** 17 (yueniqdevteam)
+
+Enhanced signup validation and order card management:
+
+**Signup Validation Enhancements:**
+- `adfbdf1` - Duplicate user prevention (email & phone check)
+- `d64288b` - Phone number mandatory during signup
+- `70e1ae6` - Address mandatory during signup
+- `ea6463a` - Date of birth mandatory during signup
+
+**Key Implementation:**
+```typescript
+// Before signup submission
+✅ Check if email already exists in users table
+✅ Check if phone already exists in user_profiles table
+✅ Validate all required fields (name, email, phone, address, DOB)
+✅ Show user-friendly error messages
+✅ Prevent duplicate user creation
+```
+
+**Customer Name Display on Orders:**
+- `0597402` - Display customer name on admin order cards
+- `99919b7` - Use user_profiles table to fetch customer names
+- `9fd86e3` - Nested join through users->user_profiles
+- `0a3b005` - Fetch customer names separately without relationships
+- `b9a4e48` - Use direct user_id foreign key join
+- `36422fa` - Implement nested join: orders -> users -> user_profiles
+- `7dafa84` - Fix: Join user_profiles directly via orders.user_id
+- `f2ce8a2` - Fetch orders and user_profiles separately, join in code
+- `caca999` - Query user_profiles by user_id, map full_name in app code
+
+**Order Card UI Improvements:**
+- `c09f4f1` - Align date/amount to left side of order cards
+- `afd2cca` - Reduce gap between order number and date/amount
+- `c10aa88` - Disable delivered status button until order is shipped
+
+**Technical Details:**
+```typescript
+// Final working pattern for customer names
+// Step 1: Fetch orders with user_id
+const orders = await supabase
+  .from('orders')
+  .select('*')
+  .eq('user_id', userId);
+
+// Step 2: Fetch all relevant user profiles
+const { data: profiles } = await supabase
+  .from('user_profiles')
+  .select('user_id, full_name');
+
+// Step 3: Join in application code
+const ordersWithNames = orders.map(order => ({
+  ...order,
+  customer_name: profiles.find(p => p.user_id === order.user_id)?.full_name
+}));
+```
+
+**Why This Approach:**
+- ✅ Avoids Supabase relationship issues (works reliably)
+- ✅ Gives full control in application code
+- ✅ Better for complex queries with multiple joins
+- ✅ Performs well with reasonable data sizes
+- ✅ Easier to debug and test
+- ✅ Follows modern application patterns
+
+**Feature Impact:**
+- ✅ Admin can see customer names in order list
+- ✅ Better order management workflow
+- ✅ Prevents signup duplicates
+- ✅ Enforces complete user data
+- ✅ Improves order card readability
+- ✅ Better visual hierarchy on order cards
+
+**Signup Data Validation Flow:**
+```
+User Submits Signup Form
+  ↓
+Validate email not in users table
+  ↓
+Validate phone not in user_profiles table
+  ↓
+Validate all required fields present:
+  - Name (at least 2 characters)
+  - Email (valid format)
+  - Phone (10+ digits)
+  - Address (at least 10 characters)
+  - Date of Birth (valid date)
+  ↓
+Create user account if all valid
+  ↓
+Redirect to profile/dashboard
+```
+
+**Commits Breakdown:**
+| Commit | Feature | Impact |
+|--------|---------|--------|
+| adfbdf1 | Duplicate prevention | Checks email & phone |
+| d64288b | Phone mandatory | Improves contact data |
+| 70e1ae6 | Address mandatory | Improves shipping |
+| ea6463a | DOB mandatory | Completes user profile |
+| 0597402 | Display customer names | Admin workflow |
+| (17 total) | Customer name fixes | Query optimization |
+| c09f4f1 | Card layout | Better UX |
+| afd2cca | Spacing refinement | Polish |
+| c10aa88 | Button validation | Logical workflow |
+
+---
 
 **Repository Size:** ~25 MB  
 **Active Files:** 200+ (tsx, ts, css, sql)  
