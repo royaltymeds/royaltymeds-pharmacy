@@ -54,7 +54,7 @@ export default async function AdminLayout({
               <Link href="/" className="hidden sm:inline px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-gray-700 hover:text-green-600 hover:bg-green-50 transition whitespace-nowrap">
                 Home
               </Link>
-              <DesktopNav navLinks={navLinks} />
+              <DesktopNav navLinks={navLinks} theme="light" />
             </div>
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">

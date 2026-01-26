@@ -499,7 +499,7 @@ export default function HomePage() {
             <div className="text-center">
               <h4 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">For Pharmacists</h4>
               <Link
-                href="/admin-login"
+                href="/portal-redirect"
                 className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-xs sm:text-sm"
               >
                 Pharmacist Portal
