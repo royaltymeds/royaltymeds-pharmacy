@@ -63,45 +63,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!authData.user?.id) {
-      return NextResponse.json(
-        { error: "Failed to create user" },
-        { status: 500 }
-      );
-    }
+    const userId = authData.user.id;
 
-    // Create user record in public.users
-    const { error: userError } = await adminClient
+    // Update user role to admin (trigger already created the user record)
+    const { error: roleError } = await adminClient
       .from("users")
-      .insert([
-        {
-          id: authData.user.id,
-          email,
-          role: "admin",
-          is_active: true,
-        },
-      ]);
+      .update({ role: "admin", is_active: true })
+      .eq("id", userId);
 
-    if (userError) {
-      // Delete the auth user if we fail to create the profile
-      await adminClient.auth.admin.deleteUser(authData.user.id);
+    if (roleError) {
+      await adminClient.auth.admin.deleteUser(userId);
       return NextResponse.json(
-        { error: "Failed to create admin user record" },
+        { error: "Failed to update user role" },
         { status: 500 }
       );
     }
 
-    // Create user profile
+    // Create user profile (Supabase trigger doesn't create profile, only user record)
     const { error: profileError } = await adminClient
       .from("user_profiles")
-      .insert([
-        {
-          user_id: authData.user.id,
-          full_name: fullName,
-          phone,
-          address,
-        },
-      ]);
+      .insert({
+        user_id: userId,
+        full_name: fullName,
+        phone,
+        address,
+      });
 
     if (profileError) {
       return NextResponse.json(
@@ -115,7 +101,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "Admin account created successfully",
         user: {
-          id: authData.user.id,
+          id: userId,
           email,
           fullName,
         },
