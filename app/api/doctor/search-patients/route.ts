@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
@@ -7,6 +8,12 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClientForApi(request);
+    
+    // Create service role client to bypass RLS
+    const serviceRoleClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Verify user is authenticated and is a doctor
     const {
@@ -49,8 +56,8 @@ export async function GET(request: NextRequest) {
     // Search for patients by email or name (excluding already linked patients)
     console.log("[search-patients] Searching with ilike pattern");
     
-    // First, search users by email
-    let query = supabase
+    // First, search users by email (use service role to bypass RLS)
+    let query = serviceRoleClient
       .from("users")
       .select(
         `

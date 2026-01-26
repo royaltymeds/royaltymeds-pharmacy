@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
@@ -7,6 +8,12 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClientForApi(request);
+    
+    // Create service role client to bypass RLS
+    const serviceRoleClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Verify user is authenticated and is a doctor
     const {
@@ -35,8 +42,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all patient IDs linked to this doctor (simple query to avoid RLS join issues)
-    const { data: linkedPatientIds, error: linkError } = await supabase
+    // Get all patient IDs linked to this doctor (use service role to bypass RLS)
+    const { data: linkedPatientIds, error: linkError } = await serviceRoleClient
       .from("doctor_patient_links")
       .select("patient_id")
       .eq("doctor_id", user.id);
@@ -60,10 +67,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // Now fetch user and profile data for each patient
+    // Now fetch user and profile data for each patient (use service role to bypass RLS)
     const patientIds = linkedPatientIds.map((link: any) => link.patient_id);
     
-    const { data: patients, error: patientError } = await supabase
+    const { data: patients, error: patientError } = await serviceRoleClient
       .from("users")
       .select(
         `
