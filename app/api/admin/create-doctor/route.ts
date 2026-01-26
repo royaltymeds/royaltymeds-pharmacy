@@ -1,62 +1,40 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { createClientForApi } from "@/lib/supabase-server";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // Get the admin auth token from the request
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    // Create authenticated client for the current user
+    const supabase = createClientForApi(request);
+
+    // Verify current user is admin
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
       return NextResponse.json(
-        { error: "Missing or invalid authorization header" },
+        { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7);
-
-    // Verify admin user
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      }
-    );
-
-    const {
-      data: { user: adminUser },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !adminUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    const { data: adminUser_ } = await adminClient
+    // Check if current user is admin
+    const { data: currentUser } = await supabase
       .from("users")
       .select("role")
-      .eq("id", adminUser.id)
+      .eq("id", user.id)
       .single();
 
-    if (adminUser_?.role !== "admin") {
+    if (currentUser?.role !== "admin") {
       return NextResponse.json(
         { error: "Only admins can create doctor accounts" },
         { status: 403 }
       );
     }
 
-    // Get request body
-    const { email, password, fullName, specialization, addressOfPractice, contactNumber } = await req.json();
+    const { email, password, fullName, specialization, addressOfPractice, contactNumber } = await request.json();
 
     if (!email || !password || !fullName || !addressOfPractice || !contactNumber) {
       return NextResponse.json(
@@ -65,28 +43,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create auth user
-    const { data: authData, error: createAuthError } =
-      await adminClient.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          role: "doctor",
-        },
-      });
+    // Create admin service client
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    if (createAuthError) {
+    // Create auth user
+    const { data: authData, error: createError } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+
+    if (createError) {
       return NextResponse.json(
-        { error: createAuthError.message || "Failed to create auth user" },
+        { error: createError.message || "Failed to create doctor" },
         { status: 400 }
+      );
+    }
+
+    if (!authData.user?.id) {
+      return NextResponse.json(
+        { error: "Failed to create doctor" },
+        { status: 500 }
       );
     }
 
     const doctorId = authData.user.id;
 
     // Create user record in public.users
-    const { error: createUserError } = await adminClient
+    const { error: userError } = await adminClient
       .from("users")
       .insert([
         {
@@ -97,11 +84,11 @@ export async function POST(req: NextRequest) {
         },
       ]);
 
-    if (createUserError) {
+    if (userError) {
       // Delete the auth user if we fail to create the user record
       await adminClient.auth.admin.deleteUser(doctorId);
       return NextResponse.json(
-        { error: "Failed to create user record" },
+        { error: "Failed to create doctor user record" },
         { status: 500 }
       );
     }
@@ -109,18 +96,20 @@ export async function POST(req: NextRequest) {
     // Create user profile
     const { error: profileError } = await adminClient
       .from("user_profiles")
-      .insert({
-        user_id: doctorId,
-        full_name: fullName,
-        specialty: specialization || null,
-        address: addressOfPractice,
-        phone: contactNumber,
-      });
+      .insert([
+        {
+          user_id: doctorId,
+          full_name: fullName,
+          specialty: specialization || null,
+          address: addressOfPractice,
+          phone: contactNumber,
+        },
+      ]);
 
     if (profileError) {
       return NextResponse.json(
-        { error: "Failed to create user profile" },
-        { status: 400 }
+        { error: "Failed to create doctor profile" },
+        { status: 500 }
       );
     }
 
