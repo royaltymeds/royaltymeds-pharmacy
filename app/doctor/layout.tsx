@@ -46,6 +46,9 @@ export default async function DoctorLayout({
               <Link href="/doctor/dashboard" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap truncate flex-shrink-0">
                 <span className="text-blue-300">R</span><span>oyaltyMeds</span>
               </Link>
+              <Link href="/" className="hidden sm:inline px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700 transition whitespace-nowrap">
+                Home
+              </Link>
               <div className="hidden lg:flex space-x-1">
                 {navLinks.map((link) => (
                   <Link
@@ -64,7 +67,7 @@ export default async function DoctorLayout({
               <LogoutButton className="text-xs md:text-sm text-blue-100 hover:text-white font-medium whitespace-nowrap" />
             </div>
 
-            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} />
+            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} extraLinks={[{ href: "/", label: "Home" }]} />
           </div>
         </div>
       </nav>

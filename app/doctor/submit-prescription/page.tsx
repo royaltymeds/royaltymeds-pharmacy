@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle, Plus, Trash2, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AlertCircle, CheckCircle, Plus, Trash2, Loader } from "lucide-react";
 import { generatePrescriptionNumber } from "@/lib/prescription-number";
 
 interface Medication {
@@ -13,14 +13,26 @@ interface Medication {
   frequency: string;
 }
 
+interface Patient {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  address: string | null;
+  dateOfBirth: string | null;
+}
+
 export default function SubmitPrescription() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialPatientId = searchParams.get("patientId");
+
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(true);
   const [medications, setMedications] = useState<Medication[]>([
     { id: "1", name: "", dosage: "", quantity: "", frequency: "once daily" },
   ]);
@@ -28,37 +40,31 @@ export default function SubmitPrescription() {
   const [fileName, setFileName] = useState<string>("");
 
   const [formData, setFormData] = useState({
-    patientId: "",
-    patientEmail: "",
+    patientId: initialPatientId || "",
     duration: "",
     instructions: "",
     notes: "",
   });
 
-  const handlePatientSearch = async (email: string) => {
-    if (!email.trim()) {
-      setSearchResults([]);
-      setShowSearchResults(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/doctor/patients?search=${email}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data);
-        setShowSearchResults(true);
+  // Load linked patients
+  useEffect(() => {
+    const loadPatients = async () => {
+      try {
+        const res = await fetch("/api/doctor/linked-patients");
+        if (res.ok) {
+          const data = await res.json();
+          setPatients(data.patients || []);
+        }
+      } catch (error) {
+        console.error("Error loading patients:", error);
+        setError("Failed to load your patients");
+      } finally {
+        setLoadingPatients(false);
       }
-    } catch (error) {
-      console.error("Patient search failed:", error);
-    }
-  };
+    };
 
-  const selectPatient = (patientId: string, patientEmail: string) => {
-    setFormData({ ...formData, patientId, patientEmail });
-    setShowSearchResults(false);
-    setSearchResults([]);
-  };
+    loadPatients();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -105,9 +111,12 @@ export default function SubmitPrescription() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
+          patientId: formData.patientId,
           prescriptionNumber,
           medications: validMeds,
+          duration: formData.duration,
+          instructions: formData.instructions,
+          notes: formData.notes,
           file_url: fileUrl || null,
         }),
       });
@@ -120,7 +129,6 @@ export default function SubmitPrescription() {
       setSuccess(true);
       setFormData({
         patientId: "",
-        patientEmail: "",
         duration: "",
         instructions: "",
         notes: "",
@@ -195,6 +203,8 @@ export default function SubmitPrescription() {
     );
   };
 
+  const selectedPatient = patients.find(p => p.id === formData.patientId);
+
   return (
     <div className="w-full px-0">
       <div className="max-w-2xl mx-auto">
@@ -237,38 +247,45 @@ export default function SubmitPrescription() {
         {/* Patient Selection */}
         <div className="mb-4 sm:mb-6">
           <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-            Patient Email <span className="text-red-500">*</span>
+            Select Patient <span className="text-red-500">*</span>
           </label>
-          <div className="relative">
-            <input
-              type="email"
-              name="patientEmail"
-              value={formData.patientEmail}
-              onChange={(e) => {
-                handleChange(e);
-                handlePatientSearch(e.target.value);
-              }}
-              placeholder="Search patients by email"
+          {loadingPatients ? (
+            <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg">
+              <Loader className="h-4 w-4 animate-spin text-gray-600" />
+              <p className="text-sm text-gray-600">Loading patients...</p>
+            </div>
+          ) : patients.length === 0 ? (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-700">
+                No patients linked yet.{" "}
+                <a href="/doctor/patients" className="font-medium underline">
+                  Go to your patients page to link or create patients.
+                </a>
+              </p>
+            </div>
+          ) : (
+            <select
+              name="patientId"
+              value={formData.patientId}
+              onChange={handleChange}
+              required
               className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            {showSearchResults && searchResults.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
-                {searchResults.map((patient) => (
-                  <button
-                    key={patient.id}
-                    type="button"
-                    onClick={() => selectPatient(patient.id, patient.email)}
-                    className="w-full text-left px-3 sm:px-4 py-2 hover:bg-blue-50 border-b last:border-b-0 text-sm"
-                  >
-                    <p className="font-medium text-gray-900">{patient.name}</p>
-                    <p className="text-xs sm:text-sm text-gray-500">{patient.email}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {formData.patientId && (
-            <p className="text-xs sm:text-sm text-green-600 mt-2">✓ Patient selected</p>
+            >
+              <option value="">-- Select a patient --</option>
+              {patients.map((patient) => (
+                <option key={patient.id} value={patient.id}>
+                  {patient.fullName} ({patient.email})
+                </option>
+              ))}
+            </select>
+          )}
+          {selectedPatient && (
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs sm:text-sm text-blue-900">
+                <span className="font-medium">Selected:</span> {selectedPatient.fullName} • {selectedPatient.email}
+                {selectedPatient.phone && <> • {selectedPatient.phone}</>}
+              </p>
+            </div>
           )}
         </div>
 
@@ -400,6 +417,21 @@ export default function SubmitPrescription() {
           />
         </div>
 
+        {/* Instructions */}
+        <div className="mb-4 sm:mb-6">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+            Instructions
+          </label>
+          <textarea
+            name="instructions"
+            value={formData.instructions}
+            onChange={handleChange}
+            placeholder="Any special instructions"
+            rows={2}
+            className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          />
+        </div>
+
         {/* Additional Notes */}
         <div className="mb-4 sm:mb-6">
           <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
@@ -431,7 +463,6 @@ export default function SubmitPrescription() {
             />
             <label htmlFor="file-upload" className="cursor-pointer">
               <div className="flex items-center justify-center gap-2">
-                <Upload className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">
                     {uploading ? "Uploading..." : "Click to upload or drag and drop"}

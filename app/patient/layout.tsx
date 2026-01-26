@@ -61,8 +61,13 @@ export default async function PatientLayout({
     { href: "/patient/profile", label: "Profile" },
   ];
 
-  // Extra links only for admins
-  const extraLinks = userRole === "admin" ? [{ href: "/admin/dashboard", label: "My Admin Portal" }] : undefined;
+  // Extra links for admins and doctors
+  const extraLinks = [
+    { href: "/", label: "Home" },
+    { href: "/store", label: "Go to Store" },
+    ...(userRole === "admin" ? [{ href: "/admin/dashboard", label: "My Admin Portal" }] : []),
+    ...(userRole === "doctor" ? [{ href: "/doctor/dashboard", label: "My Doctor Portal" }] : []),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -73,6 +78,12 @@ export default async function PatientLayout({
             <div className="flex items-center gap-2 sm:gap-4 md:gap-8 min-w-0 flex-1">
               <Link href="/patient/home" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap truncate flex-shrink-0">
                 <span className="text-green-300">R</span><span>oyaltyMeds</span>
+              </Link>
+              <Link href="/" className="hidden sm:inline px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-green-100 hover:text-white hover:bg-green-700 transition whitespace-nowrap">
+                Home
+              </Link>
+              <Link href="/store" className="hidden sm:inline px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-green-100 hover:text-white hover:bg-green-700 transition whitespace-nowrap">
+                Store
               </Link>
               <div className="hidden lg:flex space-x-1">
                 {navLinks.map((link) => (
@@ -92,6 +103,11 @@ export default async function PatientLayout({
               {userRole === "admin" && (
                 <Link href="/admin/dashboard" className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-green-700 transition">
                   My Admin Portal
+                </Link>
+              )}
+              {userRole === "doctor" && (
+                <Link href="/doctor/dashboard" className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-green-700 transition">
+                  My Doctor Portal
                 </Link>
               )}
               <span className="hidden sm:inline text-xs md:text-sm text-green-100 truncate max-w-[150px]">{userEmail}</span>
