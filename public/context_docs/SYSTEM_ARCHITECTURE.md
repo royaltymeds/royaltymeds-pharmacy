@@ -1,5 +1,9 @@
 # System Architecture & Feature Matrix
 
+**Last Updated:** January 26, 2026  
+**Total Commits:** 365  
+**Latest Phase:** Phase 10 - Signup Validation & Order Management Polish
+
 ## Application Architecture Diagram
 
 ```
@@ -30,12 +34,16 @@
 │  │  ┌──────┴───────┐   ┌───┴──────┐   ┌───┴──────┐         │   │
 │  │  │   Dashboard  │   │Dashboard │   │ Dashboard│         │   │
 │  │  │ Inventory    │   │  My       │   │  Orders  │         │   │
-│  │  │ Doctors      │   │  Patients │   │  Store   │         │   │
-│  │  │ Patients     │   │  Prescrip-│   │  Prescrip│         │   │
-│  │  │ Orders       │   │  tions    │   │  tions   │         │   │
-│  │  │ Payments     │   │           │   │  Profile │         │   │
-│  │  │ Prescriptions│   │           │   │  Refills │         │   │
-│  │  │ Refills      │   │           │   │ Payments │         │   │
+│  │  │ (Paginated)  │   │  Patients │   │  (Search)│         │   │
+│  │  │ Doctors      │   │  Prescrip-│   │(Paginated)          │   │
+│  │  │ Patients     │   │  tions    │   │  Store   │         │   │
+│  │  │ Orders       │   │           │   │  Prescrip│         │   │
+│  │  │ (Search)     │   │           │   │  tions   │         │   │
+│  │  │ (Paginated)  │   │           │   │  Profile │         │   │
+│  │  │ Payments     │   │           │   │  Refills │         │   │
+│  │  │ Prescriptions│   │           │   │ Payments │         │   │
+│  │  │ (with names) │   │           │   │  (Upload)│         │   │
+│  │  │ Refills      │   │           │   │          │         │   │
 │  │  └──────────────┘   └───────────┘   └──────────┘         │   │
 │  │                                                            │   │
 │  └──────────────────────────────────────────────────────────┘   │
@@ -44,10 +52,15 @@
 │  │              Shared Features                              │   │
 │  ├──────────────────────────────────────────────────────────┤   │
 │  │  • Authentication (Supabase Auth)                         │   │
+│  │  • Duplicate user prevention (email & phone)              │   │
+│  │  • Mandatory profile fields (name, phone, address, DOB)   │   │
 │  │  • Server Actions (mutations)                             │   │
 │  │  • Form Handling (validation, error)                      │   │
 │  │  • Toast Notifications (success/error)                    │   │
 │  │  • Image Display (Next.js Image optimization)             │   │
+│  │  • Search & Filtering (orders, inventory, patients)       │   │
+│  │  • Pagination (10 items/page for orders, 20 for inventory)│   │
+│  │  • Unified loading icons (Loader animate-spin)            │   │
 │  │  • Loading States (uniform icons)                         │   │
 │  │  • Currency Formatting (proper display)                   │   │
 │  │  • Mobile Responsive (Tailwind)                           │   │
