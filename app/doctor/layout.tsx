@@ -63,11 +63,14 @@ export default async function DoctorLayout({
             </div>
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+              <Link href="/patient/home" className="text-xs md:text-sm text-blue-100 hover:text-white font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-blue-700 transition">
+                My Customer Portal
+              </Link>
               <span className="hidden sm:inline text-xs md:text-sm text-blue-100 truncate max-w-[150px]">{userEmail}</span>
               <LogoutButton className="text-xs md:text-sm text-blue-100 hover:text-white font-medium whitespace-nowrap" />
             </div>
 
-            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} extraLinks={[{ href: "/", label: "Home" }]} />
+            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} extraLinks={[{ href: "/", label: "Home" }, { href: "/patient/home", label: "My Customer Portal" }]} />
           </div>
         </div>
       </nav>
