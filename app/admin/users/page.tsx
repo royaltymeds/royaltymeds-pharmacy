@@ -72,19 +72,23 @@ export default function AdminUsersPage() {
     setIsSubmitting(true);
 
     try {
+      const payload = {
+        email: formData.email,
+        password: formData.password,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        address: formData.address,
+      };
+      console.log("[AdminUsersPage] Creating pharmacist with:", payload);
+      
       const response = await fetch("/api/admin/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          fullName: formData.fullName,
-          phone: formData.phone,
-          address: formData.address,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
+      console.log("[AdminUsersPage] Response:", data);
 
       if (!response.ok) {
         setError(data.error || "Failed to create admin account");

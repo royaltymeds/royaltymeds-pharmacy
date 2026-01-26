@@ -36,9 +36,20 @@ export async function POST(request: NextRequest) {
 
     const { email, password, fullName, phone, address } = await request.json();
 
+    // Log received data for debugging
+    console.log("[create-user API] Received fields:", { email, password: "***", fullName, phone, address });
+
     if (!email || !password || !fullName || !phone || !address) {
+      const missingFields = [];
+      if (!email) missingFields.push("email");
+      if (!password) missingFields.push("password");
+      if (!fullName) missingFields.push("fullName");
+      if (!phone) missingFields.push("phone");
+      if (!address) missingFields.push("address");
+      
+      console.warn("[create-user API] Missing fields:", missingFields);
       return NextResponse.json(
-        { error: "Email, password, full name, phone, and address are required" },
+        { error: `Missing required fields: ${missingFields.join(", ")}` },
         { status: 400 }
       );
     }
@@ -57,6 +68,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (createError) {
+      console.error("[create-user API] Auth user creation error:", createError);
       return NextResponse.json(
         { error: createError.message || "Failed to create user" },
         { status: 400 }
