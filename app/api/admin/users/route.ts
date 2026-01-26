@@ -7,6 +7,12 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClientForApi(request);
+    
+    // Create service role client to bypass RLS
+    const serviceRoleClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Verify user is authenticated and is admin
     const {
@@ -21,8 +27,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if current user is admin
-    const { data: currentUser } = await supabase
+    // Check if current user is admin (use service role to bypass RLS)
+    const { data: currentUser } = await serviceRoleClient
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -35,14 +41,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Use service role client to bypass RLS and get all admin users
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // Get all admin users with their profiles
-    const { data: admins, error: usersError } = await adminClient
+    // Get all admin users with their profiles (use service role)
+    const { data: admins, error: usersError } = await serviceRoleClient
       .from("users")
       .select("id, email, created_at")
       .eq("role", "admin")
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get profiles for all admin users
-    const { data: profiles, error: profilesError } = await adminClient
+    const { data: profiles, error: profilesError } = await serviceRoleClient
       .from("user_profiles")
       .select("user_id, full_name")
       .in("user_id", (admins || []).map(a => a.id));
