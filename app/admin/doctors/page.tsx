@@ -1,8 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AlertCircle, CheckCircle, Users } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase-client";
+
+interface Doctor {
+  id: string;
+  email: string;
+  fullName: string;
+  specialty: string;
+  phone: string;
+  address: string;
+  createdAt: string;
+}
 
 export default function AdminDoctorsPage() {
   const [email, setEmail] = useState("");
@@ -14,6 +24,30 @@ export default function AdminDoctorsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(true);
+
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
+
+  const fetchDoctors = async () => {
+    try {
+      setLoadingDoctors(true);
+      const response = await fetch("/api/admin/doctors");
+      if (response.ok) {
+        const data = await response.json();
+        setDoctors(data);
+      } else {
+        console.error("Failed to load doctors");
+      }
+    } catch (err) {
+      console.error("An error occurred while loading doctors:", err);
+    } finally {
+      setLoadingDoctors(false);
+    }
+  };
 
   const handleCreateDoctor = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +95,9 @@ export default function AdminDoctorsPage() {
       setSpecialization("");
       setAddressOfPractice("");
       setContactNumber("");
+
+      // Refresh doctors list
+      fetchDoctors();
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
@@ -205,6 +242,46 @@ export default function AdminDoctorsPage() {
         <p className="text-xs sm:text-sm text-blue-800">
           <strong>Note:</strong> Doctor accounts can only be created by pharmacists. Once created, doctors can log in with their email and password.
         </p>
+      </div>
+
+      {/* Doctors List */}
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Registered Doctors</h2>
+
+        {loadingDoctors ? (
+          <p className="text-gray-600 text-center py-8">Loading doctors...</p>
+        ) : doctors.length === 0 ? (
+          <p className="text-gray-600 text-center py-8">No doctors registered yet</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Name</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Email</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Specialty</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Phone</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Address</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Created</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {doctors.map((doctor) => (
+                  <tr key={doctor.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-gray-900">{doctor.fullName}</td>
+                    <td className="px-4 py-3 text-gray-600">{doctor.email}</td>
+                    <td className="px-4 py-3 text-gray-600">{doctor.specialty}</td>
+                    <td className="px-4 py-3 text-gray-600">{doctor.phone}</td>
+                    <td className="px-4 py-3 text-gray-600 text-xs">{doctor.address}</td>
+                    <td className="px-4 py-3 text-gray-600 text-xs">
+                      {new Date(doctor.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

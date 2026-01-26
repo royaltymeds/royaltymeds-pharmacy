@@ -1,0 +1,100 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { createClientForApi } from "@/lib/supabase-server";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = createClientForApi(request);
+
+    // Verify user is authenticated and is admin
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Check if current user is admin
+    const { data: currentUser } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (currentUser?.role !== "admin") {
+      return NextResponse.json(
+        { error: "Only admins can view doctors" },
+        { status: 403 }
+      );
+    }
+
+    // Use service role client to bypass RLS and get all doctors
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Get all doctor users with their profiles
+    const { data: doctors, error: usersError } = await adminClient
+      .from("users")
+      .select("id, email, created_at")
+      .eq("role", "doctor")
+      .order("created_at", { ascending: false });
+
+    if (usersError) {
+      console.error("[admin/doctors API] Error fetching doctors:", usersError);
+      return NextResponse.json(
+        { error: usersError.message },
+        { status: 500 }
+      );
+    }
+
+    // Get profiles for all doctors
+    const { data: profiles, error: profilesError } = await adminClient
+      .from("user_profiles")
+      .select("user_id, full_name, specialty, phone, address")
+      .in("user_id", (doctors || []).map(d => d.id));
+
+    if (profilesError) {
+      console.error("[admin/doctors API] Error fetching profiles:", profilesError);
+      return NextResponse.json(
+        { error: profilesError.message },
+        { status: 500 }
+      );
+    }
+
+    // Map profiles by user_id for quick lookup
+    const profileMap = (profiles || []).reduce((acc: any, profile: any) => {
+      acc[profile.user_id] = profile;
+      return acc;
+    }, {});
+
+    const formattedDoctors = (doctors || []).map((doctor: any) => {
+      const profile = profileMap[doctor.id];
+      return {
+        id: doctor.id,
+        email: doctor.email,
+        fullName: profile?.full_name || "Unknown",
+        specialty: profile?.specialty || "N/A",
+        phone: profile?.phone || "N/A",
+        address: profile?.address || "N/A",
+        createdAt: doctor.created_at,
+      };
+    });
+
+    return NextResponse.json(formattedDoctors);
+  } catch (error: any) {
+    console.error("[admin/doctors API] Unexpected error:", error);
+    return NextResponse.json(
+      { error: error.message || "An error occurred" },
+      { status: 500 }
+    );
+  }
+}
