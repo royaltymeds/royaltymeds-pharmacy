@@ -44,22 +44,23 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Check if user is admin by reading from users table
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("role")
-        .eq("id", data.user.id)
-        .single();
+      // Verify if user is admin via API
+      const verifyResponse = await fetch("/api/auth/verify-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: data.user.id }),
+      });
 
-      if (userError || !userData) {
+      if (!verifyResponse.ok) {
         setError("Failed to verify admin status");
+        await supabase.auth.signOut();
         return;
       }
 
-      const userRole = (userData as any)?.role;
+      const { isAdmin } = await verifyResponse.json();
 
       // Check if user is admin
-      if (userRole !== "admin") {
+      if (!isAdmin) {
         setError("Only pharmacists can access this area");
         // Sign out the non-admin user
         await supabase.auth.signOut();
