@@ -62,6 +62,13 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       console.error("Auth creation error:", createError);
+      // Check for duplicate email
+      if (createError.message?.includes("duplicate") || createError.message?.includes("already exists")) {
+        return NextResponse.json(
+          { error: "A doctor with this email already exists" },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
         { error: createError.message || "Failed to create doctor" },
         { status: 400 }
