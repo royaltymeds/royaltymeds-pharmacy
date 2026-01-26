@@ -87,16 +87,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update user profile with doctor details (trigger created empty profile)
+    // Create user profile with doctor details (Supabase trigger doesn't create profile, only user record)
     const { error: profileError } = await adminClient
       .from("user_profiles")
-      .update({
+      .insert({
+        user_id: doctorId,
         full_name: fullName,
         specialty: specialization || null,
         address: addressOfPractice,
         phone: contactNumber,
-      })
-      .eq("user_id", doctorId);
+      });
 
     if (profileError) {
       return NextResponse.json(
