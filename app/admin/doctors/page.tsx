@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AlertCircle, CheckCircle, Users } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabase-client";
 
 export default function AdminDoctorsPage() {
   const [email, setEmail] = useState("");
@@ -21,12 +22,11 @@ export default function AdminDoctorsPage() {
     setSuccess(false);
 
     try {
-      // Get current user token
-      const { data: sessionData } = await (
-        await fetch("/api/auth/session", { method: "GET" })
-      ).json();
+      // Get current user token from Supabase client
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (!sessionData?.session?.access_token) {
+      if (!session?.access_token) {
         setError("Authentication required");
         return;
       }
@@ -35,7 +35,7 @@ export default function AdminDoctorsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionData.session.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           email,
