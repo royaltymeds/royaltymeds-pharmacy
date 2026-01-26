@@ -21,9 +21,9 @@ export default function PortalRedirectPage() {
         const supabase = getSupabaseClient();
         const { data: { session } } = await supabase.auth.getSession();
 
-        // If not logged in, go to login page
+        // If not logged in, go to admin login (pharmacist portal)
         if (!session) {
-          router.push("/login");
+          router.push("/admin-login");
           return;
         }
 
@@ -47,8 +47,8 @@ export default function PortalRedirectPage() {
         router.push(redirectUrl);
       } catch (err) {
         console.error("[PortalRedirect] Error checking user:", err);
-        // Default to login on error
-        router.push("/login");
+        // Default to admin login on error
+        router.push("/admin-login");
       }
     };
 
