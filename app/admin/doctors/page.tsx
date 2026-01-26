@@ -31,28 +31,23 @@ export default function AdminDoctorsPage() {
         return;
       }
 
-      const payload = {
-        email,
-        password,
-        fullName,
-        specialization,
-        addressOfPractice,
-        contactNumber,
-      };
-
-      console.log("Sending doctor creation payload:", payload);
-
       const response = await fetch("/api/admin/create-doctor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          email,
+          password,
+          fullName,
+          specialization,
+          addressOfPractice,
+          contactNumber,
+        }),
       });
 
       const data = await response.json();
-      console.log("Create doctor response:", { status: response.status, data });
 
       if (!response.ok) {
         setError(data.error || "Failed to create doctor account");
@@ -70,7 +65,6 @@ export default function AdminDoctorsPage() {
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error("Error creating doctor:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
