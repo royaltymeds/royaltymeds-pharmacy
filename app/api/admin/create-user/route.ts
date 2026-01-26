@@ -34,11 +34,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, fullName } = await request.json();
+    const { email, password, fullName, phone, address } = await request.json();
 
-    if (!email || !password || !fullName) {
+    if (!email || !password || !fullName || !phone || !address) {
       return NextResponse.json(
-        { error: "Email, password, and full name are required" },
+        { error: "Email, password, full name, phone, and address are required" },
         { status: 400 }
       );
     }
@@ -98,6 +98,8 @@ export async function POST(request: NextRequest) {
         {
           user_id: authData.user.id,
           full_name: fullName,
+          phone,
+          address,
         },
       ]);
 

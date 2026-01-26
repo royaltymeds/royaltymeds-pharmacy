@@ -44,22 +44,28 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Admin Navigation */}
-      <nav className="bg-green-600 border-b border-green-700 shadow-lg sticky top-0 z-50">
+      <nav className="bg-white border-b-4 border-green-600 shadow-sm sticky top-0 z-50">
         <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-4 md:gap-8 min-w-0 flex-1">
-              <Link href="/admin/dashboard" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap truncate flex-shrink-0">
-                <span className="text-green-300">R</span><span>oyaltyMeds</span>
+              <Link href="/" className="font-semibold text-sm sm:text-base md:text-lg text-black whitespace-nowrap truncate flex-shrink-0 hover:text-green-600 transition">
+                <span className="text-green-600">R</span><span>oyaltyMeds</span>
+              </Link>
+              <Link href="/" className="hidden sm:inline px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-gray-700 hover:text-green-600 hover:bg-green-50 transition whitespace-nowrap">
+                Home
               </Link>
               <DesktopNav navLinks={navLinks} />
             </div>
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
-              <span className="hidden sm:inline text-xs md:text-sm text-green-100 truncate max-w-[150px]">{userEmail}</span>
-              <LogoutButton className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap" />
+              <Link href="/patient/home" className="text-xs md:text-sm text-gray-700 hover:text-green-600 font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-green-50 transition">
+                My Customer Portal
+              </Link>
+              <span className="hidden sm:inline text-xs md:text-sm text-gray-600 truncate max-w-[150px]">{userEmail}</span>
+              <LogoutButton className="text-xs md:text-sm text-gray-700 hover:text-green-600 font-medium whitespace-nowrap" />
             </div>
 
-            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} />
+            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} extraLinks={[{ href: "/", label: "Home" }, { href: "/patient/home", label: "My Customer Portal" }]} />
           </div>
         </div>
       </nav>

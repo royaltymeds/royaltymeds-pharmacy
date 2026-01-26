@@ -23,6 +23,8 @@ export default function AdminUsersPage() {
     password: "",
     confirmPassword: "",
     fullName: "",
+    phone: "",
+    address: "",
   });
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function AdminUsersPage() {
     setSuccess("");
 
     // Validation
-    if (!formData.email || !formData.password || !formData.fullName) {
+    if (!formData.email || !formData.password || !formData.fullName || !formData.phone || !formData.address) {
       setError("All fields are required");
       return;
     }
@@ -77,6 +79,8 @@ export default function AdminUsersPage() {
           email: formData.email,
           password: formData.password,
           fullName: formData.fullName,
+          phone: formData.phone,
+          address: formData.address,
         }),
       });
 
@@ -88,7 +92,7 @@ export default function AdminUsersPage() {
       }
 
       setSuccess("Admin account created successfully!");
-      setFormData({ email: "", password: "", confirmPassword: "", fullName: "" });
+      setFormData({ email: "", password: "", confirmPassword: "", fullName: "", phone: "", address: "" });
       setShowCreateForm(false);
       
       // Refresh the list
@@ -203,6 +207,36 @@ export default function AdminUsersPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="(123) 456-7890"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Address *
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                placeholder="123 Main Street"
                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                 required
               />

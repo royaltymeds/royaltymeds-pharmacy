@@ -8,6 +8,8 @@ export default function AdminDoctorsPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [specialization, setSpecialization] = useState("");
+  const [addressOfPractice, setAddressOfPractice] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -40,6 +42,8 @@ export default function AdminDoctorsPage() {
           password,
           fullName,
           specialization,
+          addressOfPractice,
+          contactNumber,
         }),
       });
 
@@ -55,6 +59,8 @@ export default function AdminDoctorsPage() {
       setPassword("");
       setFullName("");
       setSpecialization("");
+      setAddressOfPractice("");
+      setContactNumber("");
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
@@ -144,13 +150,41 @@ export default function AdminDoctorsPage() {
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                Specialization (Optional)
+                Specialization
               </label>
               <input
                 type="text"
                 value={specialization}
                 onChange={(e) => setSpecialization(e.target.value)}
                 placeholder="e.g., Cardiology, Pediatrics"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Address of Practice *
+              </label>
+              <input
+                type="text"
+                value={addressOfPractice}
+                onChange={(e) => setAddressOfPractice(e.target.value)}
+                placeholder="123 Medical Plaza Drive"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Contact Number *
+              </label>
+              <input
+                type="tel"
+                value={contactNumber}
+                onChange={(e) => setContactNumber(e.target.value)}
+                placeholder="(123) 456-7890"
+                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
               />
             </div>

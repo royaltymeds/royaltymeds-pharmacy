@@ -55,7 +55,7 @@ export default function HomePage() {
               Start Ordering
             </Link>
             <Link
-              href="/login"
+              href="/portal-redirect"
               className="px-3 sm:px-6 py-1.5 sm:py-2 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-xs sm:text-base"
             >
               Portal Login
@@ -78,13 +78,13 @@ export default function HomePage() {
             <div className="flex flex-col gap-2 sm:gap-3">
               <Link
                 href="/store"
-                className="w-full px-4 sm:px-8 py-2.5 sm:py-3 lg:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base lg:text-lg text-center"
+                className="inline-block px-4 sm:px-8 py-2.5 sm:py-3 lg:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base lg:text-lg"
               >
                 Start Ordering Now
               </Link>
               <Link
                 href="#how-it-works"
-                className="w-full px-4 sm:px-8 py-2.5 sm:py-3 lg:py-4 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-sm sm:text-base lg:text-lg text-center"
+                className="inline-block px-4 sm:px-8 py-2.5 sm:py-3 lg:py-4 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-sm sm:text-base lg:text-lg"
               >
                 Learn More
               </Link>
@@ -209,7 +209,7 @@ export default function HomePage() {
               </ul>
               <Link
                 href="/patient/home"
-                className="w-full sm:w-auto block px-6 sm:px-8 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base text-center"
+                className="inline-block px-6 sm:px-8 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base"
               >
                 Order Prescription Medications
               </Link>
@@ -272,7 +272,7 @@ export default function HomePage() {
               </ul>
               <Link
                 href="/store"
-                className="w-full sm:w-auto block px-6 sm:px-8 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base text-center"
+                className="inline-block px-6 sm:px-8 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base"
               >
                 Shop OTC Medications
               </Link>

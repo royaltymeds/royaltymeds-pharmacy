@@ -69,18 +69,14 @@ export default function SignupForm() {
       console.log("[SignupForm] Check response:", checkData);
 
       if (checkData.exists) {
-        let errorMessage = "An account already exists with ";
+        let errorMessage = "";
         if (checkData.emailExists && checkData.phoneExists) {
-          errorMessage += `this email and phone number`;
+          errorMessage = "This email and phone number are already registered in our system.";
         } else if (checkData.emailExists) {
-          errorMessage += `this email address`;
-        } else {
-          errorMessage += `this phone number`;
+          errorMessage = "This email is already registered in our system.";
+        } else if (checkData.phoneExists) {
+          errorMessage = "This phone number is already registered in our system.";
         }
-        if (checkData.existingUserName) {
-          errorMessage += ` (${checkData.existingUserName})`;
-        }
-        errorMessage += ".";
         console.warn("[SignupForm] User already exists:", errorMessage);
         setError(errorMessage);
         setIsLoading(false);
@@ -183,7 +179,7 @@ export default function SignupForm() {
 
       <div>
         <label htmlFor="fullName" className="block text-xs font-medium text-gray-700 mb-1">
-          Full Name
+          Full Name <span className="text-red-500">*</span>
         </label>
         <input
           id="fullName"
@@ -198,7 +194,7 @@ export default function SignupForm() {
 
       <div>
         <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
-          Email Address
+          Email Address <span className="text-red-500">*</span>
         </label>
         <input
           id="email"
@@ -213,7 +209,7 @@ export default function SignupForm() {
 
       <div>
         <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
-          Password
+          Password <span className="text-red-500">*</span>
         </label>
         <input
           id="password"

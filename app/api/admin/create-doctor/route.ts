@@ -56,11 +56,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Get request body
-    const { email, password, fullName, specialization } = await req.json();
+    const { email, password, fullName, specialization, addressOfPractice, contactNumber } = await req.json();
 
-    if (!email || !password || !fullName) {
+    if (!email || !password || !fullName || !addressOfPractice || !contactNumber) {
       return NextResponse.json(
-        { error: "Email, password, and full name are required" },
+        { error: "Email, password, full name, address of practice, and contact number are required" },
         { status: 400 }
       );
     }
@@ -92,6 +92,8 @@ export async function POST(req: NextRequest) {
         user_id: doctorId,
         full_name: fullName,
         specialty: specialization || null,
+        address: addressOfPractice,
+        phone: contactNumber,
       });
 
     if (profileError) {

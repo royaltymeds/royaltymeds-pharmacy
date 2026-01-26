@@ -8,12 +8,14 @@ interface MobileSidebarProps {
   navLinks: Array<{ href: string; label: string }>;
   userEmail?: string | null;
   LogoutButton: React.ComponentType<{ className?: string }>;
+  extraLinks?: Array<{ href: string; label: string }>;
 }
 
 export function MobileSidebar({
   navLinks,
   userEmail,
   LogoutButton,
+  extraLinks,
 }: MobileSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -60,6 +62,25 @@ export function MobileSidebar({
               </Link>
             ))}
           </nav>
+
+          {/* Extra Links */}
+          {extraLinks && extraLinks.length > 0 && (
+            <>
+              <div className="border-t border-green-600" />
+              <nav className="space-y-2">
+                {extraLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="block px-4 py-2 rounded-md text-green-100 hover:bg-green-600 hover:text-white transition"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+            </>
+          )}
 
           {/* Divider */}
           <div className="border-t border-green-600" />

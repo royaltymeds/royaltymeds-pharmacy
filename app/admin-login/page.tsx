@@ -117,7 +117,7 @@ export default function AdminLoginPage() {
               Start Ordering
             </Link>
             <Link
-              href="/login"
+              href="/portal-redirect"
               className="px-3 sm:px-6 py-1.5 sm:py-2 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-xs sm:text-base"
             >
               Portal Login
@@ -128,7 +128,11 @@ export default function AdminLoginPage() {
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="bg-white border border-gray-200 rounded-xl shadow-xl p-8">
+        <div className="w-full max-w-md">
+          <Link href="/" className="inline-flex items-center text-green-600 hover:text-green-700 mb-6 font-medium text-sm">
+            ← Back to Home
+          </Link>
+          <div className="bg-white border border-gray-200 rounded-xl shadow-xl p-8">
           {/* Admin Header */}
           <div className="text-center mb-8">
             <div className="inline-block mb-4 p-3 bg-green-100 rounded-lg">
@@ -209,6 +213,7 @@ export default function AdminLoginPage() {
               This is a restricted area. Unauthorized access is prohibited.
             </p>
           </div>
+        </div>
         </div>
       </main>
     </div>

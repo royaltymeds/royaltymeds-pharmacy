@@ -15,6 +15,24 @@ async function getPatientEmail() {
   }
 }
 
+async function getPatientRole() {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const { data: userData } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    
+    return (userData as any)?.role || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 export default async function PatientLayout({
   children,
 }: {
@@ -32,6 +50,7 @@ export default async function PatientLayout({
   }
 
   const userEmail = await getPatientEmail();
+  const userRole = await getPatientRole();
 
   const navLinks = [
     { href: "/patient/home", label: "Dashboard" },
@@ -41,6 +60,9 @@ export default async function PatientLayout({
     { href: "/patient/messages", label: "Messages" },
     { href: "/patient/profile", label: "Profile" },
   ];
+
+  // Extra links only for admins
+  const extraLinks = userRole === "admin" ? [{ href: "/admin/dashboard", label: "My Admin Portal" }] : undefined;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -67,12 +89,17 @@ export default async function PatientLayout({
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
               <CartBadge />
+              {userRole === "admin" && (
+                <Link href="/admin/dashboard" className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-green-700 transition">
+                  My Admin Portal
+                </Link>
+              )}
               <span className="hidden sm:inline text-xs md:text-sm text-green-100 truncate max-w-[150px]">{userEmail}</span>
               <LogoutButton className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap" />
             </div>
 
             {/* Mobile Sidebar */}
-            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} />
+            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} extraLinks={extraLinks} />
           </div>
         </div>
       </nav>
