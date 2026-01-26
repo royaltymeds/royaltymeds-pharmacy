@@ -9,7 +9,8 @@ async function handleLogout(req: NextRequest) {
   const { error } = await supabase.auth.signOut();
   console.log("[Logout API] signOut result - error:", error?.message);
 
-  return NextResponse.redirect(new URL("/login", req.url), {
+  // Redirect to portal-redirect which will determine the correct login page
+  return NextResponse.redirect(new URL("/portal-redirect", req.url), {
     status: 302,
   });
 }
