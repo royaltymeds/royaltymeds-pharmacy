@@ -3,11 +3,36 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, fullName, specialization, addressOfPractice, contactNumber } = await request.json();
+    const body = await request.json();
+    const { email, password, fullName, specialization, addressOfPractice, contactNumber } = body;
 
-    if (!email || !password || !fullName || !addressOfPractice || !contactNumber) {
+    if (!email) {
       return NextResponse.json(
-        { error: "Email, password, full name, address of practice, and contact number are required" },
+        { error: "Email is required" },
+        { status: 400 }
+      );
+    }
+    if (!password) {
+      return NextResponse.json(
+        { error: "Password is required" },
+        { status: 400 }
+      );
+    }
+    if (!fullName) {
+      return NextResponse.json(
+        { error: "Full name is required" },
+        { status: 400 }
+      );
+    }
+    if (!addressOfPractice) {
+      return NextResponse.json(
+        { error: "Address of practice is required" },
+        { status: 400 }
+      );
+    }
+    if (!contactNumber) {
+      return NextResponse.json(
+        { error: "Contact number is required" },
         { status: 400 }
       );
     }
