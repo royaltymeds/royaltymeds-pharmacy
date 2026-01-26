@@ -35,39 +35,62 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all patients linked to this doctor
-    const { data: linkedPatients, error: linkError } = await supabase
+    // Get all patient IDs linked to this doctor (simple query to avoid RLS join issues)
+    const { data: linkedPatientIds, error: linkError } = await supabase
       .from("doctor_patient_links")
-      .select(
-        `
-        patient_id,
-        users:patient_id(
-          id,
-          email,
-          user_profiles(
-            id,
-            full_name,
-            phone,
-            address,
-            date_of_birth
-          )
-        )
-      `
-      )
+      .select("patient_id")
       .eq("doctor_id", user.id);
 
     if (linkError) {
-      console.error("[doctor/patients API] Error fetching linked patients:", linkError);
+      console.error("[doctor/linked-patients API] Error fetching linked patient IDs:", linkError);
+      console.error("[doctor/linked-patients API] User ID:", user.id);
+      console.error("[doctor/linked-patients API] Full error details:", {
+        message: linkError.message,
+        code: linkError.code,
+        details: linkError.details,
+        hint: linkError.hint,
+      });
       return NextResponse.json(
-        { error: linkError.message },
+        { error: linkError.message, details: linkError.details },
+        { status: 500 }
+      );
+    }
+
+    if (!linkedPatientIds || linkedPatientIds.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // Now fetch user and profile data for each patient
+    const patientIds = linkedPatientIds.map((link: any) => link.patient_id);
+    
+    const { data: patients, error: patientError } = await supabase
+      .from("users")
+      .select(
+        `
+        id,
+        email,
+        user_profiles(
+          id,
+          full_name,
+          phone,
+          address,
+          date_of_birth
+        )
+      `
+      )
+      .in("id", patientIds);
+
+    if (patientError) {
+      console.error("[doctor/linked-patients API] Error fetching patient details:", patientError);
+      return NextResponse.json(
+        { error: patientError.message },
         { status: 500 }
       );
     }
 
     // Format the response
-    const formattedPatients = (linkedPatients || [])
-      .map((link: any) => {
-        const patientUser = link.users;
+    const formattedPatients = (patients || [])
+      .map((patientUser: any) => {
         const profile = patientUser?.user_profiles?.[0];
         return {
           id: patientUser?.id,
@@ -78,7 +101,7 @@ export async function GET(request: NextRequest) {
           dateOfBirth: profile?.date_of_birth,
         };
       })
-      .filter((p: any) => p.id); // Filter out any null entries
+      .filter((p: any) => p.id);
 
     return NextResponse.json(formattedPatients);
   } catch (error: any) {

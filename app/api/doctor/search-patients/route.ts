@@ -39,34 +39,41 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
 
+    console.log("[search-patients] Search query:", search);
+
     if (!search || search.length < 2) {
+      console.log("[search-patients] Search too short, returning empty");
       return NextResponse.json([]);
     }
 
     // Search for patients by email or name (excluding already linked patients)
-    const { data: patients, error: searchError } = await supabase
+    console.log("[search-patients] Searching with ilike pattern");
+    
+    // First, search users by email
+    let query = supabase
       .from("users")
       .select(
         `
         id,
         email,
-        user_profiles(
+        user_profiles!inner (
           full_name,
-          phone
+          phone,
+          address,
+          date_of_birth
         )
       `
       )
-      .eq("role", "patient")
-      .or(`email.ilike.%${search}%,user_profiles.full_name.ilike.%${search}%`)
-      .limit(10);
+      .eq("role", "patient");
 
-    if (searchError) {
-      console.error("[search-patients API] Error searching:", searchError);
-      return NextResponse.json(
-        { error: searchError.message },
-        { status: 500 }
-      );
-    }
+    // Add search filter - can search by email or full_name
+    const searchTerm = `%${search}%`;
+    query = query.or(`email.ilike.${searchTerm},user_profiles.full_name.ilike.${searchTerm}`);
+    query = query.limit(10);
+
+    const { data: patients, error: searchError } = await query;
+
+    console.log("[search-patients] Search results:", { patients, error: searchError });
 
     // Filter out already linked patients
     const { data: linkedIds } = await supabase
@@ -81,10 +88,13 @@ export async function GET(request: NextRequest) {
       .map((p: any) => ({
         id: p.id,
         email: p.email,
-        fullName: p.user_profiles?.[0]?.full_name || "Unknown",
-        phone: p.user_profiles?.[0]?.phone || "N/A",
+        fullName: p.user_profiles?.[0]?.full_name || p.user_profiles?.full_name || "Unknown",
+        phone: p.user_profiles?.[0]?.phone || p.user_profiles?.phone || "N/A",
+        address: p.user_profiles?.[0]?.address || p.user_profiles?.address || null,
+        dateOfBirth: p.user_profiles?.[0]?.date_of_birth || p.user_profiles?.date_of_birth || null,
       }));
 
+    console.log("[search-patients] Filtered results count:", filteredPatients.length);
     return NextResponse.json(filteredPatients);
   } catch (error: any) {
     console.error("[search-patients API] Unexpected error:", error);
