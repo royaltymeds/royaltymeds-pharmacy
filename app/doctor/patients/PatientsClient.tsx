@@ -66,7 +66,7 @@ export default function PatientsClient() {
       );
       if (res.ok) {
         const data = await res.json();
-        setSearchResults(data.patients || []);
+        setSearchResults(Array.isArray(data) ? data : data.patients || []);
       }
     } catch (error) {
       console.error("Error searching patients:", error);
