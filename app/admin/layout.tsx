@@ -93,14 +93,14 @@ export default async function AdminLayout({
             </div>
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
-              <Link href="/patient/home" className="text-xs md:text-sm text-gray-700 hover:text-green-600 font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-green-50 transition">
+              {/* <Link href="/patient/home" className="text-xs md:text-sm text-gray-700 hover:text-green-600 font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-green-50 transition">
                 My Customer Portal
-              </Link>
+              </Link> */}
               <span className="hidden sm:inline text-xs md:text-sm text-gray-600 truncate max-w-[150px]">{userEmail}</span>
               <LogoutButton className="text-xs md:text-sm text-gray-700 hover:text-green-600 font-medium whitespace-nowrap" />
             </div>
 
-            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} extraLinks={[{ href: "/", label: "Home" }, { href: "/patient/home", label: "My Customer Portal" }]} />
+            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} extraLinks={[{ href: "/", label: "Home" }]} />
           </div>
         </div>
       </nav>
