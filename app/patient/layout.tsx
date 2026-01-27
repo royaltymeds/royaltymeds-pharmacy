@@ -51,6 +51,17 @@ export default async function PatientLayout({
 
   const userEmail = await getPatientEmail();
   const userRole = await getPatientRole();
+  
+  // Redirect non-patients to their appropriate portals
+  if (userRole === "doctor") {
+    console.log("[PatientLayout] Doctor user trying to access patient portal, redirecting to /doctor/dashboard");
+    redirect("/doctor/dashboard");
+  }
+  
+  if (userRole === "admin") {
+    console.log("[PatientLayout] Admin user trying to access patient portal, redirecting to /admin/dashboard");
+    redirect("/admin/dashboard");
+  }
 
   const navLinks = [
     { href: "/patient/home", label: "Dashboard" },

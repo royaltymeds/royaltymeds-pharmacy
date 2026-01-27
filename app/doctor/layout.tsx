@@ -14,6 +14,24 @@ async function getDoctorEmail() {
   }
 }
 
+async function getDoctorRole() {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const { data: userData } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    
+    return (userData as any)?.role || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 export default async function DoctorLayout({
   children,
 }: {
@@ -28,6 +46,16 @@ export default async function DoctorLayout({
   }
 
   const userEmail = await getDoctorEmail();
+  const userRole = await getDoctorRole();
+  
+  // Redirect non-doctors to appropriate portals
+  if (userRole !== "doctor") {
+    console.log("[DoctorLayout] Non-doctor user trying to access doctor portal, redirecting");
+    if (userRole === "admin") {
+      redirect("/admin/dashboard");
+    }
+    redirect("/patient/home");
+  }
 
   const navLinks = [
     { href: "/doctor/dashboard", label: "Dashboard" },

@@ -15,6 +15,24 @@ async function getAdminEmail() {
   }
 }
 
+async function getAdminRole() {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const { data: userData } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    
+    return (userData as any)?.role || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 export default async function AdminLayout({
   children,
 }: {
@@ -29,6 +47,16 @@ export default async function AdminLayout({
   }
 
   const userEmail = await getAdminEmail();
+  const userRole = await getAdminRole();
+  
+  // Only admins can access admin portal
+  if (userRole !== "admin") {
+    console.log("[AdminLayout] Non-admin user trying to access admin portal, redirecting");
+    if (userRole === "doctor") {
+      redirect("/doctor/dashboard");
+    }
+    redirect("/patient/home");
+  }
 
   const navLinks = [
     { href: "/admin/dashboard", label: "Dashboard" },
