@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { MobileSidebar } from "@/components/MobileSidebar";
 import { DesktopNav } from "@/components/DesktopNav";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createServerSupabaseClient, createServerAdminClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
 async function getAdminEmail() {
@@ -21,14 +21,19 @@ async function getAdminRole() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     
-    const { data: userData } = await supabase
+    // Use service role to bypass RLS
+    const adminClient = await createServerAdminClient();
+    const { data: userData, error } = await adminClient
       .from("users")
       .select("role")
       .eq("id", user.id)
       .single();
     
+    console.log("[AdminLayout] getAdminRole - userId:", user.id, "userData:", userData, "error:", error?.message);
+    
     return (userData as any)?.role || null;
   } catch (error) {
+    console.error("[AdminLayout] getAdminRole error:", error);
     return null;
   }
 }
@@ -49,9 +54,11 @@ export default async function AdminLayout({
   const userEmail = await getAdminEmail();
   const userRole = await getAdminRole();
   
+  console.log("[AdminLayout] User role check - role:", userRole, "email:", userEmail);
+  
   // Only admins can access admin portal
   if (userRole !== "admin") {
-    console.log("[AdminLayout] Non-admin user trying to access admin portal, redirecting");
+    console.log("[AdminLayout] Non-admin user trying to access admin portal, userRole:", userRole, "redirecting");
     if (userRole === "doctor") {
       redirect("/doctor/dashboard");
     }

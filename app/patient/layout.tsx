@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { MobileSidebar } from "@/components/MobileSidebar";
 import { CartBadge } from "@/components/CartBadge";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createServerSupabaseClient, createServerAdminClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
 async function getPatientEmail() {
@@ -21,14 +21,19 @@ async function getPatientRole() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     
-    const { data: userData } = await supabase
+    // Use service role to bypass RLS
+    const adminClient = await createServerAdminClient();
+    const { data: userData, error } = await adminClient
       .from("users")
       .select("role")
       .eq("id", user.id)
       .single();
     
+    console.log("[PatientLayout] getPatientRole - userId:", user.id, "userData:", userData, "error:", error?.message);
+    
     return (userData as any)?.role || null;
   } catch (error) {
+    console.error("[PatientLayout] getPatientRole error:", error);
     return null;
   }
 }
@@ -51,6 +56,8 @@ export default async function PatientLayout({
 
   const userEmail = await getPatientEmail();
   const userRole = await getPatientRole();
+  
+  console.log("[PatientLayout] User role check - role:", userRole, "email:", userEmail);
   
   // Redirect non-patients to their appropriate portals
   if (userRole === "doctor") {

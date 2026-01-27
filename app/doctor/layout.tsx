@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { MobileSidebar } from "@/components/MobileSidebar";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createServerSupabaseClient, createServerAdminClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
 async function getDoctorEmail() {
@@ -20,14 +20,19 @@ async function getDoctorRole() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     
-    const { data: userData } = await supabase
+    // Use service role to bypass RLS
+    const adminClient = await createServerAdminClient();
+    const { data: userData, error } = await adminClient
       .from("users")
       .select("role")
       .eq("id", user.id)
       .single();
     
+    console.log("[DoctorLayout] getDoctorRole - userId:", user.id, "userData:", userData, "error:", error?.message);
+    
     return (userData as any)?.role || null;
   } catch (error) {
+    console.error("[DoctorLayout] getDoctorRole error:", error);
     return null;
   }
 }
@@ -48,9 +53,11 @@ export default async function DoctorLayout({
   const userEmail = await getDoctorEmail();
   const userRole = await getDoctorRole();
   
+  console.log("[DoctorLayout] User role check - role:", userRole, "email:", userEmail);
+  
   // Redirect non-doctors to appropriate portals
   if (userRole !== "doctor") {
-    console.log("[DoctorLayout] Non-doctor user trying to access doctor portal, redirecting");
+    console.log("[DoctorLayout] Non-doctor user trying to access doctor portal, userRole:", userRole, "redirecting");
     if (userRole === "admin") {
       redirect("/admin/dashboard");
     }
