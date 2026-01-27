@@ -8,9 +8,13 @@ import { getSupabaseClient } from "@/lib/supabase-client";
 export default function PortalRedirectPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [from, setFrom] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    // Get the 'from' query parameter
+    const params = new URLSearchParams(window.location.search);
+    setFrom(params.get("from"));
   }, []);
 
   useEffect(() => {
@@ -21,9 +25,12 @@ export default function PortalRedirectPage() {
         const supabase = getSupabaseClient();
         const { data: { session } } = await supabase.auth.getSession();
 
-        // If not logged in, go to admin login (pharmacist portal)
+        // If not logged in, redirect based on which button was clicked
         if (!session) {
-          router.push("/admin-login");
+          // If 'from=header', user clicked "Portal Login" → go to regular login
+          // If 'from=footer', user clicked "Pharmacist Portal" → go to admin login
+          const redirectUrl = from === "header" ? "/login" : "/admin-login";
+          router.push(redirectUrl);
           return;
         }
 
