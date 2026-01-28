@@ -7,9 +7,9 @@
 **Status:** ✅ LIVE IN PRODUCTION  
 **URL:** https://royaltymedsprescript.vercel.app  
 **Build:** Passing (0 errors)  
-**Commits:** 380+ across 20 days  
+**Commits:** 382+ across 21 days  
 **Features:** 125+ fully functional  
-**Latest Update:** Jan 27, 2026 - Authentication redirects and role-based portal access fixed    
+**Latest Update:** Jan 28, 2026 - RLS fixes in prescription items and fill endpoints    
 
 ---
 

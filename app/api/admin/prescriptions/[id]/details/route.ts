@@ -44,8 +44,11 @@ export async function PATCH(
       );
     }
 
-    // Check if user is admin
-    const { data: userData } = await supabase
+    // Use service role client for database operations and admin verification
+    const supabaseAdmin = createClient(URL, SERVICE_ROLE_KEY);
+
+    // Check if user is admin using service role to bypass RLS
+    const { data: userData } = await supabaseAdmin
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -57,9 +60,6 @@ export async function PATCH(
         { status: 403 }
       );
     }
-
-    // Use service role client for database operation (bypasses RLS)
-    const supabaseAdmin = createClient(URL, SERVICE_ROLE_KEY);
 
     // Build update object with only provided fields
     const updateData: Record<string, any> = {};
