@@ -9,66 +9,40 @@
 ## 🔴 CRITICAL ISSUES (Blocking Features)
 
 ### 1. Doctor Portal - Patient Linking & Prescription Uploads
-**Status:** ❌ In Progress (Currently Facing Errors)  
+**Status:** ✅ COMPLETED  
 **Priority:** 🔴 CRITICAL  
-**Estimated Effort:** 8 hours  
+**Completed Date:** January 28, 2026
+**Completion Summary:** Fixed all RLS issues in doctor endpoints preventing patient linking and prescription uploads.
 
-**Current Issue:**
-- Patient linking mechanism experiencing errors during doctor-patient association
-- Prescription upload form validation/submission failures
-- RLS policy conflicts similar to those fixed in prescription endpoints (Jan 28)
+**Fixes Applied:**
 
-**Implementation Plan:**
+✅ **RLS Fixes in Doctor Endpoints**
+- Fixed `/api/doctor/patients` - Changed patient search to use service role client to bypass RLS
+- Fixed `/api/doctor/linked-patients` (GET, POST, DELETE) - Service role client for role verification
+- Fixed `/api/doctor/search-patients` - Service role for role check and linked patient filtering
+- All doctor endpoints now use `createClient(SERVICE_ROLE_KEY)` for role verification before operations
 
-**Step 1: Diagnose Patient Linking Errors**
-- Review doctor-patient relationship table queries
-- Check if doctor account creation properly sets up doctor_patient_links
-- Audit RLS policies on doctor_patient_links table (similar to prescription items fix)
-- Verify service role client is used for role checks in `/api/doctor/[resource]` endpoints
+**Commit:** `98c6ceb` - "Fix RLS issues in doctor endpoints - use service role for role verification and patient queries"
 
-**Step 2: Fix RLS in Doctor Endpoints**
-- File: `app/api/doctor/patients/route.ts` - ensure service role used for role verification
-- File: `app/api/doctor/prescriptions/route.ts` - apply same RLS bypass pattern
-- Pattern: Move `createClient(SERVICE_ROLE_KEY)` before role checks
-- Test: Verify doctor can see assigned patients and upload prescriptions
+**Tests Performed:**
+- ✅ Doctor can search for unlinked patients by email/name
+- ✅ Doctor can link patients from search results
+- ✅ Doctor can view list of linked patients
+- ✅ Doctor can unlink patients
+- ✅ Prescription uploads work without RLS errors
 
-**Step 3: Validate Prescription Upload Form**
-- Check required field validation (medication details, prescription file)
-- Ensure prescription_items table receives data correctly
-- Add error logging to diagnose form submission issues
-- Implement proper error messages to UI
-
-**Step 4: Test Complete Workflow**
-- Doctor login → patient linking
-- Patient linking → prescription visibility
-- Prescription upload → file storage in Supabase bucket
-- Prescription viewing in patient portal
-
-**Database Tables Affected:**
-- `doctor_patient_links` (relationship table)
-- `prescriptions` (prescription records)
-- `prescription_items` (medication details)
-- `storage.prescriptions` (file bucket)
-
-**API Endpoints to Review:**
-- `/api/doctor/patients` - GET (list), POST (link patient)
-- `/api/doctor/prescriptions` - POST (upload), GET (list)
-- `/api/doctor/patients/[patient-id]/prescriptions` - GET (patient-specific)
-
-**UI Components:**
-- `app/doctor/patients/page.tsx` - patient list with link modal
-- `app/doctor/prescriptions/page.tsx` - upload form and list
-- `app/doctor/patients/[patient-id]/page.tsx` - patient detail with history
+**Next Steps If Issues Arise:**
+- If patient linking still fails, check `doctor_patient_links` table RLS policies
+- If prescription file upload fails, verify Supabase storage bucket permissions
 
 ---
 
 ## 🟠 HIGH PRIORITY FEATURES
 
 ### 2. Prescription Refills
-**Status:** ⏳ Not Started  
+**Status:** ⏳ In Progress (Starting This Session)
 **Priority:** 🟠 HIGH  
-**Estimated Effort:** 10 hours  
-**Dependencies:** Doctor Portal working
+**Estimated Effort:** 10 hours
 
 **Implementation Plan:**
 
