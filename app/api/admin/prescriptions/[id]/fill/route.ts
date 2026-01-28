@@ -44,8 +44,11 @@ export async function PATCH(
       );
     }
 
-    // Check if user is admin
-    const { data: userData } = await supabase
+    // Use service role client for database operations and admin verification
+    const supabaseAdmin = createClient(URL, SERVICE_ROLE_KEY);
+
+    // Check if user is admin using service role to bypass RLS
+    const { data: userData } = await supabaseAdmin
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -59,16 +62,13 @@ export async function PATCH(
     }
 
     // Get admin user profile for pharmacist name
-    const { data: userProfile } = await supabase
+    const { data: userProfile } = await supabaseAdmin
       .from("user_profiles")
       .select("full_name")
       .eq("user_id", user.id)
       .single();
 
     const pharmacistName = userProfile?.full_name || user.email || "Unknown";
-
-    // Use service role client for database operations
-    const supabaseAdmin = createClient(URL, SERVICE_ROLE_KEY);
 
     // Fetch prescription with items
     const { data: prescription, error: prescriptionError } = await supabaseAdmin
