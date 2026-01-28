@@ -25,15 +25,16 @@ export async function GET(request: NextRequest) {
     // Build query for OTC drugs
     let query = supabase
       .from('otc_drugs')
-      .select('id, name, category, sub_category, sku, unit_price, sale_price, sale_discount_percent, sale_start_date, sale_end_date, quantity_on_hand, status, is_on_sale, description, active_ingredient, strength, pack_size', { count: 'exact' })
+      .select('id, name, category, sub_category, sku, unit_price, sale_price, sale_discount_percent, sale_start_date, sale_end_date, quantity_on_hand, status, description, active_ingredient, strength, pack_size', { count: 'exact' })
       .eq('category_type', categoryType)
       .eq('status', 'active');
 
     // Filter by active sale dates unless includeExpired is true
     if (!includeExpired && categoryType === 'sale') {
+      const now = new Date().toISOString();
       query = query
-        .lte('sale_start_date', new Date().toISOString())
-        .gte('sale_end_date', new Date().toISOString());
+        .lte('sale_start_date', now)
+        .gte('sale_end_date', now);
     }
 
     query = query
@@ -50,15 +51,16 @@ export async function GET(request: NextRequest) {
     // Build query for prescription drugs
     let prescriptionQuery = supabase
       .from('prescription_drugs')
-      .select('id, name, category, sub_category, sku, unit_price, sale_price, sale_discount_percent, sale_start_date, sale_end_date, quantity_on_hand, status, is_on_sale, description, active_ingredient, strength', { count: 'exact' })
+      .select('id, name, category, sub_category, sku, unit_price, sale_price, sale_discount_percent, sale_start_date, sale_end_date, quantity_on_hand, status, description, active_ingredient, strength', { count: 'exact' })
       .eq('category_type', categoryType)
       .eq('status', 'active');
 
     // Filter by active sale dates unless includeExpired is true
     if (!includeExpired && categoryType === 'sale') {
+      const now = new Date().toISOString();
       prescriptionQuery = prescriptionQuery
-        .lte('sale_start_date', new Date().toISOString())
-        .gte('sale_end_date', new Date().toISOString());
+        .lte('sale_start_date', now)
+        .gte('sale_end_date', now);
     }
 
     prescriptionQuery = prescriptionQuery
