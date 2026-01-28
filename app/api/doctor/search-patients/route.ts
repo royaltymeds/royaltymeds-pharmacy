@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if current user is a doctor
-    const { data: currentUser } = await supabase
+    // Check if current user is a doctor using service role to bypass RLS
+    const { data: currentUser } = await serviceRoleClient
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -82,8 +82,8 @@ export async function GET(request: NextRequest) {
 
     console.log("[search-patients] Search results:", { patients, error: searchError });
 
-    // Filter out already linked patients
-    const { data: linkedIds } = await supabase
+    // Filter out already linked patients using service role to bypass RLS
+    const { data: linkedIds } = await serviceRoleClient
       .from("doctor_patient_links")
       .select("patient_id")
       .eq("doctor_id", user.id);

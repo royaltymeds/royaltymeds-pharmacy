@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Use service role client to bypass RLS for patient search
+    const serviceRoleClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Get query parameters
     const url = new URL(request.url);
     const search = url.searchParams.get("search");
 
-    let query = supabase
+    let query = serviceRoleClient
       .from("users")
       .select("id, email, user_profiles(full_name, phone)")
       .eq("role", "patient");  // Only fetch patients, not doctors or admins
