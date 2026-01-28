@@ -43,8 +43,14 @@ export async function POST(
       );
     }
 
-    // Check if user is admin
-    const { data: userData } = await supabase
+    // Create admin client that bypasses RLS using service role key
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Check if user is admin using service role to bypass RLS
+    const { data: userData } = await supabaseAdmin
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -67,13 +73,7 @@ export async function POST(
       );
     }
 
-    // Create admin client that bypasses RLS using service role key
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // Insert prescription item
+    // Insert prescription item using admin client
     const { data, error } = await supabaseAdmin
       .from("prescription_items")
       .insert([
@@ -146,8 +146,14 @@ export async function PATCH(
       );
     }
 
-    // Check if user is admin
-    const { data: userData } = await supabase
+    // Create admin client that bypasses RLS using service role key
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Check if user is admin using service role to bypass RLS
+    const { data: userData } = await supabaseAdmin
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -170,13 +176,7 @@ export async function PATCH(
       );
     }
 
-    // Create admin client that bypasses RLS using service role key
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // Update prescription item
+    // Update prescription item using admin client
     const { data, error } = await supabaseAdmin
       .from("prescription_items")
       .update({
@@ -247,8 +247,14 @@ export async function DELETE(
       );
     }
 
-    // Check if user is admin
-    const { data: userData } = await supabase
+    // Create admin client that bypasses RLS using service role key
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Check if user is admin using service role to bypass RLS
+    const { data: userData } = await supabaseAdmin
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -270,13 +276,7 @@ export async function DELETE(
       );
     }
 
-    // Create admin client that bypasses RLS using service role key
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // Delete prescription item
+    // Delete prescription item using admin client
     const { error } = await supabaseAdmin
       .from("prescription_items")
       .delete()
