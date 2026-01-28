@@ -1,11 +1,11 @@
 # Complete Git History & Feature Analysis
-**RoyaltyMeds Prescription Platform - 376+ Total Commits**
+**RoyaltyMeds Prescription Platform - 380+ Total Commits**
 
-**Analysis Date:** January 26, 2026  
+**Analysis Date:** January 27, 2026  
 **Repository:** royaltymeds_prescript  
-**Time Period:** January 8, 2026 - January 26, 2026 (19 days)  
-**Active Contributors:** 3 (princewebclient, yueniqdevteam, royaltymeds)  
-**Latest Commit:** f4fa609 - Fix: Insert user_profiles record when creating doctor account
+**Time Period:** January 8, 2026 - January 27, 2026 (20 days)  
+**Active Contributors:** 3 (princewebclient, yueniqdevteam, GitHub Copilot)  
+**Latest Commit:** 7f8d198 - Comment out My Customer Portal buttons in doctor and admin headers
 
 ---
 
@@ -13,15 +13,15 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Commits** | 376+ |
-| **Project Duration** | 19 days |
-| **Active Days** | 17 days |
+| **Total Commits** | 380+ |
+| **Project Duration** | 20 days |
+| **Active Days** | 18 days |
 | **Busiest Day** | Jan 24, 2026 (27 commits in 20 hours) |
-| **Average Commits/Day** | ~20 commits |
-| **Lead Developer** | princewebclient (~350+ commits), yueniqdevteam (~26+ commits) |
+| **Average Commits/Day** | ~19 commits |
+| **Lead Developer** | princewebclient (~350+ commits), yueniqdevteam (~26+ commits), GitHub Copilot (4+ commits) |
 | **Build Status** | ✅ Passing (0 errors) |
 | **Deployment Status** | ✅ Vercel Production (Live) |
-| **Latest Update** | Jan 26, 2026 - Doctor account creation with proper profile insert |
+| **Latest Update** | Jan 27, 2026 - Authentication redirect fixes and role-based portal access |
 
 ---
 
@@ -802,16 +802,43 @@ Redirect to profile/dashboard
 
 **Repository Size:** ~25 MB  
 **Active Files:** 200+ (tsx, ts, css, sql)  
-**Lines of Code:** ~40,000+ (application code)  
+**Lines of Code:** ~40,500+ (application code)  
 **Build Output:** Zero errors, minimal warnings  
 **Test Coverage:** Comprehensive manual test checklist created  
-**Documentation:** 15+ markdown files  
+**Documentation:** 16+ markdown files  
+
+---
+
+## 🔧 Phase 11: Authentication & Portal Redirect Fixes (Jan 27, 2026)
+**Status:** ✅ Complete | **Commits:** 4
+
+Major authentication flow improvements and role-based portal access control:
+
+**Commits:**
+- `f2c4dd3` - Fix authentication redirects: add role-based portal access control and update logout redirect
+- `3a361b3` - Fix role-based portal access by using service role for role queries
+- `087d710` - Fix portal redirect logic to distinguish between header and footer buttons
+- `7f8d198` - Comment out My Customer Portal buttons in doctor and admin headers
+
+**Key Improvements:**
+- ✅ Logout now redirects to home page (`/`) instead of portal-redirect
+- ✅ Added role checks to doctor, admin, and patient layouts using service role client
+- ✅ Distinguished between header "Portal Login" (→ `/login`) and footer "Pharmacist Portal" (→ `/admin-login`) buttons
+- ✅ Portal redirect page now uses query parameters (`?from=header` vs `?from=footer`) to route unauthenticated users correctly
+- ✅ Commented out "My Customer Portal" buttons in doctor and admin headers for future use
+- ✅ Role-based routing preserved for authenticated users
+
+**Impact:**
+- Fixed issue where unauthenticated users clicking "Portal Login" were redirected to admin-login instead of patient login
+- Fixed RLS restrictions blocking role queries by using service role client
+- Improved UX by providing clear separation between patient and pharmacist/admin portals
+- Maintained backward compatibility for logged-in users with automatic role-based routing
 
 ---
 
 ## ✅ Verification Checklist
 
-- ✅ All 348 commits analyzed
+- ✅ All 380+ commits analyzed
 - ✅ All major features documented
 - ✅ Build status verified (passing)
 - ✅ Deployment confirmed (Vercel)
@@ -820,9 +847,11 @@ Redirect to profile/dashboard
 - ✅ Payment system functional
 - ✅ User workflows documented
 - ✅ Performance optimized
+- ✅ Authentication flows fixed
+- ✅ Portal redirects working correctly
 - ✅ Documentation complete
 
 ---
 
 **End of Git History Analysis Document**  
-*Generated: January 25, 2026*
+*Generated: January 27, 2026*

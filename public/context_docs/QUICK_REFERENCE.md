@@ -7,9 +7,9 @@
 **Status:** ✅ LIVE IN PRODUCTION  
 **URL:** https://royaltymedsprescript.vercel.app  
 **Build:** Passing (0 errors)  
-**Commits:** 376+ across 19 days  
-**Features:** 120+ fully functional  
-**Latest Update:** Jan 26, 2026 - Doctor account creation and profile management complete    
+**Commits:** 380+ across 20 days  
+**Features:** 125+ fully functional  
+**Latest Update:** Jan 27, 2026 - Authentication redirects and role-based portal access fixed    
 
 ---
 
