@@ -20,8 +20,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if current user is admin
-    const { data: currentUser } = await supabase
+    // Create admin service client
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Check if current user is admin using service role to bypass RLS
+    const { data: currentUser } = await adminClient
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -33,32 +39,6 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
-
-    const { email, password, fullName, phone, address } = await request.json();
-
-    // Log received data for debugging
-    console.log("[create-user API] Received fields:", { email, password: "***", fullName, phone, address });
-
-    if (!email || !password || !fullName || !phone || !address) {
-      const missingFields = [];
-      if (!email) missingFields.push("email");
-      if (!password) missingFields.push("password");
-      if (!fullName) missingFields.push("fullName");
-      if (!phone) missingFields.push("phone");
-      if (!address) missingFields.push("address");
-      
-      console.warn("[create-user API] Missing fields:", missingFields);
-      return NextResponse.json(
-        { error: `Missing required fields: ${missingFields.join(", ")}` },
-        { status: 400 }
-      );
-    }
-
-    // Create admin service client
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // Create auth user
     const { data: authData, error: createError } = await adminClient.auth.admin.createUser({
