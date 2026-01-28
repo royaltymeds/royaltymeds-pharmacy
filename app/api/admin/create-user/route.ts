@@ -40,6 +40,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { email, password, fullName, phone, address } = await request.json();
+
+    // Log received data for debugging
+    console.log("[create-user API] Received fields:", { email, password: "***", fullName, phone, address });
+
+    if (!email || !password || !fullName || !phone || !address) {
+      const missingFields = [];
+      if (!email) missingFields.push("email");
+      if (!password) missingFields.push("password");
+      if (!fullName) missingFields.push("fullName");
+      if (!phone) missingFields.push("phone");
+      if (!address) missingFields.push("address");
+      
+      console.warn("[create-user API] Missing fields:", missingFields);
+      return NextResponse.json(
+        { error: `Missing required fields: ${missingFields.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     // Create auth user
     const { data: authData, error: createError } = await adminClient.auth.admin.createUser({
       email,
