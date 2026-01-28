@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import nodemailer from 'nodemailer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// Initialize SMTP transporter with Gmail/Google Workspace
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 interface EmailRequest {
   to: string | string[];
@@ -136,29 +148,65 @@ export async function POST(request: NextRequest) {
     // Generate email template
     generateEmailTemplate(type, data); // Generate for future use (Edge Function implementation)
 
-    // Log email in database instead of sending
-    const { data: logEntry, error: logError } = await supabase
-      .from('email_logs')
-      .insert({
-        recipientEmail: Array.isArray(to) ? to[0] : to,
+    // Prepare recipients
+    const recipients = Array.isArray(to) ? to : [to];
+
+    try {
+      // Send email via SMTP
+      const info = await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: recipients.join(','),
         subject,
-        templateType: type,
-        status: 'sent',
-        messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        metadata: { recipients: to, type, data },
-      })
-      .select()
-      .single();
+        html: generateEmailTemplate(type, data).html,
+        text: generateEmailTemplate(type, data).text,
+      });
 
-    if (logError) {
-      console.error('Failed to log email:', logError);
-      return NextResponse.json({ error: 'Failed to log email' }, { status: 500 });
+      // Log successful send to database
+      const { error: logError } = await supabase
+        .from('email_logs')
+        .insert({
+          recipientEmail: recipients[0],
+          subject,
+          templateType: type,
+          status: 'sent',
+          sentAt: new Date().toISOString(),
+          messageId: info.messageId || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          metadata: { recipients, type, data, smtpResponse: info.response },
+        })
+        .select()
+        .single();
+
+      if (logError) {
+        console.error('Failed to log email:', logError);
+      }
+
+      return NextResponse.json({
+        message: 'Email sent successfully',
+        messageId: info.messageId,
+        recipients,
+      });
+    } catch (sendError) {
+      console.error('SMTP Error:', sendError);
+
+      // Log failed send to database
+      await supabase
+        .from('email_logs')
+        .insert({
+          recipientEmail: recipients[0],
+          subject,
+          templateType: type,
+          status: 'failed',
+          sentAt: new Date().toISOString(),
+          failureReason: sendError instanceof Error ? sendError.message : 'Unknown error',
+          messageId: `msg_failed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          metadata: { recipients, type, data, error: sendError instanceof Error ? sendError.message : 'Unknown' },
+        });
+
+      return NextResponse.json(
+        { error: 'Failed to send email', details: sendError instanceof Error ? sendError.message : 'Unknown error' },
+        { status: 500 }
+      );
     }
-
-    return NextResponse.json({
-      message: 'Email queued successfully',
-      messageId: logEntry.messageId,
-    });
   } catch (error) {
     console.error('Error sending email:', error);
     return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
