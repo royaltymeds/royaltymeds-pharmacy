@@ -1,79 +1,161 @@
-import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { redirect } from "next/navigation";
-import { MessageSquareIcon } from "lucide-react";
+'use client';
 
-export const dynamic = "force-dynamic";
+import { useEffect, useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import Link from 'next/link';
 
-interface Message {
+interface Conversation {
   id: string;
-  message_text: string;
-  sender_id: string;
+  patient_id: string;
+  admin_id: string;
+  admin_name?: string;
+  admin_email?: string;
+  subject: string;
+  last_message_at: string;
   created_at: string;
+  unread_count?: number;
 }
 
-async function getMessages(userId: string): Promise<{ messages: Message[]; currentUserId: string }> {
-  try {
-    const supabase = await createServerSupabaseClient();
-    const { data } = await supabase
-      .from("messages")
-      .select("*")
-      .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
-      .order("created_at", { ascending: true });
-    return { messages: data || [], currentUserId: userId };
-  } catch (error) {
-    console.error("Error fetching messages:", error);
-    return { messages: [], currentUserId: userId };
+export default function MessagesPage() {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  useEffect(() => {
+    loadConversations();
+  }, [filter]);
+
+  const loadConversations = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        setError('You must be logged in');
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (filter === 'unread') {
+        params.append('unread_only', 'true');
+      }
+
+      const response = await fetch(`/api/patient/messages?${params}`, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to load conversations');
+      const data = await response.json();
+      setConversations(data.conversations || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
   }
-}
-
-export default async function MessagesPage() {
-  // Auth check
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  // Fetch messages
-  const { messages, currentUserId } = await getMessages(user.id);
 
   return (
-    <div className="space-y-3 sm:space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 border-l-4 border-green-600">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Messages</h1>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-2">Communication with pharmacy and support team</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Messages</h1>
+          <p className="text-gray-600">View and respond to messages from our pharmacy team</p>
+        </div>
 
-      {/* Messages List */}
-      {messages && messages.length > 0 ? (
-        <div className="space-y-2 sm:space-y-3 md:space-y-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-2 sm:gap-3 md:gap-4 auto-rows-max">
-          {messages.map((message: any) => (
-            <div key={message.id} className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 hover:shadow-md transition border-t-4 border-green-500 h-full">
-              <div className="flex items-start justify-between gap-2 sm:gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 text-sm sm:text-base">
-                    {message.sender_id === currentUserId ? "You" : "Pharmacy Support"}
-                  </p>
-                  <p className="text-gray-700 mt-2 text-xs sm:text-sm">{message.message_text}</p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {new Date(message.created_at).toLocaleString()}
-                  </p>
-                </div>
-                {message.sender_id === currentUserId && (
-                  <span className="text-xs font-medium text-green-600 whitespace-nowrap flex-shrink-0">Sent</span>
-                )}
-              </div>
-            </div>
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-6 border-b border-gray-200">
+          {(['all', 'unread'] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 font-medium border-b-2 transition ${
+                filter === f
+                  ? 'border-green-600 text-green-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {f === 'all' ? 'All' : 'Unread'}
+            </button>
           ))}
         </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8 md:p-12 text-center">
-          <MessageSquareIcon className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2">No Messages Yet</h3>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600">
-            Messages between you and the pharmacy will appear here.
-          </p>
-        </div>
-      )}
+
+        {/* Conversations List */}
+        {conversations.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-gray-500 mb-4">
+              {filter === 'unread' ? 'No unread messages' : 'No conversations yet'}
+            </p>
+            <p className="text-sm text-gray-400">
+              You can contact the pharmacy team through your prescription or order pages
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {conversations.map(conversation => (
+              <Link
+                key={conversation.id}
+                href={`/patient/messages/${conversation.id}`}
+                className="block bg-white rounded-lg shadow p-4 hover:shadow-md hover:bg-gray-50 transition"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">{conversation.subject}</h3>
+                      {conversation.unread_count && conversation.unread_count > 0 && (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
+                          {conversation.unread_count}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      With {conversation.admin_name || conversation.admin_email || 'Pharmacy Team'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Last message {new Date(conversation.last_message_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-600">
+                        {new Date(conversation.last_message_at).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

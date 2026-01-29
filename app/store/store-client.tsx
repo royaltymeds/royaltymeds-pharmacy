@@ -19,6 +19,7 @@ interface Props {
 export default function StoreClientComponent({ drugs }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [saleFilter, setSaleFilter] = useState<'all' | 'sale' | 'clearance'>('all');
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { addItem } = useCart();
@@ -45,9 +46,17 @@ export default function StoreClientComponent({ drugs }: Props) {
 
       const matchesCategory = selectedCategory ? drug.category === selectedCategory : true;
 
-      return matchesSearch && matchesCategory;
+      // Filter by sale status
+      let matchesSale = true;
+      if (saleFilter === 'sale') {
+        matchesSale = drug.is_on_sale === true && drug.category_type === 'sale';
+      } else if (saleFilter === 'clearance') {
+        matchesSale = drug.category_type === 'clearance';
+      }
+
+      return matchesSearch && matchesCategory && matchesSale;
     });
-  }, [activeDrugs, searchTerm, selectedCategory]);
+  }, [activeDrugs, searchTerm, selectedCategory, saleFilter]);
 
   const handleAddToCart = async (drug: OTCDrug) => {
     // Check authentication
@@ -134,6 +143,45 @@ export default function StoreClientComponent({ drugs }: Props) {
           </div>
         </div>
 
+        {/* Sale Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Deals & Clearance
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSaleFilter('all')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                saleFilter === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+              }`}
+            >
+              All Products
+            </button>
+            <button
+              onClick={() => setSaleFilter('sale')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                saleFilter === 'sale'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+              }`}
+            >
+              On Sale
+            </button>
+            <button
+              onClick={() => setSaleFilter('clearance')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                saleFilter === 'clearance'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+              }`}
+            >
+              Clearance
+            </button>
+          </div>
+        </div>
+
         {/* Results count */}
         <p className="text-sm text-gray-600">
           Found {filteredDrugs.length} product{filteredDrugs.length !== 1 ? 's' : ''}
@@ -195,8 +243,36 @@ export default function StoreClientComponent({ drugs }: Props) {
                 <div className="space-y-3 border-t border-gray-100 pt-3 mt-auto">
                   <div>
                     <p className="text-xs text-gray-500 font-medium">Unit Price</p>
-                    <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(drug.unit_price)}</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(drug.unit_price)}</p>
+                      {drug.sale_price && drug.sale_price < drug.unit_price && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm line-through text-gray-500">
+                            {formatCurrency(drug.unit_price)}
+                          </span>
+                          <span className="text-sm font-bold text-green-600">
+                            {formatCurrency(drug.sale_price)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {drug.sale_discount_percent && drug.sale_discount_percent > 0 && (
+                      <div className="mt-1 inline-block px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">
+                        -{drug.sale_discount_percent}% OFF
+                      </div>
+                    )}
                   </div>
+
+                  {/* Sale/Clearance Badge */}
+                  {drug.category_type && drug.category_type !== 'regular' && (
+                    <div className={`text-xs font-bold text-center py-1 rounded ${
+                      drug.category_type === 'clearance'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {drug.category_type === 'clearance' ? '🔥 CLEARANCE' : '✨ ON SALE'}
+                    </div>
+                  )}
 
                   {/* Stock Status */}
                   {drug.quantity_on_hand === 0 ? (

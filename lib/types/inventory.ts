@@ -25,6 +25,13 @@ export interface OTCDrug {
   low_stock_alert: boolean;
   notes?: string;
   file_url?: string;
+  // Sale/Clearance fields
+  category_type?: 'regular' | 'sale' | 'clearance';
+  sale_price?: number;
+  sale_discount_percent?: number;
+  sale_start_date?: string;
+  sale_end_date?: string;
+  is_on_sale?: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -1,55 +1,64 @@
-import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import PrescriptionFileViewer from "./prescription-file-viewer";
+'use client';
 
-export const dynamic = "force-dynamic";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createBrowserClient } from "@supabase/ssr";
+import PrescriptionFileViewer from "./prescription-file-viewer";
+import RefillRequestModal from "../components/RefillRequestModal";
+
 
 interface PrescriptionDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getPrescriptionDetail(prescriptionId: string) {
-  try {
-    const supabase = await createServerSupabaseClient();
-    
-    const { data, error } = await supabase
-      .from("prescriptions")
-      .select(
-        `
-        id,
-        status,
-        patient_id,
-        doctor_id,
-        created_at,
-        updated_at,
-        file_url,
-        prescription_number,
-        doctor_name,
-        doctor_phone,
-        doctor_email,
-        practice_name,
-        practice_address,
-        filled_at,
-        pharmacist_name,
-        prescription_items(
-          id,
-          medication_name,
-          dosage,
-          quantity,
-          total_amount,
-          notes
-        )
-      `
-      )
-      .eq("id", prescriptionId)
-      .single();
+interface Prescription {
+  id: string;
+  status: string;
+  patient_id: string;
+  doctor_id: string;
+  created_at: string;
+  updated_at: string;
+  file_url: string;
+  prescription_number: string;
+  doctor_name: string;
+  doctor_phone: string;
+  doctor_email: string;
+  practice_name: string;
+  practice_address: string;
+  filled_at: string;
+  pharmacist_name: string;
+  is_refillable?: boolean;
+  refill_limit?: number;
+  refill_count?: number;
+  last_refilled_at?: string;
+  prescription_items: Array<{
+    id: string;
+    medication_name: string;
+    dosage: string;
+    quantity: number;
+    total_amount: number;
+    notes: string;
+  }>;
+}
 
-    if (error || !data) {
+async function getPrescriptionDetail(prescriptionId: string, token: string): Promise<Prescription | null> {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || ""}/api/patient/prescriptions/${prescriptionId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    
+    if (!response.ok) {
       return null;
     }
 
-    return data;
+    const data = await response.json();
+    return data.prescription;
   } catch (error) {
     console.error("Error fetching prescription:", error);
     return null;
@@ -71,23 +80,73 @@ function getStatusColor(status: string) {
   }
 }
 
-export default async function PrescriptionDetailPage({
+export default function PrescriptionDetailPage({
   params,
 }: PrescriptionDetailPageProps) {
-  // Auth check
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const router = useRouter();
+  const [prescription, setPrescription] = useState<Prescription | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showRefillModal, setShowRefillModal] = useState(false);
 
-  // Get prescription ID
-  const { id } = await params;
+  useEffect(() => {
+    const loadPrescription = async () => {
+      try {
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
 
-  // Fetch prescription
-  const prescription = await getPrescriptionDetail(id);
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session) {
+          setError("You must be logged in");
+          return;
+        }
 
-  // Verify patient owns this prescription
-  if (!prescription || prescription.patient_id !== user.id) {
-    redirect("/patient/prescriptions");
+        const { id } = await params;
+        const prescription = await getPrescriptionDetail(id, session.access_token);
+
+        if (!prescription) {
+          setError("Prescription not found");
+          router.push("/patient/prescriptions");
+          return;
+        }
+
+        setPrescription(prescription);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPrescription();
+  }, [params, router]);
+
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !prescription) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error || "Failed to load prescription"}
+          </div>
+          <Link href="/patient/prescriptions" className="mt-4 text-green-600 hover:text-green-700">
+            ← Back to Prescriptions
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -116,7 +175,7 @@ export default async function PrescriptionDetailPage({
           {/* Status Card */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Status</h2>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3">
               <span
                 className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(
                   prescription.status
@@ -125,7 +184,23 @@ export default async function PrescriptionDetailPage({
                 {prescription.status.charAt(0).toUpperCase() +
                   prescription.status.slice(1)}
               </span>
+              {prescription.is_refillable && (
+                <button
+                  onClick={() => setShowRefillModal(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition"
+                >
+                  Request Refill
+                </button>
+              )}
             </div>
+            {prescription.refill_count !== undefined && prescription.refill_limit !== undefined && (
+              <div className="mt-4 text-sm text-gray-600">
+                <p>Refills Used: {prescription.refill_count} / {prescription.refill_limit}</p>
+                {prescription.last_refilled_at && (
+                  <p className="mt-1">Last Refilled: {new Date(prescription.last_refilled_at).toLocaleDateString()}</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Prescription Number */}
@@ -322,6 +397,21 @@ export default async function PrescriptionDetailPage({
           </div>
         </div>
       </div>
+
+      {showRefillModal && (
+        <RefillRequestModal
+          prescriptionId={prescription.id}
+          medicationName={
+            prescription.prescription_items?.[0]?.medication_name || "Prescription"
+          }
+          onClose={() => setShowRefillModal(false)}
+          onSuccess={() => {
+            setShowRefillModal(false);
+            // Reload prescription to show updated refill info
+            window.location.reload();
+          }}
+        />
+      )}
     </div>
   );
 }
