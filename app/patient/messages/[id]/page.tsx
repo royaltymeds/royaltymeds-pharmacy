@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
 
@@ -49,14 +49,7 @@ export default function ConversationDetailPage({
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    loadConversation();
-    // Set up polling for new messages
-    const interval = setInterval(loadConversation, 3000);
-    return () => clearInterval(interval);
-  }, [params]);
-
-  const loadConversation = async () => {
+  const loadConversation = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -97,7 +90,14 @@ export default function ConversationDetailPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [params, supabase]);
+
+  useEffect(() => {
+    loadConversation();
+    // Set up polling for new messages
+    const interval = setInterval(() => loadConversation(), 3000);
+    return () => clearInterval(interval);
+  }, [loadConversation]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 
 interface EmailPreferences {
@@ -24,11 +24,7 @@ export default function EmailPreferencesPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  useEffect(() => {
-    loadPreferences();
-  }, []);
-
-  const loadPreferences = async () => {
+  const loadPreferences = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -55,7 +51,11 @@ export default function EmailPreferencesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    loadPreferences();
+  }, [loadPreferences]);
 
   const handleToggle = async (key: keyof Omit<EmailPreferences, 'user_id' | 'updated_at'>) => {
     if (!preferences) return;

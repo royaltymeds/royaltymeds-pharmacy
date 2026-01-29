@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
 
@@ -29,11 +29,7 @@ export default function TransactionHistoryPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  useEffect(() => {
-    loadTransactions();
-  }, [page, filter]);
-
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -69,7 +65,11 @@ export default function TransactionHistoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, filter, supabase]);
+
+  useEffect(() => {
+    loadTransactions();
+  }, [loadTransactions]);
 
   const handleExportCSV = async () => {
     try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 
 interface AuditLog {
@@ -34,11 +34,7 @@ export default function AuditLogsPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  useEffect(() => {
-    loadLogs();
-  }, [page, filters]);
-
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -77,7 +73,11 @@ export default function AuditLogsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, filters, supabase]);
+
+  useEffect(() => {
+    loadLogs();
+  }, [loadLogs]);
 
   const handleExportCSV = async () => {
     try {
