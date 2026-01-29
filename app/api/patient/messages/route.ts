@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const { data: conversations, error: convError, count } = await supabaseAdmin
       .from('conversations')
       .select('*', { count: 'exact' })
-      .contains('participant_ids', `[${JSON.stringify(user.user.id)}]`)
+      .contains('participant_ids', `["${user.user.id}"]`)
       .order('updated_at', { ascending: false })
       .range(offset, offset + pageSize - 1);
 
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         .from('conversations')
         .select('id')
         .eq('conversation_type', 'direct')
-        .contains('participant_ids', JSON.stringify(allParticipants.sort()))
+        .contains('participant_ids', JSON.stringify(allParticipants))
         .single();
 
       if (existingConv) {

@@ -60,7 +60,7 @@ export default async function RefillsPage() {
 
       {/* Request New Refill Button */}
       <Link
-        href="/patient/refills/request"
+        href="/patient/prescriptions"
         className="inline-block px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-xs sm:text-sm md:text-base"
       >
         Request New Refill
@@ -123,7 +123,7 @@ export default async function RefillsPage() {
             You don&apos;t have any pending refill requests. Create a new one when you need a refill.
           </p>
           <Link
-            href="/patient/refills/request"
+            href="/patient/prescriptions"
             className="inline-block px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-xs sm:text-sm md:text-base"
           >
             Request a Refill
