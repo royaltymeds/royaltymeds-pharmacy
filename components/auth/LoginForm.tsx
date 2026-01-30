@@ -49,18 +49,17 @@ export default function LoginForm() {
         return;
       }
 
-      // Get user role from database
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("role")
-        .eq("id", authData.user.id)
-        .single();
+      // Get user role from server endpoint (uses service role to bypass RLS)
+      const roleResponse = await fetch("/api/auth/user-role");
+      let userRole = "patient";
 
-      if (userError) {
-        console.warn("[LoginForm] Could not get user role:", userError);
+      if (roleResponse.ok) {
+        const roleData = await roleResponse.json();
+        userRole = roleData.role || "patient";
+      } else {
+        console.warn("[LoginForm] Could not get user role from endpoint, defaulting to patient");
       }
 
-      const userRole = (userData as any)?.role || "patient";
       console.log("[LoginForm] User authenticated with role:", userRole);
 
       // Give the Supabase client time to persist session cookies to HTTP layer

@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if current user is a doctor
-    const { data: currentUser } = await supabase
+    // Check if current user is a doctor using service role to bypass RLS
+    const { data: currentUser } = await serviceRoleClient
       .from("users")
       .select("role")
       .eq("id", user.id)

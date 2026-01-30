@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -35,8 +36,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/login?error=auth", request.url));
     }
 
+    // Use service role client to bypass RLS for role lookup
+    const serviceRoleClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Ensure user profile exists in users table
-    const { data: existingUser, error: userError } = await supabase
+    const { data: existingUser, error: userError } = await serviceRoleClient
       .from("users")
       .select("id, role")
       .eq("id", data.user.id)
