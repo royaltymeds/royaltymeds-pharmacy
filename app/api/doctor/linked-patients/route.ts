@@ -85,15 +85,25 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .in("id", patientIds);
+      .in("id", patientIds)
+      .eq("role", "patient");
 
     if (patientError) {
       console.error("[doctor/linked-patients API] Error fetching patient details:", patientError);
+      console.error("[doctor/linked-patients API] Patient IDs:", patientIds);
+      console.error("[doctor/linked-patients API] Full error details:", {
+        message: patientError.message,
+        code: patientError.code,
+        details: patientError.details,
+        hint: patientError.hint,
+      });
       return NextResponse.json(
-        { error: patientError.message },
+        { error: patientError.message, details: patientError.details },
         { status: 500 }
       );
     }
+
+    console.log("[doctor/linked-patients API] Fetched patients:", { count: patients?.length, patientIds });
 
     // Format the response
     const formattedPatients = (patients || [])
@@ -109,6 +119,8 @@ export async function GET(request: NextRequest) {
         };
       })
       .filter((p: any) => p.id);
+
+    console.log("[doctor/linked-patients API] Formatted patients:", formattedPatients);
 
     return NextResponse.json(formattedPatients);
   } catch (error: any) {
