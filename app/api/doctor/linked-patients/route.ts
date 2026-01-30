@@ -107,7 +107,9 @@ export async function GET(request: NextRequest) {
     // Format the response
     const formattedPatients = (patients || [])
       .map((patientUser: any) => {
-        const profile = patientUser?.user_profiles?.[0];
+        const profile = Array.isArray(patientUser?.user_profiles)
+          ? patientUser?.user_profiles?.[0]
+          : patientUser?.user_profiles;
         return {
           id: patientUser?.id,
           email: patientUser?.email,
