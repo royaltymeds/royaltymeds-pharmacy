@@ -21,8 +21,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if current user is a doctor
-    const { data: currentUser } = await supabase
+    // Create service role client to bypass RLS
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Check if current user is a doctor using service role to bypass RLS
+    const { data: currentUser } = await adminClient
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -52,12 +58,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Create service role client to create auth user
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // Create auth user
     const { data: authData, error: createError } = await adminClient.auth.admin.createUser({

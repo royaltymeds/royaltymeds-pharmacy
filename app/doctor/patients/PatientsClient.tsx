@@ -267,7 +267,7 @@ export default function PatientsClient() {
                           href={`/doctor/submit-prescription?patientId=${patient.id}`}
                           className="px-3 py-1 bg-blue-600 text-white rounded text-xs md:text-sm hover:bg-blue-700 inline-block"
                         >
-                          Submit
+                          Submit Rx
                         </Link>
                         <button
                           onClick={() => handleUnlinkPatient(patient.id)}
