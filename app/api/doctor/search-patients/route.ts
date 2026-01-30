@@ -54,10 +54,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Search for patients by email or name (excluding already linked patients)
-    console.log("[search-patients] Searching with ilike pattern");
+    console.log("[search-patients] Searching with ilike pattern for:", search);
     
-    // First, search users by email (use service role to bypass RLS)
-    let query = serviceRoleClient
+    // Search users by email OR user_profiles.full_name using service role
+    const { data: patients, error: searchError } = await serviceRoleClient
       .from("users")
       .select(
         `
@@ -71,14 +71,9 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .eq("role", "patient");
-
-    // Add search filter - can search by email or full_name
-    const searchTerm = `%${search}%`;
-    query = query.or(`email.ilike.${searchTerm},user_profiles.full_name.ilike.${searchTerm}`);
-    query = query.limit(10);
-
-    const { data: patients, error: searchError } = await query;
+      .eq("role", "patient")
+      .or(`email.ilike.%${search}%,user_profiles.full_name.ilike.%${search}%`)
+      .limit(10);
 
     console.log("[search-patients] Search results:", { patients, error: searchError });
 
