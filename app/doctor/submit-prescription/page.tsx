@@ -181,14 +181,15 @@ export default function SubmitPrescription() {
         setFilePreview("pdf");
       }
 
-      const response = await fetch("/api/patient/upload", {
+      const response = await fetch("/api/doctor/upload", {
         method: "POST",
         body: formDataUpload,
         credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error("File upload failed");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "File upload failed");
       }
 
       const data = await response.json();
