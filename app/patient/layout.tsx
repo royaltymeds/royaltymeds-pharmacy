@@ -4,6 +4,7 @@ import { MobileSidebar } from "@/components/MobileSidebar";
 import { CartBadge } from "@/components/CartBadge";
 import { createServerSupabaseClient, createServerAdminClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
+import PatientNavDropdown from "@/components/PatientNavDropdown";
 
 async function getPatientEmail() {
   try {
@@ -76,6 +77,10 @@ export default async function PatientLayout({
     { href: "/patient/orders", label: "Orders" },
     { href: "/patient/refills", label: "Refills" },
     { href: "/patient/messages", label: "Messages" },
+  ];
+
+  // Links for the "More" dropdown
+  const moreLinks = [
     { href: "/patient/transactions", label: "Transactions" },
     { href: "/patient/email-preferences", label: "Email Preferences" },
     { href: "/patient/profile", label: "Profile" },
@@ -94,31 +99,52 @@ export default async function PatientLayout({
       {/* Customer Portal Navigation */}
       <nav className="bg-green-600 border-b border-green-700 shadow-lg sticky top-0 z-50">
         <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 gap-2 sm:gap-4">
-            <div className="flex items-center gap-2 sm:gap-4 md:gap-8 min-w-0 flex-1">
-              <Link href="/patient/home" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap truncate flex-shrink-0">
+          <div className="flex justify-between items-center h-16 gap-3 sm:gap-4">
+            {/* Left side - Logo and main links */}
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-6 min-w-0 flex-1">
+              <Link href="/patient/home" className="font-semibold text-sm sm:text-base md:text-lg text-white whitespace-nowrap flex-shrink-0">
                 <span className="text-green-300">R</span><span>oyaltyMeds</span>
               </Link>
+              
+              {/* Home and Store links - hidden on mobile */}
               <Link href="/" className="hidden sm:inline px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-green-100 hover:text-white hover:bg-green-700 transition whitespace-nowrap">
                 Home
               </Link>
               <Link href="/store" className="hidden sm:inline px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-green-100 hover:text-white hover:bg-green-700 transition whitespace-nowrap">
                 Store
               </Link>
-              <div className="hidden lg:flex space-x-1">
+
+              {/* Main nav links - hidden on lg+ (shown in dropdown there) */}
+              <div className="hidden md:flex lg:hidden items-center gap-1 flex-wrap">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-green-100 hover:text-white hover:bg-green-700"
+                    className="px-2 py-2 rounded-md text-xs font-medium text-green-100 hover:text-white hover:bg-green-700 transition whitespace-nowrap"
                   >
                     {link.label}
                   </Link>
                 ))}
+                <PatientNavDropdown links={moreLinks} />
+              </div>
+
+              {/* Full nav links for desktop */}
+              <div className="hidden lg:flex items-center gap-1">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-green-100 hover:text-white hover:bg-green-700 whitespace-nowrap"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <PatientNavDropdown links={moreLinks} />
               </div>
             </div>
 
-            <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+            {/* Right side - Cart, Portal links, Email, Logout */}
+            <div className="hidden md:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
               <CartBadge />
               {userRole === "admin" && (
                 <Link href="/admin/dashboard" className="text-xs md:text-sm text-green-100 hover:text-white font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-green-700 transition">
@@ -135,7 +161,7 @@ export default async function PatientLayout({
             </div>
 
             {/* Mobile Sidebar */}
-            <MobileSidebar navLinks={navLinks} userEmail={userEmail} LogoutButton={LogoutButton} extraLinks={extraLinks} />
+            <MobileSidebar navLinks={[...navLinks, ...moreLinks]} userEmail={userEmail} LogoutButton={LogoutButton} extraLinks={extraLinks} />
           </div>
         </div>
       </nav>
