@@ -1,7 +1,7 @@
 # Implementation Roadmap - RoyaltyMeds Platform
 
-**Last Updated:** January 29, 2026  
-**Status:** Active Development - Features #2-7 COMPLETE ✅, Ready for Deployment  
+**Last Updated:** January 30, 2026  
+**Status:** Active Development - Features #2-7 COMPLETE ✅, Feature #8 (Enhanced Auth) PLANNED, Ready for Deployment  
 **Priority:** HIGH
 
 ## 🎯 Completion Criteria
@@ -21,11 +21,20 @@
   - Feature #5: Transaction History ✅
   - Feature #6: Messaging System ✅
   - Feature #7: Email Integration ✅
-- ⏳ **Backend Work:** Features #8-13 not started
+- 🔨 **Feature #8:** PLANNED - Enhanced Authentication (Forgot Password, Remember Me, OTC Email Login)
+- ⏳ **Backend Work:** Features #9-16 not started
+
+**Latest Session Work (Jan 30):**
+- ✅ Schema audit: Identified & fixed 4 critical column naming issues
+- ✅ Doctor portal: Fixed patient linking, search, creation endpoints
+- ✅ Patient portal: Improved header navigation with dropdown
+- ✅ 8 commits deployed to production
+- ✅ All critical issues resolved
 
 **Latest Commits:**
-- `b596a88` - Add comprehensive UI implementations for all 6 backend features
-- `c1b736e` - Update TO_DO: Mark features as UI In Progress
+- `854fb34` - Improve patient portal header alignment and add More dropdown
+- `fe28978` - Fix doctor create-patient RLS issue
+- `c3ad47e` - Fix user_profiles array/object handling in GET endpoint
 
 ---
 
@@ -510,7 +519,187 @@ CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp DESC);
 
 ## 🟡 MEDIUM PRIORITY FEATURES
 
-### 6. Messaging System
+### 8. Enhanced Authentication - Forgot Password, Remember Me, One-Time Code Email Login
+**Status:** ⏳ Not Started  
+**Priority:** 🟡 MEDIUM  
+**Estimated Effort:** 10 hours (backend) + 6 hours (UI) = 16 hours total  
+
+**Implementation Plan:**
+
+**Database Schema**
+```sql
+-- Add to users table
+ALTER TABLE users ADD COLUMN (
+  remember_token VARCHAR(255) UNIQUE,
+  remember_token_expires_at TIMESTAMP,
+  last_login_at TIMESTAMP,
+  failed_login_attempts INT DEFAULT 0,
+  account_locked_until TIMESTAMP
+);
+
+-- Create password reset tokens table
+CREATE TABLE password_reset_tokens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  token_hash VARCHAR(255) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+-- Create one-time login codes table
+CREATE TABLE one_time_login_codes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  email VARCHAR(255) NOT NULL,
+  code VARCHAR(6) NOT NULL, -- 6-digit code
+  code_hash VARCHAR(255) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used_at TIMESTAMP,
+  attempts INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE INDEX idx_password_reset_user_id ON password_reset_tokens(user_id);
+CREATE INDEX idx_password_reset_token_hash ON password_reset_tokens(token_hash);
+CREATE INDEX idx_password_reset_expires ON password_reset_tokens(expires_at);
+CREATE INDEX idx_otc_user_id ON one_time_login_codes(user_id);
+CREATE INDEX idx_otc_code_hash ON one_time_login_codes(code_hash);
+CREATE INDEX idx_otc_expires ON one_time_login_codes(expires_at);
+```
+
+**Phase 1: Forgot Password (Hours 1-4)**
+- Create password reset token generation endpoint
+- Store tokens with expiration (24 hours)
+- Email password reset link to user
+- Validate token and allow password reset
+- Implement security: rate limiting, token invalidation after use, account lockout on failed attempts
+
+**Phase 2: One-Time Code Email Login (Hours 5-8)**
+- Generate 6-digit OTC codes
+- Send codes via email with 10-minute expiration
+- Validate code and authenticate user
+- Track failed attempts and lock after 5 attempts
+- Option to resend code
+
+**Phase 3: Remember Me (Hours 9-16)**
+- Generate secure remember tokens
+- Store tokens with 30-day expiration
+- Auto-login on subsequent visits
+- Implement token refresh mechanism
+- "Remember me" checkbox on login form
+- Secure cookie handling (httpOnly, secure flags)
+
+**Features by Phase:**
+
+**Phase 1 - Forgot Password:**
+- User clicks "Forgot Password?" on login
+- Enter email address
+- Receive password reset email with 24-hour link
+- Click link, verify token still valid
+- Enter new password (validation: min 8 chars, uppercase, lowercase, number)
+- Confirmation email sent
+- Old tokens auto-expire after 24 hours
+- Tokens marked used and cannot be reused
+
+**Phase 2 - One-Time Code Email Login:**
+- User clicks "Login with Email Code" on login
+- Enter email address
+- Receive 6-digit code via email
+- Code expires in 10 minutes
+- Enter code in UI
+- Max 5 failed attempts → account locked for 15 minutes
+- Option to request new code (rate limited to 3 per hour)
+- Auto-submit when 6 digits entered (optional UX enhancement)
+
+**Phase 3 - Remember Me:**
+- "Remember me for 30 days" checkbox on login
+- After login, generate 30-day remember token
+- Store in secure, httpOnly cookie
+- On page load, check for valid remember token
+- Auto-authenticate if token valid and not expired
+- Show "You're logged in" banner if auto-authenticated
+- Option to "Log out from all devices" clears all tokens for user
+- Token refresh on each auto-login (extends 30-day window)
+
+**Implementation Sequence:**
+
+**Phase 1 (Hours 1-4):**
+1. Create password_reset_tokens table
+2. `POST /api/auth/forgot-password` - Request password reset token
+3. `POST /api/auth/reset-password` - Validate token and reset password
+4. Create forgot password UI pages
+5. Add email template for password reset link
+6. Implement rate limiting (5 requests per hour per email)
+
+**Phase 2 (Hours 5-8):**
+1. Create one_time_login_codes table
+2. `POST /api/auth/request-login-code` - Generate and email OTC
+3. `POST /api/auth/verify-login-code` - Verify code and authenticate
+4. Create one-time code login UI page
+5. Add email template for login code
+6. Implement code generation with 6-digit format
+7. Implement rate limiting (3 codes per hour per email)
+
+**Phase 3 (Hours 9-16):**
+1. Add remember_token columns to users table
+2. Modify `POST /api/auth/login` to support remember-me checkbox
+3. Create secure cookie handling middleware
+4. Implement auto-login on page load
+5. `POST /api/auth/logout-all-devices` endpoint
+6. Create "Manage Sessions" UI page
+7. Add "You're logged in" banner for auto-authenticated sessions
+8. Implement token refresh logic
+
+**Security Considerations:**
+- ✅ Rate limiting on password reset requests
+- ✅ Token hashing in database (never store plain tokens)
+- ✅ Short expiration times (24h for reset, 10m for OTC)
+- ✅ One-time use enforcement (mark used, prevent replay)
+- ✅ Account lockout after failed attempts (5 attempts = 15min lockout)
+- ✅ Secure cookies (httpOnly, secure, sameSite flags)
+- ✅ Token invalidation on logout
+- ✅ Email verification (send code/link to verified email only)
+- ✅ CSRF protection on forms
+- ✅ Audit logging of authentication attempts
+
+**UI Components:**
+- `app/auth/forgot-password/page.tsx` - Request password reset
+- `app/auth/reset-password/[token]/page.tsx` - Reset password form
+- `app/auth/login-with-code/page.tsx` - Email code login
+- `app/auth/verify-code/page.tsx` - Enter 6-digit code
+- Modified `app/auth/login/page.tsx` - Add "Remember me" checkbox
+- `app/patient/settings/sessions/page.tsx` - Manage active sessions
+- `components/AuthGuard.tsx` - Check remember token on app load
+
+**API Endpoints:**
+- `POST /api/auth/forgot-password` - Request password reset (public)
+- `POST /api/auth/reset-password` - Reset password with token (public)
+- `POST /api/auth/request-login-code` - Email login code (public)
+- `POST /api/auth/verify-login-code` - Verify code and authenticate (public)
+- `POST /api/auth/login` - Modified to support remember-me (public)
+- `GET /api/auth/sessions` - List active sessions (authenticated)
+- `POST /api/auth/logout-all-devices` - Logout from all devices (authenticated)
+- `DELETE /api/auth/sessions/[token]` - Revoke specific session (authenticated)
+
+**Testing Checklist:**
+- ✅ Password reset link expires after 24 hours
+- ✅ Reset token cannot be reused
+- ✅ OTC code expires after 10 minutes
+- ✅ OTC code locked after 5 failed attempts
+- ✅ Remember me persists for 30 days
+- ✅ Auto-login works with valid remember token
+- ✅ "Log out all devices" revokes all tokens
+- ✅ Rate limiting prevents brute force
+- ✅ Email delivery tracking
+- ✅ Audit logging for all authentication attempts
+
+**Status:** PLANNED - Ready to implement in next development cycle
+
+---
+
+### 9. Messaging System
 **Status:** ⏳ Not Started  
 **Priority:** 🟡 MEDIUM  
 **Estimated Effort:** 14 hours  
@@ -578,7 +767,7 @@ CREATE TABLE message_attachments (
 
 ---
 
-### 7. Card Payments Integration
+### 10. Card Payments Integration
 **Status:** ⏳ Not Started  
 **Priority:** 🟡 MEDIUM  
 **Estimated Effort:** 12 hours  
@@ -647,7 +836,7 @@ CREATE TABLE saved_cards (
 
 ---
 
-### 8. Email Integration
+### 11. Email Integration (Setup)
 **Status:** ⏳ Not Started  
 **Priority:** 🟡 MEDIUM  
 **Estimated Effort:** 8 hours  
@@ -697,7 +886,7 @@ CREATE TABLE email_logs (
 
 ## 🟢 LOWER PRIORITY FEATURES
 
-### 9. Prescription Order Type (Non-OTC Products)
+### 12. Prescription Order Type (Non-OTC Products)
 **Status:** ⏳ Not Started  
 **Priority:** 🟢 GREEN  
 **Estimated Effort:** 8 hours  
@@ -756,7 +945,7 @@ CREATE TABLE prescription_order_links (
 
 ---
 
-### 10. Delivery Partner Portal
+### 13. Delivery Partner Portal
 **Status:** ⏳ Not Started  
 **Priority:** 🟢 GREEN  
 **Estimated Effort:** 16 hours  
@@ -842,7 +1031,7 @@ CREATE TABLE delivery_photos (
 
 ---
 
-### 11. Add Refund Order Status
+### 14. Add Refund Order Status
 **Status:** ⏳ Not Started  
 **Priority:** 🟢 GREEN  
 **Estimated Effort:** 3 hours  
@@ -888,7 +1077,7 @@ ALTER TABLE orders ADD COLUMN refund_reason TEXT;
 
 ---
 
-### 12. Add Edit User Button to Doctor/Admin Lists
+### 15. Add Edit User Button to Doctor/Admin Lists
 **Status:** ⏳ Not Started  
 **Priority:** 🟢 GREEN  
 **Estimated Effort:** 4 hours  
@@ -924,7 +1113,7 @@ ALTER TABLE orders ADD COLUMN refund_reason TEXT;
 
 ---
 
-### 13. Add Profile Page to Admin and Doctor Portals
+### 16. Add Profile Page to Admin and Doctor Portals
 **Status:** ⏳ Not Started  
 **Priority:** 🟢 GREEN  
 **Estimated Effort:** 5 hours  
