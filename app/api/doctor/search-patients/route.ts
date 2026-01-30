@@ -72,7 +72,8 @@ export async function GET(request: NextRequest) {
       `
       )
       .eq("role", "patient")
-      .ilike("email", `%${search}%`);
+      .ilike("email", `%${search}%`)
+      .limit(10);
 
     if (emailError) {
       console.error("[search-patients] Email search error:", {
