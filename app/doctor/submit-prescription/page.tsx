@@ -127,7 +127,9 @@ export default function SubmitPrescription() {
           medications: validMeds,
           instructions: formData.instructions,
           notes: formData.notes,
+          duration: validMeds[0]?.duration || null,
           file_url: fileUrl,
+          file_name: fileName,
         }),
       });
 

@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/doctor/upload
  * Upload a prescription file for doctor submissions
- * Uses service role key to bypass RLS
+ * Uses service role key to verify user is a doctor
+ * Returns file URL for use in prescription submission
  */
 export async function POST(request: NextRequest) {
   try {

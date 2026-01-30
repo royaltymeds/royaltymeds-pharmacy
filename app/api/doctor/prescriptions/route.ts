@@ -93,17 +93,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, we'll create one prescription record per set of medications
-    // In the future, this might be refactored to store medications separately
-    const medicationsText = body.medications
-      ?.map(
-        (med: any) =>
-          `${med.name} (${med.dosage}, ${med.quantity}, ${med.frequency})`
-      )
-      .join("; ");
-
-    // Use prescription number generated on client using browser time
+    // Validate required fields
     const prescriptionNumber = body.prescriptionNumber;
+    const patientId = body.patientId;
 
     if (!prescriptionNumber) {
       return NextResponse.json(
@@ -112,27 +104,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { error } = await supabase.from("doctor_prescriptions").insert([
-      {
-        doctor_id: user.id,
-        prescription_number: prescriptionNumber,
-        patient_id: body.patientId,
-        medication_name: medicationsText || "No medications",
-        dosage: body.medications?.[0]?.dosage || null,
-        quantity: body.medications?.[0]?.quantity || null,
-        frequency: body.medications?.[0]?.frequency || null,
-        duration: body.duration,
-        instructions: body.instructions || null,
-        notes: body.notes || null,
-        file_url: body.file_url || null,
-        status: "pending",
-      },
-    ]);
+    if (!patientId) {
+      return NextResponse.json(
+        { error: "Missing patient ID" },
+        { status: 400 }
+      );
+    }
+
+    // Create medication text representation from medications array
+    const medicationsText = body.medications
+      ?.map(
+        (med: any) =>
+          `${med.name} (${med.dosage}, ${med.quantity}, ${med.frequency})`
+      )
+      .join("; ") || "No medications";
+
+    // Get first medication's quantity and frequency for the single record
+    const firstMed = body.medications?.[0];
+
+    const { data: prescriptionData, error } = await supabase
+      .from("doctor_prescriptions")
+      .insert([
+        {
+          doctor_id: user.id,
+          prescription_number: prescriptionNumber,
+          patient_id: patientId,
+          medication_name: medicationsText,
+          quantity: firstMed?.quantity || null,
+          frequency: firstMed?.frequency || null,
+          duration: body.duration || null,
+          instructions: body.instructions || null,
+          notes: body.notes || null,
+          file_url: body.file_url || null,
+          file_name: body.file_name || null,
+          status: "pending",
+        },
+      ])
+      .select();
 
     if (error) throw error;
 
     return NextResponse.json(
-      { message: "Prescription submitted successfully" },
+      { 
+        message: "Prescription submitted successfully",
+        prescription: prescriptionData?.[0] || null
+      },
       { status: 201 }
     );
   } catch (error: any) {
