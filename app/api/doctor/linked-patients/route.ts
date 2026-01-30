@@ -234,7 +234,9 @@ export async function POST(request: NextRequest) {
       .eq("id", patientId)
       .single();
 
-    const profile = newPatientUser?.user_profiles?.[0];
+    const profile = Array.isArray(newPatientUser?.user_profiles)
+      ? newPatientUser?.user_profiles?.[0]
+      : newPatientUser?.user_profiles;
     const patientData = {
       id: newPatientUser?.id,
       email: newPatientUser?.email,
