@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact' });
 
     if (recipientEmail) {
-      query = query.ilike('recipientemail', `%${recipientEmail}%`);
+      query = query.ilike('recipientEmail', `%${recipientEmail}%`);
     }
 
     if (status) {
@@ -34,16 +34,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (dateFrom) {
-      query = query.gte('sentat', new Date(dateFrom).toISOString());
+      query = query.gte('sentAt', new Date(dateFrom).toISOString());
     }
 
     if (dateTo) {
-      query = query.lte('sentat', new Date(dateTo).toISOString());
+      query = query.lte('sentAt', new Date(dateTo).toISOString());
     }
 
     // Add ordering and pagination
     query = query
-      .order('sentat', { ascending: false })
+      .order('sentAt', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
     const { data: logs, error, count } = await query;

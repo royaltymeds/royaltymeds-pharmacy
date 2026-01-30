@@ -165,12 +165,12 @@ export async function POST(request: NextRequest) {
       const { error: logError } = await supabase
         .from('email_logs')
         .insert({
-          recipientEmail: recipients[0],
+          recipientemail: recipients[0],
           subject,
-          templateType: type,
+          templatetype: type,
           status: 'sent',
-          sentAt: new Date().toISOString(),
-          messageId: info.messageId || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          sentat: new Date().toISOString(),
+          messageid: info.messageId || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           metadata: { recipients, type, data, smtpResponse: info.response },
         })
         .select()
@@ -192,13 +192,13 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('email_logs')
         .insert({
-          recipientEmail: recipients[0],
+          recipientemail: recipients[0],
           subject,
-          templateType: type,
+          templatetype: type,
           status: 'failed',
-          sentAt: new Date().toISOString(),
-          failureReason: sendError instanceof Error ? sendError.message : 'Unknown error',
-          messageId: `msg_failed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          sentat: new Date().toISOString(),
+          failurereason: sendError instanceof Error ? sendError.message : 'Unknown error',
+          messageid: `msg_failed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           metadata: { recipients, type, data, error: sendError instanceof Error ? sendError.message : 'Unknown' },
         });
 

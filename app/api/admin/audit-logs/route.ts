@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const resourceType = searchParams.get('resourceType');
+    const entityType = searchParams.get('entityType');
     const action = searchParams.get('action');
     const dateFrom = searchParams.get('dateFrom');
     const dateTo = searchParams.get('dateTo');
@@ -55,22 +55,22 @@ export async function GET(request: NextRequest) {
     if (userId) {
       query = query.eq('user_id', userId);
     }
-    if (resourceType) {
-      query = query.eq('resource_type', resourceType);
+    if (entityType) {
+      query = query.eq('entity_type', entityType);
     }
     if (action) {
       query = query.eq('action', action);
     }
     if (dateFrom) {
-      query = query.gte('timestamp', new Date(dateFrom).toISOString());
+      query = query.gte('created_at', new Date(dateFrom).toISOString());
     }
     if (dateTo) {
-      query = query.lte('timestamp', new Date(dateTo).toISOString());
+      query = query.lte('created_at', new Date(dateTo).toISOString());
     }
 
     // Order and paginate
     const { data: logs, error: logsError, count } = await query
-      .order('timestamp', { ascending: false })
+      .order('created_at', { ascending: false })
       .range(offset, offset + pageSize - 1);
 
     if (logsError) {

@@ -87,10 +87,10 @@ export async function PUT(request: NextRequest) {
       const { data, error } = await supabase
         .from('email_preferences')
         .update({
-          orderUpdates: body.orderUpdates ?? undefined,
-          prescriptionUpdates: body.prescriptionUpdates ?? undefined,
-          promotionalEmails: body.promotionalEmails ?? undefined,
-          weeklyNewsletter: body.weeklyNewsletter ?? undefined,
+          orderupdates: body.orderUpdates ?? undefined,
+          prescriptionupdates: body.prescriptionUpdates ?? undefined,
+          promotionalemails: body.promotionalEmails ?? undefined,
+          weeklynewsletter: body.weeklyNewsletter ?? undefined,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)
@@ -109,10 +109,10 @@ export async function PUT(request: NextRequest) {
         .from('email_preferences')
         .insert({
           user_id: user.id,
-          orderUpdates: body.orderUpdates ?? true,
-          prescriptionUpdates: body.prescriptionUpdates ?? true,
-          promotionalEmails: body.promotionalEmails ?? false,
-          weeklyNewsletter: body.weeklyNewsletter ?? false,
+          orderupdates: body.orderUpdates ?? true,
+          prescriptionupdates: body.prescriptionUpdates ?? true,
+          promotionalemails: body.promotionalEmails ?? false,
+          weeklynewsletter: body.weeklyNewsletter ?? false,
         })
         .select()
         .single();
