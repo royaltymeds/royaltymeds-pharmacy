@@ -85,8 +85,7 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .in("id", patientIds)
-      .eq("role", "patient");
+      .in("id", patientIds);
 
     if (patientError) {
       console.error("[doctor/linked-patients API] Error fetching patient details:", patientError);
@@ -122,7 +121,7 @@ export async function GET(request: NextRequest) {
 
     console.log("[doctor/linked-patients API] Formatted patients:", formattedPatients);
 
-    return NextResponse.json(formattedPatients);
+    return NextResponse.json({ patients: formattedPatients });
   } catch (error: any) {
     console.error("[doctor/patients API] Unexpected error:", error);
     return NextResponse.json(
@@ -216,10 +215,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch the newly linked patient's full details
+    const { data: newPatientUser } = await serviceRoleClient
+      .from("users")
+      .select(
+        `
+        id,
+        email,
+        user_profiles(
+          id,
+          full_name,
+          phone,
+          address,
+          date_of_birth
+        )
+      `
+      )
+      .eq("id", patientId)
+      .single();
+
+    const profile = newPatientUser?.user_profiles?.[0];
+    const patientData = {
+      id: newPatientUser?.id,
+      email: newPatientUser?.email,
+      fullName: profile?.full_name || "Unknown",
+      phone: profile?.phone,
+      address: profile?.address,
+      dateOfBirth: profile?.date_of_birth,
+    };
+
     return NextResponse.json(
       {
         success: true,
         message: "Patient linked successfully",
+        patient: patientData,
       },
       { status: 201 }
     );
