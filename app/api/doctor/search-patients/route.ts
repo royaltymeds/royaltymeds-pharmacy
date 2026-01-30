@@ -56,14 +56,14 @@ export async function GET(request: NextRequest) {
     // Search for patients by email or name (excluding already linked patients)
     console.log("[search-patients] Searching with ilike pattern for:", search);
     
-    // Search users by email OR user_profiles.full_name using service role
-    const { data: patients, error: searchError } = await serviceRoleClient
+    // First, search by email
+    const { data: emailMatches, error: emailError } = await serviceRoleClient
       .from("users")
       .select(
         `
         id,
         email,
-        user_profiles!inner (
+        user_profiles (
           full_name,
           phone,
           address,
@@ -72,10 +72,44 @@ export async function GET(request: NextRequest) {
       `
       )
       .eq("role", "patient")
-      .or(`email.ilike.%${search}%,user_profiles.full_name.ilike.%${search}%`)
+      .ilike("email", `%${search}%`)
       .limit(10);
 
-    console.log("[search-patients] Search results:", { patients, error: searchError });
+    console.log("[search-patients] Email search results:", { count: emailMatches?.length, error: emailError });
+
+    // Then, search by full_name in user_profiles
+    const { data: nameMatches } = await serviceRoleClient
+      .from("users")
+      .select(
+        `
+        id,
+        email,
+        user_profiles (
+          full_name,
+          phone,
+          address,
+          date_of_birth
+        )
+      `
+      )
+      .eq("role", "patient");
+
+    // Manual filter for names (since we can't easily do ilike on joined tables in Supabase)
+    const filteredByName = (nameMatches || []).filter((user: any) => {
+      const fullName = user.user_profiles?.[0]?.full_name || user.user_profiles?.full_name || "";
+      return fullName.toLowerCase().includes(search.toLowerCase());
+    }).slice(0, 10);
+
+    console.log("[search-patients] Name search results:", { count: filteredByName.length });
+
+    // Merge results, avoiding duplicates
+    const allResults = [...(emailMatches || [])];
+    const emailIds = new Set(emailMatches?.map((p: any) => p.id) || []);
+    for (const user of filteredByName) {
+      if (!emailIds.has(user.id)) {
+        allResults.push(user);
+      }
+    }
 
     // Filter out already linked patients using service role to bypass RLS
     const { data: linkedIds } = await serviceRoleClient
@@ -85,7 +119,7 @@ export async function GET(request: NextRequest) {
 
     const linkedPatientIds = (linkedIds || []).map((link: any) => link.patient_id);
 
-    const filteredPatients = (patients || [])
+    const filteredPatients = (allResults || [])
       .filter((p: any) => !linkedPatientIds.includes(p.id))
       .map((p: any) => ({
         id: p.id,
@@ -96,7 +130,7 @@ export async function GET(request: NextRequest) {
         dateOfBirth: p.user_profiles?.[0]?.date_of_birth || p.user_profiles?.date_of_birth || null,
       }));
 
-    console.log("[search-patients] Filtered results count:", filteredPatients.length);
+    console.log("[search-patients] Final filtered results count:", filteredPatients.length);
     return NextResponse.json(filteredPatients);
   } catch (error: any) {
     console.error("[search-patients API] Unexpected error:", error);
