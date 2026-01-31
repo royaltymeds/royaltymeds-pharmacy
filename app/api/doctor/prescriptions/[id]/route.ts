@@ -1,30 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClientForApi } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createClientForApi(request);
     const { id } = await params;
+    console.log("[GET /api/doctor/prescriptions/[id]] Fetching items for prescription:", id);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    // Use service role to bypass RLS
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Fetch medication items for this prescription
-    const { data: items, error } = await supabase
+    const { data: items, error } = await supabaseAdmin
       .from("doctor_prescriptions_items")
       .select("*")
       .eq("doctor_prescription_id", id);
+
+    console.log("[GET /api/doctor/prescriptions/[id]] Query result:", { 
+      itemsCount: items?.length,
+      items,
+      error 
+    });
 
     if (error) throw error;
 

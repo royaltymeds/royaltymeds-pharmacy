@@ -137,15 +137,22 @@ export default function MyPrescriptionsClient({
   const fetchMedicationItems = async (prescriptionId: string) => {
     try {
       setLoadingItems((prev) => ({ ...prev, [prescriptionId]: true }));
+      console.log("[fetchMedicationItems] Fetching for prescription:", prescriptionId);
       const response = await fetch(
         `/api/doctor/prescriptions/${prescriptionId}`
       );
+      console.log("[fetchMedicationItems] Response status:", response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log("[fetchMedicationItems] Received data:", data);
         setMedicationItems((prev) => ({
           ...prev,
           [prescriptionId]: data.items || [],
         }));
+      } else {
+        const errorData = await response.json();
+        console.error("[fetchMedicationItems] Error response:", errorData);
       }
     } catch (error) {
       console.error("Error fetching medication items:", error);
