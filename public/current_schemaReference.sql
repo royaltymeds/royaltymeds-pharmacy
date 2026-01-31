@@ -48,8 +48,8 @@ CREATE TABLE public.doctor_prescriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   doctor_id uuid NOT NULL,
   patient_id uuid NOT NULL,
-  quantity text NOT NULL,
-  frequency text NOT NULL,
+  quantity text,
+  frequency text,
   duration text NOT NULL,
   instructions text,
   notes text,
@@ -59,9 +59,24 @@ CREATE TABLE public.doctor_prescriptions (
   prescription_number text NOT NULL DEFAULT ''::text UNIQUE,
   filled_at timestamp with time zone,
   pharmacist_name text,
+  file_url text,
+  file_name text,
   CONSTRAINT doctor_prescriptions_pkey PRIMARY KEY (id),
   CONSTRAINT doctor_prescriptions_doctor_id_fkey FOREIGN KEY (doctor_id) REFERENCES public.users(id),
   CONSTRAINT doctor_prescriptions_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.doctor_prescriptions_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  doctor_prescription_id uuid NOT NULL,
+  medication_name text NOT NULL,
+  dosage text,
+  quantity integer,
+  brand_choice text DEFAULT 'generic'::text CHECK (brand_choice = ANY (ARRAY['brand'::text, 'generic'::text])),
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  duration text,
+  CONSTRAINT doctor_prescriptions_items_pkey PRIMARY KEY (id),
+  CONSTRAINT doctor_prescriptions_items_doctor_prescription_id_fkey FOREIGN KEY (doctor_prescription_id) REFERENCES public.doctor_prescriptions(id)
 );
 CREATE TABLE public.email_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -275,7 +290,9 @@ CREATE TABLE public.prescription_items (
   dosage text,
   quantity_filled integer DEFAULT 0,
   total_amount integer,
+  doctor_prescription_id uuid,
   CONSTRAINT prescription_items_pkey PRIMARY KEY (id),
+  CONSTRAINT prescription_items_doctor_prescription_id_fkey FOREIGN KEY (doctor_prescription_id) REFERENCES public.doctor_prescriptions(id),
   CONSTRAINT prescription_items_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES public.prescriptions(id)
 );
 CREATE TABLE public.prescriptions (
