@@ -20,24 +20,55 @@ interface Prescription {
 async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
   try {
     const supabase = await createServerSupabaseClient();
-    console.log("[Doctor My-Prescriptions] Fetching doctor prescriptions for doctor_id:", doctorId);
+    console.log("[getPrescriptions] Starting - doctor_id:", doctorId);
     
+    // First, check if doctor exists in users table
+    const { data: doctorUser, error: doctorError } = await supabase
+      .from("users")
+      .select("id, email, role")
+      .eq("id", doctorId)
+      .single();
+    
+    console.log("[getPrescriptions] Doctor user lookup:", { doctorUser, doctorError });
+    
+    // Now fetch doctor_prescriptions
     const { data, error } = await supabase
       .from("doctor_prescriptions")
       .select("*")
       .eq("doctor_id", doctorId)
       .order("created_at", { ascending: false });
     
-    console.log("[Doctor My-Prescriptions] Query result:", { data, error });
+    console.log("[getPrescriptions] Raw query result:", { 
+      dataCount: data?.length,
+      dataKeys: data?.[0] ? Object.keys(data[0]) : [],
+      firstRecord: data?.[0],
+      error 
+    });
     
     if (error) {
-      console.error("[Doctor My-Prescriptions] Query error:", error);
+      console.error("[getPrescriptions] Query error:", error);
       return [];
     }
     
-    return data || [];
+    // Transform data to match interface
+    const transformed = (data || []).map((item: any) => ({
+      id: item.id,
+      patient_id: item.patient_id,
+      duration: item.duration,
+      instructions: item.instructions,
+      notes: item.notes,
+      status: item.status,
+      file_url: item.file_url,
+      file_name: item.file_name,
+      prescription_number: item.prescription_number,
+      created_at: item.created_at,
+    }));
+    
+    console.log("[getPrescriptions] Transformed data:", { count: transformed.length, items: transformed });
+    
+    return transformed;
   } catch (error) {
-    console.error("Error fetching prescriptions:", error);
+    console.error("[getPrescriptions] Exception:", error);
     return [];
   }
 }
