@@ -544,11 +544,11 @@ export default function PrescriptionDetailClient({
   };
 
   const handleZoomIn = () => {
-    setZoomLevel(Math.min(zoomLevel + 10, 300));
+    setZoomLevel(Math.min(zoomLevel + 10, 100));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel(Math.max(zoomLevel - 10, fitZoom));
+    setZoomLevel(Math.max(zoomLevel - 10, 25));
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -614,7 +614,8 @@ export default function PrescriptionDetailClient({
         const scaleY = (containerHeight - 40) / imgHeight;
         const calculatedZoom = Math.min(scaleX, scaleY) * 100;
         
-        const zoomToUse = Math.max(Math.min(calculatedZoom, 100), 50);
+        // Always fit within 100%, at least 25%
+        const zoomToUse = Math.max(Math.min(calculatedZoom, 100), 25);
         setFitZoom(zoomToUse);
         setZoomLevel(zoomToUse);
         setPanX(0);
