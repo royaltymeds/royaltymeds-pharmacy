@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       }));
 
       const { error: itemsError } = await adminClient
-        .from("prescription_items")
+        .from("doctor_prescriptions_items")
         .insert(medicationItems);
 
       if (itemsError) {
