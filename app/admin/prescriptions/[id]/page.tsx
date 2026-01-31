@@ -63,7 +63,7 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
       .maybeSingle();
 
     if (patientError) {
-      console.log("[getPrescriptionDetail] Patient query error:", patientError);
+      console.log("[getPrescriptionDetail] Patient query error:", patientError.message);
     }
 
     if (patientPrescription) {
@@ -74,7 +74,27 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
     console.log("[getPrescriptionDetail] Not found in patient prescriptions, searching doctor prescriptions...");
     
     // If not found, try doctor prescriptions table
+    // Start with a basic query to debug
     const { data: doctorPrescription, error: doctorError } = await supabaseAdmin
+      .from("doctor_prescriptions")
+      .select("*")
+      .eq("id", prescriptionId)
+      .maybeSingle();
+
+    if (doctorError) {
+      console.error("[getPrescriptionDetail] Doctor query basic error:", doctorError);
+      return null;
+    }
+
+    if (!doctorPrescription) {
+      console.log("[getPrescriptionDetail] Prescription not found in either table with ID:", prescriptionId);
+      return null;
+    }
+
+    console.log("[getPrescriptionDetail] Found doctor prescription, now fetching items:", doctorPrescription.id);
+
+    // Now fetch with related items - use flexible selection to avoid column errors
+    const { data: doctorPrescriptionFull, error: doctorErrorFull } = await supabaseAdmin
       .from("doctor_prescriptions")
       .select(
         `
@@ -105,7 +125,6 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
           medication_name,
           dosage,
           quantity,
-          quantity_filled,
           notes
         ),
         users:patient_id(
@@ -119,16 +138,72 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
       .eq("id", prescriptionId)
       .maybeSingle();
 
-    if (doctorError) {
-      console.log("[getPrescriptionDetail] Doctor query error:", doctorError);
+    if (doctorErrorFull) {
+      console.error("[getPrescriptionDetail] Doctor query full error:", doctorErrorFull.message);
+      // Try again without the user join if it fails
+      console.log("[getPrescriptionDetail] Retrying without user join...");
+      const { data: doctorPrescriptionRetry, error: doctorErrorRetry } = await supabaseAdmin
+        .from("doctor_prescriptions")
+        .select(
+          `
+          id,
+          status,
+          patient_id,
+          doctor_id,
+          quantity,
+          frequency,
+          duration,
+          instructions,
+          created_at,
+          updated_at,
+          notes,
+          prescription_number,
+          file_url,
+          file_name,
+          admin_notes,
+          filled_at,
+          pharmacist_name,
+          doctor_name,
+          doctor_phone,
+          doctor_email,
+          practice_name,
+          practice_address,
+          doctor_prescriptions_items(
+            id,
+            medication_name,
+            dosage,
+            quantity,
+            notes
+          )
+        `
+        )
+        .eq("id", prescriptionId)
+        .maybeSingle();
+
+      if (doctorErrorRetry) {
+        console.error("[getPrescriptionDetail] Doctor query retry error:", doctorErrorRetry.message);
+        return {
+          ...doctorPrescription,
+          prescription_items: [],
+          source: "doctor",
+        };
+      }
+
+      if (doctorPrescriptionRetry) {
+        return {
+          ...doctorPrescriptionRetry,
+          prescription_items: doctorPrescriptionRetry.doctor_prescriptions_items || [],
+          source: "doctor",
+        };
+      }
     }
 
-    if (doctorPrescription) {
-      console.log("[getPrescriptionDetail] Found in doctor prescriptions:", doctorPrescription.id);
+    if (doctorPrescriptionFull) {
+      console.log("[getPrescriptionDetail] Found in doctor prescriptions:", doctorPrescriptionFull.id);
       // Normalize doctor_prescriptions_items to prescription_items for consistent rendering
       return {
-        ...doctorPrescription,
-        prescription_items: doctorPrescription.doctor_prescriptions_items || [],
+        ...doctorPrescriptionFull,
+        prescription_items: doctorPrescriptionFull.doctor_prescriptions_items || [],
         source: "doctor",
       };
     }
@@ -137,7 +212,7 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
     console.log("[getPrescriptionDetail] Prescription not found in either table with ID:", prescriptionId);
     return null;
   } catch (error) {
-    console.error("[getPrescriptionDetail] Error fetching prescription:", error);
+    console.error("[getPrescriptionDetail] Catch error fetching prescription:", error);
     return null;
   }
 }
@@ -149,6 +224,15 @@ export default async function PrescriptionDetailPage({ params }: PrescriptionDet
   if (!prescription) {
     notFound();
   }
+
+  console.log("[PrescriptionDetailPage] Prescription data being passed to client:", {
+    id: prescription.id,
+    source: prescription.source,
+    prescription_items: prescription.prescription_items,
+    doctor_name: prescription.doctor_name,
+    doctor_email: prescription.doctor_email,
+    doctor_phone: prescription.doctor_phone,
+  });
 
   return (
     <PrescriptionDetailClient prescription={prescription} />

@@ -343,7 +343,10 @@ export default function PrescriptionDetailClient({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(doctorDetails),
+          body: JSON.stringify({
+            ...doctorDetails,
+            source: prescription.source,
+          }),
         }
       );
 

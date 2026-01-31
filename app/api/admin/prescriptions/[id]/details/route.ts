@@ -13,7 +13,7 @@ export async function PATCH(
   const { id } = await params;
   const prescriptionId = id;
   const body = await request.json();
-  const { admin_notes, doctor_name, doctor_phone, doctor_email, practice_name, practice_address } = body;
+  const { admin_notes, doctor_name, doctor_phone, doctor_email, practice_name, practice_address, source } = body;
 
   try {
     // Verify user is authenticated and is admin
@@ -77,8 +77,12 @@ export async function PATCH(
       );
     }
 
+    // Determine which table to update based on source
+    const tableName = source === "doctor" ? "doctor_prescriptions" : "prescriptions";
+    console.log(`[details] Updating ${tableName} for prescription ${prescriptionId}`, updateData);
+
     const { data, error } = await supabaseAdmin
-      .from("prescriptions")
+      .from(tableName)
       .update(updateData)
       .eq("id", prescriptionId)
       .select()
