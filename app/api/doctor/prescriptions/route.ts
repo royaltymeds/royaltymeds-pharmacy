@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
         medication_name: med.name,
         dosage: med.dosage || null,
         quantity: med.quantity || null,
+        duration: med.duration || null,
         notes: med.frequency ? `Frequency: ${med.frequency}` : null,
         brand_choice: "generic",
       }));

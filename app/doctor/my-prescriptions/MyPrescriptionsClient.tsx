@@ -9,6 +9,7 @@ interface MedicationItem {
   quantity: number;
   frequency: string | null;
   strength: string | null;
+  duration: string | null;
   total_amount: number | null;
   filled_at: string | null;
   pharmacist_name: string | null;
@@ -342,14 +343,6 @@ export default function MyPrescriptionsClient({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500 mb-1">
-                        Duration
-                      </p>
-                      <p className="text-sm sm:text-base font-medium text-gray-900">
-                        {prescription.duration}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-500 mb-1">
                         Instructions
                       </p>
                       <p className="text-sm sm:text-base font-medium text-gray-900">
@@ -428,9 +421,9 @@ export default function MyPrescriptionsClient({
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-500">Amount</p>
+                                <p className="text-gray-500">Duration</p>
                                 <p className="font-medium text-gray-900">
-                                  ${item.total_amount?.toFixed(2) || "0.00"}
+                                  {item.duration || "N/A"}
                                 </p>
                               </div>
                             </div>
