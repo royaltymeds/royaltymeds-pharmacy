@@ -49,20 +49,16 @@ export default function DebugPrescriptionsPage() {
         });
 
         // Check if this user is in the users table
-        const { data: userRecord, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        console.log("[Client Debug] User record in database:", {
-          userRecord,
-          error: userError?.message,
-        });
+        // Note: Skip this to avoid infinite recursion in RLS policies
+        // const { data: userRecord, error: userError } = await supabase
+        //   .from("users")
+        //   .select("*")
+        //   .eq("id", user.id)
+        //   .single();
 
         setData({
           currentAuth: { id: user.id, email: user.email },
-          userRecord: { data: userRecord, error: userError?.message },
+          userRecord: { data: "Skipped (causes RLS recursion)", error: null },
           myPrescriptions: { count: myPrescriptions?.length, data: myPrescriptions, error: myError?.message },
           allPrescriptions: { count: allPrescriptions?.length, data: allPrescriptions, error: allError?.message },
           expectedDoctorId: "196f96b2-283d-4e45-8a93-a195347e9a5b (demodoctor@telemed.com)",

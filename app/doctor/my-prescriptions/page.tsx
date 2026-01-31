@@ -22,16 +22,7 @@ async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
     const supabase = await createServerSupabaseClient();
     console.log("[getPrescriptions] Starting - doctor_id:", doctorId);
     
-    // First, check if doctor exists in users table
-    const { data: doctorUser, error: doctorError } = await supabase
-      .from("users")
-      .select("id, email, role")
-      .eq("id", doctorId)
-      .single();
-    
-    console.log("[getPrescriptions] Doctor user lookup:", { doctorUser, doctorError });
-    
-    // Now fetch doctor_prescriptions
+    // Query doctor_prescriptions directly - no need to check users table
     const { data, error } = await supabase
       .from("doctor_prescriptions")
       .select("*")
