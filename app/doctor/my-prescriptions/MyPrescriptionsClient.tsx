@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Trash2, AlertCircle, ChevronDown } from "lucide-react";
+import { Download, Trash2, AlertCircle, ChevronDown, X } from "lucide-react";
 
 interface MedicationItem {
   id: string;
@@ -44,6 +44,14 @@ export default function MyPrescriptionsClient({
     Record<string, MedicationItem[]>
   >({});
   const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
+  const [fileViewerOpen, setFileViewerOpen] = useState(false);
+  const [viewerFileUrl, setViewerFileUrl] = useState<string | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStartX, setPanStartX] = useState(0);
+  const [panStartY, setPanStartY] = useState(0);
 
   console.log("[MyPrescriptionsClient] Received prescriptions:", {
     count: prescriptions.length,
@@ -119,6 +127,49 @@ export default function MyPrescriptionsClient({
     } catch (error) {
       console.error("Error deleting prescription:", error);
     }
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(Math.min(zoomLevel + 10, 300));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(Math.max(zoomLevel - 10, 100));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel > 100) {
+      setIsPanning(true);
+      setPanStartX(e.clientX - panX);
+      setPanStartY(e.clientY - panY);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPanning && zoomLevel > 100) {
+      setPanX(e.clientX - panStartX);
+      setPanY(e.clientY - panStartY);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const openFileViewer = (fileUrl: string) => {
+    setViewerFileUrl(fileUrl);
+    setFileViewerOpen(true);
+    setZoomLevel(100);
+    setPanX(0);
+    setPanY(0);
+  };
+
+  const closeFileViewer = () => {
+    setFileViewerOpen(false);
+    setViewerFileUrl(null);
+    setZoomLevel(100);
+    setPanX(0);
+    setPanY(0);
   };
 
   return (
@@ -212,7 +263,7 @@ export default function MyPrescriptionsClient({
                 <div className="border-t border-gray-200 p-4 sm:p-6 space-y-6">
                   {/* File Thumbnail */}
                   {prescription.file_url && (
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-w-sm">
                       <h4 className="text-sm font-semibold text-gray-900">
                         Prescription File
                       </h4>
@@ -234,15 +285,13 @@ export default function MyPrescriptionsClient({
                           />
                         )}
                       </div>
-                      <a
-                        href={prescription.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => prescription.file_url && openFileViewer(prescription.file_url)}
                         className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition text-sm"
                       >
                         <Download className="w-4 h-4" />
                         View File
-                      </a>
+                      </button>
                     </div>
                   )}
 
@@ -368,6 +417,81 @@ export default function MyPrescriptionsClient({
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* File Viewer Modal */}
+      {fileViewerOpen && viewerFileUrl && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl h-auto max-h-[90vh] flex flex-col shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Prescription File Viewer
+              </h3>
+              <button
+                onClick={closeFileViewer}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Toolbar */}
+            <div className="flex items-center gap-2 p-3 bg-gray-100 border-b border-gray-200">
+              <button
+                onClick={handleZoomOut}
+                className="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium"
+              >
+                −
+              </button>
+              <span className="text-sm font-medium text-gray-700 w-12 text-center">
+                {zoomLevel}%
+              </span>
+              <button
+                onClick={handleZoomIn}
+                className="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium"
+              >
+                +
+              </button>
+            </div>
+
+            {/* Content */}
+            <div
+              className="flex-1 overflow-hidden bg-gray-200 flex items-center justify-center relative"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{
+                cursor: isPanning ? "grabbing" : zoomLevel > 100 ? "grab" : "auto",
+              }}
+            >
+              {viewerFileUrl.includes(".pdf") ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <Download className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">PDF files cannot be previewed</p>
+                    <p className="text-sm text-gray-300 mt-2">Use the View File button to open the PDF</p>
+                  </div>
+                </div>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={viewerFileUrl}
+                  alt="Prescription full view"
+                  style={{
+                    transform: `scale(${zoomLevel / 100}) translate(${panX}px, ${panY}px)`,
+                    transformOrigin: "center center",
+                    transition: isPanning ? "none" : "transform 0.2s",
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                  }}
+                  className="w-full h-full object-contain"
+                />
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
