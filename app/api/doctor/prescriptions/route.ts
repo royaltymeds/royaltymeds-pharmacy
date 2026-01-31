@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
     // Create medication items (details) for each medication
     if (body.medications && body.medications.length > 0) {
       const medicationItems = body.medications.map((med: any) => ({
-        prescription_id: prescriptionId,
+        doctor_prescription_id: prescriptionId,
         medication_name: med.name,
         dosage: med.dosage || null,
         quantity: med.quantity || null,
