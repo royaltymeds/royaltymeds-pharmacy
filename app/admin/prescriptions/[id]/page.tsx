@@ -102,8 +102,6 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         status,
         patient_id,
         doctor_id,
-        quantity,
-        frequency,
         duration,
         instructions,
         created_at,
@@ -125,6 +123,8 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
           medication_name,
           dosage,
           quantity,
+          frequency,
+          duration,
           notes
         ),
         users:patient_id(
@@ -150,8 +150,6 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
           status,
           patient_id,
           doctor_id,
-          quantity,
-          frequency,
           duration,
           instructions,
           created_at,
@@ -173,6 +171,8 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
             medication_name,
             dosage,
             quantity,
+            frequency,
+            duration,
             notes
           )
         `
