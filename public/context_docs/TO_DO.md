@@ -1,7 +1,7 @@
 # Implementation Roadmap - RoyaltyMeds Platform
 
-**Last Updated:** January 30, 2026  
-**Status:** Active Development - Features #2-7 COMPLETE ✅, Feature #8 (Enhanced Auth) PLANNED, Ready for Deployment  
+**Last Updated:** January 31, 2026  
+**Status:** Active Development - Features #2-7 COMPLETE ✅, Feature #8 (Enhanced Auth) PLANNED, Features #10-13 (Inventory Categories) PLANNED, Ready for Deployment  
 **Priority:** HIGH
 
 ## 🎯 Completion Criteria
@@ -14,7 +14,7 @@
 ✅ Documented in TO_DO.md
 
 **Current Status:**
-- ✅ **Features #2-7:** COMPLETE - Database + APIs + UI Pages + Ready for Deployment
+- ✅ **Features #2-7:** COMPLETE - Database + APIs + UI Pages + Deployed to Production ✅
   - Feature #2: Prescription Refills ✅
   - Feature #3: Store Sales/Clearance ✅
   - Feature #4: Audit Logs ✅
@@ -22,19 +22,20 @@
   - Feature #6: Messaging System ✅
   - Feature #7: Email Integration ✅
 - 🔨 **Feature #8:** PLANNED - Enhanced Authentication (Forgot Password, Remember Me, OTC Email Login)
-- ⏳ **Backend Work:** Features #9-16 not started
+- 🔨 **Feature #9:** PLANNED - Inventory-Linked Prescription Items (OTC & Rx Dropdown Selection)
+- 🔨 **Features #10-13:** PLANNED - Inventory Categories (Snacks & Beverages, Fashion, Medical Disposables, Stationery)
 
-**Latest Session Work (Jan 30):**
-- ✅ Schema audit: Identified & fixed 4 critical column naming issues
-- ✅ Doctor portal: Fixed patient linking, search, creation endpoints
-- ✅ Patient portal: Improved header navigation with dropdown
-- ✅ 8 commits deployed to production
-- ✅ All critical issues resolved
+**Latest Session Work (Jan 31):**
+- ✅ Fixed infinite recursion in doctor_prescriptions RLS policy (migration 20260130000011)
+- ✅ Doctor portal prescription display now working
+- ✅ Deployed RLS fix to production via Vercel
+- ✅ Added 4 new inventory category features to roadmap (#10-13) with full implementation plans
+- ✅ All doctor prescription functionality restored and verified working
 
 **Latest Commits:**
-- `854fb34` - Improve patient portal header alignment and add More dropdown
-- `fe28978` - Fix doctor create-patient RLS issue
-- `c3ad47e` - Fix user_profiles array/object handling in GET endpoint
+- `e291b7a` - Updated TO_DO.md with 4 new inventory category features (#10-13)
+- `705d375` - Deploy doctor prescriptions RLS fix to production via Vercel
+- `ad7fcb5` - Fix infinite recursion in doctor prescriptions RLS policy - migration 20260130000011
 
 ---
 

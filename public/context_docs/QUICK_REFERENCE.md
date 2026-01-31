@@ -7,9 +7,9 @@
 **Status:** ✅ LIVE IN PRODUCTION  
 **URL:** https://royaltymedsprescript.vercel.app  
 **Build:** Passing (0 errors)  
-**Commits:** 382+ across 21 days  
-**Features:** 125+ fully functional  
-**Latest Update:** Jan 28, 2026 - RLS fixes in prescription items and fill endpoints    
+**Commits:** 385+ across 21 days  
+**Features:** 130+ fully functional  
+**Latest Update:** Jan 31, 2026 - Fixed doctor prescriptions RLS recursion, added 4 inventory categories to roadmap    
 
 ---
 
