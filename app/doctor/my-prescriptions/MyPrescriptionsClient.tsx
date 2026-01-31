@@ -7,13 +7,11 @@ interface MedicationItem {
   id: string;
   medication_name: string;
   quantity: number;
-  frequency: string | null;
-  strength: string | null;
+  dosage: string | null;
   duration: string | null;
-  total_amount: number | null;
-  filled_at: string | null;
-  pharmacist_name: string | null;
-  status: string;
+  brand_choice?: string;
+  notes?: string | null;
+  created_at?: string;
 }
 
 interface Prescription {
@@ -395,11 +393,6 @@ export default function MyPrescriptionsClient({
                               <h5 className="text-sm sm:text-base font-medium text-gray-900">
                                 {item.medication_name}
                               </h5>
-                              {item.filled_at && (
-                                <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium">
-                                  Filled
-                                </span>
-                              )}
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs sm:text-sm mb-2">
                               <div>
@@ -409,15 +402,15 @@ export default function MyPrescriptionsClient({
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-500">Strength</p>
+                                <p className="text-gray-500">Dosage</p>
                                 <p className="font-medium text-gray-900">
-                                  {item.strength || "N/A"}
+                                  {item.dosage || "N/A"}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-500">Frequency</p>
-                                <p className="font-medium text-gray-900">
-                                  {item.frequency || "N/A"}
+                                <p className="text-gray-500">Brand</p>
+                                <p className="font-medium text-gray-900 capitalize">
+                                  {item.brand_choice || "Generic"}
                                 </p>
                               </div>
                               <div>
@@ -427,17 +420,11 @@ export default function MyPrescriptionsClient({
                                 </p>
                               </div>
                             </div>
-                            {item.filled_at && (
-                              <div className="bg-white rounded p-2 border border-green-200">
-                                <p className="text-xs text-gray-600 mb-1">
-                                  Filled on:{" "}
-                                  {new Date(item.filled_at).toLocaleDateString()}
+                            {item.notes && (
+                              <div className="bg-white rounded p-2 border border-gray-200">
+                                <p className="text-xs text-gray-600">
+                                  Notes: {item.notes}
                                 </p>
-                                {item.pharmacist_name && (
-                                  <p className="text-xs text-gray-600">
-                                    Pharmacist: {item.pharmacist_name}
-                                  </p>
-                                )}
                               </div>
                             )}
                           </div>
