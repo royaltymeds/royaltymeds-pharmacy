@@ -15,6 +15,8 @@ interface Prescription {
   file_name: string | null;
   prescription_number: string;
   created_at: string;
+  pharmacist_name: string | null;
+  filled_at: string | null;
 }
 
 async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
@@ -53,6 +55,8 @@ async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
       file_name: item.file_name,
       prescription_number: item.prescription_number,
       created_at: item.created_at,
+      pharmacist_name: item.pharmacist_name,
+      filled_at: item.filled_at,
     }));
     
     console.log("[getPrescriptions] Transformed data:", { count: transformed.length, items: transformed });
