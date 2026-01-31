@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CheckCircle, X, AlertCircle, Download, Edit2, Plus, Trash2, Loader } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface PrescriptionDetailClientProps {
   prescription: any;
@@ -41,11 +41,14 @@ export default function PrescriptionDetailClient({
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [fitZoom, setFitZoom] = useState(100);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
   const [isPanning, setIsPanning] = useState(false);
   const [panStartX, setPanStartX] = useState(0);
   const [panStartY, setPanStartY] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
@@ -545,7 +548,7 @@ export default function PrescriptionDetailClient({
   };
 
   const handleZoomOut = () => {
-    setZoomLevel(Math.max(zoomLevel - 10, 100));
+    setZoomLevel(Math.max(zoomLevel - 10, fitZoom));
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -588,6 +591,45 @@ export default function PrescriptionDetailClient({
       });
     }
   };
+
+  useEffect(() => {
+    if (fileViewerOpen && imgRef.current && containerRef.current) {
+      const calculateFitZoom = () => {
+        const img = imgRef.current;
+        const container = containerRef.current;
+        if (!img || !container) return;
+
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        const imgWidth = img.naturalWidth;
+        const imgHeight = img.naturalHeight;
+
+        if (imgWidth === 0 || imgHeight === 0) {
+          setFitZoom(100);
+          setZoomLevel(100);
+          return;
+        }
+
+        const scaleX = (containerWidth - 40) / imgWidth; // 40px padding
+        const scaleY = (containerHeight - 40) / imgHeight;
+        const calculatedZoom = Math.min(scaleX, scaleY) * 100;
+        
+        const zoomToUse = Math.max(Math.min(calculatedZoom, 100), 50);
+        setFitZoom(zoomToUse);
+        setZoomLevel(zoomToUse);
+        setPanX(0);
+        setPanY(0);
+      };
+
+      const img = imgRef.current;
+      if (img.complete) {
+        calculateFitZoom();
+      } else {
+        img.addEventListener("load", calculateFitZoom);
+        return () => img.removeEventListener("load", calculateFitZoom);
+      }
+    }
+  }, [fileViewerOpen, prescription.file_url]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -1546,12 +1588,13 @@ export default function PrescriptionDetailClient({
                 {/* Content */}
                 <div className="flex-1 overflow-hidden bg-gray-200 flex items-center justify-center relative">
                   <div
+                    ref={containerRef}
                     className="overflow-hidden relative"
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
-                    style={{ width: "100%", height: "100%", cursor: isPanning ? "grabbing" : zoomLevel > 100 ? "grab" : "auto" }}
+                    style={{ width: "100%", height: "100%", cursor: isPanning ? "grabbing" : zoomLevel > fitZoom ? "grab" : "auto" }}
                   >
                     {prescription.file_url.includes(".pdf") ? (
                       <div className="w-full h-full flex items-center justify-center">
@@ -1564,6 +1607,7 @@ export default function PrescriptionDetailClient({
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
+                        ref={imgRef}
                         src={prescription.file_url}
                         alt="Prescription full view"
                         style={{

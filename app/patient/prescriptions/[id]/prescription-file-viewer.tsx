@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Download, X } from "lucide-react";
 
 interface PrescriptionFileViewerProps {
@@ -16,18 +16,21 @@ export default function PrescriptionFileViewer({
 }: PrescriptionFileViewerProps) {
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [fitZoom, setFitZoom] = useState(100);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
   const [isPanning, setIsPanning] = useState(false);
   const [panStartX, setPanStartX] = useState(0);
   const [panStartY, setPanStartY] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const handleZoomIn = () => {
     setZoomLevel(Math.min(zoomLevel + 10, 300));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel(Math.max(zoomLevel - 10, 100));
+    setZoomLevel(Math.max(zoomLevel - 10, fitZoom));
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -66,6 +69,45 @@ export default function PrescriptionFileViewer({
       console.error("Error downloading file:", error);
     }
   };
+
+  useEffect(() => {
+    if (fileViewerOpen && imgRef.current && containerRef.current) {
+      const calculateFitZoom = () => {
+        const img = imgRef.current;
+        const container = containerRef.current;
+        if (!img || !container) return;
+
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        const imgWidth = img.naturalWidth;
+        const imgHeight = img.naturalHeight;
+
+        if (imgWidth === 0 || imgHeight === 0) {
+          setFitZoom(100);
+          setZoomLevel(100);
+          return;
+        }
+
+        const scaleX = (containerWidth - 40) / imgWidth; // 40px padding
+        const scaleY = (containerHeight - 40) / imgHeight;
+        const calculatedZoom = Math.min(scaleX, scaleY) * 100;
+        
+        const zoomToUse = Math.max(Math.min(calculatedZoom, 100), 50);
+        setFitZoom(zoomToUse);
+        setZoomLevel(zoomToUse);
+        setPanX(0);
+        setPanY(0);
+      };
+
+      const img = imgRef.current;
+      if (img.complete) {
+        calculateFitZoom();
+      } else {
+        img.addEventListener("load", calculateFitZoom);
+        return () => img.removeEventListener("load", calculateFitZoom);
+      }
+    }
+  }, [fileViewerOpen]);
 
   return (
     <>
@@ -168,13 +210,14 @@ export default function PrescriptionFileViewer({
 
             {/* Content */}
             <div
+              ref={containerRef}
               className="flex-1 overflow-hidden bg-gray-200 flex items-center justify-center relative"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
               style={{
-                cursor: isPanning ? "grabbing" : zoomLevel > 100 ? "grab" : "auto",
+                cursor: isPanning ? "grabbing" : zoomLevel > fitZoom ? "grab" : "auto",
               }}
             >
               {fileUrl.includes(".pdf") ? (
@@ -188,6 +231,7 @@ export default function PrescriptionFileViewer({
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
+                  ref={imgRef}
                   src={fileUrl}
                   alt="Prescription full view"
                   style={{
