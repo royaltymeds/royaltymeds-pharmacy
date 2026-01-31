@@ -33,7 +33,6 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         notes,
         prescription_number,
         file_url,
-        quantity,
         admin_notes,
         filled_at,
         pharmacist_name,
@@ -47,8 +46,6 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         refill_status,
         is_refillable,
         last_refilled_at,
-        refills_allowed,
-        rejection_reason,
         prescription_items(
           id,
           medication_name,
