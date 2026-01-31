@@ -29,14 +29,14 @@ export async function GET(request: NextRequest) {
         id,
         prescription_number,
         patient_id,
-        medication_name,
-        dosage,
         quantity,
         frequency,
         duration,
         instructions,
         notes,
         status,
+        file_url,
+        file_name,
         created_at
       `
       )
@@ -56,14 +56,14 @@ export async function GET(request: NextRequest) {
       id: prescription.id,
       prescriptionNumber: prescription.prescription_number,
       patientId: prescription.patient_id,
-      medicationName: prescription.medication_name,
-      dosage: prescription.dosage,
       quantity: prescription.quantity,
       frequency: prescription.frequency,
       duration: prescription.duration,
       instructions: prescription.instructions,
       notes: prescription.notes,
       status: prescription.status,
+      fileUrl: prescription.file_url,
+      fileName: prescription.file_name,
       createdAt: prescription.created_at,
     })) || [];
 
@@ -111,27 +111,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create medication text representation from medications array
-    const medicationsText = body.medications
-      ?.map(
-        (med: any) =>
-          `${med.name} (${med.dosage}, ${med.quantity}, ${med.frequency})`
-      )
-      .join("; ") || "No medications";
-
-    // Get first medication's quantity and frequency for the single record
-    const firstMed = body.medications?.[0];
-
-    const { data: prescriptionData, error } = await supabase
+    // Create doctor prescription record (header)
+    const { data: prescriptionData, error: prescriptionError } = await supabase
       .from("doctor_prescriptions")
       .insert([
         {
           doctor_id: user.id,
           prescription_number: prescriptionNumber,
           patient_id: patientId,
-          medication_name: medicationsText,
-          quantity: firstMed?.quantity || null,
-          frequency: firstMed?.frequency || null,
+          quantity: null,
+          frequency: null,
           duration: body.duration || null,
           instructions: body.instructions || null,
           notes: body.notes || null,
@@ -142,7 +131,38 @@ export async function POST(request: NextRequest) {
       ])
       .select();
 
-    if (error) throw error;
+    if (prescriptionError) throw prescriptionError;
+
+    const prescriptionId = prescriptionData?.[0]?.id;
+
+    if (!prescriptionId) {
+      return NextResponse.json(
+        { error: "Failed to create prescription record" },
+        { status: 500 }
+      );
+    }
+
+    // Create medication items (details) for each medication
+    if (body.medications && body.medications.length > 0) {
+      const medicationItems = body.medications.map((med: any) => ({
+        prescription_id: prescriptionId,
+        medication_name: med.name,
+        dosage: med.dosage || null,
+        quantity: med.quantity || null,
+        notes: med.frequency ? `Frequency: ${med.frequency}` : null,
+        brand_choice: "generic",
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("prescription_items")
+        .insert(medicationItems);
+
+      if (itemsError) {
+        // Rollback the prescription creation on error
+        await supabase.from("doctor_prescriptions").delete().eq("id", prescriptionId);
+        throw itemsError;
+      }
+    }
 
     return NextResponse.json(
       { 
