@@ -8,6 +8,7 @@ interface MedicationItem {
   medication_name: string;
   quantity: number;
   dosage: string | null;
+  frequency: string | null;
   duration: string | null;
   brand_choice?: string;
   notes?: string | null;
@@ -415,9 +416,9 @@ export default function MyPrescriptionsClient({
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-500">Brand</p>
-                                <p className="font-medium text-gray-900 capitalize">
-                                  {item.brand_choice || "Generic"}
+                                <p className="text-gray-500">Frequency</p>
+                                <p className="font-medium text-gray-900">
+                                  {item.frequency || "N/A"}
                                 </p>
                               </div>
                               <div>
@@ -427,11 +428,18 @@ export default function MyPrescriptionsClient({
                                 </p>
                               </div>
                             </div>
-                            {item.notes && (
-                              <div className="bg-white rounded p-2 border border-gray-200">
-                                <p className="text-xs text-gray-600">
-                                  Notes: {item.notes}
-                                </p>
+                            {(item.brand_choice || item.notes) && (
+                              <div className="bg-white rounded p-2 border border-gray-200 space-y-1">
+                                {item.brand_choice && (
+                                  <p className="text-xs text-gray-600">
+                                    Brand: <span className="capitalize">{item.brand_choice}</span>
+                                  </p>
+                                )}
+                                {item.notes && (
+                                  <p className="text-xs text-gray-600">
+                                    Notes: {item.notes}
+                                  </p>
+                                )}
                               </div>
                             )}
                           </div>
