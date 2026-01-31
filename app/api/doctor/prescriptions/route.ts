@@ -127,8 +127,6 @@ export async function POST(request: NextRequest) {
           doctor_id: user.id,
           prescription_number: prescriptionNumber,
           patient_id: patientId,
-          quantity: null,
-          frequency: null,
           duration: body.duration || null,
           instructions: body.instructions || null,
           notes: body.notes || null,
@@ -157,8 +155,9 @@ export async function POST(request: NextRequest) {
         medication_name: med.name,
         dosage: med.dosage || null,
         quantity: med.quantity || null,
+        frequency: med.frequency || null,
         duration: med.duration || null,
-        notes: med.frequency ? `Frequency: ${med.frequency}` : null,
+        notes: med.notes || null,
         brand_choice: "generic",
       }));
 
