@@ -64,7 +64,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { medication_name, dosage, quantity, notes } = body;
+    const { medication_name, dosage, quantity, notes, source } = body;
 
     if (!medication_name || !dosage || !quantity) {
       return NextResponse.json(
@@ -73,12 +73,15 @@ export async function POST(
       );
     }
 
+    // Determine which table to use based on source
+    const itemsTable = source === "doctor" ? "doctor_prescriptions_items" : "prescription_items";
+
     // Insert prescription item using admin client
     const { data, error } = await supabaseAdmin
-      .from("prescription_items")
+      .from(itemsTable)
       .insert([
         {
-          prescription_id: prescriptionId,
+          [source === "doctor" ? "doctor_prescription_id" : "prescription_id"]: prescriptionId,
           medication_name,
           dosage,
           quantity: parseInt(quantity),
@@ -167,7 +170,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { itemId, medication_name, dosage, quantity, notes } = body;
+    const { itemId, medication_name, dosage, quantity, notes, source } = body;
 
     if (!itemId) {
       return NextResponse.json(
@@ -176,9 +179,13 @@ export async function PATCH(
       );
     }
 
+    // Determine which table to use based on source
+    const itemsTable = source === "doctor" ? "doctor_prescriptions_items" : "prescription_items";
+    const foreignKeyColumn = source === "doctor" ? "doctor_prescription_id" : "prescription_id";
+
     // Update prescription item using admin client
     const { data, error } = await supabaseAdmin
-      .from("prescription_items")
+      .from(itemsTable)
       .update({
         medication_name,
         dosage,
@@ -186,7 +193,7 @@ export async function PATCH(
         notes: notes || null,
       })
       .eq("id", itemId)
-      .eq("prescription_id", prescriptionId)
+      .eq(foreignKeyColumn, prescriptionId)
       .select();
 
     if (error) {
@@ -267,7 +274,7 @@ export async function DELETE(
       );
     }
 
-    const { itemId } = await request.json();
+    const { itemId, source } = await request.json();
 
     if (!itemId) {
       return NextResponse.json(
@@ -276,12 +283,15 @@ export async function DELETE(
       );
     }
 
+    const itemsTable = source === "doctor" ? "doctor_prescriptions_items" : "prescription_items";
+    const foreignKeyColumn = source === "doctor" ? "doctor_prescription_id" : "prescription_id";
+
     // Delete prescription item using admin client
     const { error } = await supabaseAdmin
-      .from("prescription_items")
+      .from(itemsTable)
       .delete()
       .eq("id", itemId)
-      .eq("prescription_id", prescriptionId);
+      .eq(foreignKeyColumn, prescriptionId);
 
     if (error) {
       console.error("Error deleting prescription item:", error);

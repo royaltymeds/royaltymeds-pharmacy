@@ -7,18 +7,18 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { status, table } = await request.json();
+    const { status, table, source } = await request.json();
 
-    if (!status || !table) {
+    if (!status) {
       return NextResponse.json(
-        { error: "Status and table are required" },
+        { error: "Status is required" },
         { status: 400 }
       );
     }
 
-    if (!["approved", "rejected", "processing"].includes(status)) {
+    if (!["approved", "rejected", "processing", "pending"].includes(status)) {
       return NextResponse.json(
-        { error: "Invalid status. Must be 'approved', 'rejected', or 'processing'" },
+        { error: "Invalid status. Must be 'approved', 'rejected', 'processing', or 'pending'" },
         { status: 400 }
       );
     }
@@ -29,8 +29,8 @@ export async function PATCH(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Determine which table to update based on the source
-    const tableName = table === "patient" ? "prescriptions" : "doctor_prescriptions";
+    // Determine which table to update based on the source or table parameter (source takes precedence)
+    const tableName = (source === "doctor" || table === "doctor") ? "doctor_prescriptions" : "prescriptions";
 
     // Update the prescription status
     const { data, error } = await supabaseAdmin

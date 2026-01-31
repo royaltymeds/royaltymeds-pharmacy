@@ -13,7 +13,7 @@ export async function PATCH(
   const { id } = await params;
   const prescriptionId = id;
   const body = await request.json();
-  const { items } = body;
+  const { items, source } = body; // source: "patient" or "doctor"
 
   try {
     // Verify user is authenticated and is admin
@@ -70,14 +70,19 @@ export async function PATCH(
 
     const pharmacistName = userProfile?.full_name || user.email || "Unknown";
 
+    // Determine which table to use based on source
+    const prescriptionTable = source === "doctor" ? "doctor_prescriptions" : "prescriptions";
+    const itemsTable = source === "doctor" ? "doctor_prescriptions_items" : "prescription_items";
+    const prescriptionItemsRelation = source === "doctor" ? "doctor_prescriptions_items" : "prescription_items";
+
     // Fetch prescription with items
     const { data: prescription, error: prescriptionError } = await supabaseAdmin
-      .from("prescriptions")
+      .from(prescriptionTable)
       .select(
         `
         id,
         status,
-        prescription_items(
+        ${prescriptionItemsRelation}(
           id,
           quantity
         )
@@ -94,19 +99,22 @@ export async function PATCH(
     }
 
     // Verify prescription is in fillable status
-    if (prescription.status !== "processing" && prescription.status !== "partially_filled") {
+    if (prescription.status !== "processing" && prescription.status !== "partially_filled" && prescription.status !== "approved") {
       return new Response(
         JSON.stringify({ error: `Cannot fill prescription with status: ${prescription.status}` }),
         { status: 400 }
       );
     }
 
+    // Get the items from the relation
+    const prescriptionItems = (prescription as any)[prescriptionItemsRelation] || [];
+
     // Validate and process items
     const itemUpdates = [];
     let hasZeroQuantity = true; // tracks if all quantities are 0
 
     for (const item of items) {
-      const originalItem = prescription.prescription_items.find((pi: any) => pi.id === item.itemId);
+      const originalItem = prescriptionItems.find((pi: any) => pi.id === item.itemId);
 
       if (!originalItem) {
         return new Response(
@@ -149,7 +157,7 @@ export async function PATCH(
     // Update prescription items
     for (const update of itemUpdates) {
       const { error: updateError } = await supabaseAdmin
-        .from("prescription_items")
+        .from(itemsTable)
         .update({
           quantity_filled: update.quantityFilled,
           quantity: update.remainingQuantity,
@@ -170,7 +178,7 @@ export async function PATCH(
 
     // Update prescription with new status and fill info
     const { data: updatedPrescription, error: updatePrescriptionError } = await supabaseAdmin
-      .from("prescriptions")
+      .from(prescriptionTable)
       .update({
         status: newStatus,
         filled_at: new Date().toISOString(),

@@ -62,7 +62,7 @@ export default function PrescriptionDetailClient({
         },
         body: JSON.stringify({
           status: newStatus,
-          table: prescription.source,
+          source: prescription.source,
         }),
       });
 
@@ -109,7 +109,10 @@ export default function PrescriptionDetailClient({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(newMedication),
+          body: JSON.stringify({
+            ...newMedication,
+            source: prescription.source,
+          }),
         }
       );
 
@@ -174,6 +177,7 @@ export default function PrescriptionDetailClient({
           },
           body: JSON.stringify({
             itemId,
+            source: prescription.source,
             ...updatedData,
           }),
         }
@@ -238,7 +242,10 @@ export default function PrescriptionDetailClient({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ itemId }),
+          body: JSON.stringify({
+            itemId,
+            source: prescription.source,
+          }),
         }
       );
 
@@ -424,6 +431,7 @@ export default function PrescriptionDetailClient({
               itemId: item.id,
               quantityFilled: quantitiesBeingFilled[item.id] || 0,
             })),
+            source: prescription.source,
           }),
         }
       );
