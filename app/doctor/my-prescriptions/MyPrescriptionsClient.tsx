@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Trash2, AlertCircle, ChevronDown } from "lucide-react";
-import Image from "next/image";
+import { Download, Trash2, AlertCircle, ChevronDown } from "lucide-react";
 
 interface MedicationItem {
   id: string;
@@ -213,31 +212,37 @@ export default function MyPrescriptionsClient({
                 <div className="border-t border-gray-200 p-4 sm:p-6 space-y-6">
                   {/* File Thumbnail */}
                   {prescription.file_url && (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <h4 className="text-sm font-semibold text-gray-900">
                         Prescription File
                       </h4>
-                      <div className="relative group">
-                        <div className="relative h-32 w-24 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                          <Image
+                      <div
+                        className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center"
+                        style={{ height: "200px" }}
+                      >
+                        {prescription.file_url.includes(".pdf") ? (
+                          <div className="text-center">
+                            <Download className="w-12 h-12 text-red-500 mx-auto mb-2" />
+                            <p className="text-sm text-gray-600">PDF Document</p>
+                          </div>
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
                             src={prescription.file_url}
-                            alt={prescription.file_name || "Prescription"}
-                            fill
-                            className="object-cover"
+                            alt="Prescription preview"
+                            className="w-full h-full object-contain"
                           />
-                        </div>
-                        <a
-                          href={prescription.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Eye className="h-6 w-6 text-white" />
-                        </a>
+                        )}
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        {prescription.file_name}
-                      </p>
+                      <a
+                        href={prescription.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition text-sm"
+                      >
+                        <Download className="w-4 h-4" />
+                        View File
+                      </a>
                     </div>
                   )}
 
