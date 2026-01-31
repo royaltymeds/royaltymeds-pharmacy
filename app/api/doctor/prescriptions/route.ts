@@ -112,8 +112,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create doctor prescription record (header)
-    const { data: prescriptionData, error: prescriptionError } = await supabase
+    // Create service role client to bypass RLS policies
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          persistSession: false,
+        },
+      }
+    );
+
+    // Create doctor prescription record (header) using service role client
+    const { data: prescriptionData, error: prescriptionError } = await adminClient
       .from("doctor_prescriptions")
       .insert([
         {
@@ -145,17 +156,6 @@ export async function POST(request: NextRequest) {
 
     // Create medication items (details) for each medication
     if (body.medications && body.medications.length > 0) {
-      // Use service role client to bypass RLS policies
-      const adminClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            persistSession: false,
-          },
-        }
-      );
-
       const medicationItems = body.medications.map((med: any) => ({
         prescription_id: prescriptionId,
         medication_name: med.name,
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 
       if (itemsError) {
         // Rollback the prescription creation on error
-        await supabase.from("doctor_prescriptions").delete().eq("id", prescriptionId);
+        await adminClient.from("doctor_prescriptions").delete().eq("id", prescriptionId);
         throw itemsError;
       }
     }
