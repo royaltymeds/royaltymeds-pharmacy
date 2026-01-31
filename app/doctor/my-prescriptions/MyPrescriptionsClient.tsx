@@ -7,6 +7,7 @@ interface MedicationItem {
   id: string;
   medication_name: string;
   quantity: number;
+  quantity_filled?: number;
   dosage: string | null;
   frequency: string | null;
   duration: string | null;
@@ -406,7 +407,7 @@ export default function MyPrescriptionsClient({
                               <div>
                                 <p className="text-gray-500">Quantity</p>
                                 <p className="font-medium text-gray-900">
-                                  {item.quantity}
+                                  {item.quantity_filled ? `${item.quantity_filled}/${item.quantity}` : item.quantity}
                                 </p>
                               </div>
                               <div>

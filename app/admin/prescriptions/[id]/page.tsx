@@ -18,13 +18,6 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // First, let's see what prescriptions exist in the patient table
-    console.log("[getPrescriptionDetail] Fetching ALL patient prescriptions for debugging...");
-    const { data: allPatientPrescriptions } = await supabaseAdmin
-      .from("prescriptions")
-      .select("id");
-    console.log("[getPrescriptionDetail] Patient prescriptions in DB:", allPatientPrescriptions?.map((p: any) => p.id) || []);
-
     // Try to fetch from patient prescriptions table first
     console.log("[getPrescriptionDetail] Searching patient prescriptions table for ID:", prescriptionId);
     const { data: patientPrescription, error: patientError } = await supabaseAdmin
@@ -54,6 +47,7 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
           medication_name,
           dosage,
           quantity,
+          quantity_filled,
           total_amount,
           notes
         ),
@@ -79,13 +73,6 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
 
     console.log("[getPrescriptionDetail] Not found in patient prescriptions, searching doctor prescriptions...");
     
-    // First, let's see what prescriptions exist in the doctor table
-    console.log("[getPrescriptionDetail] Fetching ALL doctor prescriptions for debugging...");
-    const { data: allDoctorPrescriptions } = await supabaseAdmin
-      .from("doctor_prescriptions")
-      .select("id");
-    console.log("[getPrescriptionDetail] Doctor prescriptions in DB:", allDoctorPrescriptions?.map((p: any) => p.id) || []);
-    
     // If not found, try doctor prescriptions table
     const { data: doctorPrescription, error: doctorError } = await supabaseAdmin
       .from("doctor_prescriptions")
@@ -105,11 +92,20 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         prescription_number,
         file_url,
         file_name,
+        admin_notes,
+        filled_at,
+        pharmacist_name,
+        doctor_name,
+        doctor_phone,
+        doctor_email,
+        practice_name,
+        practice_address,
         doctor_prescriptions_items(
           id,
           medication_name,
           dosage,
           quantity,
+          quantity_filled,
           notes
         ),
         users:patient_id(
