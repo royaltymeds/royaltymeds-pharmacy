@@ -103,14 +103,15 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
         updated_at,
         notes,
         prescription_number,
-        admin_notes,
-        doctor_name,
-        doctor_phone,
-        doctor_email,
-        practice_name,
-        practice_address,
-        filled_at,
-        pharmacist_name,
+        file_url,
+        file_name,
+        doctor_prescriptions_items(
+          id,
+          medication_name,
+          dosage,
+          quantity,
+          notes
+        ),
         users:patient_id(
           id,
           user_profiles(
@@ -128,7 +129,12 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
 
     if (doctorPrescription) {
       console.log("[getPrescriptionDetail] Found in doctor prescriptions:", doctorPrescription.id);
-      return { ...doctorPrescription, source: "doctor" };
+      // Normalize doctor_prescriptions_items to prescription_items for consistent rendering
+      return {
+        ...doctorPrescription,
+        prescription_items: doctorPrescription.doctor_prescriptions_items || [],
+        source: "doctor",
+      };
     }
 
     // Not found in either table

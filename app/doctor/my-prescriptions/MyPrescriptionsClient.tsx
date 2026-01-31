@@ -6,14 +6,13 @@ import { Eye, Trash2, AlertCircle } from "lucide-react";
 interface Prescription {
   id: string;
   patient_id: string;
-  medication_name: string;
-  dosage: string;
-  quantity: string;
-  frequency: string;
   duration: string;
   instructions: string | null;
   notes: string | null;
   status: string;
+  file_url: string | null;
+  file_name: string | null;
+  prescription_number: string;
   created_at: string;
 }
 
@@ -101,7 +100,7 @@ export default function MyPrescriptionsClient({
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                      {prescription.medication_name}
+                      Prescription #{prescription.prescription_number}
                     </h3>
                     <span
                       className={`w-fit px-2 py-1 rounded text-xs font-medium ${getStatusColor(
@@ -116,27 +115,32 @@ export default function MyPrescriptionsClient({
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs sm:text-sm">
                     <div>
-                      <p className="text-gray-500">Dosage</p>
-                      <p className="font-medium text-gray-900">
-                        {prescription.dosage}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Quantity</p>
-                      <p className="font-medium text-gray-900">
-                        {prescription.quantity}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Frequency</p>
-                      <p className="font-medium text-gray-900">
-                        {prescription.frequency}
-                      </p>
-                    </div>
-                    <div>
                       <p className="text-gray-500">Duration</p>
                       <p className="font-medium text-gray-900">
                         {prescription.duration}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">File</p>
+                      <p className="font-medium text-gray-900">
+                        {prescription.file_name ? (
+                          <a 
+                            href={prescription.file_url || '#'} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            View File
+                          </a>
+                        ) : (
+                          'No file'
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Submitted</p>
+                      <p className="font-medium text-gray-900">
+                        {new Date(prescription.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

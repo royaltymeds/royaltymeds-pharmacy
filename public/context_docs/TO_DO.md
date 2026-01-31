@@ -699,7 +699,188 @@ CREATE INDEX idx_otc_expires ON one_time_login_codes(expires_at);
 
 ---
 
-### 9. Messaging System
+### 9. Inventory-Linked Prescription Items - OTC & Rx Dropdown Selection
+**Status:** ⏳ Not Started  
+**Priority:** 🟡 MEDIUM  
+**Estimated Effort:** 8 hours (backend) + 6 hours (UI) = 14 hours total  
+
+**Implementation Plan:**
+
+**Database Schema Changes**
+```sql
+-- Add medication_id columns to prescription_items and doctor_prescriptions_items
+ALTER TABLE public.prescription_items
+ADD COLUMN IF NOT EXISTS medication_id uuid,
+ADD COLUMN IF NOT EXISTS medication_type VARCHAR(20), -- 'otc' or 'prescription'
+ADD CONSTRAINT prescription_items_medication_id_fkey 
+  FOREIGN KEY (medication_id) REFERENCES public.otc_drugs(id) ON DELETE SET NULL;
+
+ALTER TABLE public.doctor_prescriptions_items
+ADD COLUMN IF NOT EXISTS medication_id uuid,
+ADD COLUMN IF NOT EXISTS medication_type VARCHAR(20), -- 'otc' or 'prescription'
+ADD CONSTRAINT doctor_prescriptions_items_medication_id_fkey 
+  FOREIGN KEY (medication_id) REFERENCES public.otc_drugs(id) ON DELETE SET NULL;
+
+-- Create indexes for faster lookups
+CREATE INDEX IF NOT EXISTS idx_prescription_items_medication_id ON public.prescription_items(medication_id);
+CREATE INDEX IF NOT EXISTS idx_doctor_prescriptions_items_medication_id ON public.doctor_prescriptions_items(medication_id);
+```
+
+**Phase 1: Inventory API Endpoints (Hours 1-3)**
+- Create endpoint to fetch available OTC drugs
+- Create endpoint to fetch available prescription drugs
+- Filter by search term/name
+- Return: id, name, dosage, strength, category
+
+**Phase 2: Update Prescription Upload Forms (Hours 4-6)**
+- Modify patient prescription upload form to support dropdown
+- Modify doctor prescription upload form to support dropdown
+- Show "Manual Entry" vs "Select from Inventory" toggle
+- Load inventory items on form mount
+- Show auto-populated dosage when item selected
+
+**Phase 3: Database Schema Updates & Migrations (Hours 7-8)**
+- Add medication_id and medication_type columns to prescription_items
+- Add medication_id and medication_type columns to doctor_prescriptions_items
+- Create foreign key constraints to otc_drugs/prescription_drugs tables
+- Create performance indexes
+
+**Phase 4: API Updates (Hours 9-11)**
+- Modify `POST /api/patient/upload` to support medication_id
+- Modify `POST /api/doctor/prescriptions` to support medication_id
+- Validate medication_id exists when provided
+- Fallback to manual entry if medication_id not provided
+- Store both medication_id and medication_name for flexibility
+
+**Phase 5: UI Refinements (Hours 12-14)**
+- Add async dropdown component with search/filter
+- Show medication details (dosage, strength, category) in dropdown
+- Auto-fill dosage when inventory item selected
+- Validate quantity and dosage fields
+- Clear medication_id if user switches back to manual entry
+- Show selected medication info below dropdown
+
+**Implementation Sequence:**
+
+**Phase 1 (Hours 1-3): API Endpoints**
+1. `GET /api/inventory/otc-drugs` - List available OTC drugs with pagination
+   - Query parameters: search (name filter), limit (20 default), offset (0 default)
+   - Returns: id, name, dosage, strength, category, quantity_on_hand
+   - Filter out out-of-stock items
+   
+2. `GET /api/inventory/prescription-drugs` - List available prescription drugs
+   - Query parameters: search, limit, offset
+   - Returns: id, name, dosage, strength, category, quantity_on_hand
+   - Admin/doctor only access
+
+3. `GET /api/inventory/search` - Combined search across both tables
+   - Query parameter: q (search term), type (otc/prescription/all)
+   - Returns unified results with type indicator
+
+**Phase 2 (Hours 4-6): Form UI Updates**
+1. Patient prescription upload form:
+   - Add toggle: "Manual Entry" vs "Select from Inventory"
+   - When "Select from Inventory": Show dropdown with search
+   - When "Manual Entry": Show text fields (current behavior)
+   - Auto-fill dosage from selected inventory item
+   
+2. Doctor prescription upload form:
+   - Same toggle and dropdown for each medication row
+   - Allow mix of manual and inventory-selected items
+   - Show medication details card when inventory item selected
+
+**Phase 3 (Hours 7-8): Database Schema**
+1. Create migration: `20260130000008_add_medication_id_to_prescription_items.sql`
+   - Add medication_id uuid column
+   - Add medication_type varchar(20) column
+   - Create FK constraint to otc_drugs table
+   - Create indexes for query optimization
+
+2. Create migration: `20260130000009_add_medication_id_to_doctor_prescriptions_items.sql`
+   - Same changes as prescription_items
+
+**Phase 4 (Hours 9-11): API Updates**
+1. Update `POST /api/patient/upload` endpoint:
+   ```typescript
+   // Accept both manual entry and medication_id
+   body.medications = [
+     {
+       name: "Aspirin",           // manual
+       dosage: "500mg",
+       quantity: 30,
+       frequency: "twice daily"
+     },
+     {
+       medication_id: "uuid-123", // from inventory
+       dosage: "500mg",           // can override
+       quantity: 30
+     }
+   ]
+   ```
+   - Validate medication_id if provided
+   - Use medication name from inventory if not provided manually
+   - Store both medication_id and medication_name
+
+2. Update `POST /api/doctor/prescriptions` endpoint:
+   - Same logic as patient upload
+   - Support medication_id selection
+   - Auto-fetch medication details from inventory
+
+**Phase 5 (Hours 12-14): UI Refinements**
+1. Create `MedicationSelector` component:
+   - Dropdown with search/filter
+   - Shows medication name, dosage, strength
+   - Displays stock status
+   - Auto-fill dosage on select
+
+2. Update prescription forms:
+   - Replace text input with MedicationSelector for first selection
+   - Keep manual entry as fallback
+   - Show medication info card (name, dosage, strength, stock)
+   - Add "Edit" button to override auto-filled fields
+
+3. Add validation:
+   - Check medication_id exists
+   - Verify stock available
+   - Validate dosage matches inventory item (optional warning if manual override)
+
+**Benefits**
+- ✅ Standardized medication names (reduced typos)
+- ✅ Easier medication selection (dropdown vs typing)
+- ✅ Auto-population of dosage/strength
+- ✅ Stock visibility during prescription creation
+- ✅ Inventory integration for better tracking
+- ✅ Backward compatible (manual entry still works)
+- ✅ Flexible (support mixed manual + inventory selection)
+
+**Tables Involved**
+- `prescription_items` - Add medication_id, medication_type columns
+- `doctor_prescriptions_items` - Add medication_id, medication_type columns
+- `otc_drugs` - Reference via FK constraint
+- `prescription_drugs` - Reference via FK constraint (future)
+
+**RLS Considerations**
+- Inventory endpoints accessible to authenticated users (doctors, patients)
+- Filter out controlled substances from patient view (optional)
+- Show stock info only to doctors/admins (optional security)
+
+**Testing Checklist**
+- ✅ Dropdown loads OTC items with search
+- ✅ Selecting item auto-fills dosage
+- ✅ Manual entry still works (backward compatible)
+- ✅ Can mix manual and inventory selection
+- ✅ Medication_id stored correctly
+- ✅ Fallback to medication_name if no medication_id
+- ✅ Out-of-stock items filtered from dropdown
+- ✅ Search filters work correctly
+- ✅ Pagination works for large inventories
+- ✅ Medication details display correctly
+
+**Status:** PLANNED - Ready for implementation after Enhanced Authentication feature
+
+---
+
+### 11. Messaging System
 **Status:** ⏳ Not Started  
 **Priority:** 🟡 MEDIUM  
 **Estimated Effort:** 14 hours  
@@ -767,7 +948,7 @@ CREATE TABLE message_attachments (
 
 ---
 
-### 10. Card Payments Integration
+### 12. Card Payments Integration
 **Status:** ⏳ Not Started  
 **Priority:** 🟡 MEDIUM  
 **Estimated Effort:** 12 hours  
@@ -836,7 +1017,7 @@ CREATE TABLE saved_cards (
 
 ---
 
-### 11. Email Integration (Setup)
+### 13. Email Integration (Setup)
 **Status:** ⏳ Not Started  
 **Priority:** 🟡 MEDIUM  
 **Estimated Effort:** 8 hours  
@@ -886,7 +1067,7 @@ CREATE TABLE email_logs (
 
 ## 🟢 LOWER PRIORITY FEATURES
 
-### 12. Prescription Order Type (Non-OTC Products)
+### 14. Prescription Order Type (Non-OTC Products)
 **Status:** ⏳ Not Started  
 **Priority:** 🟢 GREEN  
 **Estimated Effort:** 8 hours  

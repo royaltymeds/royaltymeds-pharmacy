@@ -7,14 +7,13 @@ export const dynamic = "force-dynamic";
 interface Prescription {
   id: string;
   patient_id: string;
-  medication_name: string;
-  dosage: string;
-  quantity: string;
-  frequency: string;
   duration: string;
   instructions: string | null;
   notes: string | null;
   status: string;
+  file_url: string | null;
+  file_name: string | null;
+  prescription_number: string;
   created_at: string;
 }
 
@@ -22,7 +21,7 @@ async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
   try {
     const supabase = await createServerSupabaseClient();
     const { data } = await supabase
-      .from("prescriptions")
+      .from("doctor_prescriptions")
       .select("*")
       .eq("doctor_id", doctorId)
       .order("created_at", { ascending: false });
