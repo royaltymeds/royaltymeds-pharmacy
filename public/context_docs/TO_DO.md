@@ -880,6 +880,282 @@ CREATE INDEX IF NOT EXISTS idx_doctor_prescriptions_items_medication_id ON publi
 
 ---
 
+### 10. Inventory Category - Snacks & Beverages
+**Status:** ⏳ Not Started  
+**Priority:** 🟡 MEDIUM  
+**Estimated Effort:** 4 hours (backend) + 3 hours (UI) = 7 hours total  
+
+**Implementation Plan:**
+
+**Database Schema Changes**
+```sql
+-- Create snacks_beverages table
+CREATE TABLE snacks_beverages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  brand VARCHAR(100),
+  category VARCHAR(50), -- juice, water, sports_drink, snack, energy_bar, protein_snack
+  quantity INT NOT NULL DEFAULT 0,
+  unit_price DECIMAL(10, 2) NOT NULL,
+  sale_price DECIMAL(10, 2),
+  category_type VARCHAR(20) DEFAULT 'regular', -- regular/sale/clearance
+  is_on_sale BOOLEAN DEFAULT FALSE,
+  expiry_date TIMESTAMP,
+  sku VARCHAR(50) UNIQUE,
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+-- Create indexes
+CREATE INDEX idx_snacks_beverages_category ON snacks_beverages(category);
+CREATE INDEX idx_snacks_beverages_on_sale ON snacks_beverages(is_on_sale);
+CREATE INDEX idx_snacks_beverages_sku ON snacks_beverages(sku);
+
+-- Add RLS policies
+ALTER TABLE snacks_beverages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY snacks_beverages_select ON snacks_beverages FOR SELECT USING (true);
+CREATE POLICY snacks_beverages_insert ON snacks_beverages FOR INSERT WITH CHECK ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+CREATE POLICY snacks_beverages_update ON snacks_beverages FOR UPDATE USING ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+```
+
+**API Endpoints (3 endpoints)**
+1. `GET /api/store/snacks-beverages` - List snacks & beverages with pagination
+   - Query parameters: category, search, is_on_sale, limit, offset
+   - Returns items with pricing and availability
+   
+2. `PATCH /api/admin/inventory/snacks-beverages/[id]` - Update individual item
+   - Admin only: update price, quantity, sale status
+   - Returns updated item
+   
+3. `POST /api/admin/inventory/snacks-beverages/bulk` - Bulk import/update items
+   - Support CSV import of multiple items
+   - Upsert by SKU if provided
+
+**UI Features**
+- Add "Snacks & Beverages" category filter in store
+- Product cards with expiry date indicator if applicable
+- Category-specific filtering (Juice, Water, Sports Drink, Snacks, Energy Bars, etc.)
+- Quantity and "Add to Cart" functionality
+
+**Migration**
+- Create migration: `20260131000001_create_snacks_beverages_table.sql`
+
+**Status:** READY FOR IMPLEMENTATION
+
+---
+
+### 11. Inventory Category - Fashion
+**Status:** ⏳ Not Started  
+**Priority:** 🟡 MEDIUM  
+**Estimated Effort:** 5 hours (backend) + 4 hours (UI) = 9 hours total  
+
+**Implementation Plan:**
+
+**Database Schema Changes**
+```sql
+-- Create fashion table
+CREATE TABLE fashion (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  brand VARCHAR(100),
+  category VARCHAR(50), -- t_shirt, pants, jacket, shoes, accessories, activewear
+  size VARCHAR(20), -- XS, S, M, L, XL, XXL, One Size
+  color VARCHAR(50),
+  quantity INT NOT NULL DEFAULT 0,
+  unit_price DECIMAL(10, 2) NOT NULL,
+  sale_price DECIMAL(10, 2),
+  category_type VARCHAR(20) DEFAULT 'regular', -- regular/sale/clearance
+  is_on_sale BOOLEAN DEFAULT FALSE,
+  size_chart_url VARCHAR(500),
+  sku VARCHAR(50) UNIQUE,
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+-- Create indexes
+CREATE INDEX idx_fashion_category ON fashion(category);
+CREATE INDEX idx_fashion_size ON fashion(size);
+CREATE INDEX idx_fashion_on_sale ON fashion(is_on_sale);
+CREATE INDEX idx_fashion_sku ON fashion(sku);
+
+-- Add RLS policies
+ALTER TABLE fashion ENABLE ROW LEVEL SECURITY;
+CREATE POLICY fashion_select ON fashion FOR SELECT USING (true);
+CREATE POLICY fashion_insert ON fashion FOR INSERT WITH CHECK ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+CREATE POLICY fashion_update ON fashion FOR UPDATE USING ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+```
+
+**API Endpoints (3 endpoints)**
+1. `GET /api/store/fashion` - List fashion items with pagination
+   - Query parameters: category, size, color, search, is_on_sale, limit, offset
+   - Returns items with all attributes
+   
+2. `PATCH /api/admin/inventory/fashion/[id]` - Update individual item
+   - Admin only: update price, size, quantity, sale status
+   - Returns updated item
+   
+3. `POST /api/admin/inventory/fashion/bulk` - Bulk import/update items
+   - Support CSV import for multiple sizes/colors of same item
+   - Upsert by SKU
+
+**UI Features**
+- Add "Fashion" category filter in store
+- Product cards with size and color options
+- Size guide modal linked from product page
+- Category-specific filtering (T-Shirts, Pants, Jackets, Shoes, Accessories, Activewear)
+- Size selector with quantity for multi-size selection
+- Color options display with visual indicators
+
+**Migration**
+- Create migration: `20260131000002_create_fashion_table.sql`
+
+**Status:** READY FOR IMPLEMENTATION
+
+---
+
+### 12. Inventory Category - Medical Disposables
+**Status:** ⏳ Not Started  
+**Priority:** 🟡 MEDIUM  
+**Estimated Effort:** 5 hours (backend) + 4 hours (UI) = 9 hours total  
+
+**Implementation Plan:**
+
+**Database Schema Changes**
+```sql
+-- Create medical_disposables table
+CREATE TABLE medical_disposables (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  brand VARCHAR(100),
+  category VARCHAR(50), -- masks, gloves, bandages, syringes, needles, thermometers, pulse_oximeters
+  unit_type VARCHAR(30), -- box, pack, piece, piece_per_box
+  unit_quantity INT, -- number of items per unit
+  quantity INT NOT NULL DEFAULT 0, -- total units available
+  unit_price DECIMAL(10, 2) NOT NULL,
+  sale_price DECIMAL(10, 2),
+  category_type VARCHAR(20) DEFAULT 'regular', -- regular/sale/clearance
+  is_on_sale BOOLEAN DEFAULT FALSE,
+  expiry_date TIMESTAMP,
+  certification VARCHAR(100), -- FDA, CE, ISO, etc.
+  reorder_level INT DEFAULT 50,
+  sku VARCHAR(50) UNIQUE,
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+-- Create indexes
+CREATE INDEX idx_medical_disposables_category ON medical_disposables(category);
+CREATE INDEX idx_medical_disposables_on_sale ON medical_disposables(is_on_sale);
+CREATE INDEX idx_medical_disposables_reorder ON medical_disposables(quantity);
+CREATE INDEX idx_medical_disposables_sku ON medical_disposables(sku);
+
+-- Add RLS policies
+ALTER TABLE medical_disposables ENABLE ROW LEVEL SECURITY;
+CREATE POLICY medical_disposables_select ON medical_disposables FOR SELECT USING (true);
+CREATE POLICY medical_disposables_insert ON medical_disposables FOR INSERT WITH CHECK ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+CREATE POLICY medical_disposables_update ON medical_disposables FOR UPDATE USING ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+```
+
+**API Endpoints (3 endpoints)**
+1. `GET /api/store/medical-disposables` - List medical disposables with pagination
+   - Query parameters: category, search, certification, is_on_sale, limit, offset
+   - Returns items with unit info and expiry dates
+   
+2. `PATCH /api/admin/inventory/medical-disposables/[id]` - Update individual item
+   - Admin only: update price, quantity, reorder level, certification
+   - Returns updated item
+   
+3. `POST /api/admin/inventory/medical-disposables/bulk` - Bulk import/update items
+   - Support CSV import for inventory management
+   - Upsert by SKU
+
+**UI Features**
+- Add "Medical Disposables" category filter in store
+- Product cards with certification badges (FDA, CE, ISO)
+- Category-specific filtering (Masks, Gloves, Bandages, Syringes, Needles, Thermometers, etc.)
+- Unit quantity display and ordering (box of 50, pack of 10, single)
+- Expiry date alerts for items close to expiration
+- Low stock warnings for items below reorder level
+
+**Migration**
+- Create migration: `20260131000003_create_medical_disposables_table.sql`
+
+**Status:** READY FOR IMPLEMENTATION
+
+---
+
+### 13. Inventory Category - Stationery
+**Status:** ⏳ Not Started  
+**Priority:** 🟡 MEDIUM  
+**Estimated Effort:** 4 hours (backend) + 3 hours (UI) = 7 hours total  
+
+**Implementation Plan:**
+
+**Database Schema Changes**
+```sql
+-- Create stationery table
+CREATE TABLE stationery (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  brand VARCHAR(100),
+  category VARCHAR(50), -- paper, pen, notebook, binder, clipboard, organizer, desk_accessory
+  size VARCHAR(50), -- A4, A3, Letter, etc.
+  color VARCHAR(50),
+  quantity INT NOT NULL DEFAULT 0, -- number of units
+  unit_price DECIMAL(10, 2) NOT NULL,
+  sale_price DECIMAL(10, 2),
+  category_type VARCHAR(20) DEFAULT 'regular', -- regular/sale/clearance
+  is_on_sale BOOLEAN DEFAULT FALSE,
+  sku VARCHAR(50) UNIQUE,
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+-- Create indexes
+CREATE INDEX idx_stationery_category ON stationery(category);
+CREATE INDEX idx_stationery_size ON stationery(size);
+CREATE INDEX idx_stationery_on_sale ON stationery(is_on_sale);
+CREATE INDEX idx_stationery_sku ON stationery(sku);
+
+-- Add RLS policies
+ALTER TABLE stationery ENABLE ROW LEVEL SECURITY;
+CREATE POLICY stationery_select ON stationery FOR SELECT USING (true);
+CREATE POLICY stationery_insert ON stationery FOR INSERT WITH CHECK ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+CREATE POLICY stationery_update ON stationery FOR UPDATE USING ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+```
+
+**API Endpoints (3 endpoints)**
+1. `GET /api/store/stationery` - List stationery items with pagination
+   - Query parameters: category, size, color, search, is_on_sale, limit, offset
+   - Returns items with all attributes
+   
+2. `PATCH /api/admin/inventory/stationery/[id]` - Update individual item
+   - Admin only: update price, quantity, sale status
+   - Returns updated item
+   
+3. `POST /api/admin/inventory/stationery/bulk` - Bulk import/update items
+   - Support CSV import for bulk stationery orders
+   - Upsert by SKU
+
+**UI Features**
+- Add "Stationery" category filter in store
+- Product cards with size and color options
+- Category-specific filtering (Paper, Pens, Notebooks, Binders, Clipboards, Organizers, Desk Accessories)
+- Color swatches for visual selection
+- Quantity input for bulk purchases
+- Bundle suggestions (e.g., "Complete Desk Set")
+
+**Migration**
+- Create migration: `20260131000004_create_stationery_table.sql`
+
+**Status:** READY FOR IMPLEMENTATION
+
+---
+
 ### 11. Messaging System
 **Status:** ⏳ Not Started  
 **Priority:** 🟡 MEDIUM  
