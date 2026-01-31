@@ -428,18 +428,11 @@ export default function MyPrescriptionsClient({
                                 </p>
                               </div>
                             </div>
-                            {(item.brand_choice || item.notes) && (
-                              <div className="bg-white rounded p-2 border border-gray-200 space-y-1">
-                                {item.brand_choice && (
-                                  <p className="text-xs text-gray-600">
-                                    Brand: <span className="capitalize">{item.brand_choice}</span>
-                                  </p>
-                                )}
-                                {item.notes && (
-                                  <p className="text-xs text-gray-600">
-                                    Notes: {item.notes}
-                                  </p>
-                                )}
+                            {item.notes && (
+                              <div className="bg-white rounded p-2 border border-gray-200">
+                                <p className="text-xs text-gray-600">
+                                  Notes: {item.notes}
+                                </p>
                               </div>
                             )}
                           </div>
