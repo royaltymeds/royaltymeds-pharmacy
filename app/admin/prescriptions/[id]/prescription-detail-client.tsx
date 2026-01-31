@@ -15,6 +15,17 @@ export default function PrescriptionDetailClient({
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isEditingMeds, setIsEditingMeds] = useState(false);
+
+  // Debug logging on mount
+  useEffect(() => {
+    console.log("[PrescriptionDetailClient] Mounted with initial prescription:", {
+      id: initialPrescription.id,
+      source: initialPrescription.source,
+      prescription_items: initialPrescription.prescription_items,
+      prescription_items_length: initialPrescription.prescription_items?.length,
+      prescription_items_keys: initialPrescription.prescription_items?.[0] ? Object.keys(initialPrescription.prescription_items[0]) : [],
+    });
+  }, [initialPrescription]);
   const [newMedication, setNewMedication] = useState({
     medication_name: "",
     dosage: "",

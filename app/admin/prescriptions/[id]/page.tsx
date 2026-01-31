@@ -225,14 +225,9 @@ export default async function PrescriptionDetailPage({ params }: PrescriptionDet
     notFound();
   }
 
-  console.log("[PrescriptionDetailPage] Prescription data being passed to client:", {
-    id: prescription.id,
-    source: prescription.source,
-    prescription_items: prescription.prescription_items,
-    doctor_name: prescription.doctor_name,
-    doctor_email: prescription.doctor_email,
-    doctor_phone: prescription.doctor_phone,
-  });
+  console.log("[PrescriptionDetailPage] Full prescription object:", JSON.stringify(prescription, null, 2));
+  console.log("[PrescriptionDetailPage] prescription_items array:", prescription.prescription_items);
+  console.log("[PrescriptionDetailPage] prescription_items length:", prescription.prescription_items?.length);
 
   return (
     <PrescriptionDetailClient prescription={prescription} />
