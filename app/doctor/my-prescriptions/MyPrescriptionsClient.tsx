@@ -26,6 +26,11 @@ export default function MyPrescriptionsClient({
   const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
   const [filterStatus, setFilterStatus] = useState("all");
 
+  console.log("[MyPrescriptionsClient] Received prescriptions:", {
+    count: prescriptions.length,
+    prescriptions: prescriptions,
+  });
+
   const filteredPrescriptions =
     filterStatus === "all"
       ? prescriptions
