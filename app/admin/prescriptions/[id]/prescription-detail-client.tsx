@@ -1587,41 +1587,39 @@ export default function PrescriptionDetailClient({
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-hidden bg-gray-200 flex items-center justify-center relative">
-                  <div
-                    ref={containerRef}
-                    className="overflow-hidden relative"
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
-                    style={{ width: "100%", height: "100%", cursor: isPanning ? "grabbing" : zoomLevel > fitZoom ? "grab" : "auto" }}
-                  >
-                    {prescription.file_url.includes(".pdf") ? (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="text-center text-white">
-                          <Download className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                          <p className="text-lg">PDF files cannot be previewed in the modal</p>
-                          <p className="text-sm text-gray-300 mt-2">Use the Download button to view the file</p>
-                        </div>
+                <div
+                  ref={containerRef}
+                  className="flex-1 overflow-hidden bg-gray-200 flex items-center justify-center relative"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  style={{ cursor: isPanning ? "grabbing" : zoomLevel > fitZoom ? "grab" : "auto" }}
+                >
+                  {prescription.file_url.includes(".pdf") ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <Download className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg">PDF files cannot be previewed in the modal</p>
+                        <p className="text-sm text-gray-300 mt-2">Use the Download button to view the file</p>
                       </div>
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        ref={imgRef}
-                        src={prescription.file_url}
-                        alt="Prescription full view"
-                        style={{
-                          transform: `scale(${zoomLevel / 100}) translate(${panX}px, ${panY}px)`,
-                          transformOrigin: "center center",
-                          transition: isPanning ? "none" : "transform 0.2s",
-                          maxWidth: "100%",
-                          maxHeight: "100%",
-                        }}
-                        className="w-full h-full object-contain"
-                      />
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      ref={imgRef}
+                      src={prescription.file_url}
+                      alt="Prescription full view"
+                      style={{
+                        transform: `scale(${zoomLevel / 100}) translate(${panX}px, ${panY}px)`,
+                        transformOrigin: "center center",
+                        transition: isPanning ? "none" : "transform 0.2s",
+                        maxWidth: "100%",
+                        maxHeight: "100%",
+                      }}
+                      className="w-full h-full object-contain"
+                    />
+                  )}
                 </div>
               </div>
             </div>
