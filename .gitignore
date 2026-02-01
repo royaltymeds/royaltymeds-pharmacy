@@ -31,6 +31,7 @@ public/current_schemaReference.sql
 .DS_Store
 /app/devtools/
 scripts/
+.vscode/
 
 # Logs
 logs/
