@@ -15,6 +15,13 @@ export async function PATCH(
   const body = await request.json();
   const { items, source } = body; // source: "patient" or "doctor"
 
+  console.log("[Fill] Received request:", {
+    prescriptionId,
+    source,
+    items,
+    itemsCount: items?.length,
+  });
+
   try {
     // Verify user is authenticated and is admin
     const cookieStore = await cookies();
@@ -156,20 +163,29 @@ export async function PATCH(
 
     // Update prescription items
     for (const update of itemUpdates) {
-      const { error: updateError } = await supabaseAdmin
+      console.log(`[Fill] Updating ${itemsTable} item:`, {
+        itemId: update.itemId,
+        quantityFilled: update.quantityFilled,
+        table: itemsTable,
+      });
+      
+      const { error: updateError, data: updateData } = await supabaseAdmin
         .from(itemsTable)
         .update({
           quantity_filled: update.quantityFilled,
         })
-        .eq("id", update.itemId);
+        .eq("id", update.itemId)
+        .select();
 
       if (updateError) {
-        console.error("Error updating prescription item:", updateError);
+        console.error(`[Fill] Error updating ${itemsTable} item:`, updateError);
         return new Response(
-          JSON.stringify({ error: "Failed to update prescription item" }),
+          JSON.stringify({ error: `Failed to update ${itemsTable} item: ${updateError.message}` }),
           { status: 400 }
         );
       }
+      
+      console.log(`[Fill] Successfully updated item, returned data:`, updateData);
     }
 
     // Determine new status

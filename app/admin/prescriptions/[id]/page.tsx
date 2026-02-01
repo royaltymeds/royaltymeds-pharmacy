@@ -132,6 +132,7 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
           medication_name,
           dosage,
           quantity,
+          quantity_filled,
           frequency,
           duration,
           notes
@@ -185,6 +186,7 @@ async function getPrescriptionDetail(prescriptionId: string): Promise<any> {
             medication_name,
             dosage,
             quantity,
+            quantity_filled,
             frequency,
             duration,
             notes
