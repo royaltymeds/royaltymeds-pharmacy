@@ -160,7 +160,6 @@ export async function PATCH(
         .from(itemsTable)
         .update({
           quantity_filled: update.quantityFilled,
-          quantity: update.remainingQuantity,
         })
         .eq("id", update.itemId);
 
