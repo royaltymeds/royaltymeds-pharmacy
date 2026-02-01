@@ -19,7 +19,7 @@ build/
 .env
 next-env.d.ts
 supabase
-!supabase/migrations/
+supabase/migrations/
 REFERENCE_APP
 
 # IDE
