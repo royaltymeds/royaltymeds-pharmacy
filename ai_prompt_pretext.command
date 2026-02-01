@@ -11,6 +11,11 @@
 # Generated: February 1, 2026 (385+ commits, 14+ phases completed)
 # Last Revised: Complete comprehensive revision incorporating git history
 # Reference Docs: /public/context_docs/ (6 comprehensive analysis files)
+#
+# 📚 DOCUMENTATION GUIDELINES:
+# All new documentation files MUST be created in: /public/new_docs/
+# Existing context docs are in: /public/context_docs/
+# Analysis & reference docs stay organized in their respective folders
 
 ---
 
@@ -791,9 +796,10 @@ const { data: signedUrl } = await supabase.storage
 
 ---
 
-## 📚 REFERENCE DOCUMENTATION
+## 📚 DOCUMENTATION SYSTEM
 
-**Comprehensive Context Documents:** `/public/context_docs/`
+### Existing Reference Documents
+**Location:** `/public/context_docs/` (comprehensive analysis & architecture)
 - `SYSTEM_ARCHITECTURE.md` — Visual diagrams, data flows, tech stack
 - `GIT_HISTORY_ANALYSIS.md` — Complete phase-by-phase breakdown
 - `QUICK_REFERENCE.md` — Fast lookup for features and patterns
@@ -801,12 +807,38 @@ const { data: signedUrl } = await supabase.storage
 - `DOCUMENTATION_INDEX.md` — How to navigate these docs
 - `TO_DO.md` — Roadmap for future phases
 
+### New Documentation Guidelines
+**All NEW documentation files MUST go to:** `/public/new_docs/`
+
+When you create documentation for:
+- New features being built
+- Architecture decisions made during development
+- Bug fixes and their root causes
+- API specifications or workflow updates
+- Database migration explanations
+- Integration patterns or examples
+- Performance optimizations
+- Security implementations
+
+**Save the file as:** `/public/new_docs/FEATURE_NAME_YYYYMMDD.md`
+
+Example filenames:
+- `/public/new_docs/INVENTORY_CATEGORIES_20260201.md`
+- `/public/new_docs/PAYMENT_GATEWAY_INTEGRATION_20260205.md`
+- `/public/new_docs/RLS_PERFORMANCE_TUNING_20260203.md`
+
+This keeps the documentation system organized with:
+- **Existing analysis** in `/public/context_docs/` (permanent reference)
+- **Development work** in `/public/new_docs/` (feature-specific documentation)
+- **Inline code** documented in source files (via comments)
+
 **On Every Modification:**
 1. Reference this pretext for architectural rules
-2. Check `/public/context_docs/` for detailed patterns
-3. Search git history for similar implementations
-4. Test locally before pushing
-5. Run `npm run build` to verify no TypeScript errors
+2. Check `/public/context_docs/` for existing patterns
+3. Add new feature docs to `/public/new_docs/` as you build
+4. Search git history for similar implementations
+5. Test locally before pushing
+6. Run `npm run build` to verify no TypeScript errors
 
 ---
 
