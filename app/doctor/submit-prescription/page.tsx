@@ -13,6 +13,7 @@ interface Medication {
   quantity: string;
   frequency: string;
   duration: string;
+  notes: string;
 }
 
 interface Patient {
@@ -37,7 +38,7 @@ export default function SubmitPrescription() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [medications, setMedications] = useState<Medication[]>([
-    { id: "1", name: "", dosage: "", quantity: "", frequency: "once daily", duration: "" },
+    { id: "1", name: "", dosage: "", quantity: "", frequency: "once daily", duration: "", notes: "" },
   ]);
   const [expandedMedications, setExpandedMedications] = useState<Set<string>>(new Set(["1"]));
   const [fileUrl, setFileUrl] = useState<string>("");
@@ -46,7 +47,6 @@ export default function SubmitPrescription() {
 
   const [formData, setFormData] = useState({
     patientId: initialPatientId || "",
-    instructions: "",
     notes: "",
   });
 
@@ -125,7 +125,6 @@ export default function SubmitPrescription() {
           patientId: formData.patientId,
           prescriptionNumber,
           medications: validMeds,
-          instructions: formData.instructions,
           notes: formData.notes,
           duration: validMeds[0]?.duration || null,
           file_url: fileUrl,
@@ -141,11 +140,10 @@ export default function SubmitPrescription() {
       setSuccess(true);
       setFormData({
         patientId: "",
-        instructions: "",
         notes: "",
       });
       setMedications([
-        { id: "1", name: "", dosage: "", quantity: "", frequency: "once daily", duration: "" },
+        { id: "1", name: "", dosage: "", quantity: "", frequency: "once daily", duration: "", notes: "" },
       ]);
       setFileUrl("");
       setFileName("");
@@ -225,7 +223,7 @@ export default function SubmitPrescription() {
 
   const addMedication = () => {
     const newId = String(Math.max(...medications.map(m => parseInt(m.id) || 0)) + 1);
-    const newMed = { id: newId, name: "", dosage: "", quantity: "", frequency: "once daily", duration: "" };
+    const newMed = { id: newId, name: "", dosage: "", quantity: "", frequency: "once daily", duration: "", notes: "" };
     setMedications([...medications, newMed]);
     setExpandedMedications(new Set([...expandedMedications, newId]));
   };
@@ -487,27 +485,27 @@ export default function SubmitPrescription() {
                           required
                         />
                       </div>
+
+                      <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                          Instructions
+                        </label>
+                        <textarea
+                          value={med.notes}
+                          onChange={(e) =>
+                            updateMedication(med.id, "notes", e.target.value)
+                          }
+                          placeholder="e.g., Take with food, avoid dairy"
+                          rows={2}
+                          className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-        </div>
-
-        {/* Instructions */}
-        <div className="mb-4 sm:mb-6">
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-            Instructions
-          </label>
-          <textarea
-            name="instructions"
-            value={formData.instructions}
-            onChange={handleChange}
-            placeholder="Any special instructions"
-            rows={2}
-            className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-          />
         </div>
 
         {/* Additional Notes */}

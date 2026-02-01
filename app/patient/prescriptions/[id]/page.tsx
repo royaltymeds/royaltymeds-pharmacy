@@ -253,7 +253,7 @@ export default function PrescriptionDetailPage({
                       {item.notes && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
-                            Notes
+                            Instructions
                           </p>
                           <p className="text-gray-900 mt-1 text-sm">
                             {item.notes}

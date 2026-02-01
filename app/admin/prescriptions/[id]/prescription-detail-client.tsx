@@ -925,7 +925,7 @@ export default function PrescriptionDetailClient({
                             </p>
                             {item.notes && (
                               <p className="text-sm text-gray-600 mt-2">
-                                Notes: {item.notes}
+                                Instructions: {item.notes}
                               </p>
                             )}
                           </div>
@@ -1031,7 +1031,7 @@ export default function PrescriptionDetailClient({
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-2">
-                      Notes
+                      Instructions
                     </label>
                     <input
                       type="text"
@@ -1042,7 +1042,7 @@ export default function PrescriptionDetailClient({
                           notes: e.target.value,
                         })
                       }
-                      placeholder="Optional notes"
+                      placeholder="Optional instructions"
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>

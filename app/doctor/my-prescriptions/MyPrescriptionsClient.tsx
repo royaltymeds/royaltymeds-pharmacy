@@ -432,7 +432,7 @@ export default function MyPrescriptionsClient({
                             {item.notes && (
                               <div className="bg-white rounded p-2 border border-gray-200">
                                 <p className="text-xs text-gray-600">
-                                  Notes: {item.notes}
+                                  Instructions: {item.notes}
                                 </p>
                               </div>
                             )}
