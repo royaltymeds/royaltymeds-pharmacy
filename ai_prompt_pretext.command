@@ -895,6 +895,7 @@ npm test                   # Run test suite (if available)
 - ✅ Respect role-based access for all features
 - ✅ Keep environment variables secure
 - ✅ Document complex business logic
+- ✅ **KEEP FILES IN GITIGNORE** - Don't remove entries from `.gitignore`
 
 **DON'T:**
 - ❌ Bypass RLS with manual SQL or service role in client code
@@ -905,6 +906,24 @@ npm test                   # Run test suite (if available)
 - ❌ Use deprecated color scheme (indigo, slate, amber)
 - ❌ Commit .env files or private keys
 - ❌ Skip TypeScript checks before deployment
+- ❌ **REMOVE FILES FROM GITIGNORE** - Respect the ignore rules for:
+  - `supabase/migrations/` - Restore via `npx supabase db pull --linked`
+  - `.env*` files - Never commit secrets
+  - `node_modules/`, `.next/`, build artifacts
+  - Local configuration and generated files
+
+### Gitignored Files Recovery Guidelines
+
+**If you accidentally delete a gitignored folder:**
+
+| Folder | Recovery Command | Why Ignored |
+|--------|------------------|------------|
+| `supabase/migrations/` | `npx supabase db pull --linked` | Server source of truth, don't track |
+| `.env.local` | Recreate manually | Contains secrets, local-only |
+| `.next/`, `build/` | `npm run build` | Regenerate from source |
+| `node_modules/` | `npm install` | Regenerate from package.json |
+
+**Key Rule:** Gitignore entries exist for a reason. Always restore via their source of truth, never by removing from `.gitignore`.
 
 ---
 
