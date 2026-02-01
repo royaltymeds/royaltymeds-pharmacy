@@ -166,6 +166,7 @@ export async function PATCH(
       console.log(`[Fill] Updating ${itemsTable} item:`, {
         itemId: update.itemId,
         quantityFilled: update.quantityFilled,
+        remainingQuantity: update.remainingQuantity,
         table: itemsTable,
       });
       
@@ -173,6 +174,7 @@ export async function PATCH(
         .from(itemsTable)
         .update({
           quantity_filled: update.quantityFilled,
+          quantity: update.remainingQuantity,
         })
         .eq("id", update.itemId)
         .select();
