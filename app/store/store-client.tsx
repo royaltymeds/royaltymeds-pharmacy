@@ -156,7 +156,7 @@ export default function StoreClientComponent({ drugs }: Props) {
                     e.stopPropagation();
                     setSlideShowIndex((prev) => (prev - 1 + saleItems.length) % saleItems.length);
                   }}
-                  className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-30 hover:bg-opacity-50 text-white p-2 transition-all z-10 sm:p-3"
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-60 text-white p-2 transition-all z-10 sm:p-3"
                   aria-label="Previous slide"
                 >
                   <ChevronLeft size={24} />
@@ -166,7 +166,7 @@ export default function StoreClientComponent({ drugs }: Props) {
                     e.stopPropagation();
                     setSlideShowIndex((prev) => (prev + 1) % saleItems.length);
                   }}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-30 hover:bg-opacity-50 text-white p-2 transition-all z-10 sm:p-3"
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-60 text-white p-2 transition-all z-10 sm:p-3"
                   aria-label="Next slide"
                 >
                   <ChevronRight size={24} />
