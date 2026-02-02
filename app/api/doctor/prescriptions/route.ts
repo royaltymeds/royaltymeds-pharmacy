@@ -119,6 +119,17 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    // Fetch doctor details from auth user and doctors table
+    const { data: doctorData, error: doctorError } = await adminClient
+      .from("doctors")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (doctorError) {
+      console.error("Error fetching doctor details:", doctorError);
+    }
+
     // Create doctor prescription record (header) using service role client
     const { data: prescriptionData, error: prescriptionError } = await adminClient
       .from("doctor_prescriptions")
@@ -133,6 +144,11 @@ export async function POST(request: NextRequest) {
           file_url: body.file_url || null,
           file_name: body.file_name || null,
           status: "pending",
+          doctor_name: doctorData?.full_name || null,
+          doctor_email: doctorData?.email || user.email || null,
+          doctor_phone: doctorData?.phone || null,
+          practice_name: doctorData?.practice_name || null,
+          practice_address: doctorData?.practice_address || null,
         },
       ])
       .select();
