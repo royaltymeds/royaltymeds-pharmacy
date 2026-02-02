@@ -160,7 +160,7 @@ export function PrescriptionsUploadForm() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full text-center"
+              className="w-auto text-center mx-auto block"
             >
               <Upload className="w-8 sm:w-12 h-8 sm:h-12 text-green-600 mx-auto mb-3" />
               <p className="font-medium text-gray-900 text-sm sm:text-base">
