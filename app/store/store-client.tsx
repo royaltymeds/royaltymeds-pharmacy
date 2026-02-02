@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { OTCDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
-import { ShoppingCart, Search, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Search, Loader, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/currency';
 import { addToCart } from '@/app/actions/orders';
 import { toast } from 'sonner';
@@ -23,6 +23,7 @@ export default function StoreClientComponent({ drugs }: Props) {
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [slideShowIndex, setSlideShowIndex] = useState(0);
+  const [showSaleModal, setShowSaleModal] = useState(false);
   const { addItem } = useCart();
 
   // Filter to only active drugs for store display
@@ -108,7 +109,10 @@ export default function StoreClientComponent({ drugs }: Props) {
       <div className="space-y-8">
         {/* Sale Items Slideshow */}
         {saleItems.length > 0 && (
-          <div className="relative bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg overflow-hidden shadow-lg">
+          <button
+            onClick={() => setShowSaleModal(true)}
+            className="relative w-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer group"
+          >
             <div className="relative w-full h-64 md:h-96 bg-gray-900 flex items-center justify-center">
               <Image
                 src={saleItems[slideShowIndex].file_url || DEFAULT_INVENTORY_IMAGE}
@@ -148,15 +152,21 @@ export default function StoreClientComponent({ drugs }: Props) {
             {saleItems.length > 1 && (
               <>
                 <button
-                  onClick={() => setSlideShowIndex((prev) => (prev - 1 + saleItems.length) % saleItems.length)}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSlideShowIndex((prev) => (prev - 1 + saleItems.length) % saleItems.length);
+                  }}
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-30 hover:bg-opacity-50 text-white p-2 transition-all z-10 sm:p-3"
                   aria-label="Previous slide"
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <button
-                  onClick={() => setSlideShowIndex((prev) => (prev + 1) % saleItems.length)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSlideShowIndex((prev) => (prev + 1) % saleItems.length);
+                  }}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-30 hover:bg-opacity-50 text-white p-2 transition-all z-10 sm:p-3"
                   aria-label="Next slide"
                 >
                   <ChevronRight size={24} />
@@ -167,7 +177,10 @@ export default function StoreClientComponent({ drugs }: Props) {
                   {saleItems.map((_, index) => (
                     <button
                       key={index}
-                      onClick={() => setSlideShowIndex(index)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSlideShowIndex(index);
+                      }}
                       className={`w-3 h-3 rounded-full transition-all ${
                         index === slideShowIndex ? 'bg-white w-8' : 'bg-white bg-opacity-50'
                       }`}
@@ -177,7 +190,7 @@ export default function StoreClientComponent({ drugs }: Props) {
                 </div>
               </>
             )}
-          </div>
+          </button>
         )}
       <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
         {/* Search */}
@@ -401,6 +414,155 @@ export default function StoreClientComponent({ drugs }: Props) {
       ) : (
         <div className="bg-white rounded-lg shadow-md p-12 text-center">
           <p className="text-gray-600 text-lg">No products found matching your criteria.</p>
+        </div>
+      )}
+
+      {/* Sale Items Modal */}
+      {showSaleModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 flex items-center justify-between border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-white">On Sale & Clearance Items</h2>
+              <button
+                onClick={() => setShowSaleModal(false)}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {saleItems.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {saleItems.map((drug) => (
+                    <div
+                      key={drug.id}
+                      className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col"
+                    >
+                      {/* Image Section */}
+                      <div className="relative w-full h-48 sm:h-56 bg-gray-50 border-b border-gray-100 flex items-center justify-center">
+                        <Image
+                          src={drug.file_url || DEFAULT_INVENTORY_IMAGE}
+                          alt={drug.name}
+                          fill
+                          className="object-contain p-4"
+                        />
+                        
+                        {/* Sale Banner */}
+                        {drug.is_on_sale && (
+                          <div className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg">
+                            ON SALE
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="p-4 space-y-4 flex-1 flex flex-col">
+                        {/* Title and Ingredient */}
+                        <div>
+                          <h3 className="font-semibold text-lg text-gray-900">{drug.name}</h3>
+                          {drug.active_ingredient && (
+                            <p className="text-sm text-gray-600 mt-1">{drug.active_ingredient}</p>
+                          )}
+                        </div>
+
+                        {/* Details Grid */}
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <p className="text-gray-500 text-xs font-medium">Category</p>
+                            <p className="font-medium text-gray-900 mt-1">{drug.category}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 text-xs font-medium">Pack Size</p>
+                            <p className="font-medium text-gray-900 mt-1">{drug.pack_size || 'Standard'}</p>
+                          </div>
+                          {drug.manufacturer && (
+                            <div className="col-span-2">
+                              <p className="text-gray-500 text-xs font-medium">Manufacturer</p>
+                              <p className="font-medium text-gray-900 mt-1">{drug.manufacturer}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Description */}
+                        {drug.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2">{drug.description}</p>
+                        )}
+
+                        {/* Price and Stock Section */}
+                        <div className="space-y-3 border-t border-gray-100 pt-3 mt-auto">
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium">Price</p>
+                            <div className="flex items-baseline gap-2">
+                              {(() => {
+                                // Calculate the display price based on sale_price or sale_discount_percent
+                                let displayPrice = drug.unit_price;
+                                if (drug.is_on_sale) {
+                                  if (drug.sale_price && drug.sale_price > 0) {
+                                    displayPrice = drug.sale_price;
+                                  } else if (drug.sale_discount_percent && drug.sale_discount_percent > 0) {
+                                    displayPrice = drug.unit_price * (1 - drug.sale_discount_percent / 100);
+                                  }
+                                }
+                                return (
+                                  <>
+                                    <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(displayPrice)}</p>
+                                    {drug.is_on_sale && displayPrice < drug.unit_price && (
+                                      <>
+                                        <span className="text-sm line-through text-gray-500">
+                                          {formatCurrency(drug.unit_price)}
+                                        </span>
+                                        {drug.sale_discount_percent && drug.sale_discount_percent > 0 && (
+                                          <span className="text-sm font-bold text-green-600">
+                                            -{drug.sale_discount_percent}%
+                                          </span>
+                                        )}
+                                      </>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </div>
+
+                          {/* Stock Status */}
+                          {drug.quantity_on_hand === 0 ? (
+                            <div className="w-full py-2 text-center bg-red-50 text-red-600 text-sm font-medium rounded-lg">
+                              Out of Stock
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleAddToCart(drug)}
+                              disabled={addingToCart === drug.id}
+                              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-auto"
+                            >
+                              {addingToCart === drug.id ? (
+                                <>
+                                  <Loader className="w-4 h-4 animate-spin" />
+                                  Adding...
+                                </>
+                              ) : (
+                                <>
+                                  <ShoppingCart size={18} />
+                                  Add to Cart
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-600 text-lg">No items currently on sale.</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
       </div>
