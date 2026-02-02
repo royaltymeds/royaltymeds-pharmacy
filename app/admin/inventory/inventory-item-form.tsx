@@ -51,6 +51,11 @@ export default function InventoryItemForm({
     status: initialData?.status || 'active',
     notes: initialData?.notes || '',
     file_url: initialData?.file_url || null,
+    is_on_sale: (initialData as OTCDrug)?.is_on_sale || false,
+    sale_price: (initialData as OTCDrug)?.sale_price || 0,
+    sale_discount_percent: (initialData as OTCDrug)?.sale_discount_percent || 0,
+    sale_start_date: (initialData as OTCDrug)?.sale_start_date || '',
+    sale_end_date: (initialData as OTCDrug)?.sale_end_date || '',
     ...(drugType === 'prescription' && {
       requires_refrigeration: (initialData as PrescriptionDrug)?.requires_refrigeration || false,
       controlled_substance: (initialData as PrescriptionDrug)?.controlled_substance || false,
@@ -463,6 +468,92 @@ export default function InventoryItemForm({
           </div>
         </div>
       </div>
+
+      {/* Sale Information */}
+      {drugType === 'otc' && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Sale & Clearance</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <input
+                type="checkbox"
+                name="is_on_sale"
+                checked={(formData as any).is_on_sale}
+                onChange={handleChange}
+                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Mark as On Sale / Clearance
+              </label>
+            </div>
+
+            {(formData as any).is_on_sale && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                {/* Sale Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sale Price
+                  </label>
+                  <input
+                    type="number"
+                    name="sale_price"
+                    value={(formData as any).sale_price}
+                    onChange={handleChange}
+                    step="0.01"
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Sale Discount Percent */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Discount Percent (%)
+                  </label>
+                  <input
+                    type="number"
+                    name="sale_discount_percent"
+                    value={(formData as any).sale_discount_percent}
+                    onChange={handleChange}
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Sale Start Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sale Start Date
+                  </label>
+                  <input
+                    type="date"
+                    name="sale_start_date"
+                    value={(formData as any).sale_start_date}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Sale End Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sale End Date
+                  </label>
+                  <input
+                    type="date"
+                    name="sale_end_date"
+                    value={(formData as any).sale_end_date}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Medication Details */}
       <div>

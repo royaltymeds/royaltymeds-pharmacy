@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { OTCDrug } from '@/lib/types/inventory';
 import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
-import { ShoppingCart, Search, Loader } from 'lucide-react';
+import { ShoppingCart, Search, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/currency';
 import { addToCart } from '@/app/actions/orders';
 import { toast } from 'sonner';
@@ -22,6 +22,7 @@ export default function StoreClientComponent({ drugs }: Props) {
   const [saleFilter, setSaleFilter] = useState<'all' | 'sale' | 'clearance'>('all');
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [slideShowIndex, setSlideShowIndex] = useState(0);
   const { addItem } = useCart();
 
   // Filter to only active drugs for store display
@@ -35,6 +36,21 @@ export default function StoreClientComponent({ drugs }: Props) {
     () => [...new Set(activeDrugs.map((drug) => drug.category))],
     [activeDrugs]
   );
+
+  // Get items on sale for slideshow
+  const saleItems = useMemo(
+    () => activeDrugs.filter((drug) => drug.is_on_sale === true),
+    [activeDrugs]
+  );
+
+  // Auto-advance slideshow every 5 seconds
+  useEffect(() => {
+    if (saleItems.length === 0) return;
+    const interval = setInterval(() => {
+      setSlideShowIndex((prev) => (prev + 1) % saleItems.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [saleItems.length]);
 
   // Filter by search and category
   const filteredDrugs = useMemo(() => {
@@ -92,7 +108,79 @@ export default function StoreClientComponent({ drugs }: Props) {
     <>
       <AuthRequiredModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <div className="space-y-8">
-      {/* Search and Filter */}
+        {/* Sale Items Slideshow */}
+        {saleItems.length > 0 && (
+          <div className="relative bg-gradient-to-r from-red-500 to-orange-500 rounded-lg overflow-hidden shadow-lg">
+            <div className="relative w-full h-64 md:h-96 bg-gray-900 flex items-center justify-center">
+              <Image
+                src={saleItems[slideShowIndex].file_url || DEFAULT_INVENTORY_IMAGE}
+                alt={saleItems[slideShowIndex].name}
+                fill
+                className="object-contain p-8"
+              />
+              
+              {/* Sale Badge */}
+              <div className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg">
+                SALE
+              </div>
+              
+              {/* Product Info Overlay */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6 text-white">
+                <h2 className="text-2xl md:text-3xl font-bold">{saleItems[slideShowIndex].name}</h2>
+                <p className="text-sm mt-2 opacity-90">{saleItems[slideShowIndex].active_ingredient}</p>
+                <div className="flex items-center gap-3 mt-3">
+                  <span className="text-3xl font-bold">
+                    {formatCurrency(saleItems[slideShowIndex].sale_price || saleItems[slideShowIndex].unit_price)}
+                  </span>
+                  {saleItems[slideShowIndex].sale_price && saleItems[slideShowIndex].sale_price < saleItems[slideShowIndex].unit_price && (
+                    <span className="text-lg line-through opacity-75">
+                      {formatCurrency(saleItems[slideShowIndex].unit_price)}
+                    </span>
+                  )}
+                  {saleItems[slideShowIndex].sale_discount_percent && saleItems[slideShowIndex].sale_discount_percent > 0 && (
+                    <span className="text-xl font-bold text-green-400 ml-2">
+                      -{saleItems[slideShowIndex].sale_discount_percent}% OFF
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
+            {saleItems.length > 1 && (
+              <>
+                <button
+                  onClick={() => setSlideShowIndex((prev) => (prev - 1 + saleItems.length) % saleItems.length)}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all z-10"
+                  aria-label="Previous slide"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  onClick={() => setSlideShowIndex((prev) => (prev + 1) % saleItems.length)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all z-10"
+                  aria-label="Next slide"
+                >
+                  <ChevronRight size={24} />
+                </button>
+
+                {/* Slide Indicators */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                  {saleItems.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSlideShowIndex(index)}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        index === slideShowIndex ? 'bg-white w-8' : 'bg-white bg-opacity-50'
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
       <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
         {/* Search */}
         <div>
@@ -204,6 +292,13 @@ export default function StoreClientComponent({ drugs }: Props) {
                   fill
                   className="object-contain p-4"
                 />
+                
+                {/* Sale Banner */}
+                {drug.is_on_sale && (
+                  <div className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg">
+                    ON SALE
+                  </div>
+                )}
               </div>
 
               {/* Product Info */}
