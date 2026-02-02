@@ -122,9 +122,16 @@ export async function POST(request: NextRequest) {
     // Fetch doctor details from auth user and user_profiles table
     const { data: doctorData, error: doctorError } = await adminClient
       .from("user_profiles")
-      .select("full_name, email, phone, address")
+      .select("full_name, phone, address")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    console.log("[Doctor Prescription] Doctor data fetch:", {
+      userId: user.id,
+      doctorData,
+      doctorError,
+      userEmail: user.email,
+    });
 
     if (doctorError) {
       console.error("Error fetching doctor details:", doctorError);
@@ -145,7 +152,7 @@ export async function POST(request: NextRequest) {
           file_name: body.file_name || null,
           status: "pending",
           doctor_name: doctorData?.full_name || null,
-          doctor_email: doctorData?.email || user.email || null,
+          doctor_email: user.email || null,
           doctor_phone: doctorData?.phone || null,
           practice_address: doctorData?.address || null,
         },
@@ -153,6 +160,13 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (prescriptionError) throw prescriptionError;
+
+    console.log("[Doctor Prescription] Created prescription with details:", {
+      doctorName: doctorData?.full_name || null,
+      doctorEmail: user.email || null,
+      doctorPhone: doctorData?.phone || null,
+      practiceAddress: doctorData?.address || null,
+    });
 
     const prescriptionId = prescriptionData?.[0]?.id;
 
