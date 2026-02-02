@@ -1529,16 +1529,12 @@ export default function PrescriptionDetailClient({
             <div className="inline-block">
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  prescription.status === "partially_filled" || prescription.status === "filled"
-                    ? "bg-green-100 text-green-800"
-                    : prescription.source === "patient"
+                  prescription.source === "patient"
                     ? "bg-blue-100 text-blue-800"
                     : "bg-purple-100 text-purple-800"
                 }`}
               >
-                {prescription.status === "partially_filled" || prescription.status === "filled"
-                  ? "Pharmacist Submitted"
-                  : prescription.source === "patient"
+                {prescription.source === "patient"
                   ? "Patient Upload"
                   : "Doctor Submitted"}
               </span>

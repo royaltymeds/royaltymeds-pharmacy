@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     // Fetch doctor details from auth user and user_profiles table
     const { data: doctorData, error: doctorError } = await adminClient
       .from("user_profiles")
-      .select("full_name, phone, address")
+      .select("full_name, phone, address, specialty")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -154,6 +154,7 @@ export async function POST(request: NextRequest) {
           doctor_name: doctorData?.full_name || null,
           doctor_email: user.email || null,
           doctor_phone: doctorData?.phone || null,
+          practice_name: doctorData?.specialty || null,
           practice_address: doctorData?.address || null,
         },
       ])
@@ -165,6 +166,7 @@ export async function POST(request: NextRequest) {
       doctorName: doctorData?.full_name || null,
       doctorEmail: user.email || null,
       doctorPhone: doctorData?.phone || null,
+      practiceName: doctorData?.specialty || null,
       practiceAddress: doctorData?.address || null,
     });
 

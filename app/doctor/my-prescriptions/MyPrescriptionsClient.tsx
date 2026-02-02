@@ -323,14 +323,6 @@ export default function MyPrescriptionsClient({
 
                   {/* Prescription Details */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-500 mb-1">
-                        Instructions
-                      </p>
-                      <p className="text-sm sm:text-base font-medium text-gray-900">
-                        {prescription.instructions || "N/A"}
-                      </p>
-                    </div>
                     <div className="sm:col-span-2">
                       <p className="text-xs sm:text-sm text-gray-500 mb-1">
                         Notes
