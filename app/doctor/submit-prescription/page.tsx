@@ -598,13 +598,15 @@ export default function SubmitPrescription() {
         </div>
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 sm:py-3 px-4 text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-        >
-          {loading ? "Submitting..." : "Submit Prescription"}
-        </button>
+        <div className="flex justify-start">
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+          >
+            {loading ? "Submitting..." : "Submit Prescription"}
+          </button>
+        </div>
       </form>
       </div>
     </div>
