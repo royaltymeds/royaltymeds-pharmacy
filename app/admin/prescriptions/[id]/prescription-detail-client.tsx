@@ -781,7 +781,8 @@ export default function PrescriptionDetailClient({
               {(prescription.status === "processing" || prescription.status === "partially_filled") && (
                 <button
                   onClick={() => setIsEditingMeds(!isEditingMeds)}
-                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                  disabled={prescription.source === "doctor"}
+                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Edit2 className="w-4 h-4" />
                   {isEditingMeds ? "Done Editing" : "Make Changes"}
@@ -1038,7 +1039,7 @@ export default function PrescriptionDetailClient({
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full inline-block px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                    className="inline-block px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-lg transition w-auto"
                   >
                     {isLoading ? "Adding..." : "Add Medication"}
                   </button>
@@ -1339,7 +1340,8 @@ export default function PrescriptionDetailClient({
               {!isEditingDoctorDetails && (
                 <button
                   onClick={() => setIsEditingDoctorDetails(true)}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                  disabled={prescription.source === "doctor"}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Edit2 className="w-4 h-4" />
                   Edit
