@@ -151,10 +151,14 @@ export default function InventoryItemForm({
         return;
       }
 
-      // Convert empty date strings to null
+      // Convert empty date strings to null for all timestamp fields
       const cleanedData = {
         ...formData,
         expiration_date: formData.expiration_date || null,
+        ...(drugType === 'otc' && {
+          sale_start_date: (formData as any).sale_start_date || null,
+          sale_end_date: (formData as any).sale_end_date || null,
+        }),
       };
 
       await onSubmit(cleanedData);
