@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Download, Trash2, AlertCircle, ChevronDown, X } from "lucide-react";
+import { Download, AlertCircle, ChevronDown, X } from "lucide-react";
 
 interface MedicationItem {
   id: string;
   medication_name: string;
   quantity: number;
   quantity_filled?: number;
+  total_amount?: number;
   dosage: string | null;
   frequency: string | null;
   duration: string | null;
@@ -38,7 +39,7 @@ interface MyPrescriptionsClientProps {
 export default function MyPrescriptionsClient({
   initialPrescriptions,
 }: MyPrescriptionsClientProps) {
-  const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
+  const [prescriptions] = useState(initialPrescriptions);
   const [filterStatus, setFilterStatus] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [medicationItems, setMedicationItems] = useState<
@@ -163,23 +164,6 @@ export default function MyPrescriptionsClient({
     }
   };
 
-  const handleDelete = async (prescriptionId: string) => {
-    if (!confirm("Are you sure you want to delete this prescription?"))
-      return;
-
-    try {
-      const response = await fetch(`/api/doctor/prescriptions/${prescriptionId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        setPrescriptions(prescriptions.filter((p) => p.id !== prescriptionId));
-      }
-    } catch (error) {
-      console.error("Error deleting prescription:", error);
-    }
-  };
-
   const handleZoomIn = () => {
     setZoomLevel(Math.min(zoomLevel + 10, 100));
   };
@@ -289,16 +273,7 @@ export default function MyPrescriptionsClient({
                 </div>
 
                 {/* Expand/Collapse Button */}
-                <div className="flex gap-2 flex-shrink-0 items-start">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(prescription.id);
-                    }}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+                <div className="flex-shrink-0">
                   <button
                     className={`p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all ${
                       expandedId === prescription.id ? "rotate-180" : ""
@@ -384,7 +359,7 @@ export default function MyPrescriptionsClient({
 
                   {/* Medication Items */}
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-4">
                       Medications
                     </h4>
                     {loadingItems[prescription.id] ? (
@@ -392,50 +367,28 @@ export default function MyPrescriptionsClient({
                         <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-r-transparent"></div>
                       </div>
                     ) : medicationItems[prescription.id]?.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {medicationItems[prescription.id].map((item) => (
                           <div
                             key={item.id}
-                            className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200"
+                            className="border border-gray-200 rounded-lg p-4"
                           >
-                            <div className="flex justify-between items-start gap-2 mb-2">
-                              <h5 className="text-sm sm:text-base font-medium text-gray-900">
+                            <div>
+                              <p className="font-medium text-gray-900">
                                 {item.medication_name}
-                              </h5>
-                            </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs sm:text-sm mb-2">
-                              <div>
-                                <p className="text-gray-500">Quantity</p>
-                                <p className="font-medium text-gray-900">
-                                  {item.quantity_filled ? `${item.quantity_filled}/${item.quantity}` : item.quantity}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Dosage</p>
-                                <p className="font-medium text-gray-900">
-                                  {item.dosage || "N/A"}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Frequency</p>
-                                <p className="font-medium text-gray-900">
-                                  {item.frequency || "N/A"}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Duration</p>
-                                <p className="font-medium text-gray-900">
-                                  {item.duration || "N/A"}
-                                </p>
-                              </div>
-                            </div>
-                            {item.notes && (
-                              <div className="bg-white rounded p-2 border border-gray-200">
-                                <p className="text-xs text-gray-600">
+                              </p>
+                              <p className="text-sm text-gray-600 mt-1">
+                                Dosage: {item.dosage}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Total: {item.total_amount || item.quantity} | Filled: {(item.total_amount || item.quantity) - item.quantity} | Remaining: {item.quantity}
+                              </p>
+                              {item.notes && (
+                                <p className="text-sm text-gray-600 mt-2">
                                   Instructions: {item.notes}
                                 </p>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
