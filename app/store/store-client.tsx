@@ -65,9 +65,7 @@ export default function StoreClientComponent({ drugs }: Props) {
       // Filter by sale status
       let matchesSale = true;
       if (saleFilter === 'sale') {
-        matchesSale = drug.is_on_sale === true && drug.category_type === 'sale';
-      } else if (saleFilter === 'clearance') {
-        matchesSale = drug.category_type === 'clearance';
+        matchesSale = drug.is_on_sale === true;
       }
 
       return matchesSearch && matchesCategory && matchesSale;
@@ -110,7 +108,7 @@ export default function StoreClientComponent({ drugs }: Props) {
       <div className="space-y-8">
         {/* Sale Items Slideshow */}
         {saleItems.length > 0 && (
-          <div className="relative bg-gradient-to-r from-red-500 to-orange-500 rounded-lg overflow-hidden shadow-lg">
+          <div className="relative bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg overflow-hidden shadow-lg">
             <div className="relative w-full h-64 md:h-96 bg-gray-900 flex items-center justify-center">
               <Image
                 src={saleItems[slideShowIndex].file_url || DEFAULT_INVENTORY_IMAGE}
@@ -234,7 +232,7 @@ export default function StoreClientComponent({ drugs }: Props) {
         {/* Sale Filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Deals & Clearance
+            On Sale & Clearance
           </label>
           <div className="flex flex-wrap gap-2">
             <button
@@ -255,17 +253,7 @@ export default function StoreClientComponent({ drugs }: Props) {
                   : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
               }`}
             >
-              On Sale
-            </button>
-            <button
-              onClick={() => setSaleFilter('clearance')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                saleFilter === 'clearance'
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-              }`}
-            >
-              Clearance
+              On Sale / Clearance
             </button>
           </div>
         </div>
@@ -337,25 +325,37 @@ export default function StoreClientComponent({ drugs }: Props) {
                 {/* Price and Stock Section */}
                 <div className="space-y-3 border-t border-gray-100 pt-3 mt-auto">
                   <div>
-                    <p className="text-xs text-gray-500 font-medium">Unit Price</p>
+                    <p className="text-xs text-gray-500 font-medium">Price</p>
                     <div className="flex items-baseline gap-2">
-                      <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(drug.unit_price)}</p>
-                      {drug.sale_price && drug.sale_price < drug.unit_price && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm line-through text-gray-500">
-                            {formatCurrency(drug.unit_price)}
-                          </span>
-                          <span className="text-sm font-bold text-green-600">
-                            {formatCurrency(drug.sale_price)}
-                          </span>
-                        </div>
-                      )}
+                      {(() => {
+                        // Calculate the display price based on sale_price or sale_discount_percent
+                        let displayPrice = drug.unit_price;
+                        if (drug.is_on_sale) {
+                          if (drug.sale_price && drug.sale_price > 0) {
+                            displayPrice = drug.sale_price;
+                          } else if (drug.sale_discount_percent && drug.sale_discount_percent > 0) {
+                            displayPrice = drug.unit_price * (1 - drug.sale_discount_percent / 100);
+                          }
+                        }
+                        return (
+                          <>
+                            <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(displayPrice)}</p>
+                            {drug.is_on_sale && displayPrice < drug.unit_price && (
+                              <>
+                                <span className="text-sm line-through text-gray-500">
+                                  {formatCurrency(drug.unit_price)}
+                                </span>
+                                {drug.sale_discount_percent && drug.sale_discount_percent > 0 && (
+                                  <span className="text-sm font-bold text-green-600">
+                                    -{drug.sale_discount_percent}%
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
-                    {drug.sale_discount_percent && drug.sale_discount_percent > 0 && (
-                      <div className="mt-1 inline-block px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">
-                        -{drug.sale_discount_percent}% OFF
-                      </div>
-                    )}
                   </div>
 
                   {/* Sale/Clearance Badge */}

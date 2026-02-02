@@ -168,6 +168,11 @@ export default function InventoryItemTable({
                       </div>
                     </button>
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {(drug as any).is_on_sale && (
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold border border-green-300 bg-green-50 text-green-700 whitespace-nowrap">
+                          Sale Active
+                        </span>
+                      )}
                       <span
                         className={`inline-flex px-2 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getStatusColor(
                           drug.status

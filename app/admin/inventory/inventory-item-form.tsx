@@ -496,7 +496,7 @@ export default function InventoryItemForm({
                 {/* Sale Price */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sale Price
+                    Sale Price (Amount)
                   </label>
                   <input
                     type="number"
@@ -505,8 +505,10 @@ export default function InventoryItemForm({
                     onChange={handleChange}
                     step="0.01"
                     min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={(formData as any).sale_discount_percent && (formData as any).sale_discount_percent > 0}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
+                  <p className="text-xs text-gray-600 mt-1">Set a fixed sale price OR use discount percentage below, not both</p>
                 </div>
 
                 {/* Sale Discount Percent */}
@@ -522,8 +524,10 @@ export default function InventoryItemForm({
                     step="0.01"
                     min="0"
                     max="100"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={(formData as any).sale_price && (formData as any).sale_price > 0}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
+                  <p className="text-xs text-gray-600 mt-1">Set a discount percentage OR use fixed price above, not both</p>
                 </div>
 
                 {/* Sale Start Date */}

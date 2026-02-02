@@ -96,7 +96,19 @@ export default function CartPage() {
   // Calculate totals
   const subtotal = cartItems.reduce((sum, item) => {
     const drug = drugDetails[item.drug_id];
-    return sum + (drug ? drug.unit_price * item.quantity : 0);
+    if (!drug) return sum;
+    
+    // Calculate the price to use (sale price or regular price)
+    let itemPrice = drug.unit_price;
+    if (drug.is_on_sale) {
+      if (drug.sale_price && drug.sale_price > 0) {
+        itemPrice = drug.sale_price;
+      } else if (drug.sale_discount_percent && drug.sale_discount_percent > 0) {
+        itemPrice = drug.unit_price * (1 - drug.sale_discount_percent / 100);
+      }
+    }
+    
+    return sum + (itemPrice * item.quantity);
   }, 0);
 
   // Tax handling: if tax_type is 'inclusive', don't add extra tax (it's already in the price)
@@ -198,9 +210,31 @@ export default function CartPage() {
                     <div className="flex-grow">
                       <h3 className="font-semibold text-gray-900">{drug.name}</h3>
                       <p className="text-sm text-gray-600">{drug.category}</p>
-                      <p className="text-lg font-bold text-blue-600 mt-2">
-                        {formatCurrency(drug.unit_price)} each
-                      </p>
+                      <div className="mt-2">
+                        {(() => {
+                          // Calculate the price to use (sale price or regular price)
+                          let itemPrice = drug.unit_price;
+                          if (drug.is_on_sale) {
+                            if (drug.sale_price && drug.sale_price > 0) {
+                              itemPrice = drug.sale_price;
+                            } else if (drug.sale_discount_percent && drug.sale_discount_percent > 0) {
+                              itemPrice = drug.unit_price * (1 - drug.sale_discount_percent / 100);
+                            }
+                          }
+                          return (
+                            <div className="flex items-center gap-2">
+                              <p className="text-lg font-bold text-blue-600">
+                                {formatCurrency(itemPrice)} each
+                              </p>
+                              {drug.is_on_sale && itemPrice < drug.unit_price && (
+                                <span className="text-sm line-through text-gray-500">
+                                  {formatCurrency(drug.unit_price)}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
 
                     {/* Quantity and Remove */}
@@ -236,7 +270,18 @@ export default function CartPage() {
 
                       {/* Item Total */}
                       <p className="text-lg font-bold text-gray-900">
-                        {formatCurrency(drug.unit_price * item.quantity)}
+                        {(() => {
+                          // Calculate the price to use (sale price or regular price)
+                          let itemPrice = drug.unit_price;
+                          if (drug.is_on_sale) {
+                            if (drug.sale_price && drug.sale_price > 0) {
+                              itemPrice = drug.sale_price;
+                            } else if (drug.sale_discount_percent && drug.sale_discount_percent > 0) {
+                              itemPrice = drug.unit_price * (1 - drug.sale_discount_percent / 100);
+                            }
+                          }
+                          return formatCurrency(itemPrice * item.quantity);
+                        })()}
                       </p>
                     </div>
                   </div>
