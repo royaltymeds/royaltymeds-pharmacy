@@ -789,18 +789,6 @@ export default function PrescriptionDetailClient({
               )}
             </div>
 
-            {message && (
-              <div
-                className={`mb-4 p-3 rounded-lg text-sm ${
-                  message.type === "success"
-                    ? "bg-green-50 text-green-800 border border-green-200"
-                    : "bg-red-50 text-red-800 border border-red-200"
-                }`}
-              >
-                {message.text}
-              </div>
-            )}
-
             {/* Existing Medications List */}
             {prescription.prescription_items &&
               prescription.prescription_items.length > 0 && (
@@ -1472,6 +1460,18 @@ export default function PrescriptionDetailClient({
                     Cancel
                   </button>
                 </div>
+
+                {message && (
+                  <div
+                    className={`mt-4 p-3 rounded-lg text-sm ${
+                      message.type === "success"
+                        ? "bg-green-50 text-green-800 border border-green-200"
+                        : "bg-red-50 text-red-800 border border-red-200"
+                    }`}
+                  >
+                    {message.text}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-3">

@@ -266,32 +266,6 @@ export default function SubmitPrescription() {
         </p>
       </div>
 
-      {/* Success Message */}
-      {success && (
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2 sm:gap-3">
-          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-green-900">
-              Prescription submitted successfully!
-            </h3>
-            <p className="text-green-700 text-sm mt-1">
-              You will be redirected to your prescriptions in a moment.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 sm:gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-red-900 text-sm sm:text-base">Error</h3>
-            <p className="text-red-700 text-xs sm:text-sm mt-1">{error}</p>
-          </div>
-        </div>
-      )}
-
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
         {/* Patient Selection */}
@@ -607,6 +581,32 @@ export default function SubmitPrescription() {
             {loading ? "Submitting..." : "Submit Prescription"}
           </button>
         </div>
+
+        {/* Success Message */}
+        {success && (
+          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2 sm:gap-3">
+            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-green-900">
+                Prescription submitted successfully!
+              </h3>
+              <p className="text-green-700 text-sm mt-1">
+                You will be redirected to your prescriptions in a moment.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 sm:gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-red-900 text-sm sm:text-base">Error</h3>
+              <p className="text-red-700 text-xs sm:text-sm mt-1">{error}</p>
+            </div>
+          </div>
+        )}
       </form>
       </div>
     </div>
