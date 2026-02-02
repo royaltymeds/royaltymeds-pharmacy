@@ -119,10 +119,10 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Fetch doctor details from auth user and doctors table
+    // Fetch doctor details from auth user and user_profiles table
     const { data: doctorData, error: doctorError } = await adminClient
-      .from("doctors")
-      .select("*")
+      .from("user_profiles")
+      .select("full_name, email, phone, address")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -147,8 +147,7 @@ export async function POST(request: NextRequest) {
           doctor_name: doctorData?.full_name || null,
           doctor_email: doctorData?.email || user.email || null,
           doctor_phone: doctorData?.phone || null,
-          practice_name: doctorData?.practice_name || null,
-          practice_address: doctorData?.practice_address || null,
+          practice_address: doctorData?.address || null,
         },
       ])
       .select();
