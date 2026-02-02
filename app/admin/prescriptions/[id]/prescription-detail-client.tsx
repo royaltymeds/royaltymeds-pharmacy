@@ -309,6 +309,7 @@ export default function PrescriptionDetailClient({
           },
           body: JSON.stringify({
             admin_notes: adminNotes,
+            source: prescription.source,
           }),
         }
       );
