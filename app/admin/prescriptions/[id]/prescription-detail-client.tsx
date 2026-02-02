@@ -760,10 +760,10 @@ export default function PrescriptionDetailClient({
               </div>
               <div>
                 <p className="text-xs text-gray-600 uppercase tracking-wide">
-                  Patient ID
+                  Email
                 </p>
                 <p className="text-gray-900 font-medium">
-                  {prescription.patient_id}
+                  {prescription.users?.email || "Not provided"}
                 </p>
               </div>
             </div>

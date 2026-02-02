@@ -32,6 +32,7 @@ interface Prescription {
   refill_limit?: number;
   refill_count?: number;
   last_refilled_at?: string;
+  source?: "patient" | "doctor";
   prescription_items: Array<{
     id: string;
     medication_name: string;
@@ -201,6 +202,22 @@ export default function PrescriptionDetailPage({
                 )}
               </div>
             )}
+          </div>
+
+          {/* Source Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Source</h2>
+            <div className="inline-block">
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  prescription.source === "doctor"
+                    ? "bg-purple-100 text-purple-800"
+                    : "bg-blue-100 text-blue-800"
+                }`}
+              >
+                {prescription.source === "doctor" ? "Doctor Submitted" : "Patient Upload"}
+              </span>
+            </div>
           </div>
 
           {/* Prescription Number */}

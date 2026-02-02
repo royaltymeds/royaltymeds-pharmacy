@@ -29,8 +29,8 @@ export async function GET(
 
     const { id } = await params;
 
-    // Fetch prescription
-    const { data: prescription, error } = await supabase
+    // First try to fetch from patient prescriptions
+    const { data: patientPrescription } = await supabase
       .from("prescriptions")
       .select(
         `
@@ -67,14 +67,62 @@ export async function GET(
       .eq("patient_id", user.id)
       .single();
 
-    if (error || !prescription) {
-      return NextResponse.json(
-        { error: "Prescription not found" },
-        { status: 404 }
-      );
+    if (patientPrescription) {
+      return NextResponse.json({ prescription: { ...patientPrescription, source: "patient" } });
     }
 
-    return NextResponse.json({ prescription });
+    // If not found in patient prescriptions, try doctor prescriptions
+    const { data: doctorPrescription } = await supabase
+      .from("doctor_prescriptions")
+      .select(
+        `
+        id,
+        status,
+        patient_id,
+        doctor_id,
+        created_at,
+        updated_at,
+        file_url,
+        prescription_number,
+        doctor_name,
+        doctor_phone,
+        doctor_email,
+        practice_name,
+        practice_address,
+        filled_at,
+        pharmacist_name,
+        is_refillable,
+        refill_limit,
+        refill_count,
+        last_refilled_at,
+        doctor_prescriptions_items(
+          id,
+          medication_name,
+          dosage,
+          quantity,
+          total_amount,
+          notes
+        )
+      `
+      )
+      .eq("id", id)
+      .eq("patient_id", user.id)
+      .single();
+
+    if (doctorPrescription) {
+      return NextResponse.json({ 
+        prescription: { 
+          ...doctorPrescription, 
+          prescription_items: doctorPrescription.doctor_prescriptions_items || [],
+          source: "doctor" 
+        } 
+      });
+    }
+
+    return NextResponse.json(
+      { error: "Prescription not found" },
+      { status: 404 }
+    );
   } catch (error) {
     console.error("Error fetching prescription:", error);
     return NextResponse.json(

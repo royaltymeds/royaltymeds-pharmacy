@@ -20,12 +20,31 @@ const ITEMS_PER_PAGE = 10;
 async function getPrescriptions(userId: string): Promise<Prescription[]> {
   try {
     const supabase = await createServerSupabaseClient();
-    const { data } = await supabase
+    
+    // Fetch patient-submitted prescriptions
+    const { data: patientData } = await supabase
       .from("prescriptions")
       .select("*")
       .eq("patient_id", userId)
       .order("created_at", { ascending: false });
-    return data || [];
+    
+    // Fetch doctor-submitted prescriptions linked to this patient
+    const { data: doctorData } = await supabase
+      .from("doctor_prescriptions")
+      .select("*")
+      .eq("patient_id", userId)
+      .order("created_at", { ascending: false });
+    
+    // Combine both arrays
+    const allPrescriptions = [
+      ...(patientData || []),
+      ...(doctorData || [])
+    ];
+    
+    // Sort by created_at descending
+    return allPrescriptions.sort((a: any, b: any) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   } catch (error) {
     console.error("Error fetching prescriptions:", error);
     return [];

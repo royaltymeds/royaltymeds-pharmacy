@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 interface Prescription {
   id: string;
   patient_id: string;
+  patient_name?: string;
   duration: string;
   instructions: string | null;
   notes: string | null;
@@ -24,10 +25,17 @@ async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
     const supabase = await createServerSupabaseClient();
     console.log("[getPrescriptions] Starting - doctor_id:", doctorId);
     
-    // Query doctor_prescriptions directly - no need to check users table
+    // Query doctor_prescriptions with patient profile info
     const { data, error } = await supabase
       .from("doctor_prescriptions")
-      .select("*")
+      .select(`
+        *,
+        users:patient_id(
+          user_profiles(
+            full_name
+          )
+        )
+      `)
       .eq("doctor_id", doctorId)
       .order("created_at", { ascending: false });
     
@@ -47,6 +55,7 @@ async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
     const transformed = (data || []).map((item: any) => ({
       id: item.id,
       patient_id: item.patient_id,
+      patient_name: item.users?.user_profiles?.full_name || "Unknown",
       duration: item.duration,
       instructions: item.instructions,
       notes: item.notes,

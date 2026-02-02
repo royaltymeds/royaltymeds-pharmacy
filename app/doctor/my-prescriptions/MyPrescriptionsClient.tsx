@@ -20,6 +20,7 @@ interface MedicationItem {
 interface Prescription {
   id: string;
   patient_id: string;
+  patient_name?: string;
   duration: string;
   instructions: string | null;
   notes: string | null;
@@ -264,7 +265,7 @@ export default function MyPrescriptionsClient({
                     </span>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                    Patient ID: {prescription.patient_id}
+                    Patient: {prescription.patient_name || prescription.patient_id}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-500">
                     Submitted:{" "}
