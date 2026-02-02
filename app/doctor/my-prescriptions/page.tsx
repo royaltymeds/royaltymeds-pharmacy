@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import MyPrescriptionsClient from "./MyPrescriptionsClient";
 
@@ -22,13 +23,25 @@ interface Prescription {
 
 async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
   try {
-    const supabase = await createServerSupabaseClient();
+    // Use admin client to bypass RLS policies that cause recursion
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
     console.log("[getPrescriptions] Starting - doctor_id:", doctorId);
     
-    // Query doctor_prescriptions without joins to avoid RLS recursion
-    const { data, error } = await supabase
+    // Query doctor_prescriptions with patient profile info using admin client
+    const { data, error } = await supabaseAdmin
       .from("doctor_prescriptions")
-      .select(`*`)
+      .select(`
+        *,
+        users:patient_id(
+          user_profiles(
+            full_name
+          )
+        )
+      `)
       .eq("doctor_id", doctorId)
       .order("created_at", { ascending: false });
     
@@ -48,7 +61,7 @@ async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
     const transformed = (data || []).map((item: any) => ({
       id: item.id,
       patient_id: item.patient_id,
-      patient_name: item.patient_name || "Unknown",
+      patient_name: item.users?.user_profiles?.full_name || "Unknown",
       duration: item.duration,
       instructions: item.instructions,
       notes: item.notes,
