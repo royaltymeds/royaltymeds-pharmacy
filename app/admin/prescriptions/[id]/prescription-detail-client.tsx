@@ -36,7 +36,6 @@ export default function PrescriptionDetailClient({
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [isEditingDoctorDetails, setIsEditingDoctorDetails] = useState(false);
   const [adminNotes, setAdminNotes] = useState(prescription.admin_notes || "");
-  const [doctorNotes, setDoctorNotes] = useState(prescription.notes || "");
   const [doctorDetails, setDoctorDetails] = useState({
     doctor_name: prescription.doctor_name || "",
     doctor_phone: prescription.doctor_phone || "",
@@ -310,7 +309,6 @@ export default function PrescriptionDetailClient({
           },
           body: JSON.stringify({
             admin_notes: adminNotes,
-            notes: doctorNotes,
           }),
         }
       );
@@ -1284,18 +1282,16 @@ export default function PrescriptionDetailClient({
 
             {isEditingNotes ? (
               <div className="space-y-6">
-                {/* Doctor Notes (Submitted) */}
+                {/* Doctor Notes (Submitted) - Read Only */}
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Notes from Doctor</h3>
-                  <textarea
-                    value={doctorNotes}
-                    onChange={(e) => setDoctorNotes(e.target.value)}
-                    placeholder="Notes submitted by the doctor when they submitted the prescription..."
-                    className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    rows={3}
-                  />
+                  <div className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600 resize-none">
+                    <p className="whitespace-pre-wrap">
+                      {prescription.notes || "No notes submitted by doctor"}
+                    </p>
+                  </div>
                 </div>
-                {/* Admin Notes (Internal) */}
+                {/* Admin Notes (Internal) - Editable */}
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Internal Notes</h3>
                   <textarea
@@ -1318,7 +1314,6 @@ export default function PrescriptionDetailClient({
                     onClick={() => {
                       setIsEditingNotes(false);
                       setAdminNotes(prescription.admin_notes || "");
-                      setDoctorNotes(prescription.notes || "");
                     }}
                     className="inline-block px-4 py-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 text-gray-900 rounded-lg transition"
                   >
