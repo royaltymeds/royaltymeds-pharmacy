@@ -158,6 +158,8 @@ export default function InventoryItemForm({
         ...(drugType === 'otc' && {
           sale_start_date: (formData as any).sale_start_date || null,
           sale_end_date: (formData as any).sale_end_date || null,
+          sale_discount_percent: (formData as any).sale_discount_percent && (formData as any).sale_discount_percent > 0 ? (formData as any).sale_discount_percent : null,
+          sale_price: (formData as any).sale_price && (formData as any).sale_price > 0 ? (formData as any).sale_price : null,
         }),
       };
 
