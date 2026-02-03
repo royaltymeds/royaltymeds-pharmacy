@@ -360,11 +360,14 @@ export default function StoreClientComponent({ drugs }: Props) {
                       {(() => {
                         // Calculate the display price based on sale_price or sale_discount_percent
                         let displayPrice = drug.unit_price;
+                        let discountPercent = 0;
                         if (drug.is_on_sale) {
                           if (drug.sale_price && drug.sale_price > 0) {
                             displayPrice = drug.sale_price;
+                            discountPercent = Math.round(((drug.unit_price - displayPrice) / drug.unit_price) * 100);
                           } else if (drug.sale_discount_percent && drug.sale_discount_percent > 0) {
                             displayPrice = drug.unit_price * (1 - drug.sale_discount_percent / 100);
+                            discountPercent = drug.sale_discount_percent;
                           }
                         }
                         return (
@@ -375,9 +378,9 @@ export default function StoreClientComponent({ drugs }: Props) {
                                 <span className="text-sm line-through text-gray-500">
                                   {formatCurrency(drug.unit_price)}
                                 </span>
-                                {drug.sale_discount_percent && drug.sale_discount_percent > 0 && (
+                                {discountPercent > 0 && (
                                   <span className="text-sm font-bold text-green-600">
-                                    -{drug.sale_discount_percent}%
+                                    -{discountPercent}%
                                   </span>
                                 )}
                               </>
