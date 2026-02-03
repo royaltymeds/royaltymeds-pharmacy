@@ -131,14 +131,33 @@ export default function StoreClientComponent({ drugs }: Props) {
                 <h2 className="text-2xl md:text-3xl font-bold">{saleItems[slideShowIndex].name}</h2>
                 <p className="text-sm mt-2 opacity-90">{saleItems[slideShowIndex].active_ingredient}</p>
                 <div className="flex items-center gap-3 mt-3">
-                  <span className="text-3xl font-bold">
-                    {formatCurrency(saleItems[slideShowIndex].sale_price || saleItems[slideShowIndex].unit_price)}
-                  </span>
-                  {saleItems[slideShowIndex].sale_price && saleItems[slideShowIndex].sale_price < saleItems[slideShowIndex].unit_price && (
-                    <span className="text-lg line-through opacity-75">
-                      {formatCurrency(saleItems[slideShowIndex].unit_price)}
-                    </span>
-                  )}
+                  {(() => {
+                    let displayPrice = saleItems[slideShowIndex].unit_price;
+                    if (saleItems[slideShowIndex].sale_price && saleItems[slideShowIndex].sale_price > 0) {
+                      displayPrice = saleItems[slideShowIndex].sale_price;
+                    } else if (saleItems[slideShowIndex].sale_discount_percent && saleItems[slideShowIndex].sale_discount_percent > 0) {
+                      displayPrice = saleItems[slideShowIndex].unit_price * (1 - saleItems[slideShowIndex].sale_discount_percent / 100);
+                    }
+                    return (
+                      <>
+                        <span className="text-3xl font-bold">
+                          {formatCurrency(displayPrice)}
+                        </span>
+                        {displayPrice < saleItems[slideShowIndex].unit_price && (
+                          <>
+                            <span className="text-lg line-through opacity-75">
+                              {formatCurrency(saleItems[slideShowIndex].unit_price)}
+                            </span>
+                            {saleItems[slideShowIndex].sale_discount_percent && saleItems[slideShowIndex].sale_discount_percent > 0 && (
+                              <span className="text-xl font-bold text-green-400 ml-2">
+                                -{saleItems[slideShowIndex].sale_discount_percent}% OFF
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -492,20 +511,29 @@ export default function StoreClientComponent({ drugs }: Props) {
                             <p className="text-xs text-gray-500 font-medium">Price</p>
                             <div className="flex items-baseline gap-2">
                               {(() => {
-                                // Calculate the display price based on sale_price
+                                // Calculate the display price based on sale_price or sale_discount_percent
                                 let displayPrice = drug.unit_price;
                                 if (drug.is_on_sale) {
                                   if (drug.sale_price && drug.sale_price > 0) {
                                     displayPrice = drug.sale_price;
+                                  } else if (drug.sale_discount_percent && drug.sale_discount_percent > 0) {
+                                    displayPrice = drug.unit_price * (1 - drug.sale_discount_percent / 100);
                                   }
                                 }
                                 return (
                                   <>
                                     <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(displayPrice)}</p>
                                     {drug.is_on_sale && displayPrice < drug.unit_price && (
-                                      <span className="text-sm line-through text-gray-500">
-                                        {formatCurrency(drug.unit_price)}
-                                      </span>
+                                      <>
+                                        <span className="text-sm line-through text-gray-500">
+                                          {formatCurrency(drug.unit_price)}
+                                        </span>
+                                        {drug.sale_discount_percent && drug.sale_discount_percent > 0 && (
+                                          <span className="text-sm font-bold text-green-600">
+                                            -{drug.sale_discount_percent}%
+                                          </span>
+                                        )}
+                                      </>
                                     )}
                                   </>
                                 );
