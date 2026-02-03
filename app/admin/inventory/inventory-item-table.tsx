@@ -270,8 +270,8 @@ export default function InventoryItemTable({
                     {isEditingQty ? (
                       <div className="flex gap-2">
                         <input
-                          type="number"
-                          value={editingQuantity.value}
+                          type="text"
+                          value={editingQuantity.value || ''}
                           onChange={(e) => {
                             const value = e.target.value === '' ? '' : parseInt(e.target.value, 10);
                             setEditingQuantity({
@@ -279,7 +279,9 @@ export default function InventoryItemTable({
                               value: typeof value === 'number' ? value : 0,
                             });
                           }}
-                          min="0"
+                          placeholder="0"
+                          pattern="^[0-9]*$"
+                          inputMode="numeric"
                           className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
                           autoFocus
                         />

@@ -1113,14 +1113,16 @@ export default function PrescriptionDetailClient({
                               Quantity to Fill
                             </label>
                             <input
-                              type="number"
-                              min="0"
+                              type="text"
                               max={item.quantity}
-                              value={quantityFilled}
+                              value={quantityFilled || ''}
                               onChange={(e) => {
                                 const value = e.target.value === '' ? '0' : e.target.value;
                                 handleQuantityFilledChange(item.id, parseInt(value, 10) || 0);
                               }}
+                              placeholder="0"
+                              pattern="^[0-9]*$"
+                              inputMode="numeric"
                               className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:border-transparent ${
                                 isExceeded
                                   ? "border-red-300 focus:ring-red-500"

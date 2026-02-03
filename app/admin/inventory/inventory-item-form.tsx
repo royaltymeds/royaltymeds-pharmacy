@@ -395,11 +395,13 @@ export default function InventoryItemForm({
               Quantity on Hand
             </label>
             <input
-              type="number"
+              type="text"
               name="quantity_on_hand"
-              value={formData.quantity_on_hand}
+              value={formData.quantity_on_hand || ''}
               onChange={handleChange}
-              min="0"
+              placeholder="0"
+              pattern="^[0-9]*(\.[0-9]{1,2})?$"
+              inputMode="decimal"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -410,11 +412,13 @@ export default function InventoryItemForm({
               Reorder Level
             </label>
             <input
-              type="number"
+              type="text"
               name="reorder_level"
-              value={formData.reorder_level}
+              value={formData.reorder_level || ''}
               onChange={handleChange}
-              min="0"
+              placeholder="10"
+              pattern="^[0-9]*(\.[0-9]{1,2})?$"
+              inputMode="decimal"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -425,11 +429,13 @@ export default function InventoryItemForm({
               Reorder Quantity
             </label>
             <input
-              type="number"
+              type="text"
               name="reorder_quantity"
-              value={formData.reorder_quantity}
+              value={formData.reorder_quantity || ''}
               onChange={handleChange}
-              min="0"
+              placeholder="50"
+              pattern="^[0-9]*(\.[0-9]{1,2})?$"
+              inputMode="decimal"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -446,12 +452,13 @@ export default function InventoryItemForm({
               Unit Price <span className="text-red-500">*</span>
             </label>
             <input
-              type="number"
+              type="text"
               name="unit_price"
-              value={formData.unit_price}
+              value={formData.unit_price || ''}
               onChange={handleChange}
-              step="0.01"
-              min="0"
+              placeholder="0.00"
+              pattern="^[0-9]*(\.[0-9]{1,2})?$"
+              inputMode="decimal"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -463,12 +470,13 @@ export default function InventoryItemForm({
               Cost Price
             </label>
             <input
-              type="number"
+              type="text"
               name="cost_price"
-              value={formData.cost_price}
+              value={formData.cost_price || ''}
               onChange={handleChange}
-              step="0.01"
-              min="0"
+              placeholder="0.00"
+              pattern="^[0-9]*(\.[0-9]{1,2})?$"
+              inputMode="decimal"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -501,12 +509,13 @@ export default function InventoryItemForm({
                     Sale Price (Amount)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="sale_price"
-                    value={(formData as any).sale_price}
+                    value={(formData as any).sale_price || ''}
                     onChange={handleChange}
-                    step="0.01"
-                    min="0"
+                    placeholder="0.00"
+                    pattern="^[0-9]*(\.[0-9]{1,2})?$"
+                    inputMode="decimal"
                     disabled={(formData as any).sale_discount_percent && (formData as any).sale_discount_percent > 0}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
@@ -519,13 +528,13 @@ export default function InventoryItemForm({
                     Discount Percent (%)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="sale_discount_percent"
-                    value={(formData as any).sale_discount_percent}
+                    value={(formData as any).sale_discount_percent || ''}
                     onChange={handleChange}
-                    step="0.01"
-                    min="0"
-                    max="100"
+                    placeholder="0"
+                    pattern="^[0-9]*(\.[0-9]{1,2})?$"
+                    inputMode="decimal"
                     disabled={(formData as any).sale_price && (formData as any).sale_price > 0}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />

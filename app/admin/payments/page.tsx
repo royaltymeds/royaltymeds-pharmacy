@@ -295,13 +295,13 @@ export default function PaymentConfigPage() {
                       Tax Rate (GCT %)
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       name="tax_rate"
-                      value={formData.tax_rate}
+                      value={formData.tax_rate || ''}
                       onChange={handleInputChange}
-                      step="0.1"
-                      min="0"
-                      max="100"
+                      placeholder="15"
+                      pattern="^[0-9]*(\.[0-9]{1,2})?$"
+                      inputMode="decimal"
                       className="w-full px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
                     />
                     <p className="text-xs md:text-sm text-gray-500 mt-2">
@@ -326,13 +326,13 @@ export default function PaymentConfigPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-gray-700 font-medium">JMD</span>
                     <input
-                      type="number"
+                      type="text"
                       name="kingston_delivery_cost"
-                      value={formData.kingston_delivery_cost}
+                      value={formData.kingston_delivery_cost || ''}
                       onChange={handleInputChange}
                       placeholder="e.g., 500"
-                      step="0.01"
-                      min="0"
+                      pattern="^[0-9]*(\.[0-9]{1,2})?$"
+                      inputMode="decimal"
                       className="flex-1 px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
                     />
                   </div>

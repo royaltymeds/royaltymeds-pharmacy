@@ -580,11 +580,12 @@ export default function AdminOrdersPage() {
                           {editingShipping === order.id ? (
                             <div className="flex gap-2">
                               <input
-                                type="number"
-                                value={shippingValues[order.id] ?? order.shipping_amount}
+                                type="text"
+                                value={(shippingValues[order.id] ?? order.shipping_amount) || ''}
                                 onChange={(e) => setShippingValues({ ...shippingValues, [order.id]: e.target.value })}
-                                step="0.01"
-                                min="0"
+                                placeholder="0.00"
+                                pattern="^[0-9]*(\.[0-9]{1,2})?$"
+                                inputMode="decimal"
                                 className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
                               />
                               <button
