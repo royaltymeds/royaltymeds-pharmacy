@@ -272,12 +272,13 @@ export default function InventoryItemTable({
                         <input
                           type="number"
                           value={editingQuantity.value}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const value = e.target.value === '' ? '' : parseInt(e.target.value, 10);
                             setEditingQuantity({
                               drugId: drug.id,
-                              value: parseInt(e.target.value) || 0,
-                            })
-                          }
+                              value: typeof value === 'number' ? value : 0,
+                            });
+                          }}
                           min="0"
                           className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
                           autoFocus
