@@ -84,7 +84,7 @@ export default function InventoryItemForm({
       setFormData((prev) => ({
         ...prev,
         [name]: name.includes('price') || name.includes('quantity') || name.includes('reorder') 
-          ? parseFloat(value) || 0
+          ? parseFloat(value === '' ? '0' : value) || 0
           : value,
       }));
     }

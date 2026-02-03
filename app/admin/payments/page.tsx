@@ -60,7 +60,7 @@ export default function PaymentConfigPage() {
     setFormData((prev) => ({
       ...prev,
       [name]: name === 'kingston_delivery_cost' || name === 'tax_rate' 
-        ? parseFloat(value) || 0 
+        ? parseFloat(value === '' ? '0' : value) || 0 
         : value,
     }));
   };
