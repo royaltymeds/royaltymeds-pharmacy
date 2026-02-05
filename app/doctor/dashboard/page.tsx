@@ -3,81 +3,10 @@ import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import {
   FileText,
-  Users,
   CheckCircle,
-  Clock,
-  AlertCircle,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
-
-interface DashboardStats {
-  totalPrescriptions: number;
-  pendingApproval: number;
-  approved: number;
-  rejected: number;
-  totalPatients: number;
-}
-
-async function getDashboardStats(doctorId: string): Promise<DashboardStats> {
-  try {
-    const supabase = await createServerSupabaseClient();
-
-    // Get total prescriptions
-    const { count: totalPrescriptions } = await supabase
-      .from("doctor_prescriptions")
-      .select("*", { count: "exact", head: true })
-      .eq("doctor_id", doctorId);
-
-    // Get pending prescriptions
-    const { count: pendingApproval } = await supabase
-      .from("doctor_prescriptions")
-      .select("*", { count: "exact", head: true })
-      .eq("doctor_id", doctorId)
-      .eq("status", "pending");
-
-    // Get approved prescriptions
-    const { count: approved } = await supabase
-      .from("doctor_prescriptions")
-      .select("*", { count: "exact", head: true })
-      .eq("doctor_id", doctorId)
-      .eq("status", "approved");
-
-    // Get rejected prescriptions
-    const { count: rejected } = await supabase
-      .from("doctor_prescriptions")
-      .select("*", { count: "exact", head: true })
-      .eq("doctor_id", doctorId)
-      .eq("status", "rejected");
-
-    // Get total unique patients
-    const { data: prescriptions } = await supabase
-      .from("doctor_prescriptions")
-      .select("patient_id")
-      .eq("doctor_id", doctorId);
-
-    const uniquePatients = new Set(
-      (prescriptions || []).map((p: any) => p.patient_id)
-    );
-
-    return {
-      totalPrescriptions: totalPrescriptions || 0,
-      pendingApproval: pendingApproval || 0,
-      approved: approved || 0,
-      rejected: rejected || 0,
-      totalPatients: uniquePatients.size,
-    };
-  } catch (error) {
-    console.error("Error fetching stats:", error);
-    return {
-      totalPrescriptions: 0,
-      pendingApproval: 0,
-      approved: 0,
-      rejected: 0,
-      totalPatients: 0,
-    };
-  }
-}
 
 export default async function DoctorDashboard() {
   // Auth check - page-level enforcement
@@ -89,8 +18,6 @@ export default async function DoctorDashboard() {
   if (!user) {
     redirect("/login");
   }
-
-  const stats = await getDashboardStats(user.id);
 
   const quickActions = [
     {
@@ -107,108 +34,14 @@ export default async function DoctorDashboard() {
       icon: CheckCircle,
       color: "bg-blue-50 text-blue-600",
     },
-    {
-      title: "Patient Search",
-      description: "Look up patient records and history",
-      href: "/doctor/patients",
-      icon: Users,
-      color: "bg-blue-50 text-blue-600",
-    },
   ];
 
   return (
     <div className="space-y-3 sm:space-y-4 md:space-y-6">
-      {/* Header with Navigation */}
-      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 border-l-4 border-blue-600">
-        <div className="flex items-start justify-between gap-2 sm:gap-3 md:gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Doctor Dashboard</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2">
-              Submit prescriptions and track pharmacy approval status
-            </p>
-          </div>
-          <Link href="/" className="flex-shrink-0 text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm whitespace-nowrap">
-            ← Home
-          </Link>
-        </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
-        {/* Total Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-blue-600">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-gray-500 text-xs md:text-sm font-medium">
-                Total
-              </p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-                {stats.totalPrescriptions}
-              </p>
-            </div>
-            <FileText className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-blue-600 flex-shrink-0" />
-          </div>
-        </div>
-
-        {/* Pending Approval */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-yellow-500">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-gray-500 text-xs md:text-sm font-medium">
-                Pending
-              </p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-                {stats.pendingApproval}
-              </p>
-            </div>
-            <Clock className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-yellow-600 flex-shrink-0" />
-          </div>
-        </div>
-
-        {/* Approved */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-green-600">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-gray-500 text-xs md:text-sm font-medium">Approved</p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-                {stats.approved}
-              </p>
-            </div>
-            <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-green-600 flex-shrink-0" />
-          </div>
-        </div>
-
-        {/* Rejected */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-red-600">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-gray-500 text-xs md:text-sm font-medium">Rejected</p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-                {stats.rejected}
-              </p>
-            </div>
-            <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-red-600 flex-shrink-0" />
-          </div>
-        </div>
-
-        {/* Total Patients */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-blue-600">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-gray-500 text-xs md:text-sm font-medium">Patients</p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-                {stats.totalPatients}
-              </p>
-            </div>
-            <Users className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
-          </div>
-        </div>
-      </div>
-
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {quickActions.map((action) => {
             const IconComponent = action.icon;
             return (

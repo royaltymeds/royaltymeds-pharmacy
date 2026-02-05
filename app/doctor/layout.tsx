@@ -66,8 +66,8 @@ export default async function DoctorLayout({
 
   const navLinks = [
     { href: "/doctor/dashboard", label: "Dashboard" },
-    { href: "/doctor/submit-prescription", label: "Submit Rx" },
-    { href: "/doctor/my-prescriptions", label: "Prescriptions" },
+    { href: "/doctor/submit-prescription", label: "Send Prescription" },
+    { href: "/doctor/my-prescriptions", label: "View Prescriptions" },
   ];
 
   return (
