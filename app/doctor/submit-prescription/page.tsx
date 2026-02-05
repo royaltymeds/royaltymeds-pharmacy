@@ -73,9 +73,9 @@ export default function SubmitPrescription() {
       setFileName("");
       setFilePreview(null);
 
-      // Redirect to my-prescriptions after 2 seconds
+      // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        router.push("/doctor/my-prescriptions");
+        router.push("/doctor/dashboard");
       }, 2000);
     } catch (err: any) {
       setError(err.message || "An error occurred");
