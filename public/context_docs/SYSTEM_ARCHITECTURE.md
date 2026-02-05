@@ -1,8 +1,8 @@
 # System Architecture & Feature Matrix
 
-**Last Updated:** February 1, 2026  
-**Total Commits:** 391+  
-**Latest Phase:** Phase 13 - Git Management, Pretext Revision & Documentation System
+**Last Updated:** February 5, 2026  
+**Total Commits:** 392+  
+**Latest Phase:** Phase 12 - Patient Linking Restructuring & UX Improvements
 
 ## Application Architecture Diagram
 
@@ -455,7 +455,10 @@ Patient sees final total with:
 | Profile Edit | ✅ Live | Low | Jan 22 | Update personal info |
 | Patient List (Admin) | ✅ Live | Medium | Jan 22 | Search, view details |
 | Doctor List (Admin) | ✅ Live | Medium | Jan 22 | Manage doctors |
-| **TOTAL** | **✅** | **Low** | **Jan 22** | **4 features** |
+| Patient Linking (Admin) | ✅ Live | Medium | Feb 5 | Admin selects doctor for patient |
+| Link Search | ✅ Live | Low | Feb 5 | Search patients by email/name/phone |
+| Create & Link Patient | ✅ Live | Medium | Feb 5 | Auto-link new patient to doctor |
+| **TOTAL** | **✅** | **Medium** | **Feb 5** | **7 features** |
 
 ### **UI/UX Features**
 
@@ -469,7 +472,9 @@ Patient sees final total with:
 | Currency Formatting | ✅ Live | Low | Jan 24 | Comma-separated display |
 | Image Optimization | ✅ Live | Medium | Jan 21 | Next.js Image component |
 | Mobile Navigation | ✅ Live | Medium | Jan 21 | Hamburger menu, sidebars |
-| **TOTAL** | **✅** | **Medium** | **Jan 24** | **8 features** |
+| Number Input Validation | ✅ Live | Low | Feb 4 | Text inputs with pattern validation |
+| Discount Display | ✅ Live | Low | Feb 4 | Fixed price discount calculation |
+| **TOTAL** | **✅** | **Medium** | **Feb 4** | **10 features** |
 
 ### **Security & Performance**
 
