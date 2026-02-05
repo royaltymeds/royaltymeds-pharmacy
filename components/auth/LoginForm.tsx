@@ -2,6 +2,7 @@
 
 import { getSupabaseClient } from "@/lib/supabase-client";
 import { saveSessionMetadata } from "@/lib/auth-persistence";
+import { saveCredentials, getSavedCredentials, clearCredentials } from "@/lib/credentials-persistence";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
@@ -10,7 +11,8 @@ import Link from "next/link";
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
+  const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -19,6 +21,13 @@ export default function LoginForm() {
 
   useEffect(() => {
     setMounted(true);
+    
+    // Load saved credentials if available
+    const savedCredentials = getSavedCredentials();
+    if (savedCredentials) {
+      setEmail(savedCredentials.email);
+      setPassword(savedCredentials.password);
+    }
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -56,6 +65,13 @@ export default function LoginForm() {
         saveSessionMetadata(true, 30); // Keep logged in for 30 days
       } else {
         saveSessionMetadata(false); // Clear persistent session
+      }
+
+      // If "Remember me" is checked, save credentials for next login
+      if (rememberMe) {
+        saveCredentials(email, password);
+      } else {
+        clearCredentials(); // Clear saved credentials if unchecked
       }
 
       // Get user role from API endpoint (server-side uses service role to bypass RLS)
@@ -139,17 +155,32 @@ export default function LoginForm() {
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          id="keepLoggedIn"
-          type="checkbox"
-          checked={keepLoggedIn}
-          onChange={(e) => setKeepLoggedIn(e.target.checked)}
-          className="w-4 h-4 border border-gray-300 rounded accent-green-600 cursor-pointer"
-        />
-        <label htmlFor="keepLoggedIn" className="text-sm text-gray-700 cursor-pointer select-none">
-          Keep me logged in for 30 days
-        </label>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <input
+            id="rememberMe"
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-4 h-4 border border-gray-300 rounded accent-green-600 cursor-pointer"
+          />
+          <label htmlFor="rememberMe" className="text-sm text-gray-700 cursor-pointer select-none">
+            Remember me
+          </label>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            id="keepLoggedIn"
+            type="checkbox"
+            checked={keepLoggedIn}
+            onChange={(e) => setKeepLoggedIn(e.target.checked)}
+            className="w-4 h-4 border border-gray-300 rounded accent-green-600 cursor-pointer"
+          />
+          <label htmlFor="keepLoggedIn" className="text-sm text-gray-700 cursor-pointer select-none">
+            Keep me logged in for 30 days
+          </label>
+        </div>
       </div>
 
       <button
