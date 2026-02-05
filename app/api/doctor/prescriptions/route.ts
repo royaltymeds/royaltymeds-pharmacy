@@ -92,7 +92,6 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     const prescriptionNumber = body.prescriptionNumber;
-    const patientId = body.patientId;
 
     if (!prescriptionNumber) {
       return NextResponse.json(
@@ -101,9 +100,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!patientId) {
+    if (!body.file_url) {
       return NextResponse.json(
-        { error: "Missing patient ID" },
+        { error: "Missing prescription file" },
         { status: 400 }
       );
     }
@@ -138,15 +137,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Create doctor prescription record (header) using service role client
+    // Note: patient_id will be NULL and set later by admins
     const { data: prescriptionData, error: prescriptionError } = await adminClient
       .from("doctor_prescriptions")
       .insert([
         {
           doctor_id: user.id,
           prescription_number: prescriptionNumber,
-          patient_id: patientId,
-          duration: body.duration || null,
-          instructions: body.instructions || null,
+          patient_id: null, // Admins will set this later
+          duration: null,
+          instructions: null,
           notes: body.notes || null,
           file_url: body.file_url || null,
           file_name: body.file_name || null,
@@ -168,45 +168,12 @@ export async function POST(request: NextRequest) {
       doctorPhone: doctorData?.phone || null,
       practiceName: doctorData?.specialty || null,
       practiceAddress: doctorData?.address || null,
+      note: "Patient linking and medication items will be added by admins",
     });
-
-    const prescriptionId = prescriptionData?.[0]?.id;
-
-    if (!prescriptionId) {
-      return NextResponse.json(
-        { error: "Failed to create prescription record" },
-        { status: 500 }
-      );
-    }
-
-    // Create medication items (details) for each medication
-    if (body.medications && body.medications.length > 0) {
-      const medicationItems = body.medications.map((med: any) => ({
-        doctor_prescription_id: prescriptionId,
-        medication_name: med.name,
-        dosage: med.dosage || null,
-        quantity: parseInt(med.quantity) || null,
-        total_amount: parseInt(med.quantity) || null,
-        frequency: med.frequency || null,
-        duration: med.duration || null,
-        notes: med.notes || null,
-        brand_choice: "generic",
-      }));
-
-      const { error: itemsError } = await adminClient
-        .from("doctor_prescriptions_items")
-        .insert(medicationItems);
-
-      if (itemsError) {
-        // Rollback the prescription creation on error
-        await adminClient.from("doctor_prescriptions").delete().eq("id", prescriptionId);
-        throw itemsError;
-      }
-    }
 
     return NextResponse.json(
       { 
-        message: "Prescription submitted successfully",
+        message: "Prescription submitted successfully. Admin will link patient and add medication items.",
         prescription: prescriptionData?.[0] || null
       },
       { status: 201 }
