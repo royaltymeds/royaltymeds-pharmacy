@@ -68,7 +68,6 @@ export default async function DoctorLayout({
     { href: "/doctor/dashboard", label: "Dashboard" },
     { href: "/doctor/submit-prescription", label: "Submit Rx" },
     { href: "/doctor/my-prescriptions", label: "Prescriptions" },
-    { href: "/doctor/patients", label: "Patients" },
   ];
 
   return (
