@@ -1,6 +1,7 @@
 "use client";
 
 import { getSupabaseClient } from "@/lib/supabase-client";
+import { saveSessionMetadata } from "@/lib/auth-persistence";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
@@ -9,6 +10,7 @@ import Link from "next/link";
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -47,6 +49,13 @@ export default function LoginForm() {
         console.error("[LoginForm] No user returned from login");
         setError("Login failed: No user data returned");
         return;
+      }
+
+      // If "Keep me logged in" is checked, persist session metadata
+      if (keepLoggedIn) {
+        saveSessionMetadata(true, 30); // Keep logged in for 30 days
+      } else {
+        saveSessionMetadata(false); // Clear persistent session
       }
 
       // Get user role from API endpoint (server-side uses service role to bypass RLS)
@@ -128,6 +137,19 @@ export default function LoginForm() {
           required
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          id="keepLoggedIn"
+          type="checkbox"
+          checked={keepLoggedIn}
+          onChange={(e) => setKeepLoggedIn(e.target.checked)}
+          className="w-4 h-4 border border-gray-300 rounded accent-green-600 cursor-pointer"
+        />
+        <label htmlFor="keepLoggedIn" className="text-sm text-gray-700 cursor-pointer select-none">
+          Keep me logged in for 30 days
+        </label>
       </div>
 
       <button
