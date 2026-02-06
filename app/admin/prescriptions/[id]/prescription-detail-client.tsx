@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle, X, AlertCircle, Download, Edit2, Plus, Trash2, Loader } from "lucide-react";
+import { CheckCircle, X, AlertCircle, Download, Edit2, Plus, Trash2, Loader, ExternalLink } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 interface PrescriptionDetailClientProps {
@@ -15,6 +15,9 @@ export default function PrescriptionDetailClient({
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isEditingMeds, setIsEditingMeds] = useState(false);
+  const [availablePatients, setAvailablePatients] = useState<any[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const [linkingPatient, setLinkingPatient] = useState(false);
 
   // Debug logging on mount
   useEffect(() => {
@@ -25,7 +28,77 @@ export default function PrescriptionDetailClient({
       prescription_items_length: initialPrescription.prescription_items?.length,
       prescription_items_keys: initialPrescription.prescription_items?.[0] ? Object.keys(initialPrescription.prescription_items[0]) : [],
     });
+
+    // Load available patients for doctor if this is a doctor prescription without a patient
+    if (initialPrescription.source === "doctor" && !initialPrescription.patient_id && initialPrescription.doctor_id) {
+      loadAvailablePatientsForDoctor(initialPrescription.doctor_id);
+    }
   }, [initialPrescription]);
+
+  const loadAvailablePatientsForDoctor = async (doctorId: string) => {
+    try {
+      const response = await fetch(`/api/admin/doctors/${doctorId}/patients`);
+      if (response.ok) {
+        const data = await response.json();
+        setAvailablePatients(data.patients || []);
+      }
+    } catch (error) {
+      console.error("Error loading available patients:", error);
+    }
+  };
+
+  const handleLinkPatient = async () => {
+    if (!selectedPatientId) {
+      setMessage({ type: "error", text: "Please select a patient" });
+      return;
+    }
+
+    setLinkingPatient(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(`/api/admin/prescriptions/${prescription.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          patient_id: selectedPatientId,
+          source: prescription.source,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to link patient to prescription",
+        });
+        return;
+      }
+
+      setMessage({
+        type: "success",
+        text: "Patient linked successfully",
+      });
+
+      // Update prescription with new patient_id
+      setPrescription({ ...prescription, patient_id: selectedPatientId });
+      setSelectedPatientId("");
+
+      // Refresh page after 2 seconds
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (error) {
+      console.error("Error linking patient:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while linking patient",
+      });
+    } finally {
+      setLinkingPatient(false);
+    }
+  };
   const [newMedication, setNewMedication] = useState({
     medication_name: "",
     dosage: "",
@@ -750,24 +823,86 @@ export default function PrescriptionDetailClient({
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Patient Information
             </h2>
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-gray-600 uppercase tracking-wide">
-                  Name
+            {prescription.source === "doctor" && !prescription.patient_id ? (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  No patient linked yet. Link a patient to this prescription.
                 </p>
-                <p className="text-gray-900 font-medium">
-                  {prescription.users?.user_profiles?.full_name || "Unknown"}
-                </p>
+                
+                {availablePatients.length > 0 ? (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 uppercase tracking-wide font-medium mb-2">
+                        Select Patient
+                      </label>
+                      <select
+                        value={selectedPatientId}
+                        onChange={(e) => setSelectedPatientId(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">-- Choose a patient --</option>
+                        {availablePatients.map((patient: any) => (
+                          <option key={patient.id} value={patient.id}>
+                            {patient.fullName} ({patient.email})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleLinkPatient}
+                        disabled={!selectedPatientId || linkingPatient}
+                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                      >
+                        {linkingPatient ? (
+                          <>
+                            <Loader className="w-4 h-4 animate-spin" />
+                            Linking...
+                          </>
+                        ) : (
+                          "Link Patient"
+                        )}
+                      </button>
+                      <Link
+                        href="/admin/patient-links"
+                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Go to Patient Links
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      No patients are linked with this doctor yet. 
+                      <Link href="/admin/patient-links" className="ml-1 font-medium text-yellow-900 hover:underline">
+                        Create patient links first
+                      </Link>
+                    </p>
+                  </div>
+                )}
               </div>
-              <div>
-                <p className="text-xs text-gray-600 uppercase tracking-wide">
-                  Email
-                </p>
-                <p className="text-gray-900 font-medium">
-                  {prescription.users?.email || "Not provided"}
-                </p>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide">
+                    Name
+                  </p>
+                  <p className="text-gray-900 font-medium">
+                    {prescription.users?.user_profiles?.full_name || "Unknown"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide">
+                    Email
+                  </p>
+                  <p className="text-gray-900 font-medium">
+                    {prescription.users?.email || "Not provided"}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Medications Section */}

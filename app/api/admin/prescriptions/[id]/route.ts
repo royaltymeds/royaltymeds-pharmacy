@@ -7,16 +7,17 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { status, table, source } = await request.json();
+    const { status, table, source, patient_id } = await request.json();
 
-    if (!status) {
+    // Validate that at least status or patient_id is provided
+    if (!status && !patient_id) {
       return NextResponse.json(
-        { error: "Status is required" },
+        { error: "Either status or patient_id is required" },
         { status: 400 }
       );
     }
 
-    if (!["approved", "rejected", "processing", "pending"].includes(status)) {
+    if (status && !["approved", "rejected", "processing", "pending"].includes(status)) {
       return NextResponse.json(
         { error: "Invalid status. Must be 'approved', 'rejected', 'processing', or 'pending'" },
         { status: 400 }
@@ -32,32 +33,46 @@ export async function PATCH(
     // Determine which table to update based on the source or table parameter (source takes precedence)
     const tableName = (source === "doctor" || table === "doctor") ? "doctor_prescriptions" : "prescriptions";
 
-    // Update the prescription status
+    // Build update object
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (status) {
+      updateData.status = status;
+    }
+
+    if (patient_id) {
+      updateData.patient_id = patient_id;
+    }
+
+    // Update the prescription
     const { data, error } = await supabaseAdmin
       .from(tableName)
-      .update({
-        status,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();
 
     if (error) {
-      console.error("[UPDATE_PRESCRIPTION_STATUS] Error:", error);
+      console.error("[UPDATE_PRESCRIPTION] Error:", error);
       return NextResponse.json(
         { error: `Failed to update prescription: ${error.message}` },
         { status: 400 }
       );
     }
 
+    const message = patient_id 
+      ? "Patient linked successfully" 
+      : `Prescription ${status} successfully`;
+
     return NextResponse.json({
       success: true,
-      message: `Prescription ${status} successfully`,
+      message,
       prescription: data,
     });
   } catch (error) {
-    console.error("[UPDATE_PRESCRIPTION_STATUS] Exception:", error);
+    console.error("[UPDATE_PRESCRIPTION] Exception:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
