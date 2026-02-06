@@ -326,11 +326,19 @@ export default function MyPrescriptionsClient({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
                       <p className="text-xs sm:text-sm text-gray-500 mb-1">
-                        Notes
+                        Patient Information
                       </p>
-                      <p className="text-sm sm:text-base font-medium text-gray-900">
-                        {prescription.notes || "N/A"}
-                      </p>
+                      {prescription.notes ? (
+                        <div className="space-y-1">
+                          {prescription.notes.split('\n').map((line: string, idx: number) => (
+                            <p key={idx} className="text-sm sm:text-base font-medium text-gray-900">
+                              {line}
+                            </p>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm sm:text-base font-medium text-gray-900">N/A</p>
+                      )}
                     </div>
                   </div>
 
