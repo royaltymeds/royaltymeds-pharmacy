@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
+import { createServerSupabaseClient, createServerAdminClient } from "@/lib/supabase-server";
 import {
   ShieldCheckIcon,
   ClockIcon,
@@ -16,7 +18,31 @@ import {
 // Blue: #0284c7 to #06b6d4
 // White: #ffffff
 
-export default function HomePage() {
+async function getDoctorRole() {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const adminClient = await createServerAdminClient();
+    const { data: userData } = await adminClient
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    
+    return (userData as any)?.role || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+export default async function HomePage() {
+  // Check if user is a doctor and redirect to dashboard
+  const userRole = await getDoctorRole();
+  if (userRole === "doctor") {
+    redirect("/doctor/dashboard");
+  }
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
