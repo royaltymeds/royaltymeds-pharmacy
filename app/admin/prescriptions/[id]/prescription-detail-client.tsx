@@ -838,7 +838,8 @@ export default function PrescriptionDetailClient({
                       <select
                         value={selectedPatientId}
                         onChange={(e) => setSelectedPatientId(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={linkingPatient}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                       >
                         <option value="">-- Choose a patient --</option>
                         {availablePatients.map((patient: any) => (
@@ -852,7 +853,7 @@ export default function PrescriptionDetailClient({
                       <button
                         onClick={handleLinkPatient}
                         disabled={!selectedPatientId || linkingPatient}
-                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition"
                       >
                         {linkingPatient ? (
                           <>
@@ -863,13 +864,15 @@ export default function PrescriptionDetailClient({
                           "Link Patient"
                         )}
                       </button>
-                      <Link
-                        href="/admin/patient-links"
-                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        Go to Patient Links
-                      </Link>
+                      {!linkingPatient && (
+                        <Link
+                          href="/admin/patient-links"
+                          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Go to Patient Links
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ) : (
