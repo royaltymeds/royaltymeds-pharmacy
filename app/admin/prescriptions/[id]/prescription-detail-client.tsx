@@ -1279,11 +1279,17 @@ export default function PrescriptionDetailClient({
               <div className="space-y-6">
                 {/* Doctor Notes (Submitted) - Read Only */}
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Notes from Doctor</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Patient Information from Doctor</h3>
                   <div className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600 resize-none">
-                    <p className="whitespace-pre-wrap">
-                      {prescription.notes || "No notes submitted by doctor"}
-                    </p>
+                    {prescription.notes ? (
+                      <div className="space-y-2">
+                        {prescription.notes.split('\n').map((line: string, idx: number) => (
+                          <p key={idx}>{line}</p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p>No patient information submitted by doctor</p>
+                    )}
                   </div>
                 </div>
                 {/* Admin Notes (Internal) - Editable */}
@@ -1320,10 +1326,16 @@ export default function PrescriptionDetailClient({
               <div className="space-y-6">
                 {/* Doctor Notes (Submitted) */}
                 <div>
-                  <h3 className="text-xs text-gray-600 uppercase tracking-wide font-medium mb-2">Notes from Doctor</h3>
-                  <p className="text-gray-700 whitespace-pre-wrap">
-                    {prescription.notes || "No notes submitted by doctor"}
-                  </p>
+                  <h3 className="text-xs text-gray-600 uppercase tracking-wide font-medium mb-2">Patient Information from Doctor</h3>
+                  {prescription.notes ? (
+                    <div className="space-y-2 text-gray-700">
+                      {prescription.notes.split('\n').map((line: string, idx: number) => (
+                        <p key={idx}>{line}</p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">No patient information submitted by doctor</p>
+                  )}
                 </div>
                 {/* Admin Notes (Internal) */}
                 <div>

@@ -19,7 +19,9 @@ export default function SubmitPrescription() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    notes: "",
+    patientName: "",
+    contactNumber: "",
+    dateOfBirth: "",
   });
 
   const handleChange = (
@@ -47,6 +49,13 @@ export default function SubmitPrescription() {
       // Generate prescription number using browser time
       const prescriptionNumber = generatePrescriptionNumber();
 
+      // Format notes from patient information fields
+      const notes = [
+        `patient name: ${formData.patientName}`,
+        `contact number: ${formData.contactNumber}`,
+        `D.O.B: ${formData.dateOfBirth}`,
+      ].join("\n");
+
       const response = await fetch("/api/doctor/prescriptions", {
         method: "POST",
         headers: {
@@ -54,7 +63,7 @@ export default function SubmitPrescription() {
         },
         body: JSON.stringify({
           prescriptionNumber,
-          notes: formData.notes,
+          notes,
           file_url: fileUrl,
           file_name: fileName,
         }),
@@ -67,7 +76,9 @@ export default function SubmitPrescription() {
 
       setSuccess(true);
       setFormData({
-        notes: "",
+        patientName: "",
+        contactNumber: "",
+        dateOfBirth: "",
       });
       setFileUrl("");
       setFileName("");
@@ -157,21 +168,52 @@ export default function SubmitPrescription() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-
-        {/* Additional Notes */}
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="mb-4 sm:mb-6">
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-            Additional Notes
-          </label>
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            placeholder="Any additional notes"
-            rows={2}
-            className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-          />
+          <h2 className="text-sm font-semibold text-gray-900 mb-4">Patient Information</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Patient Name
+              </label>
+              <input
+                type="text"
+                name="patientName"
+                value={formData.patientName}
+                onChange={handleChange}
+                placeholder="e.g., John Smith"
+                className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Contact Number
+              </label>
+              <input
+                type="tel"
+                name="contactNumber"
+                value={formData.contactNumber}
+                onChange={handleChange}
+                placeholder="e.g., 555-123-4567"
+                className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Prescription File Upload */}
