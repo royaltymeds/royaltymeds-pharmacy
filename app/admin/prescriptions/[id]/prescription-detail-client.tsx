@@ -919,8 +919,7 @@ export default function PrescriptionDetailClient({
               {(prescription.status === "processing" || prescription.status === "partially_filled") && (
                 <button
                   onClick={() => setIsEditingMeds(!isEditingMeds)}
-                  disabled={prescription.source === "doctor"}
-                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
                 >
                   <Edit2 className="w-4 h-4" />
                   {isEditingMeds ? "Done Editing" : "Make Changes"}
