@@ -12,7 +12,11 @@ interface Prescription {
   source: "patient" | "doctor";
 }
 
-export default function RefillRequestButton() {
+interface RefillRequestButtonProps {
+  buttonText?: string;
+}
+
+export default function RefillRequestButton({ buttonText = "Request Refill" }: RefillRequestButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [partiallyFilledPrescriptions, setPartiallyFilledPrescriptions] = useState<Prescription[]>([]);
   const [isLoadingPrescriptions, setIsLoadingPrescriptions] = useState(false);
@@ -116,7 +120,7 @@ export default function RefillRequestButton() {
         onClick={() => setIsModalOpen(true)}
         className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition"
       >
-        Request Refill
+        {buttonText}
       </button>
 
       {/* Modal Overlay */}

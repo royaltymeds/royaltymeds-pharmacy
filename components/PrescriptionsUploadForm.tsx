@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Upload, AlertCircle, CheckCircle, FileText, X, Loader } from "lucide-react";
 import { revalidatePrescriptionsPath } from "@/lib/actions";
 import { generatePrescriptionNumber } from "@/lib/prescription-number";
+import RefillRequestButton from "@/app/patient/prescriptions/components/RefillRequestButton";
 
 export function PrescriptionsUploadForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,7 +100,10 @@ export function PrescriptionsUploadForm() {
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload New Prescription</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Upload New Prescription</h3>
+        <RefillRequestButton buttonText="Request A Refill" />
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         <p className="text-gray-600 text-sm">
