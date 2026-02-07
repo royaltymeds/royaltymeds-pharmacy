@@ -11,6 +11,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: prescriptionId } = await params;
+  const body = await request.json();
+  const source = body.source || "patient";
 
   try {
     const supabase = createClientForApi(request);
@@ -32,9 +34,12 @@ export async function POST(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    // Determine which table to query based on source
+    const tableName = source === "doctor" ? "doctor_prescriptions" : "prescriptions";
+
     // Get the prescription to verify patient owns it and it's in partially_filled status
     const { data: prescription, error: prescriptionError } = await supabaseAdmin
-      .from("prescriptions")
+      .from(tableName)
       .select("id, patient_id, status")
       .eq("id", prescriptionId)
       .single();
@@ -74,7 +79,7 @@ export async function POST(
 
     // Update prescription status to refill_requested
     const { data: updatedPrescription, error: updateError } = await supabaseAdmin
-      .from("prescriptions")
+      .from(tableName)
       .update({
         status: "refill_requested",
         updated_at: new Date().toISOString(),
