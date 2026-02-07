@@ -36,9 +36,8 @@ export async function POST(req: Request) {
       },
     } as jwt.SignOptions);
 
-    // Get payment button ID from link
-    const paymentButtonId = 'e3df4b61-668c-43e3-9b02-623ac3f534ef';
-    const paymentUrl = `https://pay.fygaro.com/${paymentButtonId}?jwt=${token}`;
+    // Fygaro payment link with JWT token
+    const paymentUrl = `https://www.fygaro.com/en/pb/e3df4b61-668c-43e3-9b02-623ac3f534ef/?jwt=${token}`;
 
     return Response.json({ url: paymentUrl });
   } catch (error) {
