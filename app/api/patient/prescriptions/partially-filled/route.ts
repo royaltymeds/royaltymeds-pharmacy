@@ -26,7 +26,7 @@ export async function GET() {
     const [patientData, doctorData] = await Promise.all([
       supabaseAdmin
         .from("prescriptions")
-        .select("id, prescription_number, medication_name, status, file_url")
+        .select("id, prescription_number, status, file_url")
         .eq("patient_id", user.id)
         .eq("status", "partially_filled"),
       supabaseAdmin

@@ -192,9 +192,11 @@ export default function RefillRequestButton({ buttonText = "Request Refill" }: R
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div>
-                                <p className="font-medium text-gray-900">
-                                  {prescription.medication_name || "Prescription"}
-                                </p>
+                                {prescription.medication_name && (
+                                  <p className="font-medium text-gray-900">
+                                    {prescription.medication_name}
+                                  </p>
+                                )}
                                 <p className="text-sm text-gray-600 mt-1">
                                   Prescription #{prescription.prescription_number}
                                 </p>
@@ -226,9 +228,11 @@ export default function RefillRequestButton({ buttonText = "Request Refill" }: R
                       Selected Prescription:
                     </p>
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <p className="font-medium text-gray-900">
-                        {selectedPrescription.medication_name || "Prescription"}
-                      </p>
+                      {selectedPrescription.medication_name && (
+                        <p className="font-medium text-gray-900">
+                          {selectedPrescription.medication_name}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-600 mt-1">
                         Prescription #{selectedPrescription.prescription_number}
                       </p>
@@ -287,9 +291,11 @@ export default function RefillRequestButton({ buttonText = "Request Refill" }: R
                       Refill request for:
                     </p>
                     <div className="mt-2 space-y-1">
-                      <p className="text-base font-semibold text-green-900">
-                        {selectedPrescription?.medication_name}
-                      </p>
+                      {selectedPrescription?.medication_name && (
+                        <p className="text-base font-semibold text-green-900">
+                          {selectedPrescription.medication_name}
+                        </p>
+                      )}
                       <p className="text-sm text-green-800">
                         Prescription #{selectedPrescription?.prescription_number}
                       </p>
