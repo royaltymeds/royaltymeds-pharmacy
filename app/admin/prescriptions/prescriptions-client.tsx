@@ -175,7 +175,7 @@ export default function PrescriptionsClient({ prescriptions, initialPage }: Prop
               </button>
               {allStatuses.map((status) => {
                 const count = prescriptions.filter(rx => rx.status === status).length;
-                const showBadge = status === 'pending' || status === 'refill_requested';
+                const showBadge = status === 'pending' || status === 'refill_requested' || status === 'processing';
                 const colors = getStatusButtonColors(status);
                 
                 return (

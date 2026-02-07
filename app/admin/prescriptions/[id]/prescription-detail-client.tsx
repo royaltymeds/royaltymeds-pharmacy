@@ -920,7 +920,7 @@ export default function PrescriptionDetailClient({
                   Medications
                 </h2>
               </div>
-              {(prescription.status === "processing" || prescription.status === "partially_filled") && (
+              {(prescription.status === "processing" || prescription.status === "partially_filled" || prescription.status === "refill_requested") && (
                 <button
                   onClick={() => setIsEditingMeds(!isEditingMeds)}
                   className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
@@ -1199,7 +1199,7 @@ export default function PrescriptionDetailClient({
 
             {/* Fill Prescription Button and Fill Timestamp */}
             <div className="mt-6 space-y-4">
-              {(prescription.status === "processing" || prescription.status === "partially_filled") && !isFillingPrescription && (
+              {(prescription.status === "processing" || prescription.status === "partially_filled" || prescription.status === "refill_requested") && !isFillingPrescription && (
                 <button
                   onClick={handleFillPrescription}
                   disabled={!prescription.prescription_items || prescription.prescription_items.length === 0 || isEditingMeds}
@@ -1208,9 +1208,9 @@ export default function PrescriptionDetailClient({
                   Fill Prescription
                 </button>
               )}
-              {(prescription.status === "partially_filled" || prescription.status === "filled") && prescription.filled_at && (
+              {(prescription.status === "partially_filled" || prescription.status === "refill_requested" || prescription.status === "filled") && prescription.filled_at && (
                 <p className="text-xs text-gray-600 p-3 bg-gray-50 rounded-lg">
-                  <span className="font-medium">{prescription.status === "partially_filled" ? "Partially filled" : "Filled"} at:</span> {new Date(prescription.filled_at).toLocaleString()}
+                  <span className="font-medium">{prescription.status === "partially_filled" ? "Partially filled" : prescription.status === "refill_requested" ? "Refill requested" : "Filled"} at:</span> {new Date(prescription.filled_at).toLocaleString()}
                 </p>
               )}
             </div>
