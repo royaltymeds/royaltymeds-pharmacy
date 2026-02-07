@@ -75,7 +75,6 @@ export default async function PatientLayout({
     { href: "/patient/home", label: "Dashboard" },
     { href: "/patient/prescriptions", label: "Prescriptions" },
     { href: "/patient/orders", label: "Orders" },
-    { href: "/patient/refills", label: "Refills" },
     { href: "/patient/messages", label: "Messages" },
   ];
 
