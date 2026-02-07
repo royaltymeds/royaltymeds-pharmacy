@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { X, AlertCircle, Check, Loader } from "lucide-react";
 
 interface Prescription {
@@ -244,11 +245,13 @@ export default function RefillRequestButton({ buttonText = "Request Refill" }: R
                       <p className="text-sm font-medium text-gray-700 mb-3">
                         Prescription Image:
                       </p>
-                      <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center" style={{ maxHeight: "400px" }}>
-                        <img
+                      <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center relative" style={{ maxHeight: "400px", width: "100%" }}>
+                        <Image
                           src={selectedPrescription.file_url}
                           alt="Prescription"
-                          className="max-w-full max-h-[400px] object-contain"
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
                         />
                       </div>
                     </div>
