@@ -742,6 +742,8 @@ export default function PrescriptionDetailClient({
         return "bg-orange-100 text-orange-800";
       case "filled":
         return "bg-green-100 text-green-800";
+      case "refill_requested":
+        return "bg-purple-100 text-purple-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -761,6 +763,8 @@ export default function PrescriptionDetailClient({
         return <AlertCircle className="w-5 h-5" />;
       case "filled":
         return <CheckCircle className="w-5 h-5" />;
+      case "refill_requested":
+        return <AlertCircle className="w-5 h-5" />;
       default:
         return null;
     }

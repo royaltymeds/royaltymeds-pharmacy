@@ -32,13 +32,10 @@ export async function POST(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const body = await request.json();
-    const { reason = "Refill requested" } = body;
-
-    // Get the prescription to verify patient owns it
+    // Get the prescription to verify patient owns it and it's in partially_filled status
     const { data: prescription, error: prescriptionError } = await supabaseAdmin
       .from("prescriptions")
-      .select("id, patient_id, refill_count, refill_limit, status")
+      .select("id, patient_id, status")
       .eq("id", prescriptionId)
       .single();
 
@@ -57,48 +54,37 @@ export async function POST(
       );
     }
 
-    // Check if prescription is refillable
-    if (prescription.refill_count >= prescription.refill_limit) {
+    // Check if prescription is in partially_filled status
+    if (prescription.status !== "partially_filled") {
       return NextResponse.json(
         {
-          error: "No refills remaining for this prescription",
-          refillsUsed: prescription.refill_count,
-          refillLimit: prescription.refill_limit,
+          error: "Refill can only be requested for prescriptions in partially_filled status",
         },
         { status: 400 }
       );
     }
 
-    // Check if there's already a pending refill request
-    const { data: existingRequest } = await supabaseAdmin
-      .from("refill_requests")
-      .select("id")
-      .eq("prescription_id", prescriptionId)
-      .eq("patient_id", user.id)
-      .eq("status", "pending")
-      .maybeSingle();
-
-    if (existingRequest) {
+    // Check if there's already a refill request pending
+    if (prescription.status === "refill_requested") {
       return NextResponse.json(
-        { error: "You already have a pending refill request for this prescription" },
+        { error: "A refill request is already pending for this prescription" },
         { status: 400 }
       );
     }
 
-    // Create refill request
-    const { data: refillRequest, error: refillError } = await supabaseAdmin
-      .from("refill_requests")
-      .insert({
-        prescription_id: prescriptionId,
-        patient_id: user.id,
-        reason,
-        status: "pending",
+    // Update prescription status to refill_requested
+    const { data: updatedPrescription, error: updateError } = await supabaseAdmin
+      .from("prescriptions")
+      .update({
+        status: "refill_requested",
+        updated_at: new Date().toISOString(),
       })
+      .eq("id", prescriptionId)
       .select()
       .single();
 
-    if (refillError) {
-      console.error("Error creating refill request:", refillError);
+    if (updateError) {
+      console.error("Error updating prescription status:", updateError);
       return NextResponse.json(
         { error: "Failed to request refill" },
         { status: 500 }
@@ -109,9 +95,9 @@ export async function POST(
       {
         success: true,
         message: "Refill request submitted",
-        refillRequest,
+        prescription: updatedPrescription,
       },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error: any) {
     console.error("Error requesting prescription refill:", error);

@@ -71,6 +71,8 @@ function getStatusColor(status: string) {
       return "bg-orange-100 text-orange-800";
     case "filled":
       return "bg-green-100 text-green-800";
+    case "refill_requested":
+      return "bg-purple-100 text-purple-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -90,6 +92,8 @@ function getStatusIcon(status: string) {
       return <AlertCircle className="w-4 h-4" />;
     case "filled":
       return <CheckCircle className="w-4 h-4" />;
+    case "refill_requested":
+      return <AlertCircle className="w-4 h-4" />;
     default:
       return null;
   }
