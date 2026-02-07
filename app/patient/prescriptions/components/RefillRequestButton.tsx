@@ -285,9 +285,14 @@ export default function RefillRequestButton({ buttonText = "Request Refill" }: R
                     <p className="text-sm font-medium text-green-900">
                       Refill request for:
                     </p>
-                    <p className="text-base font-semibold text-green-900 mt-1">
-                      {selectedPrescription?.medication_name}
-                    </p>
+                    <div className="mt-2 space-y-1">
+                      <p className="text-base font-semibold text-green-900">
+                        {selectedPrescription?.medication_name}
+                      </p>
+                      <p className="text-sm text-green-800">
+                        Prescription #{selectedPrescription?.prescription_number}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex gap-3">
