@@ -8,6 +8,7 @@ interface RefillRequestModalProps {
   isOpen: boolean;
   prescriptionId: string;
   medicationName: string;
+  source?: "patient" | "doctor";
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -16,6 +17,7 @@ export default function RefillRequestModal({
   isOpen,
   prescriptionId,
   medicationName,
+  source = "patient",
   onClose,
   onSuccess,
 }: RefillRequestModalProps) {
@@ -57,6 +59,7 @@ export default function RefillRequestModal({
           },
           body: JSON.stringify({
             reason: reason || 'Patient requested refill',
+            source: source,
           }),
         }
       );

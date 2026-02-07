@@ -425,6 +425,7 @@ export default function PrescriptionDetailPage({
         <RefillRequestModal
           isOpen={showRefillModal}
           prescriptionId={prescription.id}
+          source={prescription.source}
           medicationName={
             prescription.prescription_items?.[0]?.medication_name || "Prescription"
           }
