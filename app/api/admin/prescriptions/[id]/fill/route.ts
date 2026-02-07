@@ -106,7 +106,7 @@ export async function PATCH(
     }
 
     // Verify prescription is in fillable status
-    if (prescription.status !== "processing" && prescription.status !== "partially_filled" && prescription.status !== "approved") {
+    if (prescription.status !== "processing" && prescription.status !== "partially_filled" && prescription.status !== "approved" && prescription.status !== "refill_requested") {
       return new Response(
         JSON.stringify({ error: `Cannot fill prescription with status: ${prescription.status}` }),
         { status: 400 }
