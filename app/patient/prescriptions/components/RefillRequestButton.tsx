@@ -45,6 +45,7 @@ export default function RefillRequestButton({ buttonText = "Request Refill" }: R
         }
 
         const data = await response.json();
+        console.log("[RefillRequestButton] Loaded prescriptions:", data.prescriptions);
         setPartiallyFilledPrescriptions(data.prescriptions || []);
       } catch (error) {
         console.error("Error loading prescriptions:", error);
