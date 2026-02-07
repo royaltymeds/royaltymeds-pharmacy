@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Script from 'next/script';
 import { CreditCard, DollarSign } from 'lucide-react';
 import { Order } from '@/lib/types/orders';
 import { PaymentConfig } from '@/lib/types/payments';
@@ -51,29 +50,25 @@ export function OrderPaymentSection({
             </div>
           </button>
 
-          {/* Card Payment Option - Fygaro Embed Button */}
-          <div className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition">
+          {/* Card Payment Option - Fygaro Button */}
+          <a
+            href="https://www.fygaro.com/en/pb/e3df4b61-668c-43e3-9b02-623ac3f534ef/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition text-left block"
+          >
             <div className="flex items-start gap-3">
               <CreditCard className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
               <div className="w-full">
                 <h5 className="font-semibold text-gray-900 text-sm md:text-base">
                   Card Payment
                 </h5>
-                <p className="text-xs md:text-sm text-gray-600 mt-1 mb-3">
+                <p className="text-xs md:text-sm text-gray-600 mt-1">
                   Pay securely with your credit or debit card
                 </p>
-                {/* Fygaro Payment Button Container */}
-                <div id="fygaro-button-container" />
-                <Script 
-                  src="https://api.fygaro.com/api/v1/payments/payment-button/e3df4b61-668c-43e3-9b02-623ac3f534ef/render/"
-                  strategy="lazyOnload"
-                  onLoad={() => {
-                    onPaymentInitiated?.();
-                  }}
-                />
               </div>
             </div>
-          </div>
+          </a>
         </div>
       </div>
 
