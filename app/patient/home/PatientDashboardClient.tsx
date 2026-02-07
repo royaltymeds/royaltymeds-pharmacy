@@ -126,7 +126,7 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
           </Link>
 
           <Link
-            href="/patient/refills"
+            href="/patient/prescriptions"
             className="bg-green-50 text-green-600 hover:bg-green-100 rounded-lg p-3 md:p-4 text-center text-sm md:text-base font-medium transition cursor-pointer"
           >
             Request Refill
