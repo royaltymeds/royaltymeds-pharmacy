@@ -504,6 +504,217 @@ updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 ❌ Dark backgrounds on main portals (white standard)
 ❌ Rainbow gradients (only green-to-blue for CTAs)
 
+### Modal Design Guidelines (Standardized)
+
+**Modal Structure (Top-Level Container):**
+```tsx
+<div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div className="bg-white rounded-lg shadow-2xl max-w-[WIDTH] w-full [max-h-[90vh] overflow-y-auto]">
+    {/* Header */}
+    {/* Content */}
+  </div>
+</div>
+```
+
+**Critical Styling Rules:**
+
+1. **Overlay & Backdrop:**
+   - `fixed inset-0` — Full viewport coverage
+   - `bg-black/20` — 20% opacity black (NOT 50%, NOT fully opaque)
+   - `backdrop-blur-sm` — Slight blur effect on content beneath (standard since commit e954e4e)
+   - `z-50` — Ensures modals layer above all content
+   - `p-4` — Padding for responsive mobile (margin around modal on small screens)
+
+2. **Modal Container:**
+   - `bg-white` — Always white background
+   - `rounded-lg` — Consistent rounded corners
+   - `shadow-2xl` — Deep shadow for elevation
+   - `max-w-[WIDTH]` — Set appropriate max-width based on content type:
+     - Simple dialogs (auth, confirmation): `max-w-md` (448px)
+     - Medium forms: `max-w-lg` (512px)
+     - Complex forms with images: `max-w-2xl` (672px)
+   - `w-full` — Responsive on small screens
+   - `[max-h-[90vh] overflow-y-auto]` — Only if content may exceed viewport height
+
+3. **Modal Header (Always Present):**
+   ```tsx
+   <div className="sticky top-0 flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-white">
+     <h2 className="text-xl md:text-2xl font-bold text-gray-900">[Title]</h2>
+     <button
+       onClick={onClose}
+       className="text-gray-400 hover:text-gray-600 transition"
+       disabled={uploading || loading}
+     >
+       <X className="w-6 h-6" />
+     </button>
+   </div>
+   ```
+   - `sticky top-0 bg-white` — Header stays visible when scrolling
+   - `flex items-center justify-between` — Title left, close button right
+   - `border-b border-gray-200` — Light gray divider
+   - `p-4 md:p-6` — Responsive padding
+   - `text-gray-900` — Dark title text
+   - X icon from lucide-react for close button
+   - Close button disabled during async operations
+
+4. **Modal Content:**
+   ```tsx
+   <div className="p-4 md:p-6 space-y-6">
+     {/* Main content goes here */}
+   </div>
+   ```
+   - `p-4 md:p-6` — Responsive padding matching header
+   - `space-y-6` — Consistent spacing between sections
+
+5. **Error States (Always use this pattern):**
+   ```tsx
+   {error && (
+     <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3">
+       <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+       <p className="text-sm text-red-700">{error}</p>
+     </div>
+   )}
+   ```
+   - Red background with border
+   - AlertCircle icon on left
+   - Error message on right
+   - Small text size
+
+6. **Success States (Always use this pattern):**
+   ```tsx
+   <div className="text-center py-8">
+     <div className="flex justify-center mb-4">
+       <Check className="w-16 h-16 text-green-600" />
+     </div>
+     <h3 className="text-xl font-bold text-gray-900 mb-2">[Success Title]</h3>
+     <p className="text-gray-600">[Success Message]</p>
+   </div>
+   ```
+   - Centered layout
+   - Large Check icon (green)
+   - Bold success title
+   - Gray descriptive text
+
+7. **Button Patterns:**
+   - **Single Action:** `w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700`
+   - **Multiple Actions (flex):** Use `flex gap-3` with `flex-1` on buttons for equal width
+   - **Cancel Button:** `border border-gray-300 text-gray-700 hover:bg-gray-50`
+   - **Loading State:** Add spinner: `{loading && <Loader className="w-5 h-5 animate-spin" />}`
+   - **Disabled State:** `disabled:bg-gray-400 disabled:cursor-not-allowed` and always set `disabled` prop during async
+
+8. **File Upload Sections (If applicable):**
+   ```tsx
+   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition">
+     <input type="file" className="hidden" id="file-input" />
+     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+     <p className="text-gray-700 font-medium">[Label text]</p>
+     <p className="text-sm text-gray-500 mt-1">[Helper text]</p>
+   </div>
+   ```
+   - Dashed border (not solid)
+   - Gray by default, blue on hover
+   - Upload icon
+   - Two-line text (main + helper)
+
+9. **Info/Summary Sections:**
+   ```tsx
+   <div className="bg-gray-50 rounded-lg p-4">
+     <p className="text-sm font-medium text-gray-700 mb-3">[Label]</p>
+     {/* Content */}
+   </div>
+   ```
+   - Gray background (`bg-gray-50`)
+   - Light padding
+   - Small label text above content
+
+**Implementation Example (Complete Modal):**
+```tsx
+'use client';
+import { useState } from 'react';
+import { X, Check, AlertCircle, Loader } from 'lucide-react';
+
+export function ExampleModal({ isOpen, onClose, onSuccess }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // Your async operation
+      setSuccess(true);
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+        setSuccess(false);
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full">
+        {/* Header */}
+        <div className="sticky top-0 flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-white">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Modal Title</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 md:p-6 space-y-6">
+          {success ? (
+            <div className="text-center py-8">
+              <div className="flex justify-center mb-4">
+                <Check className="w-16 h-16 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Success!</h3>
+              <p className="text-gray-600">Operation completed successfully.</p>
+            </div>
+          ) : (
+            <>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
+
+              <p className="text-gray-600">Modal content goes here.</p>
+
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading && <Loader className="w-5 h-5 animate-spin" />}
+                {loading ? 'Processing...' : 'Submit'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+**Why This Pattern:**
+- Commit `e954e4e`: Changed from dark backgrounds to `bg-black/20 backdrop-blur-sm` for better visibility of content beneath
+- Commit `ec4ccee`: Standardized modal container structure across all portals (doctor, patient, admin)
+- Consistent header design with title + close button (always sticky and visible)
+- Proven error/success state handling (used in BankTransferModal, UpdateReceiptModal)
+- Responsive padding (`p-4 md:p-6`) works on all screen sizes
+- Full accessibility with proper button states and disabled handling
+
 ---
 
 ## ⚙️ TECHNICAL PATTERNS & BEST PRACTICES
