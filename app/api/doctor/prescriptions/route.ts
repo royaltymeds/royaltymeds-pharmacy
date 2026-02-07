@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       query = query.eq("status", status);
     }
 
-    const { data, error } = await query.order("created_at", {
+    const { data, error } = await query.order("updated_at", {
       ascending: false,
     });
 

@@ -33,19 +33,19 @@ async function getPrescriptions(): Promise<Prescription[]> {
     const { data: patientPrescriptions = [] } = await supabaseAdmin
       .from("prescriptions")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("updated_at", { ascending: false });
 
     // Fetch prescriptions from doctor prescriptions table
     const { data: doctorPrescriptions = [] } = await supabaseAdmin
       .from("doctor_prescriptions")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("updated_at", { ascending: false });
 
     // Combine and mark source
     const allPrescriptions = [
       ...(patientPrescriptions || []).map((p: any) => ({ ...p, source: "patient" as const })),
       ...(doctorPrescriptions || []).map((p: any) => ({ ...p, source: "doctor" as const })),
-    ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    ].sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
     return allPrescriptions;
   } catch (error) {

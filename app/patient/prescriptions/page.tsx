@@ -26,14 +26,14 @@ async function getPrescriptions(userId: string): Promise<Prescription[]> {
       .from("prescriptions")
       .select("*")
       .eq("patient_id", userId)
-      .order("created_at", { ascending: false });
+      .order("updated_at", { ascending: false });
     
     // Fetch doctor-submitted prescriptions linked to this patient
     const { data: doctorData } = await supabase
       .from("doctor_prescriptions")
       .select("*")
       .eq("patient_id", userId)
-      .order("created_at", { ascending: false });
+      .order("updated_at", { ascending: false });
     
     // Combine both arrays
     const allPrescriptions = [
@@ -41,9 +41,9 @@ async function getPrescriptions(userId: string): Promise<Prescription[]> {
       ...(doctorData || [])
     ];
     
-    // Sort by created_at descending
+    // Sort by updated_at descending
     return allPrescriptions.sort((a: any, b: any) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
     );
   } catch (error) {
     console.error("Error fetching prescriptions:", error);
