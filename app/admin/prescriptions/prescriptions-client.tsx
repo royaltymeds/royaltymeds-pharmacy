@@ -23,6 +23,29 @@ interface Props {
   initialPage: number;
 }
 
+function getStatusButtonColors(status: string) {
+  switch (status) {
+    case "pending":
+      return { unselected: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200", selected: "bg-yellow-600 text-white" };
+    case "approved":
+      return { unselected: "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200", selected: "bg-green-600 text-white" };
+    case "rejected":
+      return { unselected: "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200", selected: "bg-red-600 text-white" };
+    case "processing":
+      return { unselected: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200", selected: "bg-blue-600 text-white" };
+    case "partially_filled":
+      return { unselected: "bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200", selected: "bg-orange-600 text-white" };
+    case "filled":
+      return { unselected: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200", selected: "bg-emerald-600 text-white" };
+    case "dispensing":
+      return { unselected: "bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border border-cyan-200", selected: "bg-cyan-600 text-white" };
+    case "refill_requested":
+      return { unselected: "bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200", selected: "bg-purple-600 text-white" };
+    default:
+      return { unselected: "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300", selected: "bg-gray-600 text-white" };
+  }
+}
+
 function getStatusColor(status: string) {
   switch (status) {
     case "pending":
@@ -153,6 +176,7 @@ export default function PrescriptionsClient({ prescriptions, initialPage }: Prop
               {allStatuses.map((status) => {
                 const count = prescriptions.filter(rx => rx.status === status).length;
                 const showBadge = status === 'pending' || status === 'refill_requested';
+                const colors = getStatusButtonColors(status);
                 
                 return (
                   <button
@@ -160,12 +184,9 @@ export default function PrescriptionsClient({ prescriptions, initialPage }: Prop
                     onClick={() => setStatusFilter(status)}
                     className={`px-3 md:px-4 py-2 rounded-lg transition-colors text-xs md:text-sm font-medium flex items-center gap-2 ${
                       statusFilter === status
-                        ? `text-white ${getStatusColor(status).split(' ')[0]}`
-                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                        ? colors.selected
+                        : colors.unselected
                     }`}
-                    style={{
-                      backgroundColor: statusFilter === status ? undefined : undefined,
-                    }}
                   >
                     <span className="capitalize">{status.replace(/_/g, ' ')}</span>
                     {showBadge && (
