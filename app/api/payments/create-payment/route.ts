@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     // JWT payload with all required fields
     const payload = {
       amount: typeof amount === 'string' ? amount : amount.toFixed(2),
-      currency: 'USD',
+      currency: 'JMD',
       custom_reference: orderId,
       exp: Math.floor(Date.now() / 1000) + 600, // 10 minutes expiration
     };
