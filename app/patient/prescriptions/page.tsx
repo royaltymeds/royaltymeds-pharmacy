@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PrescriptionsUploadForm } from "@/components/PrescriptionsUploadForm";
+import RefillRequestButton from "./components/RefillRequestButton";
 
 export const dynamic = "force-dynamic";
 
@@ -92,9 +93,12 @@ export default async function PrescriptionsPage({ searchParams }: Props) {
 
       {/* View Prescriptions (Server-rendered) */}
       <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6">
-        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-          Your Prescriptions {allPrescriptions.length > 0 && <span className="text-gray-500 text-sm font-normal">({allPrescriptions.length})</span>}
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
+            Your Prescriptions {allPrescriptions.length > 0 && <span className="text-gray-500 text-sm font-normal">({allPrescriptions.length})</span>}
+          </h3>
+          <RefillRequestButton />
+        </div>
         
         {allPrescriptions.length > 0 ? (
           <>
