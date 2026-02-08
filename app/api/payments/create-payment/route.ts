@@ -18,13 +18,29 @@ export async function POST(req: Request) {
       );
     }
 
+    // Ensure amount is formatted as string with exactly 2 decimal places
+    let formattedAmount: string;
+    if (typeof amount === 'string') {
+      formattedAmount = parseFloat(amount).toFixed(2);
+    } else if (typeof amount === 'number') {
+      formattedAmount = amount.toFixed(2);
+    } else {
+      return Response.json(
+        { error: 'Amount must be a number or string' },
+        { status: 400 }
+      );
+    }
+
     // JWT payload with all required fields
     const payload = {
-      amount: typeof amount === 'string' ? amount : amount.toFixed(2),
+      amount: formattedAmount,
       currency: 'JMD',
       custom_reference: orderId,
       exp: Math.floor(Date.now() / 1000) + 600, // 10 minutes expiration
     };
+
+    console.log('JWT Payload:', JSON.stringify(payload));
+    console.log('Public Key:', process.env.FYGARO_API_PUBLIC_KEY);
 
     // Sign JWT with secret key
     const token = jwt.sign(payload, process.env.FYGARO_API_SECRET_KEY, {
@@ -36,7 +52,6 @@ export async function POST(req: Request) {
       },
     } as jwt.SignOptions);
 
-    console.log('JWT Payload:', payload);
     console.log('JWT Token Generated:', token);
 
     // Fygaro payment link with JWT token
