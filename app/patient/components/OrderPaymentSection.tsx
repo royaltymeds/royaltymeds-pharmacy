@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard, DollarSign, Loader } from 'lucide-react';
+import { CreditCard, DollarSign } from 'lucide-react';
 import { Order } from '@/lib/types/orders';
 import { PaymentConfig } from '@/lib/types/payments';
 import { BankTransferModal } from './BankTransferModal';
+import { FygaroPaymentModal } from './FygaroPaymentModal';
 
 interface OrderPaymentSectionProps {
   order: Order;
@@ -18,32 +19,7 @@ export function OrderPaymentSection({
   onPaymentInitiated,
 }: OrderPaymentSectionProps) {
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
-  const [processingCard, setProcessingCard] = useState(false);
-
-  const handleCardPayment = async () => {
-    try {
-      setProcessingCard(true);
-      const response = await fetch('/api/payments/create-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: order.total_amount,
-          orderId: order.id,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate payment link');
-      }
-
-      const { url } = await response.json();
-      window.location.href = url;
-    } catch (error) {
-      console.error('Card payment error:', error);
-      alert('Failed to process card payment. Please try again.');
-      setProcessingCard(false);
-    }
-  };
+  const [showFygaroModal, setShowFygaroModal] = useState(false);
 
   // Only show payment options when order is confirmed and not yet paid
   if (order.status !== 'confirmed' || order.payment_status === 'paid') {
@@ -78,16 +54,14 @@ export function OrderPaymentSection({
 
           {/* Card Payment Option - Fygaro with JWT */}
           <button
-            onClick={handleCardPayment}
-            disabled={processingCard}
-            className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => setShowFygaroModal(true)}
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition text-left"
           >
             <div className="flex items-start gap-3">
               <CreditCard className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
               <div className="w-full">
-                <h5 className="font-semibold text-gray-900 text-sm md:text-base flex items-center gap-2">
+                <h5 className="font-semibold text-gray-900 text-sm md:text-base">
                   Card Payment
-                  {processingCard && <Loader className="w-4 h-4 animate-spin" />}
                 </h5>
                 <p className="text-xs md:text-sm text-gray-600 mt-1">
                   Pay securely with your credit or debit card
@@ -109,6 +83,13 @@ export function OrderPaymentSection({
         onPaymentInitiated={() => {
           onPaymentInitiated?.();
         }}
+      />
+
+      {/* Fygaro Payment Modal */}
+      <FygaroPaymentModal
+        isOpen={showFygaroModal}
+        onClose={() => setShowFygaroModal(false)}
+        order={order}
       />
     </>
   );
