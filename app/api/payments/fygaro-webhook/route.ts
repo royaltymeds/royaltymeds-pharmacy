@@ -76,11 +76,11 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Update order status to 'paid'
+    // Update order status to 'payment_verified'
     const { error: updateError } = await supabase
       .from('orders')
       .update({
-        payment_status: 'paid',
+        payment_status: 'payment_verified',
         updated_at: new Date().toISOString(),
       })
       .eq('id', orderId)
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     console.log('Order updated successfully:', {
       orderId,
-      paymentStatus: 'paid',
+      paymentStatus: 'payment_verified',
       amount: payload.amount,
       currency: payload.currency,
     });
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         success: true,
         message: 'Order payment status updated',
         orderId,
-        paymentStatus: 'paid',
+        paymentStatus: 'payment_verified',
       },
       { status: 200 }
     );

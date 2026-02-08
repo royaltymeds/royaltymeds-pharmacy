@@ -38,7 +38,7 @@ export default async function PaymentSuccessPage() {
     .from('orders')
     .select('id, order_number, payment_status, total_amount, created_at')
     .eq('user_id', user.id)
-    .eq('payment_status', 'paid')
+    .eq('payment_status', 'payment_verified')
     .order('created_at', { ascending: false })
     .limit(1)
     .single();
@@ -89,7 +89,7 @@ export default async function PaymentSuccessPage() {
                 </p>
                 <p className="text-sm text-gray-600">
                   <strong>Status:</strong>{' '}
-                  <span className="text-green-600 font-semibold">Paid</span>
+                  <span className="text-green-600 font-semibold">Payment Verified</span>
                 </p>
               </div>
 
