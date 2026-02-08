@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Loader } from 'lucide-react';
+import { X, Loader, ExternalLink } from 'lucide-react';
 import { Order } from '@/lib/types/orders';
 
 interface FygaroPaymentModalProps {
@@ -61,15 +61,22 @@ export function FygaroPaymentModal({
     generatePaymentUrl();
   }, [isOpen, order.total_amount, order.id]);
 
+  const handleOpenPayment = () => {
+    if (paymentUrl) {
+      window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col">
+      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full">
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-white rounded-t-lg">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-            Secure Payment
+            Card Payment
           </h2>
           <button
             onClick={onClose}
@@ -81,43 +88,54 @@ export function FygaroPaymentModal({
           </button>
         </div>
 
-        {/* Content - iframe or loading/error state */}
-        <div className="flex-1 overflow-hidden relative">
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-              <div className="flex flex-col items-center gap-3">
-                <Loader className="w-8 h-8 animate-spin text-blue-600" />
-                <p className="text-gray-600 font-medium">
-                  Loading payment portal...
+        {/* Content */}
+        <div className="p-4 md:p-6 space-y-6">
+          {loading ? (
+            <div className="flex flex-col items-center gap-3 py-8">
+              <Loader className="w-8 h-8 animate-spin text-blue-600" />
+              <p className="text-gray-600 font-medium text-center">
+                Preparing secure payment portal...
+              </p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Unable to Load Payment
+              </h3>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <button
+                onClick={onClose}
+                className="w-full bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition font-semibold"
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Order Total:</strong> JMD {parseFloat(order.total_amount?.toString() || '0').toFixed(2)}
                 </p>
               </div>
-            </div>
-          )}
 
-          {error && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white z-10 p-4">
-              <div className="text-center max-w-sm">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  Unable to Load Payment Portal
-                </h3>
-                <p className="text-gray-600 mb-6">{error}</p>
-                <button
-                  onClick={onClose}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
-                >
-                  Close
-                </button>
+              <div className="text-sm text-gray-600 space-y-2">
+                <p>
+                  Click the button below to open the secure Fygaro payment portal in a new window.
+                </p>
+                <p>
+                  Your payment details will be processed securely. You can then return to this page.
+                </p>
               </div>
-            </div>
-          )}
 
-          {paymentUrl && !loading && (
-            <iframe
-              src={paymentUrl}
-              className="w-full h-full border-0"
-              title="Fygaro Payment Portal"
-              allow="payment"
-            />
+              <button
+                onClick={handleOpenPayment}
+                disabled={!paymentUrl}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-5 h-5" />
+                Open Payment Portal
+              </button>
+            </>
           )}
         </div>
       </div>
