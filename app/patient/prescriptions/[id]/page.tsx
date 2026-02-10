@@ -40,6 +40,7 @@ interface Prescription {
     quantity: number;
     total_amount: number;
     notes: string;
+    price?: number;
   }>;
 }
 
@@ -257,6 +258,13 @@ export default function PrescriptionDetailPage({
                             {item.medication_name}
                           </h3>
                         </div>
+                        {item.price && (
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-green-600">
+                              ${parseFloat(item.price.toString()).toFixed(2)}
+                            </p>
+                          </div>
+                        )}
                       </div>
                       <div className="grid grid-cols-1 gap-4 text-sm">
                         <div>
@@ -291,6 +299,23 @@ export default function PrescriptionDetailPage({
               <p className="text-sm text-gray-600 text-center py-4">
                 No medications added yet
               </p>
+            )}
+
+            {/* Total Price Display */}
+            {prescription.prescription_items && prescription.prescription_items.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="flex justify-between items-center">
+                  <p className="text-lg font-semibold text-gray-900">Total Prescription Price:</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    ${prescription.prescription_items
+                      .reduce((total: number, item: any) => {
+                        const price = parseFloat(item.price?.toString() || "0");
+                        return total + price;
+                      }, 0)
+                      .toFixed(2)}
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 

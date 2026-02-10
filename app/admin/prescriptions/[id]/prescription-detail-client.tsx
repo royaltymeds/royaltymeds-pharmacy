@@ -1174,6 +1174,11 @@ export default function PrescriptionDetailClient({
                                 Instructions: {item.notes}
                               </p>
                             )}
+                            {item.price && (
+                              <p className="text-lg font-bold text-green-600 mt-2">
+                                Price: ${parseFloat(item.price.toString()).toFixed(2)}
+                              </p>
+                            )}
                           </div>
                           {isEditingMeds && (
                             <div className="flex gap-2">
