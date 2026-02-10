@@ -139,8 +139,7 @@ export default function PrescriptionDetailClient({
   const calculateTotalPrice = (): number => {
     return prescription.prescription_items?.reduce((total: number, item: any) => {
       const price = parseFloat(item.price?.toString() || "0");
-      const quantity = parseInt(item.quantity?.toString() || "0");
-      return total + (price * quantity);
+      return total + price;
     }, 0) || 0;
   };
 
