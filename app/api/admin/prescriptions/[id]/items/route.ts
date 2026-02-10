@@ -64,7 +64,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { medication_name, dosage, quantity, notes, source } = body;
+    const { medication_name, dosage, quantity, notes, price, source } = body;
 
     if (!medication_name || !dosage || !quantity) {
       return NextResponse.json(
@@ -87,6 +87,7 @@ export async function POST(
           quantity: parseInt(quantity),
           total_amount: parseInt(quantity),
           notes: notes || null,
+          price: price ? parseFloat(price) : null,
         },
       ])
       .select();
@@ -170,7 +171,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { itemId, medication_name, dosage, quantity, notes, source } = body;
+    const { itemId, medication_name, dosage, quantity, notes, price, source } = body;
 
     if (!itemId) {
       return NextResponse.json(
@@ -191,6 +192,7 @@ export async function PATCH(
         dosage,
         quantity: parseInt(quantity),
         notes: notes || null,
+        price: price ? parseFloat(price) : null,
       })
       .eq("id", itemId)
       .eq(foreignKeyColumn, prescriptionId)
