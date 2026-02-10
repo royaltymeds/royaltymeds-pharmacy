@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle, X, AlertCircle, Download, Edit2, Plus, Trash2, Loader, ExternalLink } from "lucide-react";
+import { CheckCircle, X, AlertCircle, Download, Edit2, Plus, Trash2, Loader, ExternalLink, ShoppingCart } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 interface PrescriptionDetailClientProps {
@@ -103,6 +103,7 @@ export default function PrescriptionDetailClient({
     medication_name: "",
     dosage: "",
     quantity: "",
+    price: "",
     notes: "",
   });
   const [editingItems, setEditingItems] = useState<Record<string, any>>({});
@@ -133,6 +134,77 @@ export default function PrescriptionDetailClient({
   const [panStartY, setPanStartY] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+
+  const calculateTotalPrice = (): number => {
+    return prescription.prescription_items?.reduce((total: number, item: any) => {
+      const price = parseFloat(item.price?.toString() || "0");
+      const quantity = parseInt(item.quantity?.toString() || "0");
+      return total + (price * quantity);
+    }, 0) || 0;
+  };
+
+  const canCreateOrder = (): boolean => {
+    return prescription.prescription_items?.every(
+      (item: any) => item.price && parseFloat(item.price.toString()) > 0
+    ) || false;
+  };
+
+  const handleCreatePrescriptionOrder = async () => {
+    if (!canCreateOrder()) {
+      setMessage({
+        type: "error",
+        text: "All medications must have prices set before creating an order",
+      });
+      return;
+    }
+
+    setIsCreatingOrder(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/admin/prescriptions/${prescription.id}/create-order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            source: prescription.source,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to create prescription order",
+        });
+        return;
+      }
+
+      setMessage({
+        type: "success",
+        text: `Prescription order created successfully: ${data.order?.order_number}`,
+      });
+
+      // Redirect to orders page after 2 seconds
+      setTimeout(() => {
+        window.location.href = "/admin/orders?tab=all";
+      }, 2000);
+    } catch (error) {
+      console.error("Error creating prescription order:", error);
+      setMessage({
+        type: "error",
+        text: "An error occurred while creating the prescription order",
+      });
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  };
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected" | "processing") => {
     setIsLoading(true);
@@ -231,6 +303,7 @@ export default function PrescriptionDetailClient({
         dosage: "",
         quantity: "",
         notes: "",
+        price: "",
       });
 
       setTimeout(() => setMessage(null), 3000);
@@ -931,6 +1004,27 @@ export default function PrescriptionDetailClient({
               )}
             </div>
 
+            {/* Total Price and Create Order Button */}
+            {prescription.prescription_items && prescription.prescription_items.length > 0 && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Prescription Price</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${calculateTotalPrice().toFixed(2)}
+                  </p>
+                </div>
+                <button
+                  onClick={handleCreatePrescriptionOrder}
+                  disabled={isCreatingOrder || !canCreateOrder()}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                  title={!canCreateOrder() ? "All medications must have prices set" : ""}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  {isCreatingOrder ? "Creating Order..." : "Create Prescription Order"}
+                </button>
+              </div>
+            )}
+
             {/* Existing Medications List */}
             {prescription.prescription_items &&
               prescription.prescription_items.length > 0 && (
@@ -1017,6 +1111,28 @@ export default function PrescriptionDetailClient({
                                   },
                                 })
                               }
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Price per Unit
+                            </label>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={editingItems[item.id].price || ""}
+                              onChange={(e) =>
+                                setEditingItems({
+                                  ...editingItems,
+                                  [item.id]: {
+                                    ...editingItems[item.id],
+                                    price: e.target.value,
+                                  },
+                                })
+                              }
+                              placeholder="e.g., 15.99"
+                              pattern="^\d+(\.\d{1,2})?$"
                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
@@ -1175,6 +1291,26 @@ export default function PrescriptionDetailClient({
                       }
                       placeholder="Optional instructions"
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Price per Unit <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={newMedication.price}
+                      onChange={(e) =>
+                        setNewMedication({
+                          ...newMedication,
+                          price: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., 15.99"
+                      pattern="^\d+(\.\d{1,2})?$"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
                     />
                   </div>
                   <button
