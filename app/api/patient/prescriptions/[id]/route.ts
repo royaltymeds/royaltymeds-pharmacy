@@ -58,6 +58,7 @@ export async function GET(
           medication_name,
           dosage,
           quantity,
+          price,
           total_amount,
           notes
         )
@@ -100,6 +101,7 @@ export async function GET(
           medication_name,
           dosage,
           quantity,
+          price,
           total_amount,
           notes
         )

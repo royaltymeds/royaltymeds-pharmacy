@@ -66,6 +66,7 @@ export async function POST(
           medication_name,
           dosage,
           quantity,
+          price,
           total_amount
         )
       `
