@@ -162,6 +162,8 @@ export default function PrescriptionDetailClient({
     setMessage(null);
 
     try {
+      console.log("[Create Order] Starting request for prescription:", prescription.id, "source:", prescription.source);
+      
       const response = await fetch(
         `/api/admin/prescriptions/${prescription.id}/create-order`,
         {
@@ -175,16 +177,23 @@ export default function PrescriptionDetailClient({
         }
       );
 
+      console.log("[Create Order] Response status:", response.status);
+      
       const data = await response.json();
+      console.log("[Create Order] Response data:", data);
 
       if (!response.ok) {
+        console.error("[Create Order] Error response:", data);
         setMessage({
           type: "error",
           text: data.error || "Failed to create prescription order",
         });
+        setIsCreatingOrder(false);
         return;
       }
 
+      console.log("[Create Order] Success! Order number:", data.order?.order_number);
+      
       setMessage({
         type: "success",
         text: `Prescription order created successfully: ${data.order?.order_number}`,
@@ -195,12 +204,14 @@ export default function PrescriptionDetailClient({
         window.location.href = "/admin/orders?tab=all";
       }, 2000);
     } catch (error) {
-      console.error("Error creating prescription order:", error);
+      console.error("[Create Order] Catch error:", error);
       setMessage({
         type: "error",
-        text: "An error occurred while creating the prescription order",
+        text: `An error occurred: ${error instanceof Error ? error.message : "Unknown error"}`,
       });
+      setIsCreatingOrder(false);
     } finally {
+      // Double-check to reset the state
       setIsCreatingOrder(false);
     }
   };
