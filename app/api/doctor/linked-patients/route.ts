@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log("[doctor/linked-patients API] Fetched patients:", { count: patients?.length, patientIds });
+    // console.log("[doctor/linked-patients API] Fetched patients:", { count: patients?.length, patientIds });
 
     // Format the response
     const formattedPatients = (patients || [])
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
       })
       .filter((p: any) => p.id);
 
-    console.log("[doctor/linked-patients API] Formatted patients:", formattedPatients);
+    // console.log("[doctor/linked-patients API] Formatted patients:", formattedPatients);
 
     return NextResponse.json({ patients: formattedPatients });
   } catch (error: any) {

@@ -14,7 +14,7 @@ export async function GET() {
       );
     }
 
-    console.log("[API] Fetching partially-filled prescriptions for user:", user.id);
+    // console.log("[API] Fetching partially-filled prescriptions for user:", user.id);
 
     // Use service role to bypass RLS
     const supabaseAdmin = createClient(
@@ -36,15 +36,15 @@ export async function GET() {
         .eq("status", "partially_filled"),
     ]);
 
-    console.log("[API] Patient prescriptions result:", {
-      count: patientData.data?.length || 0,
-      error: patientData.error?.message,
-    });
+    // console.log("[API] Patient prescriptions result:", {
+    //   count: patientData.data?.length || 0,
+    //   error: patientData.error?.message,
+    // });
 
-    console.log("[API] Doctor prescriptions result:", {
-      count: doctorData.data?.length || 0,
-      error: doctorData.error?.message,
-    });
+    // console.log("[API] Doctor prescriptions result:", {
+    //   count: doctorData.data?.length || 0,
+    //   error: doctorData.error?.message,
+    // });
 
     // Combine results with source information
     const patientPrescriptions = (patientData.data || []).map((p: any) => ({
@@ -59,7 +59,7 @@ export async function GET() {
 
     const prescriptions = [...patientPrescriptions, ...doctorPrescriptions];
 
-    console.log("[API] Total prescriptions returned:", prescriptions.length);
+    // console.log("[API] Total prescriptions returned:", prescriptions.length);
 
     return NextResponse.json({
       prescriptions,

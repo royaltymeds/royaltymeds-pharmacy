@@ -24,13 +24,13 @@ async function getPatientRole() {
     
     // Use service role to bypass RLS
     const adminClient = await createServerAdminClient();
-    const { data: userData, error } = await adminClient
+    const { data: userData } = await adminClient
       .from("users")
       .select("role")
       .eq("id", user.id)
       .single();
     
-    console.log("[PatientLayout] getPatientRole - userId:", user.id, "userData:", userData, "error:", error?.message);
+    // console.log("[PatientLayout] getPatientRole - userId:", user.id, "userData:", userData, "error:", error?.message);
     
     return (userData as any)?.role || null;
   } catch (error) {
@@ -46,28 +46,28 @@ export default async function PatientLayout({
 }) {
   // Check auth server-side - redirect if not authenticated
   const supabase = await createServerSupabaseClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   
-  console.log("[PatientLayout] Auth check - user:", user?.id, "error:", error?.message);
+  // console.log("[PatientLayout] Auth check - user:", user?.id, "error:", error?.message);
   
   if (!user) {
-    console.log("[PatientLayout] No user, redirecting to /login");
+    // console.log("[PatientLayout] No user, redirecting to /login");
     redirect("/login");
   }
 
   const userEmail = await getPatientEmail();
   const userRole = await getPatientRole();
   
-  console.log("[PatientLayout] User role check - role:", userRole, "email:", userEmail);
+  // console.log("[PatientLayout] User role check - role:", userRole, "email:", userEmail);
   
   // Redirect non-patients to their appropriate portals
   if (userRole === "doctor") {
-    console.log("[PatientLayout] Doctor user trying to access patient portal, redirecting to /doctor/dashboard");
+    // console.log("[PatientLayout] Doctor user trying to access patient portal, redirecting to /doctor/dashboard");
     redirect("/doctor/dashboard");
   }
   
   if (userRole === "admin") {
-    console.log("[PatientLayout] Admin user trying to access patient portal, redirecting to /admin/dashboard");
+    // console.log("[PatientLayout] Admin user trying to access patient portal, redirecting to /admin/dashboard");
     redirect("/admin/dashboard");
   }
 

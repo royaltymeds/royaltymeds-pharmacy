@@ -21,14 +21,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
   useEffect(() => {
     async function checkAuth(attempt = 0) {
       try {
-        console.log(`[AuthGuard] Checking auth status (attempt ${attempt + 1})${isRecentAuth ? " (recent auth)" : ""}...`);
+        // console.log(`[AuthGuard] Checking auth status (attempt ${attempt + 1})${isRecentAuth ? " (recent auth)" : ""}...`);
         const supabase = getSupabaseClient();
         
         const {
           data: { session },
         } = await supabase.auth.getSession();
 
-        console.log("[AuthGuard] Session status:", session ? "active" : "none");
+        // console.log("[AuthGuard] Session status:", session ? "active" : "none");
 
         if (!session) {
           // On StackBlitz, session might not be ready immediately after redirect
@@ -37,17 +37,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
           
           if (attempt < maxAttempts) {
             const delay = isRecentAuth ? 600 : 500; // Longer delay for recent auth
-            console.log(`[AuthGuard] No session found, retrying in ${delay}ms (attempt ${attempt + 1}/${maxAttempts})...`);
+            // console.log(`[AuthGuard] No session found, retrying in ${delay}ms (attempt ${attempt + 1}/${maxAttempts})...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             return checkAuth(attempt + 1);
           }
           
-          console.log("[AuthGuard] No session after retries, redirecting to /login");
+          // console.log("[AuthGuard] No session after retries, redirecting to /login");
           router.push("/login");
           return;
         }
 
-        console.log("[AuthGuard] Session active, showing content");
+        // console.log("[AuthGuard] Session active, showing content");
         setIsReady(true);
       } catch (error) {
         console.error("[AuthGuard] Error checking auth:", error);
@@ -55,7 +55,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
         const maxAttempts = isRecentAuth ? 3 : 2;
         if (attempt < maxAttempts) {
           const delay = isRecentAuth ? 600 : 500;
-          console.log(`[AuthGuard] Error checking auth, retrying in ${delay}ms...`);
+          // console.log(`[AuthGuard] Error checking auth, retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           return checkAuth(attempt + 1);
         }

@@ -36,21 +36,6 @@ function AuthSuccessContent() {
     // Mark that we just authenticated - this tells AuthGuard to be more lenient
     sessionStorage.setItem("auth-time", Date.now().toString());
 
-    // Log session status for debugging
-    const checkSessionStatus = async () => {
-      try {
-        const supabase = require("@/lib/supabase-client").getSupabaseClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        const debugMsg = `Session: ${session ? "active" : "null"}`;
-        console.log("[AuthSuccess]", debugMsg);
-      } catch (e) {
-        console.log("[AuthSuccess] Debug check failed:", e);
-      }
-    };
-
-    checkSessionStatus();
-
     // Wait for the client-side Supabase library to fully process tokens
     // This is critical on platforms like StackBlitz where async context is limited
     const timer = setTimeout(() => {
@@ -61,7 +46,7 @@ function AuthSuccessContent() {
             ? "/admin/dashboard"
             : "/patient/home";
 
-      console.log("[AuthSuccess] Redirecting to portal:", redirectUrl);
+      // console.log("[AuthSuccess] Redirecting to portal:", redirectUrl);
       router.push(redirectUrl);
     }, 800); // Increased delay to ensure token processing on StackBlitz
 

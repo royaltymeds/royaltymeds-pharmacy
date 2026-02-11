@@ -46,15 +46,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
 
-    console.log("[search-patients] Search query:", search);
+    // console.log("[search-patients] Search query:", search);
 
     if (!search || search.length < 2) {
-      console.log("[search-patients] Search too short, returning empty");
+      // console.log("[search-patients] Search too short, returning empty");
       return NextResponse.json([]);
     }
 
     // Search for patients by email or name (excluding already linked patients)
-    console.log("[search-patients] Searching with ilike pattern for:", search);
+    // console.log("[search-patients] Searching with ilike pattern for:", search);
     
     // First, search by email
     const { data: emailMatches, error: emailError } = await serviceRoleClient
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log("[search-patients] Email search results:", { count: emailMatches?.length, error: emailError?.message });
+    // console.log("[search-patients] Email search results:", { count: emailMatches?.length, error: emailError?.message });
 
     // Then, search by full_name in user_profiles
     const { data: nameMatches, error: nameError } = await serviceRoleClient
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
       return fullName.toLowerCase().includes(search.toLowerCase());
     }).slice(0, 10);
 
-    console.log("[search-patients] Name search results:", { count: filteredByName.length });
+    // console.log("[search-patients] Name search results:", { count: filteredByName.length });
 
     // Merge results, avoiding duplicates
     const allResults = [...(emailMatches || [])];
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log("[search-patients] All merged results count:", allResults.length);
+    // console.log("[search-patients] All merged results count:", allResults.length);
 
     // Filter out already linked patients using service role to bypass RLS
     const { data: linkedIds, error: linkedError } = await serviceRoleClient
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
         dateOfBirth: p.user_profiles?.[0]?.date_of_birth || p.user_profiles?.date_of_birth || null,
       }));
 
-    console.log("[search-patients] Final filtered results count:", filteredPatients.length, { search });
+    // console.log("[search-patients] Final filtered results count:", filteredPatients.length, { search });
     return NextResponse.json(filteredPatients);
   } catch (error: any) {
     console.error("[search-patients API] Unexpected error:", error);

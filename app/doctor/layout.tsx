@@ -22,13 +22,13 @@ async function getDoctorRole() {
     
     // Use service role to bypass RLS
     const adminClient = await createServerAdminClient();
-    const { data: userData, error } = await adminClient
+    const { data: userData } = await adminClient
       .from("users")
       .select("role")
       .eq("id", user.id)
       .single();
     
-    console.log("[DoctorLayout] getDoctorRole - userId:", user.id, "userData:", userData, "error:", error?.message);
+    // console.log("[DoctorLayout] getDoctorRole - userId:", user.id, "userData:", userData, "error:", error?.message);
     
     return (userData as any)?.role || null;
   } catch (error) {
@@ -53,11 +53,11 @@ export default async function DoctorLayout({
   const userEmail = await getDoctorEmail();
   const userRole = await getDoctorRole();
   
-  console.log("[DoctorLayout] User role check - role:", userRole, "email:", userEmail);
+  // console.log("[DoctorLayout] User role check - role:", userRole, "email:", userEmail);
   
   // Redirect non-doctors to appropriate portals
   if (userRole !== "doctor") {
-    console.log("[DoctorLayout] Non-doctor user trying to access doctor portal, userRole:", userRole, "redirecting");
+    // console.log("[DoctorLayout] Non-doctor user trying to access doctor portal, userRole:", userRole, "redirecting");
     if (userRole === "admin") {
       redirect("/admin/dashboard");
     }

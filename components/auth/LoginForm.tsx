@@ -36,7 +36,7 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      console.log("[LoginForm] Starting login for:", email);
+      // console.log("[LoginForm] Starting login for:", email);
 
       const supabase = getSupabaseClient();
 
@@ -46,7 +46,7 @@ export default function LoginForm() {
         password,
       });
 
-      console.log("[LoginForm] Auth response:", { user: authData.user?.id, error: authError });
+      // console.log("[LoginForm] Auth response:", { user: authData.user?.id, error: authError });
 
       if (authError) {
         console.error("[LoginForm] Auth error:", authError);
@@ -86,7 +86,7 @@ export default function LoginForm() {
         : { role: "patient" };
 
       const userRole = roleData.role || "patient";
-      console.log("[LoginForm] User authenticated with role:", userRole);
+      // console.log("[LoginForm] User authenticated with role:", userRole);
 
       // Give the Supabase client time to persist session cookies to HTTP layer
       // This prevents a race condition where server-side auth check happens
@@ -101,7 +101,7 @@ export default function LoginForm() {
             ? "/admin/dashboard"
             : "/patient/home";
 
-      console.log("[LoginForm] Redirecting to:", redirectUrl);
+      // console.log("[LoginForm] Redirecting to:", redirectUrl);
       router.push(redirectUrl);
       
       // Refresh server components to ensure cookies are available

@@ -16,7 +16,7 @@ export default function DebugPrescriptionsPage() {
       try {
         // Get current user
         const { data: { user } } = await supabase.auth.getUser();
-        console.log("[Client Debug] Current user:", { id: user?.id, email: user?.email });
+        // console.log("[Client Debug] Current user:", { id: user?.id, email: user?.email });
 
         if (!user) {
           setData({ error: "Not authenticated - please log in first" });
@@ -30,23 +30,23 @@ export default function DebugPrescriptionsPage() {
           .select("*")
           .eq("doctor_id", user.id);
 
-        console.log("[Client Debug] My prescriptions query (with doctor_id filter):", {
-          userId: user.id,
-          count: myPrescriptions?.length,
-          error: myError?.message,
-          data: myPrescriptions,
-        });
+        // console.log("[Client Debug] My prescriptions query (with doctor_id filter):", {
+        //   userId: user.id,
+        //   count: myPrescriptions?.length,
+        //   error: myError?.message,
+        //   data: myPrescriptions,
+        // });
 
         // Try without filter to see if table is accessible at all
         const { data: allPrescriptions, error: allError } = await supabase
           .from("doctor_prescriptions")
           .select("*");
 
-        console.log("[Client Debug] All prescriptions (no filter):", {
-          count: allPrescriptions?.length,
-          error: allError?.message,
-          data: allPrescriptions,
-        });
+        // console.log("[Client Debug] All prescriptions (no filter):", {
+        //   count: allPrescriptions?.length,
+        //   error: allError?.message,
+        //   data: allPrescriptions,
+        // });
 
         // Check if this user is in the users table
         // Note: Skip this to avoid infinite recursion in RLS policies

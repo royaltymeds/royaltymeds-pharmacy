@@ -39,8 +39,8 @@ export async function POST(req: Request) {
       exp: Math.floor(Date.now() / 1000) + 600, // 10 minutes expiration
     };
 
-    console.log('JWT Payload:', JSON.stringify(payload));
-    console.log('Public Key:', process.env.FYGARO_API_PUBLIC_KEY);
+    // console.log('JWT Payload:', JSON.stringify(payload));
+    // console.log('Public Key:', process.env.FYGARO_API_PUBLIC_KEY);
 
     // Sign JWT with secret key
     const token = jwt.sign(payload, process.env.FYGARO_API_SECRET_KEY, {
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       },
     } as jwt.SignOptions);
 
-    console.log('JWT Token Generated:', token);
+    // console.log('JWT Token Generated:', token);
 
     // Fygaro payment link with JWT token
     const paymentUrl = `https://www.fygaro.com/en/pb/e3df4b61-668c-43e3-9b02-623ac3f534ef/?jwt=${token}`;

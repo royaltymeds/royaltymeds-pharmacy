@@ -30,8 +30,8 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session if expired - required for Server Components
-  const { data: { user }, error } = await supabase.auth.getUser();
-  console.log("[Middleware] getUser result - user:", user?.id, "error:", error?.message);
+  void await supabase.auth.getUser();
+  // console.log("[Middleware] getUser result - user:", user?.id, "error:", error?.message);
 
   return response;
 }

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log("[Debug] Current user:", { id: user.id, email: user.email });
+    // console.log("[Debug] Current user:", { id: user.id, email: user.email });
 
     // Check if user exists in users table
     const { data: userData, error: userError } = await supabase
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       .select("*")
       .eq("id", user.id);
 
-    console.log("[Debug] User in users table:", { userData, userError });
+    // console.log("[Debug] User in users table:", { userData, userError });
 
     // Try to fetch doctor_prescriptions with service role to see all data
     const adminClient = createClient(
@@ -39,11 +39,11 @@ export async function GET(request: NextRequest) {
       .from("doctor_prescriptions")
       .select("*");
 
-    console.log("[Debug] All doctor_prescriptions (via service role):", {
-      count: allPrescriptions?.length,
-      data: allPrescriptions,
-      error: allError,
-    });
+// console.log("[Debug] All doctor_prescriptions (via service role):", {
+    //   count: allPrescriptions?.length,
+    //   data: allPrescriptions,
+    //   error: allError,
+    // });
 
     // Try to fetch doctor_prescriptions with regular client (with RLS)
     const { data: myPrescriptions, error: myError } = await supabase
@@ -51,11 +51,11 @@ export async function GET(request: NextRequest) {
       .select("*")
       .eq("doctor_id", user.id);
 
-    console.log("[Debug] My doctor_prescriptions (with RLS):", {
-      count: myPrescriptions?.length,
-      data: myPrescriptions,
-      error: myError,
-    });
+    // console.log("[Debug] My doctor_prescriptions (with RLS):", {
+    //   count: myPrescriptions?.length,
+    //   data: myPrescriptions,
+    //   error: myError,
+    // });
 
     return NextResponse.json({
       currentUser: { id: user.id, email: user.email },

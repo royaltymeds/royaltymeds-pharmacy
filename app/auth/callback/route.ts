@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     // Get user's role - default to patient if not found
     const userRole = existingUser?.role || "patient";
-    console.log("User authenticated with role:", userRole, "User ID:", data.user.id);
+    // console.log("User authenticated with role:", userRole, "User ID:", data.user.id);
 
     // Update response redirect with role
     response = NextResponse.redirect(new URL(`/auth/success?role=${userRole}`, request.url));
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     data.session?.access_token && response.cookies.set("sb-access-token", data.session.access_token);
     data.session?.refresh_token && response.cookies.set("sb-refresh-token", data.session.refresh_token);
 
-    console.log("Redirecting to auth/success with role:", userRole);
+    // console.log("Redirecting to auth/success with role:", userRole);
     return response;
   }
 

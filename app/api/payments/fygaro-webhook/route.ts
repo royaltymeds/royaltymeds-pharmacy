@@ -26,13 +26,13 @@ export async function POST(req: NextRequest) {
   try {
     // Parse the webhook payload
     const payload = await req.json();
-    console.log('Fygaro Webhook Received:', {
-      event: payload.event,
-      orderId: payload.custom_reference,
-      status: payload.status,
-      amount: payload.amount,
-      currency: payload.currency,
-    });
+    // console.log('Fygaro Webhook Received:', {
+    //   event: payload.event,
+    //   orderId: payload.custom_reference,
+    //   status: payload.status,
+    //   amount: payload.amount,
+    //   currency: payload.currency,
+    // });
 
     // Validate required fields
     if (!payload.custom_reference || !payload.status) {
@@ -48,9 +48,9 @@ export async function POST(req: NextRequest) {
 
     // Only update order if payment was successful
     if (paymentStatus !== 'completed' && paymentStatus !== 'success') {
-      console.log(
-        `Webhook received for order ${orderId} with status: ${paymentStatus}. Skipping update.`
-      );
+      // console.log(
+      //   `Webhook received for order ${orderId} with status: ${paymentStatus}. Skipping update.`
+      // );
       return NextResponse.json(
         { success: true, message: 'Webhook received but payment not successful' },
         { status: 200 }
@@ -95,12 +95,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log('Order updated successfully:', {
-      orderId,
-      paymentStatus: 'payment_verified',
-      amount: payload.amount,
-      currency: payload.currency,
-    });
+    // console.log('Order updated successfully:', {
+    //   orderId,
+    //   paymentStatus: 'payment_verified',
+    //   amount: payload.amount,
+    //   currency: payload.currency,
+    // });
 
     // Return success response
     return NextResponse.json(

@@ -59,10 +59,10 @@ export default function MyPrescriptionsClient({
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  console.log("[MyPrescriptionsClient] Received prescriptions:", {
-    count: prescriptions.length,
-    prescriptions: prescriptions,
-  });
+  // console.log("[MyPrescriptionsClient] Received prescriptions:", {
+  //   count: prescriptions.length,
+  //   prescriptions: prescriptions,
+  // });
 
   useEffect(() => {
     if (fileViewerOpen && imgRef.current && containerRef.current) {
@@ -147,15 +147,15 @@ export default function MyPrescriptionsClient({
   const fetchMedicationItems = async (prescriptionId: string) => {
     try {
       setLoadingItems((prev) => ({ ...prev, [prescriptionId]: true }));
-      console.log("[fetchMedicationItems] Fetching for prescription:", prescriptionId);
+      // console.log("[fetchMedicationItems] Fetching for prescription:", prescriptionId);
       const response = await fetch(
         `/api/doctor/prescriptions/${prescriptionId}`
       );
-      console.log("[fetchMedicationItems] Response status:", response.status);
+      // console.log("[fetchMedicationItems] Response status:", response.status);
       
       if (response.ok) {
         const data = await response.json();
-        console.log("[fetchMedicationItems] Received data:", data);
+        // console.log("[fetchMedicationItems] Received data:", data);
         setMedicationItems((prev) => ({
           ...prev,
           [prescriptionId]: data.items || [],

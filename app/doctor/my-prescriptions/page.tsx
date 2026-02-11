@@ -29,7 +29,7 @@ async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    console.log("[getPrescriptions] Starting - doctor_id:", doctorId);
+    // console.log("[getPrescriptions] Starting - doctor_id:", doctorId);
     
     // Query doctor_prescriptions with patient profile info using admin client
     const { data, error } = await supabaseAdmin
@@ -45,12 +45,12 @@ async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
       .eq("doctor_id", doctorId)
       .order("created_at", { ascending: false });
     
-    console.log("[getPrescriptions] Raw query result:", { 
-      dataCount: data?.length,
-      dataKeys: data?.[0] ? Object.keys(data[0]) : [],
-      firstRecord: data?.[0],
-      error 
-    });
+    // console.log("[getPrescriptions] Raw query result:", { 
+    //   dataCount: data?.length,
+    //   dataKeys: data?.[0] ? Object.keys(data[0]) : [],
+    //   firstRecord: data?.[0],
+    //   error 
+    // });
     
     if (error) {
       console.error("[getPrescriptions] Query error:", error);
@@ -74,7 +74,7 @@ async function getPrescriptions(doctorId: string): Promise<Prescription[]> {
       filled_at: item.filled_at,
     }));
     
-    console.log("[getPrescriptions] Transformed data:", { count: transformed.length, items: transformed });
+    // console.log("[getPrescriptions] Transformed data:", { count: transformed.length, items: transformed });
     
     return transformed;
   } catch (error) {
@@ -88,14 +88,14 @@ export default async function MyPrescriptions() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   
-  console.log("[Doctor My-Prescriptions] Current user:", user?.id, user?.email);
+  // console.log("[Doctor My-Prescriptions] Current user:", user?.id, user?.email);
   
   if (!user) redirect("/login");
 
   // Fetch prescriptions
   const prescriptions = await getPrescriptions(user.id);
   
-  console.log("[Doctor My-Prescriptions] Prescriptions fetched:", prescriptions.length);
+  // console.log("[Doctor My-Prescriptions] Prescriptions fetched:", prescriptions.length);
 
   return (
     <div className="space-y-3 sm:space-y-4 md:space-y-6">

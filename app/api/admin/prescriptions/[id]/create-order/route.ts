@@ -9,13 +9,13 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    console.log("[Create-Order] Starting - Prescription ID:", id);
+    // console.log("[Create-Order] Starting - Prescription ID:", id);
     
     const { source } = await request.json();
-    console.log("[Create-Order] Source:", source);
+    // console.log("[Create-Order] Source:", source);
 
     if (!source || !["patient", "doctor"].includes(source)) {
-      console.log("[Create-Order] Invalid source:", source);
+      // console.log("[Create-Order] Invalid source:", source);
       return NextResponse.json(
         { error: "source parameter is required and must be 'patient' or 'doctor'" },
         { status: 400 }
@@ -59,14 +59,14 @@ export async function POST(
       .single();
 
     if (prescriptionError || !prescription) {
-      console.log("[Create-Order] Prescription not found. Error:", prescriptionError);
+      // console.log("[Create-Order] Prescription not found. Error:", prescriptionError);
       return NextResponse.json(
         { error: "Prescription not found" },
         { status: 404 }
       );
     }
 
-    console.log("[Create-Order] Found prescription:", (prescription as any).id, "Status:", (prescription as any).status);
+    // console.log("[Create-Order] Found prescription:", (prescription as any).id, "Status:", (prescription as any).status);
     
     // Type the prescription data
     const typedPrescription = prescription as unknown as { patient_id: string; id: string; status: string; created_at: string; doctor_id?: string };
@@ -88,8 +88,8 @@ export async function POST(
       )
       .eq(source === "doctor" ? "doctor_prescription_id" : "prescription_id", id);
 
-    console.log("[Create-Order] Items fetch error:", itemsError);
-    console.log("[Create-Order] Items found:", items?.length || 0);
+    // console.log("[Create-Order] Items fetch error:", itemsError);
+    // console.log("[Create-Order] Items found:", items?.length || 0);
     
     if (itemsError) {
       console.error("[Create-Order] Items query error:", itemsError);
@@ -100,7 +100,7 @@ export async function POST(
     }
 
     if (!items || items.length === 0) {
-      console.log("[Create-Order] No items found for prescription");
+      // console.log("[Create-Order] No items found for prescription");
       return NextResponse.json(
         { error: "Prescription has no items" },
         { status: 400 }
@@ -109,10 +109,10 @@ export async function POST(
 
     // Validate that all items have prices
     const itemsWithoutPrices = items.filter((item) => !item.price || item.price <= 0);
-    console.log("[Create-Order] Items without prices:", itemsWithoutPrices.length);
+    // console.log("[Create-Order] Items without prices:", itemsWithoutPrices.length);
     
     if (itemsWithoutPrices.length > 0) {
-      console.log("[Create-Order] Cannot create order - items missing prices");
+      // console.log("[Create-Order] Cannot create order - items missing prices");
       return NextResponse.json(
         { error: "All medications must have prices before creating order" },
         { status: 400 }
@@ -125,7 +125,7 @@ export async function POST(
       .select("*")
       .single();
 
-    console.log("[Create-Order] Payment config:", paymentConfig?.id || "none");
+    // console.log("[Create-Order] Payment config:", paymentConfig?.id || "none");
 
     // Calculate order totals
     let subtotal = 0;
@@ -152,7 +152,7 @@ export async function POST(
     const shipping = paymentConfig ? paymentConfig.kingston_delivery_cost : 0;
     const total = subtotal + tax + shipping;
 
-    console.log("[Create-Order] Totals - Subtotal:", subtotal, "Tax:", tax, "Shipping:", shipping, "Total:", total);
+    // console.log("[Create-Order] Totals - Subtotal:", subtotal, "Tax:", tax, "Shipping:", shipping, "Total:", total);
 
     // Generate unique order number
     function generateOrderNumber(): string {
@@ -163,7 +163,7 @@ export async function POST(
 
     // Create order
     const orderNumber = generateOrderNumber();
-    console.log("[Create-Order] Creating order with number:", orderNumber);
+    // console.log("[Create-Order] Creating order with number:", orderNumber);
     
     const { data: orderData, error: orderError } = await supabaseAdmin
       .from("orders")
@@ -190,7 +190,7 @@ export async function POST(
       );
     }
 
-    console.log("[Create-Order] Order created successfully:", orderData.id);
+    // console.log("[Create-Order] Order created successfully:", orderData.id);
 
     // Create order items
     const insertItems = orderItems.map((item) => ({
@@ -201,7 +201,7 @@ export async function POST(
       total_price: item.total_price,
     }));
 
-    console.log("[Create-Order] Inserting", insertItems.length, "order items");
+    // console.log("[Create-Order] Inserting", insertItems.length, "order items");
 
     const { error: itemsInsertError } = await supabaseAdmin
       .from("order_items")
@@ -218,7 +218,7 @@ export async function POST(
       );
     }
 
-    console.log("[Create-Order] Order complete! Order ID:", orderData.id, "Order number:", orderNumber);
+    // console.log("[Create-Order] Order complete! Order ID:", orderData.id, "Order number:", orderNumber);
 
     return NextResponse.json(
       {

@@ -28,8 +28,8 @@ export default function SignupForm() {
     setError(null);
 
     // Log form data
-    console.log("[SignupForm] ========== FORM SUBMISSION ==========");
-    console.log("[SignupForm] Form data:", { email, password, fullName, phone, address, dateOfBirth, role: "patient" });
+    // console.log("[SignupForm] ========== FORM SUBMISSION ==========");
+    // console.log("[SignupForm] Form data:", { email, password, fullName, phone, address, dateOfBirth, role: "patient" });
 
     try {
       // Validate phone and address are provided
@@ -51,7 +51,7 @@ export default function SignupForm() {
         return;
       }
 
-      console.log("[SignupForm] Step 0: Checking for existing user with email or phone");
+      // console.log("[SignupForm] Step 0: Checking for existing user with email or phone");
 
       // Step 0: Check if user already exists
       const checkResponse = await fetch("/api/auth/check-existing-user", {
@@ -66,7 +66,7 @@ export default function SignupForm() {
       });
 
       const checkData = await checkResponse.json();
-      console.log("[SignupForm] Check response:", checkData);
+      // console.log("[SignupForm] Check response:", checkData);
 
       if (checkData.exists) {
         let errorMessage = "";
@@ -83,7 +83,7 @@ export default function SignupForm() {
         return;
       }
 
-      console.log("[SignupForm] Step 1: Calling /api/auth/signup-rest");
+      // console.log("[SignupForm] Step 1: Calling /api/auth/signup-rest");
 
       // Step 1: Create auth user via server API (using REST API directly)
       const signupResponse = await fetch("/api/auth/signup-rest", {
@@ -119,7 +119,7 @@ export default function SignupForm() {
       }
 
       const userId = signupData.user?.id;
-      console.log("[SignupForm] Auth user ID:", userId);
+      // console.log("[SignupForm] Auth user ID:", userId);
 
       if (!userId) {
         console.error("[SignupForm] No user ID in response:", signupData);
@@ -127,7 +127,7 @@ export default function SignupForm() {
         return;
       }
 
-      console.log("[SignupForm] Step 2: Calling /api/auth/create-profile");
+      // console.log("[SignupForm] Step 2: Calling /api/auth/create-profile");
 
       // Step 2: Create user profile via API endpoint
       const profileResponse = await fetch("/api/auth/create-profile", {
@@ -146,7 +146,7 @@ export default function SignupForm() {
         }),
       });
 
-      console.log("[SignupForm] Step 2 response status:", profileResponse.status);
+      // console.log("[SignupForm] Step 2 response status:", profileResponse.status);
 
       if (!profileResponse.ok) {
         const profileError = await profileResponse.json();
@@ -155,7 +155,7 @@ export default function SignupForm() {
         return;
       }
 
-      console.log("[SignupForm] SUCCESS: Signup complete, redirecting to login");
+      // console.log("[SignupForm] SUCCESS: Signup complete, redirecting to login");
       router.push("/login");
       router.refresh();
     } catch (err) {

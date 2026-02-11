@@ -16,11 +16,11 @@ export async function GET() {
       .from("doctor_prescriptions")
       .select("*");
 
-    console.log("[Debug] All doctor_prescriptions in DB:", {
-      count: allPrescriptions?.length,
-      data: allPrescriptions,
-      error: allError,
-    });
+    // console.log("[Debug] All doctor_prescriptions in DB:", {
+    //   count: allPrescriptions?.length,
+    //   data: allPrescriptions,
+    //   error: allError,
+    // });
 
     // Get all users with doctor role
     const { data: doctors, error: doctorsError } = await adminClient
@@ -28,11 +28,11 @@ export async function GET() {
       .select("id, email, role")
       .eq("role", "doctor");
 
-    console.log("[Debug] All doctors in users table:", {
-      count: doctors?.length,
-      data: doctors,
-      error: doctorsError,
-    });
+    // console.log("[Debug] All doctors in users table:", {
+    //   count: doctors?.length,
+    //   data: doctors,
+    //   error: doctorsError,
+    // });
 
     return NextResponse.json({
       allPrescriptions: { count: allPrescriptions?.length, data: allPrescriptions, error: allError },

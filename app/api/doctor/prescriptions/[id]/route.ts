@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    console.log("[GET /api/doctor/prescriptions/[id]] Fetching items for prescription:", id);
+    // console.log("[GET /api/doctor/prescriptions/[id]] Fetching items for prescription:", id);
 
     // Use service role to bypass RLS
     const supabaseAdmin = createClient(
@@ -22,11 +22,11 @@ export async function GET(
       .select("*")
       .eq("doctor_prescription_id", id);
 
-    console.log("[GET /api/doctor/prescriptions/[id]] Query result:", { 
-      itemsCount: items?.length,
-      items,
-      error 
-    });
+// console.log("[GET /api/doctor/prescriptions/[id]] Query result:", {
+    //   itemsCount: items?.length,
+    //   items,
+    //   error
+    // });
 
     if (error) throw error;
 

@@ -125,13 +125,12 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    console.log("[Doctor Prescription] Doctor data fetch:", {
-      userId: user.id,
-      doctorData,
-      doctorError,
-      userEmail: user.email,
-    });
-
+    // console.log("[Doctor Prescription] Doctor data fetch:", {
+        //   userId: user.id,
+        //   doctorData,
+        //   doctorError,
+        //   userEmail: user.email,
+        // });
     if (doctorError) {
       console.error("Error fetching doctor details:", doctorError);
     }
@@ -162,14 +161,14 @@ export async function POST(request: NextRequest) {
 
     if (prescriptionError) throw prescriptionError;
 
-    console.log("[Doctor Prescription] Created prescription with details:", {
-      doctorName: doctorData?.full_name || null,
-      doctorEmail: user.email || null,
-      doctorPhone: doctorData?.phone || null,
-      practiceName: doctorData?.specialty || null,
-      practiceAddress: doctorData?.address || null,
-      note: "Patient linking and medication items will be added by admins",
-    });
+    // console.log("[Doctor Prescription] Created prescription with details:", {
+    //   doctorName: doctorData?.full_name || null,
+    //   doctorEmail: user.email || null,
+    //   doctorPhone: doctorData?.phone || null,
+    //   practiceName: doctorData?.specialty || null,
+    //   practiceAddress: doctorData?.address || null,
+    //   note: "Patient linking and medication items will be added by admins",
+    // });
 
     return NextResponse.json(
       { 

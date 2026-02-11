@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(
 // Create an auth user directly using the admin API
 export async function createAuthUser(email: string, password: string) {
   try {
-    console.log("[createAuthUser] Creating user with email:", email);
+    // console.log("[createAuthUser] Creating user with email:", email);
     
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -22,7 +22,7 @@ export async function createAuthUser(email: string, password: string) {
       throw error;
     }
 
-    console.log("[createAuthUser] User created successfully:", data.user?.id);
+    // console.log("[createAuthUser] User created successfully:", data.user?.id);
     return data.user;
   } catch (err) {
     console.error("[createAuthUser] Unexpected error:", err);
