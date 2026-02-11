@@ -119,9 +119,10 @@ export async function POST(
     }> = [];
 
     for (const item of items) {
-      const unitPrice = parseFloat(item.price.toString());
+      const totalPrice = parseFloat(item.price.toString());
       const quantity = parseInt(item.quantity.toString());
-      const totalPrice = unitPrice * quantity;
+      // price is already the total cost, calculate unit price by dividing by quantity
+      const unitPrice = quantity > 0 ? totalPrice / quantity : totalPrice;
       subtotal += totalPrice;
 
       orderItems.push({
