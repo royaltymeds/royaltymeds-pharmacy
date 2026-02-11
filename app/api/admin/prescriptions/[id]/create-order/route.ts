@@ -114,21 +114,17 @@ export async function POST(
     const orderItems: Array<{
       medication_name: string;
       quantity: number;
-      unit_price: number;
       total_price: number;
     }> = [];
 
     for (const item of items) {
       const totalPrice = parseFloat(item.price.toString());
       const quantity = parseInt(item.quantity.toString());
-      // price is already the total cost, calculate unit price by dividing by quantity
-      const unitPrice = quantity > 0 ? totalPrice / quantity : totalPrice;
       subtotal += totalPrice;
 
       orderItems.push({
         medication_name: item.medication_name,
         quantity,
-        unit_price: unitPrice,
         total_price: totalPrice,
       });
     }
@@ -178,7 +174,6 @@ export async function POST(
       drug_id: null, // No drug_id for prescription items
       drug_name: item.medication_name,
       quantity: item.quantity,
-      unit_price: item.unit_price,
       total_price: item.total_price,
     }));
 
