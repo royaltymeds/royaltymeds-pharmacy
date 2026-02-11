@@ -231,12 +231,15 @@ export default function PrescriptionDetailClient({
         return;
       }
 
-      // Update local state
+      // Update local state with new status
       setPrescription({ ...prescription, status: newStatus });
       setMessage({
         type: "success",
         text: `Prescription ${newStatus} successfully`,
       });
+
+      // Reload page to ensure all data including prices are fresh
+      setTimeout(() => window.location.reload(), 2000);
 
       // Clear success message after 3 seconds
       setTimeout(() => setMessage(null), 3000);
