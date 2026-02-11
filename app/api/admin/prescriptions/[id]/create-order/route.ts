@@ -80,6 +80,7 @@ export async function POST(
         medication_name,
         dosage,
         quantity,
+        quantity_filled,
         price,
         total_amount,
         notes
@@ -130,15 +131,18 @@ export async function POST(
     let subtotal = 0;
     const orderItems: Array<{
       medication_name: string;
+      quantity_filled: number;
       total_price: number;
     }> = [];
 
     for (const item of items) {
       const totalPrice = parseFloat(item.price.toString());
+      const quantityFilled = parseInt(item.quantity_filled?.toString() || "0");
       subtotal += totalPrice;
 
       orderItems.push({
         medication_name: item.medication_name,
+        quantity_filled: quantityFilled,
         total_price: totalPrice,
       });
     }
@@ -193,7 +197,7 @@ export async function POST(
       order_id: orderData.id,
       drug_id: null, // No drug_id for prescription items
       drug_name: item.medication_name,
-      quantity: 1, // Prescription orders use 1 as a default (no inventory tracking)
+      quantity: item.quantity_filled || 1, // Use quantity_filled from prescription, default to 1 if not set
       total_price: item.total_price,
     }));
 
