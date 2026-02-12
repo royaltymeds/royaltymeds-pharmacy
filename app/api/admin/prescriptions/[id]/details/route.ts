@@ -79,7 +79,7 @@ export async function PATCH(
 
     // Determine which table to update based on source
     const tableName = source === "doctor" ? "doctor_prescriptions" : "prescriptions";
-    console.log(`[details] Updating ${tableName} for prescription ${prescriptionId}`, updateData);
+    // console.log(`[details] Updating ${tableName} for prescription ${prescriptionId}`, updateData);
 
     const { data, error } = await supabaseAdmin
       .from(tableName)

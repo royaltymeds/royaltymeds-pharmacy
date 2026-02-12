@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const { email, password, fullName, phone, address } = await request.json();
 
     // Log received data for debugging
-    console.log("[create-user API] Received fields:", { email, password: "***", fullName, phone, address });
+    // console.log("[create-user API] Received fields:", { email, password: "***", fullName, phone, address });
 
     if (!email || !password || !fullName || !phone || !address) {
       const missingFields = [];

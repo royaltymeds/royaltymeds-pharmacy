@@ -23,13 +23,13 @@ async function getAdminRole() {
     
     // Use service role to bypass RLS
     const adminClient = await createServerAdminClient();
-    const { data: userData, error } = await adminClient
+    const { data: userData } = await adminClient
       .from("users")
       .select("role")
       .eq("id", user.id)
       .single();
     
-    console.log("[AdminLayout] getAdminRole - userId:", user.id, "userData:", userData, "error:", error?.message);
+    // console.log("[AdminLayout] getAdminRole - userId:", user.id, "userData:", userData, "error:", error?.message);
     
     return (userData as any)?.role || null;
   } catch (error) {
@@ -54,11 +54,11 @@ export default async function AdminLayout({
   const userEmail = await getAdminEmail();
   const userRole = await getAdminRole();
   
-  console.log("[AdminLayout] User role check - role:", userRole, "email:", userEmail);
+  // console.log("[AdminLayout] User role check - role:", userRole, "email:", userEmail);
   
   // Only admins can access admin portal
   if (userRole !== "admin") {
-    console.log("[AdminLayout] Non-admin user trying to access admin portal, userRole:", userRole, "redirecting");
+    // console.log("[AdminLayout] Non-admin user trying to access admin portal, userRole:", userRole, "redirecting");
     if (userRole === "doctor") {
       redirect("/doctor/dashboard");
     }

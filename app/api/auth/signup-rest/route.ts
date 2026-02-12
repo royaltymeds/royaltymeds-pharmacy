@@ -4,8 +4,8 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
 
-    console.log("[signup-rest API] ========== SIGNUP (ADMIN) ENDPOINT CALLED ==========");
-    console.log("[signup-rest API] Request body:", { email, password });
+    // console.log("[signup-rest API] ========== SIGNUP (ADMIN) ENDPOINT CALLED ==========");
+    // console.log("[signup-rest API] Request body:", { email, password });
 
     if (!email || !password) {
       console.warn("[signup-rest API] Missing email or password");
@@ -26,14 +26,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[signup-rest API] URL:", supabaseUrl);
-    console.log("[signup-rest API] Using SERVICE ROLE KEY for admin user creation");
+    // console.log("[signup-rest API] URL:", supabaseUrl);
+    // console.log("[signup-rest API] Using SERVICE ROLE KEY for admin user creation");
 
     // Use Supabase Admin API to create a CONFIRMED user
     // This endpoint creates users that are immediately confirmed
     const adminUrl = `${supabaseUrl}/auth/v1/admin/users`;
     
-    console.log("[signup-rest API] Calling admin endpoint:", adminUrl);
+    // console.log("[signup-rest API] Calling admin endpoint:", adminUrl);
 
     const adminResponse = await fetch(adminUrl, {
       method: "POST",
@@ -53,8 +53,8 @@ export async function POST(request: NextRequest) {
     });
 
     const adminData = await adminResponse.json();
-    console.log("[signup-rest API] Admin response status:", adminResponse.status);
-    console.log("[signup-rest API] Admin response:", JSON.stringify(adminData, null, 2));
+    // console.log("[signup-rest API] Admin response status:", adminResponse.status);
+    // console.log("[signup-rest API] Admin response:", JSON.stringify(adminData, null, 2));
 
     if (!adminResponse.ok) {
       console.error("[signup-rest API] Admin API error:", adminData);
@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
 
     // The admin API returns user object at top level (not nested)
     const userId = adminData.id;
-    console.log("[signup-rest API] CONFIRMED user created successfully:", userId);
-    console.log("[signup-rest API] Email confirmed status:", adminData.email_confirmed_at);
+    // console.log("[signup-rest API] CONFIRMED user created successfully:", userId);
+    // console.log("[signup-rest API] Email confirmed status:", adminData.email_confirmed_at);
 
     return NextResponse.json({
       success: true,

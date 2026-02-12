@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const { userId, fullName, email, role, phone, address, dateOfBirth } = await request.json();
 
-    console.log("[create-profile API] Request received:", { userId, fullName, email, role, phone, address, dateOfBirth });
+    // console.log("[create-profile API] Request received:", { userId, fullName, email, role, phone, address, dateOfBirth });
 
     if (!userId || !fullName || !phone || !address || !dateOfBirth) {
       console.warn("[create-profile API] Missing required fields");
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // First, create the user in public.users table (if it doesn't exist)
-    console.log("[create-profile API] Creating user in public.users:", userId);
+    // console.log("[create-profile API] Creating user in public.users:", userId);
     const { error: userError } = await supabaseAdmin
       .from("users")
       .insert([
@@ -45,13 +45,13 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      console.log("[create-profile API] User already exists (duplicate key), continuing");
+      // console.log("[create-profile API] User already exists (duplicate key), continuing");
     } else {
-      console.log("[create-profile API] User created successfully");
+      // console.log("[create-profile API] User created successfully");
     }
 
     // Then create the profile
-    console.log("[create-profile API] Creating profile:", { userId, fullName, phone, address, dateOfBirth });
+    // console.log("[create-profile API] Creating profile:", { userId, fullName, phone, address, dateOfBirth });
     const { error: profileError } = await supabaseAdmin
       .from("user_profiles")
       .insert([
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[create-profile API] Profile created successfully");
+    // console.log("[create-profile API] Profile created successfully");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[create-profile API] Unexpected error:", error);

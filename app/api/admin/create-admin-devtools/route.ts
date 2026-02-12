@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     const adminId = authData.user.id;
 
-    console.log(`Auth user created: ${adminId}, trigger should create users record with role: admin`);
+    // console.log(`Auth user created: ${adminId}, trigger should create users record with role: admin`);
 
     // Create user profile
     const { error: profileError } = await adminClient
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(`Created profile for user ${adminId}`);
+    // console.log(`Created profile for user ${adminId}`);
 
     return NextResponse.json(
       {

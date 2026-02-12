@@ -14,7 +14,7 @@ export async function uploadAvatarImage(formData: FormData) {
     const file = formData.get("file") as File;
     const userId = formData.get("userId") as string;
 
-    console.log("[uploadAvatarImage] Upload started:", { userId, fileName: file.name, fileSize: file.size });
+    // console.log("[uploadAvatarImage] Upload started:", { userId, fileName: file.name, fileSize: file.size });
 
     if (!file || !userId) {
       return { success: false, error: "Missing file or user ID" };
@@ -38,7 +38,7 @@ export async function uploadAvatarImage(formData: FormData) {
     const filePath = `avatars/${fileName}`;
 
     // Upload to Supabase storage
-    console.log("[uploadAvatarImage] Uploading to storage:", filePath);
+    // console.log("[uploadAvatarImage] Uploading to storage:", filePath);
     const { error: uploadError } = await supabaseAdmin.storage
       .from("royaltymeds_storage")
       .upload(filePath, file, {
@@ -62,7 +62,7 @@ export async function uploadAvatarImage(formData: FormData) {
       return { success: false, error: "Failed to get public URL for uploaded file" };
     }
 
-    console.log("[uploadAvatarImage] File uploaded successfully:", { filePath, avatarUrl });
+    // console.log("[uploadAvatarImage] File uploaded successfully:", { filePath, avatarUrl });
 
     // Update user_profiles table with avatar_url
     const { error: updateError } = await supabaseAdmin
@@ -75,7 +75,7 @@ export async function uploadAvatarImage(formData: FormData) {
       return { success: false, error: "Failed to update profile picture" };
     }
 
-    console.log("[uploadAvatarImage] Profile updated successfully");
+    // console.log("[uploadAvatarImage] Profile updated successfully");
 
     // Revalidate the patient profile page
     revalidatePath("/patient/profile");

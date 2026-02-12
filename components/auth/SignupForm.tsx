@@ -97,11 +97,11 @@ export default function SignupForm() {
         }),
       });
 
-      console.log("[SignupForm] Step 1 response status:", signupResponse.status);
-      console.log("[SignupForm] Step 1 response ok:", signupResponse.ok);
+      // console.log("[SignupForm] Step 1 response status:", signupResponse.status);
+      // console.log("[SignupForm] Step 1 response ok:", signupResponse.ok);
 
       const signupText = await signupResponse.text();
-      console.log("[SignupForm] Step 1 response text:", signupText);
+      // console.log("[SignupForm] Step 1 response text:", signupText);
 
       let signupData;
       try {

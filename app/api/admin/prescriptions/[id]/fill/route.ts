@@ -15,12 +15,12 @@ export async function PATCH(
   const body = await request.json();
   const { items, source } = body; // source: "patient" or "doctor"
 
-  console.log("[Fill] Received request:", {
-    prescriptionId,
-    source,
-    items,
-    itemsCount: items?.length,
-  });
+  // console.log("[Fill] Received request:", {
+  //   prescriptionId,
+  //   source,
+  //   items,
+  //   itemsCount: items?.length,
+  // });
 
   try {
     // Verify user is authenticated and is admin
@@ -163,14 +163,14 @@ export async function PATCH(
 
     // Update prescription items
     for (const update of itemUpdates) {
-      console.log(`[Fill] Updating ${itemsTable} item:`, {
-        itemId: update.itemId,
-        quantityFilled: update.quantityFilled,
-        remainingQuantity: update.remainingQuantity,
-        table: itemsTable,
-      });
+      // console.log(`[Fill] Updating ${itemsTable} item:`, {
+      //   itemId: update.itemId,
+      //   quantityFilled: update.quantityFilled,
+      //   remainingQuantity: update.remainingQuantity,
+      //   table: itemsTable,
+      // });
       
-      const { error: updateError, data: updateData } = await supabaseAdmin
+      const { error: updateError } = await supabaseAdmin
         .from(itemsTable)
         .update({
           quantity_filled: update.quantityFilled,
@@ -187,7 +187,7 @@ export async function PATCH(
         );
       }
       
-      console.log(`[Fill] Successfully updated item, returned data:`, updateData);
+      // console.log(`[Fill] Successfully updated item, returned data:`, updateData);
     }
 
     // Determine new status

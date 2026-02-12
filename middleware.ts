@@ -15,11 +15,11 @@ export async function middleware(request: NextRequest) {
       cookies: {
         getAll() {
           const allCookies = request.cookies.getAll();
-          console.log("[Middleware] getAll cookies:", allCookies.map(c => c.name));
+          // console.log("[Middleware] getAll cookies:", allCookies.map(c => c.name));
           return allCookies;
         },
         setAll(cookiesToSet) {
-          console.log("[Middleware] setAll cookies:", cookiesToSet.map(c => c.name));
+          // console.log("[Middleware] setAll cookies:", cookiesToSet.map(c => c.name));
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
             response.cookies.set(name, value, options);

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const { email, phone } = await request.json();
 
-    console.log("[check-existing-user API] Checking for existing user:", { email, phone });
+    // console.log("[check-existing-user API] Checking for existing user:", { email, phone });
 
     if (!email || !phone) {
       return NextResponse.json(
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       if (profilesByEmail && profilesByEmail.length > 0) {
         duplicates.emailExists = true;
         duplicates.existingUserName = profilesByEmail[0].full_name;
-        console.log("[check-existing-user API] Email already exists");
+        // console.log("[check-existing-user API] Email already exists");
       }
     }
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       if (profilesByPhone && profilesByPhone.length > 0) {
         duplicates.phoneExists = true;
         duplicates.existingUserName = profilesByPhone[0].full_name;
-        console.log("[check-existing-user API] Phone already exists");
+        // console.log("[check-existing-user API] Phone already exists");
       }
     }
 

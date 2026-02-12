@@ -21,13 +21,13 @@ export default function PrescriptionDetailClient({
 
   // Debug logging on mount
   useEffect(() => {
-    console.log("[PrescriptionDetailClient] Mounted with initial prescription:", {
-      id: initialPrescription.id,
-      source: initialPrescription.source,
-      prescription_items: initialPrescription.prescription_items,
-      prescription_items_length: initialPrescription.prescription_items?.length,
-      prescription_items_keys: initialPrescription.prescription_items?.[0] ? Object.keys(initialPrescription.prescription_items[0]) : [],
-    });
+    // console.log("[PrescriptionDetailClient] Mounted with initial prescription:", {
+    //   id: initialPrescription.id,
+    //   source: initialPrescription.source,
+    //   prescription_items: initialPrescription.prescription_items,
+    //   prescription_items_length: initialPrescription.prescription_items?.length,
+    //   prescription_items_keys: initialPrescription.prescription_items?.[0] ? Object.keys(initialPrescription.prescription_items[0]) : [],
+    // });
 
     // Load available patients for doctor if this is a doctor prescription without a patient
     if (initialPrescription.source === "doctor" && !initialPrescription.patient_id && initialPrescription.doctor_id) {

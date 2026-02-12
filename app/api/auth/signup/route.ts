@@ -10,15 +10,15 @@ export async function POST(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
-  console.log("[signup API] ========== SIGNUP ENDPOINT CALLED ==========");
+  // console.log("[signup API] ========== SIGNUP ENDPOINT CALLED ==========");
   
   try {
     const body = await request.json();
     const { email, password } = body;
 
-    console.log("[signup API] Request body:", { email, password });
-    console.log("[signup API] Service role key exists:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-    console.log("[signup API] URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+    // console.log("[signup API] Request body:", { email, password });
+    // console.log("[signup API] Service role key exists:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    // console.log("[signup API] URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 
     if (!email || !password) {
       console.warn("[signup API] Missing email or password");
@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("[signup API] Creating auth user:", email);
-    console.log("[signup API] supabaseAdmin.auth type:", typeof supabaseAdmin.auth);
-    console.log("[signup API] supabaseAdmin.auth.admin exists:", !!supabaseAdmin.auth.admin);
-    console.log("[signup API] supabaseAdmin.auth.admin.createUser exists:", typeof supabaseAdmin.auth.admin?.createUser);
+    // console.log("[signup API] supabaseAdmin.auth type:", typeof supabaseAdmin.auth);
+    // console.log("[signup API] supabaseAdmin.auth.admin exists:", !!supabaseAdmin.auth.admin);
+    // console.log("[signup API] supabaseAdmin.auth.admin.createUser exists:", typeof supabaseAdmin.auth.admin?.createUser);
 
     // Use admin API to create user directly
     if (!supabaseAdmin.auth.admin) {
@@ -48,12 +48,12 @@ export async function POST(request: NextRequest) {
       email_confirm: true, // Auto-confirm email for development
     });
 
-    console.log("[signup API] FULL response object:", JSON.stringify({ data, error }, null, 2));
-    console.log("[signup API] data type:", typeof data);
-    console.log("[signup API] data keys:", data ? Object.keys(data) : "null");
-    console.log("[signup API] data.user:", data?.user);
-    console.log("[signup API] error type:", typeof error);
-    console.log("[signup API] error:", error);
+    // console.log("[signup API] FULL response object:", JSON.stringify({ data, error }, null, 2));
+    // console.log("[signup API] data type:", typeof data);
+    // console.log("[signup API] data keys:", data ? Object.keys(data) : "null");
+    // console.log("[signup API] data.user:", data?.user);
+    // console.log("[signup API] error type:", typeof error);
+    // console.log("[signup API] error:", error);
 
     if (error) {
       console.error("[signup API] Error creating user - throwing error:", error);
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[signup API] Auth user created successfully:", data.user.id);
+    // console.log("[signup API] Auth user created successfully:", data.user.id);
 
     return NextResponse.json({
       success: true,
