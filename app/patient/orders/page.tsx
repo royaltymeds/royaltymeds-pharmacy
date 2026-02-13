@@ -365,16 +365,38 @@ export default function PatientOrdersPage() {
                           <h5 className="font-semibold text-gray-900 mb-2">
                             Shipping Address
                           </h5>
-                          <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                            {order.shipping_address}
+                          <p className="text-sm text-gray-600">
+                            {order.shipping_street_line_1 ? (
+                              <>
+                                {order.shipping_street_line_1}
+                                {order.shipping_street_line_2 && <> {order.shipping_street_line_2}</>}
+                                <br />
+                                {order.shipping_city}, {order.shipping_state} {order.shipping_postal_code}
+                                <br />
+                                {order.shipping_country}
+                              </>
+                            ) : (
+                              'Not provided'
+                            )}
                           </p>
                         </div>
                         <div className="bg-white rounded-lg p-4">
                           <h5 className="font-semibold text-gray-900 mb-2">
                             Billing Address
                           </h5>
-                          <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                            {order.billing_address}
+                          <p className="text-sm text-gray-600">
+                            {order.billing_street_line_1 ? (
+                              <>
+                                {order.billing_street_line_1}
+                                {order.billing_street_line_2 && <> {order.billing_street_line_2}</>}
+                                <br />
+                                {order.billing_city}, {order.billing_state} {order.billing_postal_code}
+                                <br />
+                                {order.billing_country}
+                              </>
+                            ) : (
+                              'Not provided'
+                            )}
                           </p>
                         </div>
                       </div>

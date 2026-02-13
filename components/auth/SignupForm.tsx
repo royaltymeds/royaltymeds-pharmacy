@@ -10,7 +10,12 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+  const [streetLine1, setStreetLine1] = useState("");
+  const [streetLine2, setStreetLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("Jamaica");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,18 +34,42 @@ export default function SignupForm() {
 
     // Log form data
     // console.log("[SignupForm] ========== FORM SUBMISSION ==========");
-    // console.log("[SignupForm] Form data:", { email, password, fullName, phone, address, dateOfBirth, role: "patient" });
+    // console.log("[SignupForm] Form data:", { email, password, fullName, phone, streetLine1, streetLine2, city, state, postalCode, country, dateOfBirth, role: "patient" });
 
     try {
-      // Validate phone and address are provided
+      // Validate required fields
       if (!phone || phone.trim() === "") {
         setError("Phone number is required");
         setIsLoading(false);
         return;
       }
 
-      if (!address || address.trim() === "") {
-        setError("Address is required");
+      if (!streetLine1 || streetLine1.trim() === "") {
+        setError("Street address is required");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!city || city.trim() === "") {
+        setError("City is required");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!state || state.trim() === "") {
+        setError("State/Province is required");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!postalCode || postalCode.trim() === "") {
+        setError("Postal code is required");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!country || country.trim() === "") {
+        setError("Country is required");
         setIsLoading(false);
         return;
       }
@@ -141,7 +170,12 @@ export default function SignupForm() {
           email,
           role: "patient",
           phone,
-          address,
+          streetLine1,
+          streetLine2: streetLine2 || null,
+          city,
+          state,
+          postalCode,
+          country,
           dateOfBirth,
         }),
       });
@@ -240,18 +274,100 @@ export default function SignupForm() {
       </div>
 
       <div>
-        <label htmlFor="address" className="block text-xs font-medium text-gray-700 mb-1">
-          Address <span className="text-red-500">*</span>
+        <label htmlFor="streetLine1" className="block text-xs font-medium text-gray-700 mb-1">
+          Street Address <span className="text-red-500">*</span>
         </label>
         <input
-          id="address"
+          id="streetLine1"
           type="text"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
+          value={streetLine1}
+          onChange={(e) => setStreetLine1(e.target.value)}
           placeholder="123 Main Street"
           required
           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
+      </div>
+
+      <div>
+        <label htmlFor="streetLine2" className="block text-xs font-medium text-gray-700 mb-1">
+          Street Address (Continued)
+        </label>
+        <input
+          id="streetLine2"
+          type="text"
+          value={streetLine2}
+          onChange={(e) => setStreetLine2(e.target.value)}
+          placeholder="Apartment, suite, etc. (optional)"
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="city" className="block text-xs font-medium text-gray-700 mb-1">
+            City <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="city"
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Kingston"
+            required
+            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="state" className="block text-xs font-medium text-gray-700 mb-1">
+            Parish <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="state"
+            type="text"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            placeholder="Kingston"
+            required
+            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="postalCode" className="block text-xs font-medium text-gray-700 mb-1">
+            Postal Code <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="postalCode"
+            type="text"
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            placeholder="12345"
+            required
+            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="country" className="block text-xs font-medium text-gray-700 mb-1">
+            Country <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="country"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            required
+            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="Jamaica">Jamaica</option>
+            <option value="United States">United States</option>
+            <option value="Canada">Canada</option>
+            <option value="United Kingdom">United Kingdom</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
       </div>
 
       <div>

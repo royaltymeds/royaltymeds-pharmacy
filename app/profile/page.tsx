@@ -114,7 +114,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Contact Information */}
-            {userProfile?.phone || userProfile?.address ? (
+            {userProfile?.phone || userProfile?.street_address_line_1 ? (
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">Contact Information</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -126,16 +126,18 @@ export default function ProfilePage() {
                       <p className="text-gray-900">{userProfile.phone}</p>
                     </div>
                   )}
-                  {userProfile?.address && (
+                  {userProfile?.street_address_line_1 && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Address
                       </label>
                       <p className="text-gray-900">
-                        {userProfile.address}
+                        {userProfile.street_address_line_1}
+                        {userProfile.street_address_line_2 && `, ${userProfile.street_address_line_2}`}
                         {userProfile.city && `, ${userProfile.city}`}
                         {userProfile.state && `, ${userProfile.state}`}
-                        {userProfile.zip && ` ${userProfile.zip}`}
+                        {userProfile.postal_code && ` ${userProfile.postal_code}`}
+                        {userProfile.country && `, ${userProfile.country}`}
                       </p>
                     </div>
                   )}

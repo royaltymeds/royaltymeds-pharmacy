@@ -11,10 +11,12 @@ export type UserProfile = {
   user_id: string;
   full_name: string;
   phone: string | null;
-  address: string | null;
+  street_address_line_1: string | null;
+  street_address_line_2: string | null;
   city: string | null;
   state: string | null;
-  zip: string | null;
+  postal_code: string | null;
+  country: string | null;
   date_of_birth: string | null;
   avatar_url: string | null;
   created_at: string;

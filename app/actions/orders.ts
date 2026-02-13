@@ -1,6 +1,7 @@
 'use server';
 
 import { Order, OrderItem, CartItem, OrderWithItems } from '@/lib/types/orders';
+import { StructuredAddress } from '@/lib/types/address';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
@@ -146,8 +147,8 @@ export async function clearCart(): Promise<void> {
 // ============ ORDER OPERATIONS ============
 
 export async function createOrder(
-  shippingAddress: string,
-  billingAddress: string,
+  shippingAddress: StructuredAddress,
+  billingAddress: StructuredAddress,
   notes?: string
 ): Promise<OrderWithItems> {
   const supabase = await getUserClient();
@@ -217,8 +218,18 @@ export async function createOrder(
       tax_amount: tax,
       shipping_amount: shipping,
       total_amount: total,
-      shipping_address: shippingAddress,
-      billing_address: billingAddress,
+      shipping_street_line_1: shippingAddress.streetLine1,
+      shipping_street_line_2: shippingAddress.streetLine2 || null,
+      shipping_city: shippingAddress.city,
+      shipping_state: shippingAddress.state,
+      shipping_postal_code: shippingAddress.postalCode,
+      shipping_country: shippingAddress.country,
+      billing_street_line_1: billingAddress.streetLine1,
+      billing_street_line_2: billingAddress.streetLine2 || null,
+      billing_city: billingAddress.city,
+      billing_state: billingAddress.state,
+      billing_postal_code: billingAddress.postalCode,
+      billing_country: billingAddress.country,
       notes,
     })
     .select()

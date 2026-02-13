@@ -10,10 +10,12 @@ interface PatientProfile {
   user_id: string;
   full_name: string;
   phone: string | null;
-  address: string | null;
+  street_address_line_1: string | null;
+  street_address_line_2: string | null;
   city: string | null;
   state: string | null;
-  zip: string | null;
+  postal_code: string | null;
+  country: string | null;
   date_of_birth: string | null;
   avatar_url: string | null;
   created_at: string;
@@ -266,12 +268,23 @@ export default function PatientProfileClient({
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                Address
+                Street Address
               </label>
               <p className="text-sm sm:text-base text-gray-900 py-2">
-                {profile?.address || "Not provided"}
+                {profile?.street_address_line_1 || "Not provided"}
               </p>
             </div>
+
+            {profile?.street_address_line_2 && (
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                  Street Address (Continued)
+                </label>
+                <p className="text-sm sm:text-base text-gray-900 py-2">
+                  {profile.street_address_line_2}
+                </p>
+              </div>
+            )}
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -284,7 +297,7 @@ export default function PatientProfileClient({
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                State
+                Province/State
               </label>
               <p className="text-sm sm:text-base text-gray-900 py-2">
                 {profile?.state || "Not provided"}
@@ -293,10 +306,19 @@ export default function PatientProfileClient({
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                ZIP Code
+                Postal Code
               </label>
               <p className="text-sm sm:text-base text-gray-900 py-2">
-                {profile?.zip || "Not provided"}
+                {profile?.postal_code || "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                Country
+              </label>
+              <p className="text-sm sm:text-base text-gray-900 py-2">
+                {profile?.country || "Not provided"}
               </p>
             </div>
           </div>

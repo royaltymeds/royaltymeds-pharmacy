@@ -11,14 +11,40 @@ export async function POST(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
   try {
-    const { userId, fullName, email, role, phone, address, dateOfBirth } = await request.json();
+    const {
+      userId,
+      fullName,
+      email,
+      role,
+      phone,
+      streetLine1,
+      streetLine2,
+      city,
+      state,
+      postalCode,
+      country,
+      dateOfBirth,
+    } = await request.json();
 
-    // console.log("[create-profile API] Request received:", { userId, fullName, email, role, phone, address, dateOfBirth });
+    // console.log("[create-profile API] Request received:", { userId, fullName, email, role, phone, streetLine1, streetLine2, city, state, postalCode, country, dateOfBirth });
 
-    if (!userId || !fullName || !phone || !address || !dateOfBirth) {
+    if (
+      !userId ||
+      !fullName ||
+      !phone ||
+      !streetLine1 ||
+      !city ||
+      !state ||
+      !postalCode ||
+      !country ||
+      !dateOfBirth
+    ) {
       console.warn("[create-profile API] Missing required fields");
       return NextResponse.json(
-        { error: "Missing userId, fullName, phone, address, or dateOfBirth" },
+        {
+          error:
+            "Missing userId, fullName, phone, address components (street, city, state, postal code, country), or dateOfBirth",
+        },
         { status: 400 }
       );
     }
@@ -38,7 +64,10 @@ export async function POST(request: NextRequest) {
 
     if (userError) {
       // Ignore duplicate key errors, fail on others
-      if (!userError.message.includes("duplicate") && !userError.message.includes("violates unique constraint")) {
+      if (
+        !userError.message.includes("duplicate") &&
+        !userError.message.includes("violates unique constraint")
+      ) {
         console.error("[create-profile API] User creation error:", userError);
         return NextResponse.json(
           { error: "Failed to create user" },
@@ -51,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Then create the profile
-    // console.log("[create-profile API] Creating profile:", { userId, fullName, phone, address, dateOfBirth });
+    // console.log("[create-profile API] Creating profile:", { userId, fullName, phone, streetLine1, streetLine2, city, state, postalCode, country, dateOfBirth });
     const { error: profileError } = await supabaseAdmin
       .from("user_profiles")
       .insert([
@@ -59,7 +88,12 @@ export async function POST(request: NextRequest) {
           user_id: userId,
           full_name: fullName,
           phone: phone || null,
-          address,
+          street_address_line_1: streetLine1,
+          street_address_line_2: streetLine2 || null,
+          city,
+          state,
+          postal_code: postalCode,
+          country,
           date_of_birth: dateOfBirth,
         },
       ]);
