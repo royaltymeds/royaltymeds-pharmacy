@@ -148,7 +148,7 @@ export async function clearCart(): Promise<void> {
 
 export async function createOrder(
   shippingAddress: StructuredAddress,
-  billingAddress: StructuredAddress,
+  billingAddress?: StructuredAddress,
   notes?: string
 ): Promise<OrderWithItems> {
   const supabase = await getUserClient();
@@ -224,12 +224,12 @@ export async function createOrder(
       shipping_state: shippingAddress.state,
       shipping_postal_code: shippingAddress.postalCode,
       shipping_country: shippingAddress.country,
-      billing_street_line_1: billingAddress.streetLine1,
-      billing_street_line_2: billingAddress.streetLine2 || null,
-      billing_city: billingAddress.city,
-      billing_state: billingAddress.state,
-      billing_postal_code: billingAddress.postalCode,
-      billing_country: billingAddress.country,
+      billing_street_line_1: billingAddress?.streetLine1 || null,
+      billing_street_line_2: billingAddress?.streetLine2 || null,
+      billing_city: billingAddress?.city || null,
+      billing_state: billingAddress?.state || null,
+      billing_postal_code: billingAddress?.postalCode || null,
+      billing_country: billingAddress?.country || null,
       notes,
     })
     .select()

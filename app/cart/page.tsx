@@ -14,6 +14,23 @@ import { getOTCDrugById } from '@/app/actions/inventory';
 import { getPaymentConfig } from '@/app/actions/payments';
 import { useCart } from '@/lib/context/CartContext';
 
+const JAMAICAN_PARISHES = [
+  'Kingston',
+  'St. Andrew',
+  'St. Thomas',
+  'Portland',
+  'St. Mary',
+  'St. Ann',
+  'Trelawny',
+  'St. James',
+  'Hanover',
+  'Westmoreland',
+  'St. Elizabeth',
+  'Manchester',
+  'Clarendon',
+  'St. Catherine',
+];
+
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [drugDetails, setDrugDetails] = useState<Record<string, OTCDrug>>({});
@@ -29,18 +46,14 @@ export default function CartPage() {
     shipping_state: '',
     shipping_postal_code: '',
     shipping_country: 'Jamaica',
-    billing_street_line_1: '',
-    billing_street_line_2: '',
-    billing_city: '',
-    billing_state: '',
-    billing_postal_code: '',
-    billing_country: 'Jamaica',
     notes: '',
   });
   const [processingOrder, setProcessingOrder] = useState(false);
+  const [useProfileAddress, setUseProfileAddress] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { clearCart } = useCart();
 
-  // Load cart and drug details
+  // Load cart, drug details, and user profile
   useEffect(() => {
     const loadCart = async () => {
       try {
@@ -68,7 +81,32 @@ export default function CartPage() {
       }
     };
 
+    const loadUserProfile = async () => {
+      try {
+        const response = await fetch('/api/auth/get-profile');
+        if (response.ok) {
+          const profile = await response.json();
+          if (profile && profile.country === 'Jamaica') {
+            setUserProfile(profile);
+            // Prefill shipping address from profile if country is Jamaica
+            setFormData(prev => ({
+              ...prev,
+              shipping_street_line_1: profile.street_address_line_1 || '',
+              shipping_street_line_2: profile.street_address_line_2 || '',
+              shipping_city: profile.city || '',
+              shipping_state: profile.state || '',
+              shipping_postal_code: profile.postal_code || '',
+            }));
+            setUseProfileAddress(true);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load user profile:', err);
+      }
+    };
+
     loadCart();
+    loadUserProfile();
   }, []);
 
   // Handle quantity change
@@ -144,18 +182,7 @@ export default function CartPage() {
         throw new Error('Shipping city is required');
       }
       if (!formData.shipping_state.trim()) {
-        throw new Error('Shipping province/state is required');
-      }
-
-      // Validate billing address
-      if (!formData.billing_street_line_1.trim()) {
-        throw new Error('Billing street address is required');
-      }
-      if (!formData.billing_city.trim()) {
-        throw new Error('Billing city is required');
-      }
-      if (!formData.billing_state.trim()) {
-        throw new Error('Billing province/state is required');
+        throw new Error('Shipping parish is required');
       }
 
       const order = await createOrder(
@@ -165,16 +192,9 @@ export default function CartPage() {
           city: formData.shipping_city,
           state: formData.shipping_state,
           postalCode: formData.shipping_postal_code,
-          country: formData.shipping_country,
+          country: 'Jamaica',
         },
-        {
-          streetLine1: formData.billing_street_line_1,
-          streetLine2: formData.billing_street_line_2 || undefined,
-          city: formData.billing_city,
-          state: formData.billing_state,
-          postalCode: formData.billing_postal_code,
-          country: formData.billing_country,
-        },
+        undefined,
         formData.notes || undefined
       );
 
@@ -379,8 +399,36 @@ export default function CartPage() {
                 </button>
               ) : (
                 <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Shipping & Billing</h2>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Shipping Address</h2>
                   <form onSubmit={handleCheckout} className="space-y-6">
+                    {/* Use Profile Address Checkbox - only if profile exists and country is Jamaica */}
+                    {userProfile && userProfile.country === 'Jamaica' && (
+                      <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <input
+                          type="checkbox"
+                          id="useProfileAddress"
+                          checked={useProfileAddress}
+                          onChange={(e) => {
+                            setUseProfileAddress(e.target.checked);
+                            if (e.target.checked) {
+                              setFormData(prev => ({
+                                ...prev,
+                                shipping_street_line_1: userProfile.street_address_line_1 || '',
+                                shipping_street_line_2: userProfile.street_address_line_2 || '',
+                                shipping_city: userProfile.city || '',
+                                shipping_state: userProfile.state || '',
+                                shipping_postal_code: userProfile.postal_code || '',
+                              }));
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                        />
+                        <label htmlFor="useProfileAddress" className="text-sm font-medium text-gray-700 cursor-pointer">
+                          Use my profile address as shipping address
+                        </label>
+                      </div>
+                    )}
+
                     {/* Shipping Address */}
                     <div>
                       <h3 className="text-base font-semibold text-gray-900 mb-3">Shipping Address</h3>
@@ -435,18 +483,23 @@ export default function CartPage() {
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Province/State *
+                              Parish *
                             </label>
-                            <input
-                              type="text"
+                            <select
                               value={formData.shipping_state}
                               onChange={(e) =>
                                 setFormData({ ...formData, shipping_state: e.target.value })
                               }
-                              placeholder="Kingston"
                               required
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
+                            >
+                              <option value="">Select Parish</option>
+                              {JAMAICAN_PARISHES.map((parish) => (
+                                <option key={parish} value={parish}>
+                                  {parish}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
 
@@ -470,128 +523,12 @@ export default function CartPage() {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Country *
                             </label>
-                            <select
-                              value={formData.shipping_country}
-                              onChange={(e) =>
-                                setFormData({ ...formData, shipping_country: e.target.value })
-                              }
-                              required
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                              <option value="Jamaica">Jamaica</option>
-                              <option value="United States">United States</option>
-                              <option value="Canada">Canada</option>
-                              <option value="United Kingdom">United Kingdom</option>
-                              <option value="Other">Other</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Billing Address */}
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-3">Billing Address</h3>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Street Address *
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.billing_street_line_1}
-                            onChange={(e) =>
-                              setFormData({ ...formData, billing_street_line_1: e.target.value })
-                            }
-                            placeholder="123 Main Street"
-                            required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Street Address (Continued)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.billing_street_line_2}
-                            onChange={(e) =>
-                              setFormData({ ...formData, billing_street_line_2: e.target.value })
-                            }
-                            placeholder="Apartment, suite, etc. (optional)"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              City *
-                            </label>
                             <input
                               type="text"
-                              value={formData.billing_city}
-                              onChange={(e) =>
-                                setFormData({ ...formData, billing_city: e.target.value })
-                              }
-                              placeholder="Kingston"
-                              required
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              value="Jamaica"
+                              disabled
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
                             />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Province/State *
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.billing_state}
-                              onChange={(e) =>
-                                setFormData({ ...formData, billing_state: e.target.value })
-                              }
-                              placeholder="Kingston"
-                              required
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Postal Code
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.billing_postal_code}
-                              onChange={(e) =>
-                                setFormData({ ...formData, billing_postal_code: e.target.value })
-                              }
-                              placeholder="12345 (optional)"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Country *
-                            </label>
-                            <select
-                              value={formData.billing_country}
-                              onChange={(e) =>
-                                setFormData({ ...formData, billing_country: e.target.value })
-                              }
-                              required
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                              <option value="Jamaica">Jamaica</option>
-                              <option value="United States">United States</option>
-                              <option value="Canada">Canada</option>
-                              <option value="United Kingdom">United Kingdom</option>
-                              <option value="Other">Other</option>
-                            </select>
                           </div>
                         </div>
                       </div>
