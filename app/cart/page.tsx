@@ -97,7 +97,7 @@ export default function CartPage() {
               shipping_state: profile.state || '',
               shipping_postal_code: profile.postal_code || '',
             }));
-            setUseProfileAddress(true);
+            setUseProfileAddress(false);
           }
         }
       } catch (err) {
@@ -445,7 +445,8 @@ export default function CartPage() {
                             }
                             placeholder="123 Main Street"
                             required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            disabled={useProfileAddress}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
                           />
                         </div>
 
@@ -460,7 +461,8 @@ export default function CartPage() {
                               setFormData({ ...formData, shipping_street_line_2: e.target.value })
                             }
                             placeholder="Apartment, suite, etc. (optional)"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            disabled={useProfileAddress}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
                           />
                         </div>
 
@@ -477,7 +479,8 @@ export default function CartPage() {
                               }
                               placeholder="Kingston"
                               required
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              disabled={useProfileAddress}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
                             />
                           </div>
 
@@ -491,7 +494,8 @@ export default function CartPage() {
                                 setFormData({ ...formData, shipping_state: e.target.value })
                               }
                               required
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              disabled={useProfileAddress}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
                             >
                               <option value="">Select Parish</option>
                               {JAMAICAN_PARISHES.map((parish) => (
@@ -515,7 +519,8 @@ export default function CartPage() {
                                 setFormData({ ...formData, shipping_postal_code: e.target.value })
                               }
                               placeholder="12345 (optional)"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              disabled={useProfileAddress}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
                             />
                           </div>
 
