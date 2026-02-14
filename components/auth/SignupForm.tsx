@@ -257,8 +257,8 @@ export default function SignupForm() {
         return;
       }
 
-      // console.log("[SignupForm] SUCCESS: Signup complete, redirecting to login");
-      router.push("/login");
+      // console.log("[SignupForm] SUCCESS: Signup complete, redirecting to signup success page");
+      router.push("/signup-success");
       router.refresh();
     } catch (err) {
       console.error("[SignupForm] EXCEPTION:", err);
