@@ -419,6 +419,15 @@ export default function CartPage() {
                                 shipping_state: userProfile.state || '',
                                 shipping_postal_code: userProfile.postal_code || '',
                               }));
+                            } else {
+                              setFormData(prev => ({
+                                ...prev,
+                                shipping_street_line_1: '',
+                                shipping_street_line_2: '',
+                                shipping_city: '',
+                                shipping_state: '',
+                                shipping_postal_code: '',
+                              }));
                             }
                           }}
                           className="w-4 h-4 rounded border-gray-300 cursor-pointer"
