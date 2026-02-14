@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
       !streetLine1 ||
       !city ||
       !state ||
-      !postalCode ||
       !country ||
       !dateOfBirth
     ) {
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Missing userId, fullName, phone, address components (street, city, state, postal code, country), or dateOfBirth",
+            "Missing userId, fullName, phone, address components (street, city, state, country), or dateOfBirth",
         },
         { status: 400 }
       );

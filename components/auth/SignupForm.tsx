@@ -5,6 +5,24 @@ import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
 import Link from "next/link";
 
+// Jamaica parishes list
+const JAMAICAN_PARISHES = [
+  "Kingston",
+  "St. Andrew",
+  "St. Thomas",
+  "Portland",
+  "St. Mary",
+  "St. Ann",
+  "Trelawny",
+  "St. James",
+  "Hanover",
+  "Westmoreland",
+  "St. Elizabeth",
+  "Manchester",
+  "Clarendon",
+  "St. Catherine",
+];
+
 export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,13 +75,7 @@ export default function SignupForm() {
       }
 
       if (!state || state.trim() === "") {
-        setError("State/Province is required");
-        setIsLoading(false);
-        return;
-      }
-
-      if (!postalCode || postalCode.trim() === "") {
-        setError("Postal code is required");
+        setError("Parish is required");
         setIsLoading(false);
         return;
       }
@@ -322,30 +334,34 @@ export default function SignupForm() {
           <label htmlFor="state" className="block text-xs font-medium text-gray-700 mb-1">
             Parish <span className="text-red-500">*</span>
           </label>
-          <input
+          <select
             id="state"
-            type="text"
             value={state}
             onChange={(e) => setState(e.target.value)}
-            placeholder="Kingston"
             required
             className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
+          >
+            <option value="">Select a parish</option>
+            {JAMAICAN_PARISHES.map((parish) => (
+              <option key={parish} value={parish}>
+                {parish}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label htmlFor="postalCode" className="block text-xs font-medium text-gray-700 mb-1">
-            Postal Code <span className="text-red-500">*</span>
+            Postal Code
           </label>
           <input
             id="postalCode"
             type="text"
             value={postalCode}
             onChange={(e) => setPostalCode(e.target.value)}
-            placeholder="12345"
-            required
+            placeholder="12345 (optional)"
             className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>

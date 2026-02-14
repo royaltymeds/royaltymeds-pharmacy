@@ -5,6 +5,7 @@
 
 /**
  * A properly structured address with all required components
+ * Postal code is optional
  * Used for user profiles, shipping addresses, billing addresses, and practice addresses
  */
 export interface StructuredAddress {
@@ -12,20 +13,21 @@ export interface StructuredAddress {
   streetLine2?: string;
   city: string;
   state: string;
-  postalCode: string;
+  postalCode?: string;
   country: string;
 }
 
 /**
  * Database representation of address fields
  * Maps to actual database column names for type safety
+ * Postal code is optional
  */
 export interface AddressDBFields {
   street_line_1: string;
   street_line_2?: string | null;
   city: string;
   state: string;
-  postal_code: string;
+  postal_code?: string | null;
   country: string;
 }
 
@@ -141,6 +143,7 @@ export function formatAddressForDisplay(address: StructuredAddress | null | unde
 
 /**
  * Validate that all required address fields are present
+ * Postal code is optional, all others are required
  * @param address Address to validate
  * @returns true if valid, false otherwise
  */
@@ -153,9 +156,8 @@ export function isValidAddress(address: any): address is StructuredAddress {
     address.city.trim().length > 0 &&
     typeof address.state === 'string' &&
     address.state.trim().length > 0 &&
-    typeof address.postalCode === 'string' &&
-    address.postalCode.trim().length > 0 &&
     typeof address.country === 'string' &&
-    address.country.trim().length > 0
+    address.country.trim().length > 0 &&
+    (!address.postalCode || (typeof address.postalCode === 'string' && address.postalCode.trim().length >= 0))
   );
 }
