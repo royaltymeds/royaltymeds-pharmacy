@@ -242,7 +242,7 @@ export default function CartPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-screen">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cartItems.length > 0 ? (
@@ -315,9 +315,19 @@ export default function CartPage() {
                         >
                           <Minus size={18} />
                         </button>
-                        <span className="w-8 text-center font-semibold">
-                          {item.quantity}
-                        </span>
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const newQuantity = parseInt(e.target.value) || 1;
+                            if (newQuantity > 0) {
+                              handleQuantityChange(item.id, newQuantity);
+                            }
+                          }}
+                          min="1"
+                          disabled={updating === item.id}
+                          className="w-12 text-center font-semibold border border-gray-300 rounded px-2 py-1 disabled:bg-gray-100 disabled:text-gray-600"
+                        />
                         <button
                           onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                           disabled={updating === item.id}
@@ -361,7 +371,7 @@ export default function CartPage() {
 
           {/* Order Summary and Checkout */}
           {cartItems.length > 0 && (
-            <div className="space-y-6">
+            <div className="space-y-6 lg:overflow-y-auto lg:max-h-screen pr-2">
               {/* Order Summary */}
               <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
                 <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>

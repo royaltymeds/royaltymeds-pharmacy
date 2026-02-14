@@ -90,13 +90,13 @@ export default function StoreClientComponent({ drugs }: Props) {
       addItem(drug.id, drug.name, 1);
       toast.success(`${drug.name} added to cart!`, {
         duration: 3000,
-        position: 'top-right',
+        position: 'bottom-right',
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add to cart';
       toast.error(errorMessage, {
         duration: 3000,
-        position: 'top-right',
+        position: 'bottom-right',
       });
     } finally {
       setAddingToCart(null);
