@@ -23,6 +23,62 @@ const JAMAICAN_PARISHES = [
   "St. Catherine",
 ];
 
+// US states
+const US_STATES = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
+  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
+  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
+  "Wisconsin", "Wyoming",
+];
+
+// Canadian provinces
+const CANADIAN_PROVINCES = [
+  "Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador",
+  "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island",
+  "Quebec", "Saskatchewan", "Yukon",
+];
+
+// UK regions
+const UK_REGIONS = [
+  "England", "Scotland", "Wales", "Northern Ireland",
+];
+
+// Get state label based on country
+const getStateLabel = (country: string): string => {
+  switch (country) {
+    case "Jamaica":
+      return "Parish";
+    case "United States":
+      return "State";
+    case "Canada":
+      return "Province";
+    case "United Kingdom":
+      return "Region";
+    default:
+      return "Province/State";
+  }
+};
+
+// Get state/province options based on country
+const getStateOptions = (country: string): string[] => {
+  switch (country) {
+    case "Jamaica":
+      return JAMAICAN_PARISHES;
+    case "United States":
+      return US_STATES;
+    case "Canada":
+      return CANADIAN_PROVINCES;
+    case "United Kingdom":
+      return UK_REGIONS;
+    default:
+      return [];
+  }
+};
+
 export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -332,22 +388,34 @@ export default function SignupForm() {
 
         <div>
           <label htmlFor="state" className="block text-xs font-medium text-gray-700 mb-1">
-            Parish <span className="text-red-500">*</span>
+            {getStateLabel(country)} <span className="text-red-500">*</span>
           </label>
-          <select
-            id="state"
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-            required
-            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            <option value="">Select a parish</option>
-            {JAMAICAN_PARISHES.map((parish) => (
-              <option key={parish} value={parish}>
-                {parish}
-              </option>
-            ))}
-          </select>
+          {getStateOptions(country).length > 0 ? (
+            <select
+              id="state"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              required
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">Select {getStateLabel(country).toLowerCase()}</option>
+              {getStateOptions(country).map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              id="state"
+              type="text"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              placeholder={`Enter ${getStateLabel(country).toLowerCase()}`}
+              required
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          )}
         </div>
       </div>
 
@@ -373,7 +441,10 @@ export default function SignupForm() {
           <select
             id="country"
             value={country}
-            onChange={(e) => setCountry(e.target.value)}
+            onChange={(e) => {
+              setCountry(e.target.value);
+              setState(""); // Clear state when country changes
+            }}
             required
             className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           >
