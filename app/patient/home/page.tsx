@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import { UploadIcon, ShoppingCartIcon, RefreshCwIcon, MessageSquareIcon } from "lucide-react";
+import { UploadIcon, ShoppingCartIcon, MessageSquareIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
