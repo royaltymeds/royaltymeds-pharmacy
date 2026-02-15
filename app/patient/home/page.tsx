@@ -38,8 +38,7 @@ async function getDashboardData(userId: string) {
       .from("orders")
       .select("*")
       .eq("patient_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(3);
+      .order("created_at", { ascending: false });
 
     // Fetch pending refill requests
     const { data: refillsData } = await supabase
@@ -109,61 +108,70 @@ export default async function PatientHomePage() {
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-        {/* Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-green-600">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      {/* Summary Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        {/* Total Orders */}
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-gray-500 text-xs md:text-sm font-medium">Active</p>
-              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-                {prescriptions.length}
-              </p>
+              <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Orders</p>
+              <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 sm:mt-3">{orders.length}</p>
+              <div className="mt-3 sm:mt-4 space-y-2">
+                {(() => {
+                  const statusCounts: Record<string, number> = {};
+                  orders.forEach(order => {
+                    statusCounts[order.status || 'unknown'] = (statusCounts[order.status || 'unknown'] || 0) + 1;
+                  });
+                  return Object.entries(statusCounts).map(([status, count]) => (
+                    <div key={status} className="flex justify-between text-xs sm:text-sm text-gray-600">
+                      <span className="capitalize">{status}</span>
+                      <span className="font-medium">{count}</span>
+                    </div>
+                  ));
+                })()}
+              </div>
             </div>
-            <UploadIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-green-600 flex-shrink-0" />
+            <ShoppingCartIcon className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600 flex-shrink-0 opacity-50" />
           </div>
         </div>
 
-        {/* Orders */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-blue-600">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        {/* Total Prescriptions */}
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-gray-500 text-xs md:text-sm font-medium">Orders</p>
-              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-                {orders.length}
-              </p>
+              <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Prescriptions</p>
+              <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 sm:mt-3">{prescriptions.length + pendingPrescriptions.length}</p>
+              <div className="mt-3 sm:mt-4 space-y-2">
+                {(() => {
+                  const statusCounts: Record<string, number> = {};
+                  [...prescriptions, ...pendingPrescriptions].forEach(prescription => {
+                    statusCounts[prescription.status || 'unknown'] = (statusCounts[prescription.status || 'unknown'] || 0) + 1;
+                  });
+                  return Object.entries(statusCounts).map(([status, count]) => (
+                    <div key={status} className="flex justify-between text-xs sm:text-sm text-gray-600">
+                      <span className="capitalize">{status}</span>
+                      <span className="font-medium">{count}</span>
+                    </div>
+                  ));
+                })()}
+              </div>
             </div>
-            <ShoppingCartIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
+            <UploadIcon className="h-10 w-10 sm:h-12 sm:w-12 text-green-600 flex-shrink-0 opacity-50" />
           </div>
         </div>
 
-        {/* Pending Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-yellow-500">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        {/* Unread Messages */}
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-gray-500 text-xs md:text-sm font-medium">
-                Pending
-              </p>
-              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-                {pendingPrescriptions.length}
-              </p>
+              <p className="text-gray-600 text-xs sm:text-sm font-medium">Unread Messages</p>
+              <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 sm:mt-3">0</p>
+              <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500">No unread messages</p>
+              <Link href="/patient/messages" className="mt-2 inline-block text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm">
+                View Messages →
+              </Link>
             </div>
-            <RefreshCwIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-yellow-500 flex-shrink-0" />
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-green-600">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-gray-500 text-xs md:text-sm font-medium">
-                Messages
-              </p>
-              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
-                0
-              </p>
-            </div>
-            <MessageSquareIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-green-600 flex-shrink-0" />
+            <MessageSquareIcon className="h-10 w-10 sm:h-12 sm:w-12 text-purple-600 flex-shrink-0 opacity-50" />
           </div>
         </div>
       </div>
@@ -213,7 +221,10 @@ export default async function PatientHomePage() {
           </h2>
           {recentPrescriptions.length > 0 ? (
             <div className="space-y-2 sm:space-y-3">
-              {recentPrescriptions.map((prescription) => (
+              {recentPrescriptions
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 5)
+                .map((prescription) => (
                 <div
                   key={prescription.id}
                   className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition flex items-center justify-between gap-2"
@@ -269,7 +280,10 @@ export default async function PatientHomePage() {
           <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Recent Orders</h2>
           {orders.length > 0 ? (
             <div className="space-y-2 sm:space-y-3">
-              {orders.map((order) => (
+              {orders
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 5)
+                .map((order) => (
                 <div
                   key={order.id}
                   className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition flex items-center justify-between gap-2"
