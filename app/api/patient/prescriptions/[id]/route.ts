@@ -36,7 +36,39 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // First try to fetch from patient prescriptions
+    // Fetch ANY prescription with this ID first (no patient_id filter)
+    const { data: anyPrescription, error: anyError } = await supabase
+      .from("prescriptions")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    console.log("API: Any prescription check:", {
+      found: !!anyPrescription,
+      id: anyPrescription?.id,
+      patient_id: anyPrescription?.patient_id,
+      user_id: user.id,
+      match: anyPrescription?.patient_id === user.id,
+      error: anyError?.message,
+    });
+
+    if (anyPrescription && anyPrescription.patient_id !== user.id) {
+      console.log("API: Patient ID mismatch - prescription belongs to different user");
+      return NextResponse.json(
+        { error: "Prescription not found" },
+        { status: 404 }
+      );
+    }
+
+    if (!anyPrescription) {
+      console.log("API: Prescription not found in database");
+      return NextResponse.json(
+        { error: "Prescription not found" },
+        { status: 404 }
+      );
+    }
+
+    // Now fetch with full items
     const { data: patientPrescription, error: patientError } = await supabase
       .from("prescriptions")
       .select(
