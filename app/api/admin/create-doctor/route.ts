@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: doctorId,
         full_name: fullName,
+        specialty: specialization || null,
         street_address_line_1: streetAddressLine1 || null,
         street_address_line_2: streetAddressLine2 || null,
         city: city || null,
