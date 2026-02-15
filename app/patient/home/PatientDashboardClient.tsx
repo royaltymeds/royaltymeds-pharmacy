@@ -163,7 +163,10 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
           <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Prescriptions</h2>
           {(prescriptions && prescriptions.length > 0) || (pendingPrescriptions && pendingPrescriptions.length > 0) ? (
             <div className="space-y-3">
-              {[...prescriptions, ...pendingPrescriptions].map((prescription) => (
+              {[...prescriptions, ...pendingPrescriptions]
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 5)
+                .map((prescription) => (
                 <div
                   key={prescription.id}
                   className="border rounded-lg p-4 hover:bg-gray-50 transition flex items-center justify-between"
@@ -211,7 +214,10 @@ export default function PatientDashboardClient({ initialData }: { initialData: D
           <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Orders</h2>
           {orders && orders.length > 0 ? (
             <div className="space-y-3">
-              {orders.map((order) => (
+              {orders
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 5)
+                .map((order) => (
                 <div
                   key={order.id}
                   className="border rounded-lg p-4 hover:bg-gray-50 transition flex items-center justify-between"
