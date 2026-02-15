@@ -221,30 +221,35 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <Link
-          href="/store"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
-        >
-          <ArrowLeft size={20} />
-          Back to Store
-        </Link>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="px-4 sm:px-6 lg:px-8 py-6">
+          <Link
+            href="/store"
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
+          >
+            <ArrowLeft size={20} />
+            Back to Store
+          </Link>
+          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
+        </div>
+      </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-center gap-2">
+          <AlertCircle size={20} />
+          {error}
+        </div>
+      )}
 
-        {/* Error Message */}
-        {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 mb-6 flex items-center gap-2">
-            <AlertCircle size={20} />
-            {error}
-          </div>
-        )}
+      {/* Main Content - Two Independent Sections */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Section - Cart Items */}
+        <div className="w-full lg:w-2/3 bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8 overflow-y-auto">
+          <div className="space-y-4">
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-screen">
-          {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
             {cartItems.length > 0 ? (
               cartItems.map((item) => {
                 const drug = drugDetails[item.drug_id];
@@ -319,14 +324,12 @@ export default function CartPage() {
                           type="number"
                           value={item.quantity}
                           onChange={(e) => {
-                            const newQuantity = parseInt(e.target.value) || 1;
-                            if (newQuantity > 0) {
-                              handleQuantityChange(item.id, newQuantity);
-                            }
+                            const qty = parseInt(e.target.value) || 1;
+                            handleQuantityChange(item.id, Math.max(1, qty));
                           }}
                           min="1"
                           disabled={updating === item.id}
-                          className="w-12 text-center font-semibold border border-gray-300 rounded px-2 py-1 disabled:bg-gray-100 disabled:text-gray-600"
+                          className="w-12 text-center font-semibold border border-gray-300 rounded px-2 py-1"
                         />
                         <button
                           onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
@@ -369,9 +372,12 @@ export default function CartPage() {
             )}
           </div>
 
-          {/* Order Summary and Checkout */}
-          {cartItems.length > 0 && (
-            <div className="space-y-6 lg:overflow-y-auto lg:max-h-screen pr-2">
+        </div>
+        
+        {/* Right Section - Order Summary and Checkout */}
+        {cartItems.length > 0 && (
+          <div className="hidden lg:flex lg:w-1/3 bg-white border-l border-gray-200 overflow-y-auto hide-scrollbar flex-col">
+            <div className="p-6 space-y-6 w-full">
               {/* Order Summary */}
               <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
                 <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
@@ -595,8 +601,8 @@ export default function CartPage() {
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
