@@ -246,7 +246,7 @@ export default function CartPage() {
           </div>
         )}
         {/* Left Section - Cart Items */}
-        <div className="w-full lg:w-1/2 lg:flex-1 bg-white lg:bg-gradient-to-br lg:from-blue-50 lg:to-indigo-100 p-4 md:p-8 lg:overflow-y-auto lg:hide-scrollbar">
+        <div className="w-full lg:w-1/2 lg:flex-1 bg-white lg:bg-gradient-to-br lg:from-blue-50 lg:to-indigo-100 p-4 lg:p-0 lg:overflow-y-auto lg:hide-scrollbar">
           <div className="space-y-4">
 
             {cartItems.length > 0 ? (
@@ -257,7 +257,7 @@ export default function CartPage() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-white rounded-lg shadow-md p-4 flex gap-4"
+                    className="bg-white rounded-lg shadow-md p-4 md:p-4 lg:p-4 flex gap-4"
                   >
                     {/* Product Image */}
                     <div className="relative w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0">
@@ -377,9 +377,9 @@ export default function CartPage() {
         {/* Right Section - Order Summary and Checkout */}
         {cartItems.length > 0 && (
           <div className="w-full lg:w-1/2 lg:flex-1 bg-white lg:border-l border-gray-200 lg:overflow-y-auto lg:hide-scrollbar flex flex-col">
-            <div className="p-6 space-y-6 w-full">
+            <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 w-full">
               {/* Order Summary */}
-              <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+              <div className="bg-white rounded-lg shadow-md p-4 md:p-4 lg:p-6 space-y-4">
                 <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
                 <div className="space-y-3 border-b border-gray-200 pb-3">
                   <div className="flex justify-between text-gray-700">
