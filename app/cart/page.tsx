@@ -247,7 +247,7 @@ export default function CartPage() {
         )}
         {/* Left Section - Cart Items */}
         <div className="w-full lg:w-1/2 lg:flex-1 bg-white lg:bg-gradient-to-br lg:from-blue-50 lg:to-indigo-100 p-4 lg:p-0 lg:overflow-y-auto lg:hide-scrollbar">
-          <div className="space-y-4">
+          <div className="space-y-4 lg:space-y-0">
 
             {cartItems.length > 0 ? (
               cartItems.map((item) => {
@@ -257,7 +257,7 @@ export default function CartPage() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-white rounded-lg shadow-md p-4 md:p-4 lg:p-4 flex gap-4"
+                    className="bg-white rounded-lg lg:rounded-none shadow-md lg:shadow-none p-4 md:p-4 lg:p-4 flex gap-4 lg:border-b lg:border-gray-200 lg:last:border-b-0"
                   >
                     {/* Product Image */}
                     <div className="relative w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0">
