@@ -221,7 +221,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col overflow-hidden">
+    <div className="min-h-screen lg:h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col overflow-auto lg:overflow-hidden">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
         <div className="px-4 sm:px-6 lg:px-8 py-6">
@@ -237,7 +237,7 @@ export default function CartPage() {
       </div>
 
       {/* Main Content - Two Independent Sections */}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-1 lg:overflow-hidden">
         {/* Error Message - inside flex container */}
         {error && (
           <div className="absolute top-20 left-4 right-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2 z-40">
@@ -246,7 +246,7 @@ export default function CartPage() {
           </div>
         )}
         {/* Left Section - Cart Items */}
-        <div className="w-full lg:w-1/2 flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8 overflow-y-auto hide-scrollbar">
+        <div className="w-full lg:w-1/2 lg:flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8 lg:overflow-y-auto lg:hide-scrollbar">
           <div className="space-y-4">
 
             {cartItems.length > 0 ? (
@@ -376,7 +376,7 @@ export default function CartPage() {
         
         {/* Right Section - Order Summary and Checkout */}
         {cartItems.length > 0 && (
-          <div className="w-full lg:w-1/2 flex-1 bg-white lg:border-l border-t lg:border-t-0 border-gray-200 overflow-y-auto hide-scrollbar flex flex-col">
+          <div className="w-full lg:w-1/2 lg:flex-1 bg-white lg:border-l border-gray-200 lg:overflow-y-auto lg:hide-scrollbar flex flex-col">
             <div className="p-6 space-y-6 w-full">
               {/* Order Summary */}
               <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
