@@ -16,20 +16,11 @@ async function getDashboardData(userId: string) {
       .eq("user_id", userId)
       .single();
 
-    // Fetch active/approved prescriptions
+    // Fetch all prescriptions for this patient
     const { data: prescriptionsData } = await supabase
       .from("prescriptions")
       .select("*")
       .eq("patient_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    // Fetch pending prescriptions
-    const { data: pendingPrescriptionsData } = await supabase
-      .from("prescriptions")
-      .select("*")
-      .eq("patient_id", userId)
-      .eq("status", "pending")
       .order("created_at", { ascending: false });
 
     // Fetch recent orders - uses user_id, not patient_id
@@ -54,7 +45,6 @@ async function getDashboardData(userId: string) {
     console.log("Dashboard data fetched:", {
       userId,
       prescriptions: prescriptionsData?.length || 0,
-      pendingPrescriptions: pendingPrescriptionsData?.length || 0,
       orders: ordersData?.length || 0,
       refills: refillsData?.length || 0,
     });
@@ -62,7 +52,6 @@ async function getDashboardData(userId: string) {
     return {
       profile: profileData,
       prescriptions: prescriptionsData || [],
-      pendingPrescriptions: pendingPrescriptionsData || [],
       orders: ordersData || [],
       refills: refillsData || [],
     };
@@ -89,7 +78,7 @@ export default async function PatientHomePage() {
     redirect("/login");
   }
 
-  const { profile, prescriptions, pendingPrescriptions, orders } =
+  const { profile, prescriptions, orders } =
     await getDashboardData(user.id);
 
   const firstName = profile?.full_name?.split(" ")[0] || "Customer";
@@ -151,11 +140,11 @@ export default async function PatientHomePage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Prescriptions</p>
-              <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 sm:mt-3">{prescriptions.length + pendingPrescriptions.length}</p>
+              <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 sm:mt-3">{prescriptions.length}</p>
               <div className="mt-3 sm:mt-4 space-y-2">
                 {(() => {
                   const statusCounts: Record<string, number> = {};
-                  [...prescriptions, ...pendingPrescriptions].forEach(prescription => {
+                  prescriptions.forEach(prescription => {
                     statusCounts[prescription.status || 'unknown'] = (statusCounts[prescription.status || 'unknown'] || 0) + 1;
                   });
                   return Object.entries(statusCounts).map(([status, count]) => (
