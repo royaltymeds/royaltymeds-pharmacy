@@ -221,9 +221,9 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
         <div className="px-4 sm:px-6 lg:px-8 py-6">
           <Link
             href="/store"
@@ -236,18 +236,17 @@ export default function CartPage() {
         </div>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-center gap-2">
-          <AlertCircle size={20} />
-          {error}
-        </div>
-      )}
-
       {/* Main Content - Two Independent Sections */}
       <div className="flex flex-1 overflow-hidden">
+        {/* Error Message - inside flex container */}
+        {error && (
+          <div className="absolute top-20 left-4 right-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2 z-40">
+            <AlertCircle size={20} />
+            {error}
+          </div>
+        )}
         {/* Left Section - Cart Items */}
-        <div className="w-full lg:w-2/3 bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8 overflow-y-auto">
+        <div className="w-full lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8 overflow-y-auto hide-scrollbar">
           <div className="space-y-4">
 
             {cartItems.length > 0 ? (
@@ -327,6 +326,7 @@ export default function CartPage() {
                             const qty = parseInt(e.target.value) || 1;
                             handleQuantityChange(item.id, Math.max(1, qty));
                           }}
+                          onFocus={(e) => e.target.select()}
                           min="1"
                           disabled={updating === item.id}
                           className="w-12 text-center font-semibold border border-gray-300 rounded px-2 py-1"
@@ -376,7 +376,7 @@ export default function CartPage() {
         
         {/* Right Section - Order Summary and Checkout */}
         {cartItems.length > 0 && (
-          <div className="hidden lg:flex lg:w-1/3 bg-white border-l border-gray-200 overflow-y-auto hide-scrollbar flex-col">
+          <div className="hidden lg:flex lg:w-1/2 bg-white border-l border-gray-200 overflow-y-auto hide-scrollbar flex-col">
             <div className="p-6 space-y-6 w-full">
               {/* Order Summary */}
               <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
