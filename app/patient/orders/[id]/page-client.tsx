@@ -212,28 +212,6 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
                 )}
               </p>
             </div>
-
-            {/* Billing Address */}
-            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-                <span>Billing Address</span>
-              </h3>
-              <p className="text-gray-700 text-xs sm:text-sm break-words">
-                {order.billing_street_line_1 ? (
-                  <>
-                    {order.billing_street_line_1}
-                    {order.billing_street_line_2 && <> {order.billing_street_line_2}</>}
-                    <br />
-                    {order.billing_city}, {order.billing_state} {order.billing_postal_code}
-                    <br />
-                    {order.billing_country}
-                  </>
-                ) : (
-                  'Not provided'
-                )}
-              </p>
-            </div>
           </div>
         </div>
 
