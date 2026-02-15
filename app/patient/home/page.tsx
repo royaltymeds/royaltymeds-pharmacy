@@ -34,11 +34,15 @@ async function getDashboardData(userId: string) {
       .order("created_at", { ascending: false });
 
     // Fetch recent orders
-    const { data: ordersData } = await supabase
+    const { data: ordersData, error: ordersError } = await supabase
       .from("orders")
       .select("*")
       .eq("patient_id", userId)
       .order("created_at", { ascending: false });
+
+    if (ordersError) {
+      console.error("Orders fetch error:", ordersError);
+    }
 
     // Fetch pending refill requests
     const { data: refillsData } = await supabase
@@ -47,6 +51,14 @@ async function getDashboardData(userId: string) {
       .eq("patient_id", userId)
       .eq("status", "pending")
       .limit(3);
+
+    console.log("Dashboard data fetched:", {
+      userId,
+      prescriptions: prescriptionsData?.length || 0,
+      pendingPrescriptions: pendingPrescriptionsData?.length || 0,
+      orders: ordersData?.length || 0,
+      refills: refillsData?.length || 0,
+    });
 
     return {
       profile: profileData,
