@@ -33,11 +33,11 @@ async function getDashboardData(userId: string) {
       .eq("status", "pending")
       .order("created_at", { ascending: false });
 
-    // Fetch recent orders
+    // Fetch recent orders - uses user_id, not patient_id
     const { data: ordersData, error: ordersError } = await supabase
       .from("orders")
       .select("*")
-      .eq("patient_id", userId)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
     if (ordersError) {
