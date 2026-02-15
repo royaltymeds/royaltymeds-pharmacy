@@ -21,9 +21,8 @@ async function getDashboardData(userId: string) {
       .from("prescriptions")
       .select("*")
       .eq("patient_id", userId)
-      .eq("status", "approved")
       .order("created_at", { ascending: false })
-      .limit(5);
+      .limit(10);
 
     // Fetch pending prescriptions
     const { data: pendingPrescriptionsData } = await supabase
