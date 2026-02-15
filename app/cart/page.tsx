@@ -246,7 +246,7 @@ export default function CartPage() {
           </div>
         )}
         {/* Left Section - Cart Items */}
-        <div className="w-full lg:w-1/2 lg:flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8 lg:overflow-y-auto lg:hide-scrollbar">
+        <div className="w-full lg:w-1/2 lg:flex-1 bg-white lg:bg-gradient-to-br lg:from-blue-50 lg:to-indigo-100 p-4 md:p-8 lg:overflow-y-auto lg:hide-scrollbar">
           <div className="space-y-4">
 
             {cartItems.length > 0 ? (
