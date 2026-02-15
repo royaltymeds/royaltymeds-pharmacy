@@ -25,7 +25,12 @@ interface Prescription {
   doctor_phone: string;
   doctor_email: string;
   practice_name: string;
-  practice_address: string;
+  practice_street_line_1?: string | null;
+  practice_street_line_2?: string | null;
+  practice_city?: string | null;
+  practice_state?: string | null;
+  practice_postal_code?: string | null;
+  practice_country?: string | null;
   filled_at: string;
   pharmacist_name: string;
   is_refillable?: boolean;
@@ -377,13 +382,18 @@ export default function PrescriptionDetailPage({
                   {prescription.practice_name || "Not provided"}
                 </p>
               </div>
-              {prescription.practice_address && (
+              {(prescription.practice_street_line_1 || prescription.practice_city) && (
                 <div>
                   <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">
                     Practice Address
                   </p>
-                  <p className="text-gray-900 mt-1 whitespace-pre-wrap">
-                    {prescription.practice_address}
+                  <p className="text-gray-900 mt-1">
+                    {prescription.practice_street_line_1}
+                    {prescription.practice_street_line_2 && <>{"\n" + prescription.practice_street_line_2}</> }
+                    {prescription.practice_city && <>{"\n" + prescription.practice_city}</> }
+                    {prescription.practice_state && <>{" " + prescription.practice_state}</> }
+                    {prescription.practice_postal_code && <>{" " + prescription.practice_postal_code}</> }
+                    {prescription.practice_country && <>{" \n" + prescription.practice_country}</> }
                   </p>
                 </div>
               )}

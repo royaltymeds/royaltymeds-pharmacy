@@ -154,7 +154,6 @@ export async function POST(request: NextRequest) {
           doctor_email: user.email || null,
           doctor_phone: doctorData?.phone || null,
           practice_name: doctorData?.specialty || null,
-          practice_address: doctorData?.address || null,
         },
       ])
       .select();
@@ -166,7 +165,6 @@ export async function POST(request: NextRequest) {
     //   doctorEmail: user.email || null,
     //   doctorPhone: doctorData?.phone || null,
     //   practiceName: doctorData?.specialty || null,
-    //   practiceAddress: doctorData?.address || null,
     //   note: "Patient linking and medication items will be added by admins",
     // });
 

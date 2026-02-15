@@ -13,7 +13,7 @@ export async function PATCH(
   const { id } = await params;
   const prescriptionId = id;
   const body = await request.json();
-  const { admin_notes, doctor_name, doctor_phone, doctor_email, practice_name, practice_address, source } = body;
+  const { admin_notes, doctor_name, doctor_phone, doctor_email, practice_name, source } = body;
 
   try {
     // Verify user is authenticated and is admin
@@ -68,7 +68,6 @@ export async function PATCH(
     if (doctor_phone !== undefined) updateData.doctor_phone = doctor_phone;
     if (doctor_email !== undefined) updateData.doctor_email = doctor_email;
     if (practice_name !== undefined) updateData.practice_name = practice_name;
-    if (practice_address !== undefined) updateData.practice_address = practice_address;
 
     if (Object.keys(updateData).length === 0) {
       return new Response(

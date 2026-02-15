@@ -115,7 +115,6 @@ export default function PrescriptionDetailClient({
     doctor_phone: prescription.doctor_phone || "",
     doctor_email: prescription.doctor_email || "",
     practice_name: prescription.practice_name || "",
-    practice_address: prescription.practice_address || "",
   });
   const [isFillingPrescription, setIsFillingPrescription] = useState(false);
   const [quantitiesBeingFilled, setQuantitiesBeingFilled] = useState<Record<string, number>>({});
@@ -1733,23 +1732,6 @@ export default function PrescriptionDetailClient({
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-2">
-                    Practice Address
-                  </label>
-                  <textarea
-                    value={doctorDetails.practice_address}
-                    onChange={(e) =>
-                      setDoctorDetails({
-                        ...doctorDetails,
-                        practice_address: e.target.value,
-                      })
-                    }
-                    placeholder="e.g., 123 Medical Lane, Suite 200, City, State 12345"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    rows={2}
-                  />
-                </div>
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={handleSaveDoctorDetails}
@@ -1766,7 +1748,6 @@ export default function PrescriptionDetailClient({
                         doctor_phone: prescription.doctor_phone || "",
                         doctor_email: prescription.doctor_email || "",
                         practice_name: prescription.practice_name || "",
-                        practice_address: prescription.practice_address || "",
                       });
                     }}
                     className="inline-block px-4 py-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 text-gray-900 rounded-lg transition"
@@ -1821,14 +1802,6 @@ export default function PrescriptionDetailClient({
                   </p>
                   <p className="text-gray-900">
                     {prescription.practice_name || "Not provided"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase tracking-wide">
-                    Practice Address
-                  </p>
-                  <p className="text-gray-900">
-                    {prescription.practice_address || "Not provided"}
                   </p>
                 </div>
               </div>
