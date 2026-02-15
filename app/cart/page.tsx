@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils/currency';
@@ -51,6 +51,8 @@ export default function CartPage() {
   const [processingOrder, setProcessingOrder] = useState(false);
   const [useProfileAddress, setUseProfileAddress] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [pendingQuantities, setPendingQuantities] = useState<Record<string, number>>({});
+  const quantityTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
   const { clearCart } = useCart();
 
   // Load cart, drug details, and user profile
@@ -107,6 +109,52 @@ export default function CartPage() {
 
     loadCart();
     loadUserProfile();
+  }, []);
+
+  // Handle quantity input change with debounce
+  const handleQuantityInputChange = (itemId: string, newQuantity: number) => {
+    // Update pending quantities for display
+    setPendingQuantities(prev => ({
+      ...prev,
+      [itemId]: newQuantity
+    }));
+
+    // Clear existing timeout for this item
+    if (quantityTimeoutsRef.current[itemId]) {
+      clearTimeout(quantityTimeoutsRef.current[itemId]);
+    }
+
+    // Set new timeout to update after 800ms of inactivity
+    quantityTimeoutsRef.current[itemId] = setTimeout(() => {
+      if (newQuantity >= 1) {
+        handleQuantityChange(itemId, newQuantity);
+      }
+      delete quantityTimeoutsRef.current[itemId];
+    }, 800);
+  };
+
+  // Finalize quantity input
+  const finalizeQuantityInput = (itemId: string) => {
+    if (quantityTimeoutsRef.current[itemId]) {
+      clearTimeout(quantityTimeoutsRef.current[itemId]);
+      delete quantityTimeoutsRef.current[itemId];
+    }
+    const qty = pendingQuantities[itemId];
+    if (qty && qty >= 1) {
+      handleQuantityChange(itemId, qty);
+    }
+    setPendingQuantities(prev => {
+      const newPending = { ...prev };
+      delete newPending[itemId];
+      return newPending;
+    });
+  };
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(quantityTimeoutsRef.current).forEach(timeout => clearTimeout(timeout));
+    };
   }, []);
 
   // Handle quantity change
@@ -321,10 +369,17 @@ export default function CartPage() {
                         </button>
                         <input
                           type="number"
-                          value={item.quantity}
+                          value={pendingQuantities[item.id] ?? item.quantity}
                           onChange={(e) => {
                             const qty = parseInt(e.target.value) || 1;
-                            handleQuantityChange(item.id, Math.max(1, qty));
+                            handleQuantityInputChange(item.id, Math.max(1, qty));
+                          }}
+                          onBlur={() => finalizeQuantityInput(item.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                              finalizeQuantityInput(item.id);
+                            }
                           }}
                           onFocus={(e) => e.target.select()}
                           min="1"
