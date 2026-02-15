@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     const [{ data: patientProfiles }, { data: doctorProfiles }] = await Promise.all([
       adminClient
         .from("user_profiles")
-        .select("user_id, full_name, phone, address, date_of_birth")
+        .select("user_id, full_name, phone, street_address_line_1, street_address_line_2, city, state, postal_code, country, date_of_birth")
         .in("user_id", patientIds),
       adminClient
         .from("user_profiles")
@@ -89,12 +89,22 @@ export async function GET(request: NextRequest) {
       const profile = (patientProfiles || []).find(
         (pr: any) => pr.user_id === p.id
       );
+      // Format address from structured fields
+      const addressParts = [];
+      if (profile?.street_address_line_1) addressParts.push(profile.street_address_line_1);
+      if (profile?.street_address_line_2) addressParts.push(profile.street_address_line_2);
+      if (profile?.city) addressParts.push(profile.city);
+      if (profile?.state) addressParts.push(profile.state);
+      if (profile?.postal_code) addressParts.push(profile.postal_code);
+      if (profile?.country) addressParts.push(profile.country);
+      const address = addressParts.length > 0 ? addressParts.join(", ") : null;
+
       patientMap.set(p.id, {
         id: p.id,
         email: p.email,
         fullName: profile?.full_name || "Unknown",
         phone: profile?.phone || null,
-        address: profile?.address || null,
+        address: address,
         dateOfBirth: profile?.date_of_birth || null,
       });
     });
@@ -214,7 +224,7 @@ export async function POST(request: NextRequest) {
 
     const { data: patientProfile } = await adminClient
       .from("user_profiles")
-      .select("user_id, full_name, phone, address, date_of_birth")
+      .select("user_id, full_name, phone, street_address_line_1, street_address_line_2, city, state, postal_code, country, date_of_birth")
       .eq("user_id", patientId)
       .single();
 
@@ -224,6 +234,16 @@ export async function POST(request: NextRequest) {
       .eq("user_id", doctorId)
       .single();
 
+    // Format address from structured fields
+    const addressParts = [];
+    if (patientProfile?.street_address_line_1) addressParts.push(patientProfile.street_address_line_1);
+    if (patientProfile?.street_address_line_2) addressParts.push(patientProfile.street_address_line_2);
+    if (patientProfile?.city) addressParts.push(patientProfile.city);
+    if (patientProfile?.state) addressParts.push(patientProfile.state);
+    if (patientProfile?.postal_code) addressParts.push(patientProfile.postal_code);
+    if (patientProfile?.country) addressParts.push(patientProfile.country);
+    const address = addressParts.length > 0 ? addressParts.join(", ") : null;
+
     const link = {
       patientId,
       doctorId,
@@ -232,7 +252,7 @@ export async function POST(request: NextRequest) {
         email: patientData?.email,
         fullName: patientProfile?.full_name || "Unknown",
         phone: patientProfile?.phone || null,
-        address: patientProfile?.address || null,
+        address: address,
         dateOfBirth: patientProfile?.date_of_birth || null,
       },
       doctor: {

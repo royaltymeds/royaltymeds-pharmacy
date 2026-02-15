@@ -40,18 +40,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, fullName, phone, address } = await request.json();
+    const { email, password, fullName, phone, streetAddressLine1, streetAddressLine2, city, state, postalCode, country } = await request.json();
 
     // Log received data for debugging
-    // console.log("[create-user API] Received fields:", { email, password: "***", fullName, phone, address });
+    // console.log("[create-user API] Received fields:", { email, password: "***", fullName, phone, streetAddressLine1, city, state });
 
-    if (!email || !password || !fullName || !phone || !address) {
+    if (!email || !password || !fullName || !phone || !streetAddressLine1 || !city || !state) {
       const missingFields = [];
       if (!email) missingFields.push("email");
       if (!password) missingFields.push("password");
       if (!fullName) missingFields.push("fullName");
       if (!phone) missingFields.push("phone");
-      if (!address) missingFields.push("address");
+      if (!streetAddressLine1) missingFields.push("streetAddressLine1");
+      if (!city) missingFields.push("city");
+      if (!state) missingFields.push("state");
       
       console.warn("[create-user API] Missing fields:", missingFields);
       return NextResponse.json(
@@ -98,7 +100,12 @@ export async function POST(request: NextRequest) {
         user_id: userId,
         full_name: fullName,
         phone,
-        address,
+        street_address_line_1: streetAddressLine1 || null,
+        street_address_line_2: streetAddressLine2 || null,
+        city: city || null,
+        state: state || null,
+        postal_code: postalCode || null,
+        country: country || null,
       });
 
     if (profileError) {

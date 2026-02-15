@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     // Get profiles for all doctors
     const { data: profiles, error: profilesError } = await serviceRoleClient
       .from("user_profiles")
-      .select("user_id, full_name, specialty, phone, address")
+      .select("user_id, full_name, specialty, phone, street_address_line_1, street_address_line_2, city, state, postal_code, country")
       .in("user_id", (doctors || []).map(d => d.id));
 
     if (profilesError) {
@@ -78,13 +78,25 @@ export async function GET(request: NextRequest) {
 
     const formattedDoctors = (doctors || []).map((doctor: any) => {
       const profile = profileMap[doctor.id];
+      
+      // Format address from structured fields
+      const addressParts = [];
+      if (profile?.street_address_line_1) addressParts.push(profile.street_address_line_1);
+      if (profile?.street_address_line_2) addressParts.push(profile.street_address_line_2);
+      if (profile?.city) addressParts.push(profile.city);
+      if (profile?.state) addressParts.push(profile.state);
+      if (profile?.postal_code) addressParts.push(profile.postal_code);
+      if (profile?.country) addressParts.push(profile.country);
+      
+      const address = addressParts.length > 0 ? addressParts.join(", ") : "N/A";
+      
       return {
         id: doctor.id,
         email: doctor.email,
         fullName: profile?.full_name || "Unknown",
         specialty: profile?.specialty || "N/A",
         phone: profile?.phone || "N/A",
-        address: profile?.address || "N/A",
+        address,
         createdAt: doctor.created_at,
       };
     });

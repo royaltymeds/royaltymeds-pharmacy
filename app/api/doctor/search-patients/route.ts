@@ -66,7 +66,12 @@ export async function GET(request: NextRequest) {
         user_profiles (
           full_name,
           phone,
-          address,
+          street_address_line_1,
+          street_address_line_2,
+          city,
+          state,
+          postal_code,
+          country,
           date_of_birth
         )
       `
@@ -95,7 +100,12 @@ export async function GET(request: NextRequest) {
         user_profiles (
           full_name,
           phone,
-          address,
+          street_address_line_1,
+          street_address_line_2,
+          city,
+          state,
+          postal_code,
+          country,
           date_of_birth
         )
       `
@@ -147,14 +157,27 @@ export async function GET(request: NextRequest) {
 
     const filteredPatients = (allResults || [])
       .filter((p: any) => !linkedPatientIds.includes(p.id))
-      .map((p: any) => ({
-        id: p.id,
-        email: p.email,
-        fullName: p.user_profiles?.[0]?.full_name || p.user_profiles?.full_name || "Unknown",
-        phone: p.user_profiles?.[0]?.phone || p.user_profiles?.phone || "N/A",
-        address: p.user_profiles?.[0]?.address || p.user_profiles?.address || null,
-        dateOfBirth: p.user_profiles?.[0]?.date_of_birth || p.user_profiles?.date_of_birth || null,
-      }));
+      .map((p: any) => {
+        const profile = p.user_profiles?.[0] || p.user_profiles || {};
+        // Format address from structured fields
+        const addressParts = [];
+        if (profile.street_address_line_1) addressParts.push(profile.street_address_line_1);
+        if (profile.street_address_line_2) addressParts.push(profile.street_address_line_2);
+        if (profile.city) addressParts.push(profile.city);
+        if (profile.state) addressParts.push(profile.state);
+        if (profile.postal_code) addressParts.push(profile.postal_code);
+        if (profile.country) addressParts.push(profile.country);
+        const address = addressParts.length > 0 ? addressParts.join(", ") : null;
+
+        return {
+          id: p.id,
+          email: p.email,
+          fullName: profile.full_name || "Unknown",
+          phone: profile.phone || "N/A",
+          address: address,
+          dateOfBirth: profile.date_of_birth || null,
+        };
+      });
 
     // console.log("[search-patients] Final filtered results count:", filteredPatients.length, { search });
     return NextResponse.json(filteredPatients);

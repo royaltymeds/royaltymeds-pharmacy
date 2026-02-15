@@ -24,7 +24,12 @@ export default function AdminUsersPage() {
     confirmPassword: "",
     fullName: "",
     phone: "",
-    address: "",
+    streetAddressLine1: "",
+    streetAddressLine2: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "",
   });
 
   useEffect(() => {
@@ -54,8 +59,8 @@ export default function AdminUsersPage() {
     setSuccess("");
 
     // Validation
-    if (!formData.email || !formData.password || !formData.fullName || !formData.phone || !formData.address) {
-      setError("All fields are required");
+    if (!formData.email || !formData.password || !formData.fullName || !formData.phone || !formData.streetAddressLine1 || !formData.city || !formData.state) {
+      setError("All required fields must be completed");
       return;
     }
 
@@ -77,7 +82,12 @@ export default function AdminUsersPage() {
         password: formData.password,
         fullName: formData.fullName,
         phone: formData.phone,
-        address: formData.address,
+        streetAddressLine1: formData.streetAddressLine1,
+        streetAddressLine2: formData.streetAddressLine2,
+        city: formData.city,
+        state: formData.state,
+        postalCode: formData.postalCode,
+        country: formData.country,
       };
       // console.log("[AdminUsersPage] Creating pharmacist with:", payload);
       
@@ -96,7 +106,7 @@ export default function AdminUsersPage() {
       }
 
       setSuccess("Admin account created successfully!");
-      setFormData({ email: "", password: "", confirmPassword: "", fullName: "", phone: "", address: "" });
+      setFormData({ email: "", password: "", confirmPassword: "", fullName: "", phone: "", streetAddressLine1: "", streetAddressLine2: "", city: "", state: "", postalCode: "", country: "" });
       setShowCreateForm(false);
       
       // Refresh the list
@@ -230,42 +240,121 @@ export default function AdminUsersPage() {
                 required
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                Address *
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="123 Main Street"
-                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                required
-              />
-            </div>
+          {/* Address Fields */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">Address Information</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  Street Address Line 1 *
+                </label>
+                <input
+                  type="text"
+                  name="streetAddressLine1"
+                  value={formData.streetAddressLine1}
+                  onChange={handleChange}
+                  placeholder="123 Main Street"
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  required
+                />
+              </div>
 
-            <div className="flex gap-2 pt-4">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 bg-green-600 text-white text-xs sm:text-sm py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2 w-auto"
-              >
-                {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
-                {isSubmitting ? "Creating..." : "Create Admin"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCreateForm(false)}
-                className="flex-1 bg-gray-200 text-gray-700 text-xs sm:text-sm py-2 rounded-lg hover:bg-gray-300 font-medium"
-              >
-                Cancel
-              </button>
+              <div className="sm:col-span-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  Street Address Line 2
+                </label>
+                <input
+                  type="text"
+                  name="streetAddressLine2"
+                  value={formData.streetAddressLine2}
+                  onChange={handleChange}
+                  placeholder="Suite 100 (optional)"
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  City *
+                </label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder="Kingston"
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  State/Parish *
+                </label>
+                <input
+                  type="text"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  placeholder="Kingston"
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  Postal Code
+                </label>
+                <input
+                  type="text"
+                  name="postalCode"
+                  value={formData.postalCode}
+                  onChange={handleChange}
+                  placeholder="00100"
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  placeholder="Jamaica"
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                />
+              </div>
             </div>
-          </form>
-        </div>
-      )}
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 bg-green-600 text-white text-xs sm:text-sm py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2 w-auto"
+            >
+              {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
+              {isSubmitting ? "Creating..." : "Create Admin"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCreateForm(false)}
+              className="flex-1 bg-gray-200 text-gray-700 text-xs sm:text-sm py-2 rounded-lg hover:bg-gray-300 font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
 
       {/* Admins List */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">

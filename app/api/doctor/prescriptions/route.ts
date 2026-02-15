@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     // Fetch doctor details from auth user and user_profiles table
     const { data: doctorData, error: doctorError } = await adminClient
       .from("user_profiles")
-      .select("full_name, phone, address, specialty")
+      .select("full_name, phone, street_address_line_1, street_address_line_2, city, state, postal_code, country")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -153,7 +153,12 @@ export async function POST(request: NextRequest) {
           doctor_name: doctorData?.full_name || null,
           doctor_email: user.email || null,
           doctor_phone: doctorData?.phone || null,
-          practice_name: doctorData?.specialty || null,
+          practice_street_line_1: doctorData?.street_address_line_1 || null,
+          practice_street_line_2: doctorData?.street_address_line_2 || null,
+          practice_city: doctorData?.city || null,
+          practice_state: doctorData?.state || null,
+          practice_postal_code: doctorData?.postal_code || null,
+          practice_country: doctorData?.country || null,
         },
       ])
       .select();
@@ -164,7 +169,7 @@ export async function POST(request: NextRequest) {
     //   doctorName: doctorData?.full_name || null,
     //   doctorEmail: user.email || null,
     //   doctorPhone: doctorData?.phone || null,
-    //   practiceName: doctorData?.specialty || null,
+    //   practiceName: doctorData?.full_name || null,
     //   note: "Patient linking and medication items will be added by admins",
     // });
 

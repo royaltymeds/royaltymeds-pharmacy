@@ -19,7 +19,12 @@ export default function AdminDoctorsPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [specialization, setSpecialization] = useState("");
-  const [addressOfPractice, setAddressOfPractice] = useState("");
+  const [streetAddressLine1, setStreetAddressLine1] = useState("");
+  const [streetAddressLine2, setStreetAddressLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +81,12 @@ export default function AdminDoctorsPage() {
           password,
           fullName,
           specialization,
-          addressOfPractice,
+          streetAddressLine1,
+          streetAddressLine2,
+          city,
+          state,
+          postalCode,
+          country,
           contactNumber,
         }),
       });
@@ -93,7 +103,12 @@ export default function AdminDoctorsPage() {
       setPassword("");
       setFullName("");
       setSpecialization("");
-      setAddressOfPractice("");
+      setStreetAddressLine1("");
+      setStreetAddressLine2("");
+      setCity("");
+      setState("");
+      setPostalCode("");
+      setCountry("");
       setContactNumber("");
 
       // Refresh doctors list
@@ -200,20 +215,6 @@ export default function AdminDoctorsPage() {
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                Address of Practice *
-              </label>
-              <input
-                type="text"
-                value={addressOfPractice}
-                onChange={(e) => setAddressOfPractice(e.target.value)}
-                placeholder="123 Medical Plaza Drive"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Contact Number *
               </label>
               <input
@@ -224,6 +225,94 @@ export default function AdminDoctorsPage() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
               />
+            </div>
+          </div>
+
+          {/* Address Fields */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">Practice Address</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  Street Address Line 1 *
+                </label>
+                <input
+                  type="text"
+                  value={streetAddressLine1}
+                  onChange={(e) => setStreetAddressLine1(e.target.value)}
+                  placeholder="123 Medical Plaza Drive"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  Street Address Line 2
+                </label>
+                <input
+                  type="text"
+                  value={streetAddressLine2}
+                  onChange={(e) => setStreetAddressLine2(e.target.value)}
+                  placeholder="Suite 100 (optional)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  City *
+                </label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="New York"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  State *
+                </label>
+                <input
+                  type="text"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  placeholder="NY"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  Postal Code
+                </label>
+                <input
+                  type="text"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  placeholder="10001"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  placeholder="United States"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
+                />
+              </div>
             </div>
           </div>
 

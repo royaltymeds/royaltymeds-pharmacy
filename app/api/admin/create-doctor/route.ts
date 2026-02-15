@@ -4,7 +4,19 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, fullName, specialization, addressOfPractice, contactNumber } = body;
+    const { 
+      email, 
+      password, 
+      fullName, 
+      specialization,
+      streetAddressLine1,
+      streetAddressLine2,
+      city,
+      state,
+      postalCode,
+      country,
+      contactNumber 
+    } = body;
 
     if (!email) {
       return NextResponse.json(
@@ -24,9 +36,21 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    if (!addressOfPractice) {
+    if (!streetAddressLine1) {
       return NextResponse.json(
-        { error: "Address of practice is required" },
+        { error: "Street address is required" },
+        { status: 400 }
+      );
+    }
+    if (!city) {
+      return NextResponse.json(
+        { error: "City is required" },
+        { status: 400 }
+      );
+    }
+    if (!state) {
+      return NextResponse.json(
+        { error: "State is required" },
         { status: 400 }
       );
     }
@@ -93,8 +117,12 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: doctorId,
         full_name: fullName,
-        specialty: specialization || null,
-        address: addressOfPractice,
+        street_address_line_1: streetAddressLine1 || null,
+        street_address_line_2: streetAddressLine2 || null,
+        city: city || null,
+        state: state || null,
+        postal_code: postalCode || null,
+        country: country || null,
         phone: contactNumber,
       });
 

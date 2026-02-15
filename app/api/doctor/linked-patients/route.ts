@@ -80,7 +80,12 @@ export async function GET(request: NextRequest) {
           id,
           full_name,
           phone,
-          address,
+          street_address_line_1,
+          street_address_line_2,
+          city,
+          state,
+          postal_code,
+          country,
           date_of_birth
         )
       `
@@ -110,12 +115,22 @@ export async function GET(request: NextRequest) {
         const profile = Array.isArray(patientUser?.user_profiles)
           ? patientUser?.user_profiles?.[0]
           : patientUser?.user_profiles;
+        // Format address from structured fields
+        const addressParts = [];
+        if (profile?.street_address_line_1) addressParts.push(profile.street_address_line_1);
+        if (profile?.street_address_line_2) addressParts.push(profile.street_address_line_2);
+        if (profile?.city) addressParts.push(profile.city);
+        if (profile?.state) addressParts.push(profile.state);
+        if (profile?.postal_code) addressParts.push(profile.postal_code);
+        if (profile?.country) addressParts.push(profile.country);
+        const address = addressParts.length > 0 ? addressParts.join(", ") : null;
+
         return {
           id: patientUser?.id,
           email: patientUser?.email,
           fullName: profile?.full_name || "Unknown",
           phone: profile?.phone,
-          address: profile?.address,
+          address: address,
           dateOfBirth: profile?.date_of_birth,
         };
       })
@@ -228,7 +243,12 @@ export async function POST(request: NextRequest) {
           id,
           full_name,
           phone,
-          address,
+          street_address_line_1,
+          street_address_line_2,
+          city,
+          state,
+          postal_code,
+          country,
           date_of_birth
         )
       `
@@ -239,12 +259,21 @@ export async function POST(request: NextRequest) {
     const profile = Array.isArray(newPatientUser?.user_profiles)
       ? newPatientUser?.user_profiles?.[0]
       : newPatientUser?.user_profiles;
+    // Format address from structured fields
+    const addressParts = [];
+    if (profile?.street_address_line_1) addressParts.push(profile.street_address_line_1);
+    if (profile?.street_address_line_2) addressParts.push(profile.street_address_line_2);
+    if (profile?.city) addressParts.push(profile.city);
+    if (profile?.state) addressParts.push(profile.state);
+    if (profile?.postal_code) addressParts.push(profile.postal_code);
+    if (profile?.country) addressParts.push(profile.country);
+    const address = addressParts.length > 0 ? addressParts.join(", ") : null;
     const patientData = {
       id: newPatientUser?.id,
       email: newPatientUser?.email,
       fullName: profile?.full_name || "Unknown",
       phone: profile?.phone,
-      address: profile?.address,
+      address: address,
       dateOfBirth: profile?.date_of_birth,
     };
 

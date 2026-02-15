@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     // Get patient profiles to search by name and phone
     const { data: profiles, error: profileError } = await adminClient
       .from("user_profiles")
-      .select("user_id, full_name, phone, address, date_of_birth")
+      .select("user_id, full_name, phone, street_address_line_1, street_address_line_2, city, state, postal_code, country, date_of_birth")
       .or(
         `full_name.ilike.%${search}%,phone.ilike.%${search}%`
       )
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
     // Get profiles for all matching patients
     const { data: allProfiles, error: allProfilesError } = await adminClient
       .from("user_profiles")
-      .select("user_id, full_name, phone, address, date_of_birth")
+      .select("user_id, full_name, phone, street_address_line_1, street_address_line_2, city, state, postal_code, country, date_of_birth")
       .in("user_id", Array.from(allPatientIds));
 
     if (allProfilesError) {
@@ -117,12 +117,22 @@ export async function GET(request: NextRequest) {
     // Format results
     const results = (patients || []).map((p: any) => {
       const profile = profileMap.get(p.id);
+      // Format address from structured fields
+      const addressParts = [];
+      if (profile?.street_address_line_1) addressParts.push(profile.street_address_line_1);
+      if (profile?.street_address_line_2) addressParts.push(profile.street_address_line_2);
+      if (profile?.city) addressParts.push(profile.city);
+      if (profile?.state) addressParts.push(profile.state);
+      if (profile?.postal_code) addressParts.push(profile.postal_code);
+      if (profile?.country) addressParts.push(profile.country);
+      const address = addressParts.length > 0 ? addressParts.join(", ") : null;
+
       return {
         id: p.id,
         email: p.email,
         fullName: profile?.full_name || "Unknown",
         phone: profile?.phone || null,
-        address: profile?.address || null,
+        address: address,
         dateOfBirth: profile?.date_of_birth || null,
       };
     });
