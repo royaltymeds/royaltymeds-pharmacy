@@ -56,6 +56,7 @@ export default function InventoryItemForm({
     sale_discount_percent: (initialData as OTCDrug)?.sale_discount_percent || 0,
     sale_start_date: (initialData as OTCDrug)?.sale_start_date || '',
     sale_end_date: (initialData as OTCDrug)?.sale_end_date || '',
+    needs_confirmation: (initialData as OTCDrug)?.needs_confirmation || false,
     ...(drugType === 'prescription' && {
       requires_refrigeration: (initialData as PrescriptionDrug)?.requires_refrigeration || false,
       controlled_substance: (initialData as PrescriptionDrug)?.controlled_substance || false,
@@ -570,6 +571,31 @@ export default function InventoryItemForm({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Order Confirmation */}
+      {drugType === 'otc' && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Requirements</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="needs_confirmation"
+                checked={(formData as any).needs_confirmation}
+                onChange={handleChange}
+                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Requires Customer Confirmation Before Processing
+              </label>
+            </div>
+            <p className="text-xs text-gray-600 pl-6">
+              When enabled, customers must confirm their order for this item before it can be processed. 
+              This is useful for items that require customer review or additional verification.
+            </p>
           </div>
         </div>
       )}

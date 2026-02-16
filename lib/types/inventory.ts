@@ -32,6 +32,8 @@ export interface OTCDrug {
   sale_start_date?: string;
   sale_end_date?: string;
   is_on_sale?: boolean;
+  // Order confirmation field
+  needs_confirmation?: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -608,6 +608,7 @@ export type Database = {
           drug_id: string | null
           drug_name: string
           id: string
+          needs_confirmation: boolean | null
           order_id: string
           quantity: number
           total_price: number
@@ -618,6 +619,7 @@ export type Database = {
           drug_id?: string | null
           drug_name: string
           id?: string
+          needs_confirmation?: boolean | null
           order_id: string
           quantity: number
           total_price: number
@@ -628,6 +630,7 @@ export type Database = {
           drug_id?: string | null
           drug_name?: string
           id?: string
+          needs_confirmation?: boolean | null
           order_id?: string
           quantity?: number
           total_price?: number
@@ -789,6 +792,7 @@ export type Database = {
           low_stock_alert: boolean | null
           manufacturer: string | null
           name: string
+          needs_confirmation: boolean | null
           notes: string | null
           pack_size: string | null
           quantity_on_hand: number
@@ -824,6 +828,7 @@ export type Database = {
           low_stock_alert?: boolean | null
           manufacturer?: string | null
           name: string
+          needs_confirmation?: boolean | null
           notes?: string | null
           pack_size?: string | null
           quantity_on_hand?: number
@@ -859,6 +864,7 @@ export type Database = {
           low_stock_alert?: boolean | null
           manufacturer?: string | null
           name?: string
+          needs_confirmation?: boolean | null
           notes?: string | null
           pack_size?: string | null
           quantity_on_hand?: number
