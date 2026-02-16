@@ -181,6 +181,7 @@ export async function createOrder(
     quantity: number;
     unit_price: number;
     total_price: number;
+    pharm_confirm?: boolean;
   }> = [];
 
   for (const item of cartItems) {
@@ -194,6 +195,7 @@ export async function createOrder(
       quantity: item.quantity,
       unit_price: drug.unit_price,
       total_price: totalPrice,
+      pharm_confirm: drug.pharm_confirm || false,
     });
   }
 

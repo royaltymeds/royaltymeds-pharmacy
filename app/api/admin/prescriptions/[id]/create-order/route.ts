@@ -199,6 +199,7 @@ export async function POST(
       drug_name: item.medication_name,
       quantity: item.quantity_filled || 1, // Use quantity_filled from prescription, default to 1 if not set
       total_price: item.total_price,
+      pharm_confirm: true, // Prescription items always need pharmacist confirmation by default
     }));
 
     // console.log("[Create-Order] Inserting", insertItems.length, "order items");
