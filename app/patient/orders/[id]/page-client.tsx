@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { getOrderWithItems } from '@/app/actions/orders';
-import { ChevronLeft, Package, Calendar, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Package, Calendar, MapPin, CheckCircle, AlertCircle, Phone, MessageCircle, Mail } from 'lucide-react';
 
 interface OrderDetailsClientProps {
   orderId: string;
@@ -41,6 +41,10 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
 
   const getStatusColor = (status: string) => {
     return ORDER_STATUS_COLORS[status as keyof typeof ORDER_STATUS_COLORS] || 'gray';
+  };
+
+  const hasItemsRequiringConfirmation = () => {
+    return order?.items?.some((item) => item.pharm_confirm === true) ?? false;
   };
 
   if (loading) {
@@ -97,6 +101,38 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
             <span className="text-green-700 font-medium text-sm sm:text-base">Order placed successfully!</span>
+          </div>
+        )}
+
+        {/* Pharmacy Confirmation Required Message */}
+        {hasItemsRequiringConfirmation() && (
+          <div className="mb-6 p-4 sm:p-6 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-amber-900 text-sm sm:text-base mb-2">Pharmacy Review Required</h3>
+                <p className="text-amber-800 text-xs sm:text-sm mb-3">
+                  Your order contains items that require review and confirmation by our pharmacy team. Our pharmacists will contact you to confirm your order before processing.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-amber-800 text-xs sm:text-sm font-medium">We&apos;ll reach out via:</p>
+                  <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 text-amber-800 text-xs sm:text-sm">
+                      <Phone className="w-4 h-4 flex-shrink-0" />
+                      <span>Phone</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-amber-800 text-xs sm:text-sm">
+                      <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>WhatsApp</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-amber-800 text-xs sm:text-sm">
+                      <Mail className="w-4 h-4 flex-shrink-0" />
+                      <span>Email</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
