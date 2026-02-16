@@ -37,6 +37,7 @@ export interface OrderItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+  pharm_confirm?: boolean;
   created_at: string;
 }
 
