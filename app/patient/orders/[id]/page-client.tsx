@@ -174,6 +174,19 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
               {statusLabel}
             </div>
           </div>
+
+          {/* Continue to Payment Button - For Payment Pending Orders */}
+          {shouldShowPaymentButton() && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                <CreditCard className="w-5 h-5" />
+                <span>Complete Payment Now</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Order Items */}
@@ -266,32 +279,8 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
           </div>
         )}
 
-        {/* Action Buttons */}
-        {shouldShowPaymentButton() ? (
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <button
-              onClick={() => setShowPaymentModal(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <CreditCard className="w-5 h-5" />
-              Continue to Payment
-            </button>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/patient/orders"
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center whitespace-nowrap flex-1"
-              >
-                Back to Orders
-              </Link>
-              <Link
-                href="/store"
-                className="px-6 py-3 border border-indigo-600 text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors text-center whitespace-nowrap flex-1"
-              >
-                Continue Shopping
-              </Link>
-            </div>
-          </div>
-        ) : (
+        {/* Action Buttons - Only shown for orders requiring pharmacy confirmation */}
+        {!shouldShowPaymentButton() && (
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Link
               href="/patient/orders"
