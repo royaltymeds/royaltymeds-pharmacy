@@ -1,11 +1,11 @@
 # Complete Git History & Feature Analysis
 **RoyaltyMeds Prescription Platform - 400+ Total Commits**
 
-**Analysis Date:** February 10, 2026  
+**Analysis Date:** February 16, 2026  
 **Repository:** royaltymeds_prescript  
-**Time Period:** January 8, 2026 - February 10, 2026 (34 days)  
-**Active Contributors:** 3 (princewebclient, yueniqdevteam, GitHub Copilot)  
-**Latest Commit:** d6d7f66 - Fix webhook to use correct payment_verified status (Feb 8, 2026)
+**Time Period:** January 8, 2026 - February 16, 2026 (39 days)  
+**Active Contributors:** 3 (princewebclient, GitHub Copilot, yueniqdevteam)  
+**Latest Commit:** 2b4d450 - feat: add pharm_confirm badge to inventory items display (Feb 16, 2026)
 
 ---
 
@@ -13,15 +13,15 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Commits** | 400+ |
-| **Project Duration** | 34 days |
-| **Active Days** | 29 days |
+| **Total Commits** | 460+ |
+| **Project Duration** | 39 days |
+| **Active Days** | 34 days |
 | **Busiest Day** | Jan 24, 2026 (27 commits in 20 hours) |
 | **Average Commits/Day** | ~12 commits |
-| **Lead Developer** | princewebclient (~360+ commits), yueniqdevteam (~26+ commits), GitHub Copilot (22+ commits) |
+| **Lead Developer** | princewebclient (~390+ commits), GitHub Copilot (50+ commits), yueniqdevteam (~26 commits) |
 | **Build Status** | ✅ Passing (0 errors) |
 | **Deployment Status** | ✅ Vercel Production (Live) |
-| **Latest Update** | Feb 8, 2026 - Fygaro JWT payment integration complete |
+| **Latest Update** | Feb 16, 2026 - OTC pharmacist confirmation feature |
 
 ---
 
@@ -992,7 +992,147 @@ Comprehensive project maintenance: gitignore fixes, AI pretext revision with arc
 
 ---
 
-## ✅ Verification Checklist
+### **Phase 11: Prescription Pricing & Address Refactoring + UX (Feb 9-16, 2026)**
+**Status:** ✅ Complete (Active Phase) | **Commits:** 35+
+
+Multi-phase implementation of prescription order pricing system and comprehensive address field refactoring:
+
+**Sub-Phase 1: Prescription Order Implementation (Feb 9-11)**
+- `7e68ec7` - Implement prescription order feature - database migration, API endpoint, and UI pricing
+- `9b9dfa0` - Fix: Add price field support to prescription items POST and PATCH endpoints
+- `b22b46e` - Fix: Calculate prescription total correctly - price is total per item, not per unit
+- `16a1bec` - UI: Display medication prices on prescription detail pages for patient and admin portals
+- `0efaba6` - Fix: Price calculation in prescription order creation - do not multiply by quantity
+- `3568c06` - Refactor: Remove unit_price from prescription order items
+- `0468fa3` - Fix: Include price field in all prescription item queries
+- `13a5f05` - Fix: Reload prescription page after status changes to ensure fresh data with prices
+- `9ad0c06` - Add comprehensive logging to prescription order creation for debugging
+- `d37c69d` - Fix: Use quantity=1 for prescription order items - not affected by prescription fill status
+- `a491ddf` - Fix: Use quantity_filled from prescription items when creating order
+
+**Key Features:**
+- Database schema for prescription order pricing
+- API endpoints for creating prescription orders with prices
+- Server-side price calculations (total per item, not multiplied by qty)
+- UI displays medication prices on prescription pages
+- Comprehensive logging for debugging
+- Quantity handling across order creation
+
+**Sub-Phase 2: Console Cleanup & Production Hardening (Feb 11)**
+- `41013e3` - Cleanup: Comment out all debug console.log statements for production
+- `7d47a37` - Remove remaining dev console.log statements used for debugging - production cleanup
+
+**Sub-Phase 3: Address Field Refactoring (Feb 11-15)**
+- `e2e9053` - Refactor address fields: Move from unstructured text to structured components
+- `2cb18c2` - Add chat history documentation for address refactoring project
+- `9518240` - Make postal code optional and parish selection a required dropdown
+- `bd7b818` - Make state/province field dynamic based on country selection in signup form
+- `cddb9ba` - Add signup success page - redirect users to success page instead of directly to login
+- `c342ba0` - Add explicit READ RLS policies for patients to access their own user_profiles data
+- `d14ada5` - Improve patient profile error logging and simplify RLS policies
+- `66755a1` - Update checkout form for Jamaica-only shipping with parish dropdown
+- `180e30f` - Refine checkout profile address checkbox - unchecked by default and disable fields when checked
+- `5a3076c` - Clear address fields when profile address checkbox is unchecked
+- `1e455fc` - Improve store and cart UX: toast at bottom-right, independent cart scrolling, manual quantity input
+- `7fc19bb` - Fix: replace practice_address with structured address fields in prescription APIs and UI - resolves 404 errors
+- `133c357` - resolving address issues
+- `859a40f` - refactor: update admin users page with structured address fields
+- `e7c6542` - fix: add specialty field to doctor profile on creation
+
+**Key Changes:**
+- Moved from unstructured `practice_address` text field to structured components
+- Separate fields: `street_line_1`, `street_line_2`, `city`, `state`, `postal_code`, `country`
+- Dynamic state/province field based on country selection
+- Jamaica-specific parish dropdown for shipping address
+- Optional postal code with required parish selection
+- Applied across doctor profiles, patient profiles, and prescriptions
+- Fixed 404 errors in prescription detail views
+- Added signup success page with proper redirect flow
+
+**Sub-Phase 4: Patient Dashboard Redesign (Feb 15)**
+- `a965a4b` - Fix scrollbar hiding: move to Tailwind @layer utilities for proper responsive behavior
+- `b6b7979` - Replace patient dashboard status cards with summary section showing total orders/prescriptions by status and unread messages
+- `9cb96d9` - Limit recent prescriptions and orders to 5 most recent items sorted by created_at
+- `5c2192f` - Remove unused RefreshCwIcon import from patient home page
+- `f78ced2` - Add logging to debug empty dashboard data
+- `b660afe` - Add logging to debug empty dashboard data
+- `7f52923` - Fix: use user_id instead of patient_id for orders query
+- `e5a7854` - Add detailed logging to prescription API endpoints for debugging
+- `22f2bbc` - Improve API logging: check if prescription exists before checking patient_id match
+
+**Key Improvements:**
+- New 3-column summary section replacing old status cards
+- Shows order/prescription counts broken down by status
+- Unread messages counter
+- Limited display to 5 most recent items
+- Better data accuracy with fixed query logic
+- Improved scrollbar UX with Tailwind utilities
+
+**Sub-Phase 5: Cart Page UX Overhaul (Feb 14-15)**
+- `2714b5d` - Improve store and cart UX: toast at bottom-right, independent cart scrolling, manual quantity input
+- `18b668f` - Redesign cart page: add header, two independent scrollable sections, simplify quantity input and hide scrollbars
+- `7a6f8de` - Improve cart page UX: quantity input auto-select on focus, sticky header, 50/50 section split, independent scrolling with hidden bars
+- `ca11b0b` - Make cart page mobile-friendly: vertical stacking on mobile, side-by-side on desktop
+- `2f838d9` - Fix cart layout: normal scrolling on mobile/portrait, independent scrolling only on desktop
+- `1ec9250` - Unify cart section styling: white background on mobile/portrait, gradient only on desktop
+- `4936296` - Unify card sizing on mobile/portrait: consistent padding and spacing across sections
+- `1071052` - Remove billing address from order summary page
+- `6fe7999` - Connect cart item cards in desktop mode: remove spacing and rounded edges on lg screens
+- `1571b85` - Debounce quantity input: only update after user finishes typing with 800ms timeout, update on blur and enter key
+
+**Key Features:**
+- Complete cart page redesign with header
+- Two independent scrollable sections (cart list & order summary)
+- Quantity input with auto-select on focus and 800ms debounce
+- Connected cart item cards (no spacing/rounding) on desktop
+- Mobile-friendly vertical stacking
+- Hidden scrollbars with Tailwind @layer utilities
+- Toast notifications positioned bottom-right
+- Normal scrolling on mobile, independent on desktop
+
+**Sub-Phase 6: OTC Pharmacist Confirmation (Feb 16)**
+- `8f68877` - feat: add needs_confirmation field for OTC items requiring customer confirmation
+- `c2bcc30` - feat: update confirmation field to pharmacist_confirm (pharm_confirm)
+- `2b4d450` - feat: add pharm_confirm badge to inventory items display
+
+**Key Features:**
+- `needs_confirmation` field for OTC items requiring customer verification
+- `pharmacist_confirm` (pharm_confirm) field for tracking confirmation on order items
+- Badge display in inventory items list
+- Support for items requiring special handling or customer verification
+
+**Metrics:**
+- ✅ 35+ commits in Phase 11
+- ✅ 4 major feature areas completed
+- ✅ Address refactoring deployed to production
+- ✅ Cart UX significantly improved
+- ✅ Patient dashboard more intuitive
+- ✅ Prescription pricing fully implemented
+- ✅ OTC confirmation feature ready for production
+
+**Impact:**
+- Better prescription order tracking with pricing
+- More organized address data
+- Improved patient experience with dashboard redesign
+- Enhanced cart usability on all devices
+- Support for OTC items requiring special handling
+- Production-ready codebase (console logs removed)
+
+**Latest Commits (Top 10):**
+- `2b4d450` - feat: add pharm_confirm badge to inventory items display
+- `c2bcc30` - feat: update confirmation field to pharmacist_confirm (pharm_confirm)
+- `8f68877` - feat: add needs_confirmation field for OTC items requiring customer confirmation
+- `6c24252` - fix: remove duplicate pending prescriptions query to fix count accuracy
+- `e9e5bdb` - fix: remove status filter from recent prescriptions list on patient home page
+- `e7c6542` - fix: add specialty field to doctor profile on creation
+- `859a40f` - refactor: update admin users page with structured address fields
+- `133c357` - resolving address issues
+- `7fc19bb` - Fix: replace practice_address with structured address fields in prescription APIs and UI
+- `22f2bbc` - Improve API logging: check if prescription exists before checking patient_id match
+
+---
+
+
 
 - ✅ All 391+ commits analyzed
 - ✅ All major features documented

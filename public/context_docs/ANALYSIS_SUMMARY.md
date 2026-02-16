@@ -1,8 +1,8 @@
 # 🎉 Complete Git History & Feature Analysis - Summary Report
 
-**Analysis Date:** February 10, 2026  
+**Analysis Date:** February 16, 2026  
 **Project:** RoyaltyMeds Prescription Platform  
-**Status:** ✅ PRODUCTION READY & MAINTAINED  
+**Status:** ✅ PRODUCTION READY & ACTIVELY MAINTAINED  
 
 ---
 
@@ -13,13 +13,13 @@
 │                    PROJECT OVERVIEW                              │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                    │
-│  Total Commits:       400+                                        │
-│  Project Duration:    34 days (Jan 8 - Feb 10, 2026)             │
-│  Peak Activity:       27 commits on Jan 24, 13+ on Jan 26-27     │
-│  Features Built:      145+ across 15+ categories                  │
+│  Total Commits:       460+                                        │
+│  Project Duration:    39 days (Jan 8 - Feb 16, 2026)             │
+│  Peak Activity:       27 commits on Jan 24, 20+ on Feb 15        │
+│  Features Built:      155+ across 15+ categories                  │
 │  Documentation:       140+ KB (7 comprehensive files)             │
-│  Latest Update:       Feb 8 - Fygaro JWT payment integration     │
-│                       complete with webhook handler               │
+│  Latest Update:       Feb 16 - OTC pharmacist confirmation,      │
+│                       prescription order pricing, address refact. │
 │                                                                    │
 │  Build Status:        ✅ PASSING (0 errors, 9.2s build time)     │
 │  Deployment:          ✅ LIVE on Vercel (Jan 26)                  │
@@ -33,7 +33,66 @@
 
 ---
 
-## 🆕 Latest Features (Feb 8, 2026)
+## 🆕 Latest Features (Feb 9-16, 2026)
+
+### **Phase 11: Prescription Order Pricing & OTC Pharmacist Confirmation**
+- ✅ **Prescription Order Feature** (Feb 9-11)
+  - Database migration for prescription order tracking
+  - API endpoints for prescription order creation and pricing
+  - Server-side price calculations (don't multiply by quantity)
+  - UI pricing display on prescription detail pages
+  - Quantity field support in prescription items
+  - Reload prescription page on status changes for fresh data
+  - Comprehensive logging for debugging
+
+- ✅ **Address Field Refactoring** (Feb 11-15)
+  - Moved from unstructured text (practice_address) to structured components
+  - Separate fields: street_line_1, street_line_2, city, state, postal_code, country
+  - Applied to doctor profiles, patient profiles, and prescriptions
+  - Dynamic country selection with state/province field updates
+  - Jamaica-only parish dropdown for shipping
+  - Fixed 404 errors in prescription detail views
+  - Simplified RLS policies with improved error logging
+
+- ✅ **Patient Dashboard Redesign** (Feb 15)
+  - New 3-column summary section replacing old status cards
+  - Status breakdown: orders and prescriptions by status
+  - Unread messages counter
+  - Limit recent items to 5 most recent sorted by created_at
+  - Fixed duplicate pending prescriptions count query
+  - Improved data accuracy
+
+- ✅ **Cart & Store UX Improvements** (Feb 14-15)
+  - Complete cart page redesign with header
+  - Two independent scrollable sections (cart list & summary)
+  - Quantity input auto-select on focus, 800ms debounce
+  - Connected cart item cards on desktop (no spacing/rounding)
+  - Mobile-friendly vertical stacking
+  - Normal scrolling on mobile, independent on desktop
+  - Hidden scrollbars with Tailwind utilities
+  - Improved toast positioning (bottom-right)
+
+- ✅ **Authentication Improvements** (Feb 14)
+  - Signup success page with redirect flow
+  - Parish selection required dropdown for Jamaica
+  - Optional postal code field
+  - Remove billing address from order summary
+  - Explicit READ RLS policies for patient profile access
+  - Clear address fields when checkbox unchecked
+  - Dynamic country-based state/province fields
+
+- ✅ **OTC Pharmacist Confirmation** (Feb 16)
+  - `needs_confirmation` field for OTC items requiring customer verification
+  - `pharmacist_confirm` (pharm_confirm) field for order items
+  - Badge display in inventory items
+  - Multiple commits for field updates and badge implementation
+
+- ✅ **Console Cleanup & Production Hardening** (Feb 11)
+  - Removed all dev console.log statements
+  - Production cleanup and optimization
+  - Improved API logging with null checks
+
+### **Previous Latest Features (Feb 8, 2026)**
 
 ### **Fygaro JWT Payment Gateway Integration**
 - ✅ JWT-based secure authentication with Fygaro payment processor
@@ -145,7 +204,7 @@ Original project README with platform overview
 
 ---
 
-## 🎯 Development Phases (10 Total)
+## 🎯 Development Phases (11 Total)
 
 ```
 ╔════════════════════════════════════════════════════════════════════╗
@@ -195,6 +254,11 @@ Original project README with platform overview
 ║ Phase 10: Fygaro Payment Integration           Feb 8 (9 commits) ║
 ║ ├─ JWT secure gateway, JMD currency, webhooks, success page       ║
 ║ ✅ COMPLETE                                                       ║
+║                                                                    ║
+║ Phase 11: Prescription Pricing & UX            Feb 9-16 (35)    ║
+║ ├─ Address refactoring, prescriptions orders, dashboard redesign  ║
+║ ├─ OTC pharmacist confirmation, cart improvements                 ║
+║ ✅ COMPLETE (ACTIVE PHASE)                                        ║
 ║                                                                    ║
 ╚════════════════════════════════════════════════════════════════════╝
 ```

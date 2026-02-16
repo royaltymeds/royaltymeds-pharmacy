@@ -4,12 +4,12 @@
 
 **RoyaltyMeds Prescription Platform** is a complete pharmacy management and e-commerce system built with Next.js 15, React 19, Tailwind CSS, and Supabase.
 
-**Status:** ✅ LIVE IN PRODUCTION  
+**Status:** ✅ LIVE IN PRODUCTION & ACTIVELY MAINTAINED  
 **URL:** https://royaltymedsprescript.vercel.app  
 **Build:** Passing (0 errors)  
-**Commits:** 400+ across 34 days  
-**Features:** 145+ fully functional  
-**Latest Update:** Feb 8, 2026 - Fygaro JWT payment gateway integration complete with webhook handler and JMD currency support    
+**Commits:** 460+ across 39 days  
+**Features:** 155+ fully functional  
+**Latest Update:** Feb 16, 2026 - Prescription order pricing, address refactoring, dashboard redesign, OTC pharmacist confirmation, cart UX improvements    
 
 ---
 
