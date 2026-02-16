@@ -63,8 +63,7 @@ export function FygaroPaymentModal({
 
   const handleOpenPayment = () => {
     if (paymentUrl) {
-      window.open(paymentUrl, '_blank', 'noopener,noreferrer');
-      onClose();
+      window.location.href = paymentUrl;
     }
   };
 
@@ -120,10 +119,10 @@ export function FygaroPaymentModal({
 
               <div className="text-sm text-gray-600 space-y-2">
                 <p>
-                  Click the button below to open the secure Fygaro payment portal in a new window.
+                  Click the button below to proceed to the secure Fygaro payment portal.
                 </p>
                 <p>
-                  Your payment details will be processed securely. You can then return to this page.
+                  Your payment details will be processed securely.
                 </p>
               </div>
 
@@ -133,7 +132,7 @@ export function FygaroPaymentModal({
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <ExternalLink className="w-5 h-5" />
-                Open Payment Portal
+                Proceed to Payment
               </button>
             </>
           )}
