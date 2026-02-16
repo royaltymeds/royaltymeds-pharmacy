@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
-import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
@@ -29,6 +29,13 @@ export default function AdminOrdersPage() {
   const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
   const [verifyingPayment, setVerifyingPayment] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Helper function to check if order has items requiring pharmacist confirmation
+  const hasItemsRequiringConfirmation = (orderId: string): boolean => {
+    const details = orderDetails[orderId];
+    if (!details || !details.items) return false;
+    return details.items.some((item) => item.pharm_confirm === true);
+  };
 
   // Load orders
   useEffect(() => {
@@ -369,12 +376,20 @@ export default function AdminOrdersPage() {
                     </div>
 
                     {/* Status and Expand */}
-                    <div className="flex items-center gap-3 w-full md:w-auto md:ml-6">
-                      <div
-                        className="px-3 md:px-4 py-2 rounded-full text-xs md:text-sm font-semibold text-white flex-1 md:flex-none text-center md:text-left"
-                        style={{ backgroundColor: getStatusColor(order.status) }}
-                      >
-                        {getStatusLabel(order.status)}
+                    <div className="flex items-center gap-2 w-full md:w-auto md:ml-6 flex-wrap md:flex-nowrap">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="px-3 md:px-4 py-2 rounded-full text-xs md:text-sm font-semibold text-white flex-1 md:flex-none text-center md:text-left"
+                          style={{ backgroundColor: getStatusColor(order.status) }}
+                        >
+                          {getStatusLabel(order.status)}
+                        </div>
+                        {isExpanded && details && hasItemsRequiringConfirmation(order.id) && (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-100 border border-red-300 rounded-full">
+                            <AlertCircle size={14} className="text-red-600 flex-shrink-0" />
+                            <span className="text-xs font-semibold text-red-600">Needs Confirmation</span>
+                          </div>
+                        )}
                       </div>
                       <ChevronDown
                         size={20}
@@ -541,19 +556,37 @@ export default function AdminOrdersPage() {
                           {details.items.map((item) => (
                             <div
                               key={item.id}
-                              className="bg-white rounded-lg p-4 flex flex-col md:flex-row md:justify-between md:items-center gap-2"
+                              className={`rounded-lg p-4 flex flex-col md:flex-row md:justify-between md:items-center gap-2 border-2 ${
+                                item.pharm_confirm === true
+                                  ? 'bg-red-50 border-red-200'
+                                  : 'bg-white border-gray-200'
+                              }`}
                             >
                               <div className="flex-1 min-w-0">
-                                <h5 className="font-semibold text-gray-900 text-sm md:text-base break-words">
+                                <h5 className={`font-semibold text-sm md:text-base break-words ${
+                                  item.pharm_confirm === true ? 'text-red-700' : 'text-gray-900'
+                                }`}>
                                   {item.drug_name}
                                 </h5>
-                                <p className="text-xs md:text-sm text-gray-600 mt-1">
+                                <p className={`text-xs md:text-sm mt-1 ${
+                                  item.pharm_confirm === true ? 'text-red-600' : 'text-gray-600'
+                                }`}>
                                   Qty: {item.quantity} × {formatCurrency(item.unit_price)}
                                 </p>
                               </div>
-                              <p className="text-lg md:text-lg font-bold text-gray-900">
-                                {formatCurrency(item.unit_price * item.quantity)}
-                              </p>
+                              <div className="flex items-center gap-3">
+                                <p className={`text-lg md:text-lg font-bold ${
+                                  item.pharm_confirm === true ? 'text-red-700' : 'text-gray-900'
+                                }`}>
+                                  {formatCurrency(item.unit_price * item.quantity)}
+                                </p>
+                                {item.pharm_confirm === true && (
+                                  <div className="flex items-center gap-1 px-2 py-1 bg-red-200 rounded">
+                                    <AlertCircle size={14} className="text-red-700 flex-shrink-0" />
+                                    <span className="text-xs font-semibold text-red-700">Confirm</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
