@@ -21,8 +21,8 @@ export function OrderPaymentSection({
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
   const [showFygaroModal, setShowFygaroModal] = useState(false);
 
-  // Only show payment options when order is confirmed and not yet paid
-  if (order.status !== 'confirmed' || order.payment_status === 'paid') {
+  // Only show payment options when order is confirmed or payment_pending and not yet paid
+  if ((order.status !== 'confirmed' && order.status !== 'payment_pending') || order.payment_status === 'paid') {
     return null;
   }
 
