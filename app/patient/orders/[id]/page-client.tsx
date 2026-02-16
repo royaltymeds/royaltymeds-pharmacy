@@ -5,8 +5,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { getOrderWithItems } from '@/app/actions/orders';
-import { ChevronLeft, Package, Calendar, MapPin, CheckCircle, AlertCircle, Phone, MessageCircle, Mail, CreditCard } from 'lucide-react';
+import { getPaymentConfig } from '@/app/actions/payments';
+import { PaymentConfig } from '@/lib/types/payments';
+import { ChevronLeft, Package, Calendar, MapPin, CheckCircle, AlertCircle, Phone, MessageCircle, Mail, CreditCard, DollarSign } from 'lucide-react';
 import { FygaroPaymentModal } from '@/app/patient/components/FygaroPaymentModal';
+import { BankTransferModal } from '@/app/patient/components/BankTransferModal';
 
 interface OrderDetailsClientProps {
   orderId: string;
@@ -18,7 +21,9 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
   const [order, setOrder] = useState<OrderWithItems | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showFygaroModal, setShowFygaroModal] = useState(false);
+  const [showBankTransferModal, setShowBankTransferModal] = useState(false);
+  const [bankConfig, setBankConfig] = useState<PaymentConfig | null>(null);
   const isSuccess = searchParams.get('success') === 'true';
 
   useEffect(() => {
@@ -36,6 +41,20 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
 
     loadOrder();
   }, [orderId]);
+
+  // Load payment config
+  useEffect(() => {
+    const loadPaymentConfig = async () => {
+      try {
+        const config = await getPaymentConfig();
+        setBankConfig(config);
+      } catch (err) {
+        console.error('Failed to load payment config:', err);
+      }
+    };
+
+    loadPaymentConfig();
+  }, []);
 
   const getStatusLabel = (status: string) => {
     return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
@@ -175,16 +194,46 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
             </div>
           </div>
 
-          {/* Continue to Payment Button - For Payment Pending Orders */}
+          {/* Payment Options - For Payment Pending Orders */}
           {shouldShowPaymentButton() && (
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <button
-                onClick={() => setShowPaymentModal(true)}
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <CreditCard className="w-5 h-5" />
-                <span>Complete Payment Now</span>
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Bank Transfer Option */}
+                <button
+                  onClick={() => setShowBankTransferModal(true)}
+                  className="p-4 border-2 border-gray-200 rounded-lg hover:border-green-600 hover:bg-green-50 transition text-left"
+                >
+                  <div className="flex items-start gap-3">
+                    <DollarSign className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+                    <div>
+                      <h5 className="font-semibold text-gray-900 text-sm md:text-base">
+                        Bank Transfer
+                      </h5>
+                      <p className="text-xs md:text-sm text-gray-600 mt-1">
+                        Transfer to our bank account and upload receipt
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Card Payment Option - Fygaro */}
+                <button
+                  onClick={() => setShowFygaroModal(true)}
+                  className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition text-left"
+                >
+                  <div className="flex items-start gap-3">
+                    <CreditCard className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                    <div className="w-full">
+                      <h5 className="font-semibold text-gray-900 text-sm md:text-base">
+                        Card Payment
+                      </h5>
+                      <p className="text-xs md:text-sm text-gray-600 mt-1">
+                        Pay securely with your credit or debit card
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -297,13 +346,27 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
           </div>
         )}
 
-        {/* Fygaro Payment Modal */}
+        {/* Payment Modals */}
         {order && (
-          <FygaroPaymentModal
-            isOpen={showPaymentModal}
-            onClose={() => setShowPaymentModal(false)}
-            order={order}
-          />
+          <>
+            <FygaroPaymentModal
+              isOpen={showFygaroModal}
+              onClose={() => setShowFygaroModal(false)}
+              order={order}
+            />
+
+            <BankTransferModal
+              isOpen={showBankTransferModal}
+              onClose={() => setShowBankTransferModal(false)}
+              orderId={order.id}
+              orderNumber={order.order_number}
+              amount={order.total_amount}
+              bankConfig={bankConfig}
+              onPaymentInitiated={() => {
+                // Optionally handle payment initiated
+              }}
+            />
+          </>
         )}
       </div>
     </div>
