@@ -78,6 +78,25 @@ export default function AdminOrdersPage() {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
 
+  // Load order details for paginated orders (for badge display and other info)
+  useEffect(() => {
+    const loadOrderDetails = async () => {
+      for (const order of paginatedOrders) {
+        if (!orderDetails[order.id]) {
+          try {
+            const details = await getAdminOrderWithItems(order.id);
+            setOrderDetails((prev) => ({ ...prev, [order.id]: details }));
+          } catch (err) {
+            // Silently fail for badge loading
+            console.error(`Failed to load details for order ${order.id}:`, err);
+          }
+        }
+      }
+    };
+
+    loadOrderDetails();
+  }, [paginatedOrders, orderDetails]);
+
   // Load order details when expanded
   const handleExpandOrder = async (orderId: string) => {
     if (expandedOrderId === orderId) {
@@ -384,7 +403,7 @@ export default function AdminOrdersPage() {
                         >
                           {getStatusLabel(order.status)}
                         </div>
-                        {isExpanded && details && hasItemsRequiringConfirmation(order.id) && (
+                        {details && hasItemsRequiringConfirmation(order.id) && (
                           <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-100 border border-red-300 rounded-full">
                             <AlertCircle size={14} className="text-red-600 flex-shrink-0" />
                             <span className="text-xs font-semibold text-red-600">Needs Confirmation</span>
