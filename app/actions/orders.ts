@@ -208,6 +208,12 @@ export async function createOrder(
   
   const total = subtotal + tax + shipping;
 
+  // Check if any items require pharmacist confirmation
+  const hasItemsRequiringConfirmation = orderItems.some((item) => item.pharm_confirm === true);
+  
+  // Set order status: if items need confirmation, pending; otherwise payment_pending
+  const orderStatus = hasItemsRequiringConfirmation ? 'pending' : 'payment_pending';
+
   // Create order
   const orderNumber = generateOrderNumber();
   const { data: orderData, error: orderError } = await supabase
@@ -215,7 +221,7 @@ export async function createOrder(
     .insert({
       user_id: user.id,
       order_number: orderNumber,
-      status: 'pending',
+      status: orderStatus,
       subtotal_amount: subtotal,
       tax_amount: tax,
       shipping_amount: shipping,
