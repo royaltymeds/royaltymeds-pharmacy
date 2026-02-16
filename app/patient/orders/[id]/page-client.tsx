@@ -107,7 +107,7 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
         {isSuccess && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <span className="text-green-700 font-medium text-sm sm:text-base">Order placed successfully!</span>
+            <span className="text-green-700 font-medium text-sm sm:text-base">Order submitted</span>
           </div>
         )}
 
