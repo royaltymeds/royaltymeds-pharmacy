@@ -167,7 +167,7 @@ export default function InventoryItemTable({
                         </div>
                       </div>
                     </button>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                       {(drug as any).is_on_sale && (
                         <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold border border-green-300 bg-green-50 text-green-700 whitespace-nowrap">
                           Sale Active
@@ -181,6 +181,11 @@ export default function InventoryItemTable({
                         {drug.status.replace(/_/g, ' ').charAt(0).toUpperCase() +
                           drug.status.replace(/_/g, ' ').slice(1)}
                       </span>
+                      {(drug as any).pharm_confirm && (
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium border border-red-300 bg-red-50 text-red-700 whitespace-nowrap">
+                          Requires Confirmation
+                        </span>
+                      )}
                       <ChevronDown
                         className={`w-5 h-5 text-gray-400 transition-transform cursor-pointer ${
                           isExpanded ? 'rotate-180' : ''
