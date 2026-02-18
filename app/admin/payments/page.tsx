@@ -43,11 +43,17 @@ export default function PaymentConfigPage() {
 
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [showAddRate, setShowAddRate] = useState(false);
+  const [editingRateId, setEditingRateId] = useState<string | null>(null);
   const [newRate, setNewRate] = useState({
     parish: '',
     city_town: '',
     rate: 0,
     is_default: false,
+  });
+  const [editRate, setEditRate] = useState({
+    parish: '',
+    city_town: '',
+    rate: 0,
   });
   const [savingRate, setSavingRate] = useState<string | null>(null);
   const [deletingRate, setDeletingRate] = useState<string | null>(null);
@@ -163,6 +169,61 @@ export default function PaymentConfigPage() {
       await updateShippingRate(id, { is_default: !currentDefault });
       const updatedRates = await getShippingRates();
       setShippingRates(updatedRates);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update shipping rate');
+    } finally {
+      setSavingRate(null);
+    }
+  };
+
+  const handleStartEdit = (rate: ShippingRate) => {
+    setEditingRateId(rate.id);
+    setEditRate({
+      parish: rate.parish,
+      city_town: rate.city_town || '',
+      rate: rate.rate,
+    });
+    setError('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRateId(null);
+    setEditRate({ parish: '', city_town: '', rate: 0 });
+  };
+
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditRate((prev) => ({
+      ...prev,
+      [name]: name === 'rate' ? parseFloat(value === '' ? '0' : value) || 0 : value,
+    }));
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      if (!editRate.parish) {
+        setError('Parish is required');
+        return;
+      }
+      if (editRate.rate < 0) {
+        setError('Rate must be a positive number');
+        return;
+      }
+
+      setSavingRate(editingRateId);
+      setError('');
+
+      await updateShippingRate(editingRateId!, {
+        parish: editRate.parish,
+        city_town: editRate.city_town || null,
+        rate: editRate.rate,
+      });
+
+      const updatedRates = await getShippingRates();
+      setShippingRates(updatedRates);
+      setEditingRateId(null);
+      setEditRate({ parish: '', city_town: '', rate: 0 });
+      setSuccess('Shipping rate updated successfully');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update shipping rate');
     } finally {
@@ -565,40 +626,105 @@ export default function PaymentConfigPage() {
                           </thead>
                           <tbody className="divide-y divide-gray-200">
                             {shippingRates.map((rate) => (
-                              <tr key={rate.id} className="hover:bg-gray-50">
-                                <td className="px-4 py-3 text-gray-900">{rate.parish}</td>
-                                <td className="px-4 py-3 text-gray-600">
-                                  {rate.city_town || <span className="text-gray-400">Whole parish</span>}
-                                </td>
-                                <td className="px-4 py-3 text-gray-900 font-medium">{rate.rate.toFixed(2)}</td>
-                                <td className="px-4 py-3">
-                                  <button
-                                    onClick={() => handleToggleDefault(rate.id, rate.is_default)}
-                                    disabled={savingRate === rate.id}
-                                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                                      rate.is_default
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                                    } ${savingRate === rate.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                  >
-                                    {rate.is_default ? 'Yes' : 'No'}
-                                  </button>
-                                </td>
-                                <td className="px-4 py-3 text-right space-x-2">
-                                  <button
-                                    onClick={() => handleDeleteRate(rate.id)}
-                                    disabled={deletingRate === rate.id}
-                                    className="inline-flex items-center gap-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded transition-colors text-xs"
-                                  >
-                                    {deletingRate === rate.id ? (
-                                      <Loader size={14} className="animate-spin" />
-                                    ) : (
-                                      <Trash2 size={14} />
-                                    )}
-                                    Delete
-                                  </button>
-                                </td>
-                              </tr>
+                              editingRateId === rate.id ? (
+                                <tr key={rate.id} className="bg-blue-50">
+                                  <td className="px-4 py-3">
+                                    <select
+                                      name="parish"
+                                      value={editRate.parish}
+                                      onChange={handleEditInputChange}
+                                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                    >
+                                      <option value="">Select Parish</option>
+                                      {JAMAICAN_PARISHES.map((p) => (
+                                        <option key={p} value={p}>
+                                          {p}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <input
+                                      type="text"
+                                      name="city_town"
+                                      value={editRate.city_town}
+                                      onChange={handleEditInputChange}
+                                      placeholder="Optional"
+                                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                    />
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <input
+                                      type="text"
+                                      name="rate"
+                                      value={editRate.rate || ''}
+                                      onChange={handleEditInputChange}
+                                      pattern="^[0-9]*(\.[0-9]{1,2})?$"
+                                      inputMode="decimal"
+                                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                    />
+                                  </td>
+                                  <td colSpan={2} className="px-4 py-3">
+                                    <div className="flex gap-2 justify-end">
+                                      <button
+                                        onClick={handleCancelEdit}
+                                        className="px-2 py-1 bg-gray-300 text-gray-800 rounded text-xs hover:bg-gray-400"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        onClick={handleSaveEdit}
+                                        disabled={savingRate === rate.id}
+                                        className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-1"
+                                      >
+                                        {savingRate === rate.id && <Loader size={13} className="animate-spin" />}
+                                        Save
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ) : (
+                                <tr key={rate.id} className="hover:bg-gray-50">
+                                  <td className="px-4 py-3 text-gray-900">{rate.parish}</td>
+                                  <td className="px-4 py-3 text-gray-600">
+                                    {rate.city_town || <span className="text-gray-400">Whole parish</span>}
+                                  </td>
+                                  <td className="px-4 py-3 text-gray-900 font-medium">{rate.rate.toFixed(2)}</td>
+                                  <td className="px-4 py-3">
+                                    <button
+                                      onClick={() => handleToggleDefault(rate.id, rate.is_default)}
+                                      disabled={savingRate === rate.id}
+                                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                                        rate.is_default
+                                          ? 'bg-green-100 text-green-800'
+                                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                      } ${savingRate === rate.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                      {rate.is_default ? 'Yes' : 'No'}
+                                    </button>
+                                  </td>
+                                  <td className="px-4 py-3 text-right space-x-2">
+                                    <button
+                                      onClick={() => handleStartEdit(rate)}
+                                      className="inline-flex items-center gap-1 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors text-xs"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteRate(rate.id)}
+                                      disabled={deletingRate === rate.id}
+                                      className="inline-flex items-center gap-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded transition-colors text-xs"
+                                    >
+                                      {deletingRate === rate.id ? (
+                                        <Loader size={14} className="animate-spin" />
+                                      ) : (
+                                        <Trash2 size={14} />
+                                      )}
+                                      Delete
+                                    </button>
+                                  </td>
+                                </tr>
+                              )
                             ))}
                           </tbody>
                         </table>
