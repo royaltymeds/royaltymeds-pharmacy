@@ -458,58 +458,92 @@ export default function CartPage() {
                 <h2 className="text-lg font-bold text-gray-900 mb-2">Shipping Address</h2>
                 <p className="text-sm text-gray-600 mb-4">Enter your shipping address (required). Your shipping cost is calculated based on your location and will update as you fill in your details.</p>
                 <form onSubmit={handleCheckout} className="space-y-6">
-                    {/* Use Profile Address Checkbox - only if profile exists and country is Jamaica */}
-                    {userProfile && userProfile.country === 'Jamaica' && (
-                      <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <input
-                          type="checkbox"
-                          id="useProfileAddress"
-                          checked={useProfileAddress}
-                          onChange={(e) => {
-                            setUseProfileAddress(e.target.checked);
-                            if (e.target.checked) {
-                              setFormData(prev => ({
-                                ...prev,
-                                shipping_street_line_1: userProfile.street_address_line_1 || '',
-                                shipping_street_line_2: userProfile.street_address_line_2 || '',
-                                shipping_city: userProfile.city || '',
-                                shipping_state: userProfile.state || '',
-                                shipping_postal_code: userProfile.postal_code || '',
-                              }));
-                            } else {
-                              setFormData(prev => ({
-                                ...prev,
-                                shipping_street_line_1: '',
-                                shipping_street_line_2: '',
-                                shipping_city: '',
-                                shipping_state: '',
-                                shipping_postal_code: '',
-                              }));
-                            }
-                          }}
-                          className="w-4 h-4 rounded border-gray-300 cursor-pointer"
-                        />
-                        <label htmlFor="useProfileAddress" className="text-sm font-medium text-gray-700 cursor-pointer">
-                          Use my profile address as shipping address
-                        </label>
-                      </div>
-                    )}
+                  {/* Use Profile Address Checkbox - only if profile exists and country is Jamaica */}
+                  {userProfile && userProfile.country === 'Jamaica' && (
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <input
+                        type="checkbox"
+                        id="useProfileAddress"
+                        checked={useProfileAddress}
+                        onChange={(e) => {
+                          setUseProfileAddress(e.target.checked);
+                          if (e.target.checked) {
+                            setFormData(prev => ({
+                              ...prev,
+                              shipping_street_line_1: userProfile.street_address_line_1 || '',
+                              shipping_street_line_2: userProfile.street_address_line_2 || '',
+                              shipping_city: userProfile.city || '',
+                              shipping_state: userProfile.state || '',
+                              shipping_postal_code: userProfile.postal_code || '',
+                            }));
+                          } else {
+                            setFormData(prev => ({
+                              ...prev,
+                              shipping_street_line_1: '',
+                              shipping_street_line_2: '',
+                              shipping_city: '',
+                              shipping_state: '',
+                              shipping_postal_code: '',
+                            }));
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                      />
+                      <label htmlFor="useProfileAddress" className="text-sm font-medium text-gray-700 cursor-pointer">
+                        Use my profile address as shipping address
+                      </label>
+                    </div>
+                  )}
 
-                    {/* Shipping Address */}
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-3">Shipping Address</h3>
-                      <div className="space-y-3">
+                  {/* Shipping Address */}
+                  <div>
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">Shipping Address</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Street Address *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.shipping_street_line_1}
+                          onChange={(e) =>
+                            setFormData({ ...formData, shipping_street_line_1: e.target.value })
+                          }
+                          placeholder="123 Main Street"
+                          required
+                          disabled={useProfileAddress}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Street Address (Continued)
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.shipping_street_line_2}
+                          onChange={(e) =>
+                            setFormData({ ...formData, shipping_street_line_2: e.target.value })
+                          }
+                          placeholder="Apartment, suite, etc. (optional)"
+                          disabled={useProfileAddress}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Street Address *
+                            City *
                           </label>
                           <input
                             type="text"
-                            value={formData.shipping_street_line_1}
+                            value={formData.shipping_city}
                             onChange={(e) =>
-                              setFormData({ ...formData, shipping_street_line_1: e.target.value })
+                              setFormData({ ...formData, shipping_city: e.target.value })
                             }
-                            placeholder="123 Main Street"
+                            placeholder="Kingston"
                             required
                             disabled={useProfileAddress}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
@@ -518,152 +552,118 @@ export default function CartPage() {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Street Address (Continued)
+                            Parish *
+                          </label>
+                          <select
+                            value={formData.shipping_state}
+                            onChange={(e) =>
+                              setFormData({ ...formData, shipping_state: e.target.value })
+                            }
+                            required
+                            disabled={useProfileAddress}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
+                          >
+                            <option value="">Select Parish</option>
+                            {JAMAICAN_PARISHES.map((parish) => (
+                              <option key={parish} value={parish}>
+                                {parish}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Postal Code
                           </label>
                           <input
                             type="text"
-                            value={formData.shipping_street_line_2}
+                            value={formData.shipping_postal_code}
                             onChange={(e) =>
-                              setFormData({ ...formData, shipping_street_line_2: e.target.value })
+                              setFormData({ ...formData, shipping_postal_code: e.target.value })
                             }
-                            placeholder="Apartment, suite, etc. (optional)"
+                            placeholder="12345 (optional)"
                             disabled={useProfileAddress}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
                           />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              City *
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.shipping_city}
-                              onChange={(e) =>
-                                setFormData({ ...formData, shipping_city: e.target.value })
-                              }
-                              placeholder="Kingston"
-                              required
-                              disabled={useProfileAddress}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Parish *
-                            </label>
-                            <select
-                              value={formData.shipping_state}
-                              onChange={(e) =>
-                                setFormData({ ...formData, shipping_state: e.target.value })
-                              }
-                              required
-                              disabled={useProfileAddress}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
-                            >
-                              <option value="">Select Parish</option>
-                              {JAMAICAN_PARISHES.map((parish) => (
-                                <option key={parish} value={parish}>
-                                  {parish}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Postal Code
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.shipping_postal_code}
-                              onChange={(e) =>
-                                setFormData({ ...formData, shipping_postal_code: e.target.value })
-                              }
-                              placeholder="12345 (optional)"
-                              disabled={useProfileAddress}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Country *
-                            </label>
-                            <input
-                              type="text"
-                              value="Jamaica"
-                              disabled
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-                            />
-                          </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Country *
+                          </label>
+                          <input
+                            type="text"
+                            value="Jamaica"
+                            disabled
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                          />
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Notes */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Order Notes (Optional)
-                      </label>
-                      <textarea
-                        value={formData.notes}
-                        onChange={(e) =>
-                          setFormData({ ...formData, notes: e.target.value })
-                        }
-                        placeholder="Any special instructions..."
-                        rows={2}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Order Notes (Optional)
+                    </label>
+                    <textarea
+                      value={formData.notes}
+                      onChange={(e) =>
+                        setFormData({ ...formData, notes: e.target.value })
+                      }
+                      placeholder="Any special instructions..."
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Order Summary - Inside Form (Place Order button here) */}
+                  <div className="bg-white rounded-lg shadow-md p-4 md:p-4 lg:p-6 space-y-4">
+                    <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
+                    <div className="space-y-3 border-b border-gray-200 pb-3">
+                      <div className="flex justify-between text-gray-700">
+                        <span>Subtotal</span>
+                        <span>{formatCurrency(subtotal)}</span>
+                      </div>
+                      {paymentConfig && paymentConfig.tax_type === 'inclusive' && (
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>({paymentConfig.tax_rate}% GCT Inclusive)</span>
+                          <span></span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-gray-700">
+                        <span>Shipping/Delivery</span>
+                        <span>{formatCurrency(shipping)}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xl font-bold text-gray-900">
+                      <span>Total</span>
+                      <span>{formatCurrency(total)}</span>
                     </div>
 
-                    {/* Buttons */}
-                    <div className="flex gap-3 pt-2">
+                    {/* Shipping Advisory */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                      <p className="text-xs md:text-sm text-gray-700">
+                        <span className="font-semibold text-blue-900">💡 Shipping Notice:</span> Your shipping/delivery cost is calculated based on your selected shipping address. {formData.shipping_state && formData.shipping_city ? 'Current: ' + formData.shipping_city + ', ' + formData.shipping_state : 'Enter your shipping address to see the correct shipping cost.'}
+                      </p>
+                    </div>
+
+                    {/* Place Order Button (fits text) */}
+                    <div className="mt-4 flex justify-end">
                       <button
                         type="submit"
                         disabled={processingOrder}
-                        className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                       >
                         {processingOrder ? 'Processing...' : 'Place Order'}
                       </button>
                     </div>
-                  </form>
-              </div>
-
-              {/* Order Summary - After Form */}
-              <div className="bg-white rounded-lg shadow-md p-4 md:p-4 lg:p-6 space-y-4">
-                <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
-                <div className="space-y-3 border-b border-gray-200 pb-3">
-                  <div className="flex justify-between text-gray-700">
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(subtotal)}</span>
                   </div>
-                  {paymentConfig && paymentConfig.tax_type === 'inclusive' && (
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>({paymentConfig.tax_rate}% GCT Inclusive)</span>
-                      <span></span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-gray-700">
-                    <span>Shipping/Delivery</span>
-                    <span>{formatCurrency(shipping)}</span>
-                  </div>
-                </div>
-                <div className="flex justify-between text-xl font-bold text-gray-900">
-                  <span>Total</span>
-                  <span>{formatCurrency(total)}</span>
-                </div>
-
-                {/* Shipping Advisory */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-                  <p className="text-xs md:text-sm text-gray-700">
-                    <span className="font-semibold text-blue-900">💡 Shipping Notice:</span> Your shipping/delivery cost is calculated based on your selected shipping address. {formData.shipping_state && formData.shipping_city ? 'Current: ' + formData.shipping_city + ', ' + formData.shipping_state : 'Enter your shipping address to see the correct shipping cost.'}
-                  </p>
-                </div>
+                </form>
               </div>
             </div>
           </div>
