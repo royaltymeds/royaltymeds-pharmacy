@@ -632,7 +632,11 @@ export default function AdminOrdersPage() {
                         </div>
                         <div className="flex justify-between text-gray-700 items-center">
                           <span>Delivery/Shipping</span>
-                          {editingShipping === order.id ? (
+                          {order.shipping_collect_on_delivery ? (
+                            <span className="text-sm">
+                              To be paid on delivery{order.shipping_estimated_amount ? ` (${formatCurrency(order.shipping_estimated_amount)})` : ''}
+                            </span>
+                          ) : editingShipping === order.id ? (
                             <div className="flex gap-2">
                               <input
                                 type="text"

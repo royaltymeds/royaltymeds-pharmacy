@@ -294,7 +294,13 @@ export default function PatientOrdersPage() {
                         </div>
                         <div className="flex justify-between text-gray-700">
                           <span>Shipping</span>
-                          <span>{formatCurrency(order.shipping_amount)}</span>
+                          <span>
+                            {order.shipping_collect_on_delivery ? (
+                              <>To be paid on delivery{order.shipping_estimated_amount ? ` (${formatCurrency(order.shipping_estimated_amount)})` : ''}</>
+                            ) : (
+                              <>{formatCurrency(order.shipping_amount)}</>
+                            )}
+                          </span>
                         </div>
                         <div className="flex justify-between text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
                           <span>Total</span>
