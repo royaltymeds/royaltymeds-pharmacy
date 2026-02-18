@@ -53,6 +53,7 @@ export default function CartPage() {
   const [pendingQuantities, setPendingQuantities] = useState<Record<string, number>>({});
   const [shipping, setShipping] = useState<number>(0);
   const [payOnDelivery, setPayOnDelivery] = useState<boolean>(false);
+  const [shippingUpdating, setShippingUpdating] = useState(false);
   const quantityTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
   const { clearCart } = useCart();
 
@@ -119,6 +120,7 @@ export default function CartPage() {
     const calculateShipping = async () => {
       if (formData.shipping_state) {
         try {
+          setShippingUpdating(true);
           const rate = await getShippingRateByLocation(
             formData.shipping_state,
             formData.shipping_city || undefined
@@ -127,9 +129,12 @@ export default function CartPage() {
         } catch (err) {
           console.error('Failed to calculate shipping rate:', err);
           setShipping(0);
+        } finally {
+          setShippingUpdating(false);
         }
       } else {
         setShipping(0);
+        setShippingUpdating(false);
       }
     };
 
@@ -640,7 +645,7 @@ export default function CartPage() {
                   </div>
 
                   {/* Order Summary - Inside Form (Place Order button here) */}
-                  <div className="bg-white rounded-lg shadow-md p-4 md:p-4 lg:p-6 space-y-4">
+                  <div className="bg-white rounded-lg p-4 md:p-4 lg:p-6 space-y-4">
                     <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
                     <div className="space-y-3 border-b border-gray-200 pb-3">
                       <div className="flex justify-between text-gray-700">
@@ -669,6 +674,19 @@ export default function CartPage() {
                       <span>{formatCurrency(total)}</span>
                     </div>
 
+                    {/* Shipping Updating Toast */}
+                    {shippingUpdating && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-2">
+                        <div className="animate-spin">
+                          <svg className="w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        </div>
+                        <span className="text-sm font-medium text-blue-900">Updating shipping rate...</span>
+                      </div>
+                    )}
+
                     {/* Shipping Advisory */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
                       <p className="text-xs md:text-sm text-gray-700">
@@ -680,7 +698,7 @@ export default function CartPage() {
                     <div className="mt-4 flex justify-end">
                       <button
                         type="submit"
-                        disabled={processingOrder}
+                        disabled={processingOrder || shippingUpdating}
                         className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                       >
                         {processingOrder ? 'Processing...' : 'Place Order'}
