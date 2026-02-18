@@ -453,38 +453,6 @@ export default function CartPage() {
         {cartItems.length > 0 && (
           <div className="w-full lg:w-1/2 lg:flex-1 bg-white lg:border-l border-gray-200 lg:overflow-y-auto lg:hide-scrollbar flex flex-col">
             <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 w-full">
-              {/* Order Summary */}
-              <div className="bg-white rounded-lg shadow-md p-4 md:p-4 lg:p-6 space-y-4">
-                <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
-                <div className="space-y-3 border-b border-gray-200 pb-3">
-                  <div className="flex justify-between text-gray-700">
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(subtotal)}</span>
-                  </div>
-                  {paymentConfig && paymentConfig.tax_type === 'inclusive' && (
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>({paymentConfig.tax_rate}% GCT Inclusive)</span>
-                      <span></span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-gray-700">
-                    <span>Shipping/Delivery</span>
-                    <span>{formatCurrency(shipping)}</span>
-                  </div>
-                </div>
-                <div className="flex justify-between text-xl font-bold text-gray-900">
-                  <span>Total</span>
-                  <span>{formatCurrency(total)}</span>
-                </div>
-
-                {/* Shipping Advisory */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-                  <p className="text-xs md:text-sm text-gray-700">
-                    <span className="font-semibold text-blue-900">💡 Shipping Notice:</span> Your shipping/delivery cost is calculated based on your selected shipping address. {formData.shipping_state && formData.shipping_city ? 'Current: ' + formData.shipping_city + ', ' + formData.shipping_state : 'Enter your shipping address to see the correct shipping cost.'}
-                  </p>
-                </div>
-              </div>
-
               {/* Checkout Form - Always Visible */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-2">Shipping Address</h2>
@@ -664,6 +632,38 @@ export default function CartPage() {
                       </button>
                     </div>
                   </form>
+              </div>
+
+              {/* Order Summary - After Form */}
+              <div className="bg-white rounded-lg shadow-md p-4 md:p-4 lg:p-6 space-y-4">
+                <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
+                <div className="space-y-3 border-b border-gray-200 pb-3">
+                  <div className="flex justify-between text-gray-700">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(subtotal)}</span>
+                  </div>
+                  {paymentConfig && paymentConfig.tax_type === 'inclusive' && (
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>({paymentConfig.tax_rate}% GCT Inclusive)</span>
+                      <span></span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-gray-700">
+                    <span>Shipping/Delivery</span>
+                    <span>{formatCurrency(shipping)}</span>
+                  </div>
+                </div>
+                <div className="flex justify-between text-xl font-bold text-gray-900">
+                  <span>Total</span>
+                  <span>{formatCurrency(total)}</span>
+                </div>
+
+                {/* Shipping Advisory */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                  <p className="text-xs md:text-sm text-gray-700">
+                    <span className="font-semibold text-blue-900">💡 Shipping Notice:</span> Your shipping/delivery cost is calculated based on your selected shipping address. {formData.shipping_state && formData.shipping_city ? 'Current: ' + formData.shipping_city + ', ' + formData.shipping_state : 'Enter your shipping address to see the correct shipping cost.'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
