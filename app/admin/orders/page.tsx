@@ -674,7 +674,7 @@ export default function AdminOrdersPage() {
                               </div>
                               <input
                                 type="text"
-                                value={(shippingValues[order.id] ?? '0') || ''}
+                                value={shippingValues[order.id] ?? ''}
                                 onChange={(e) => setShippingValues({ ...shippingValues, [order.id]: e.target.value })}
                                 placeholder="0.00"
                                 pattern="^[0-9]*(\.[0-9]{1,2})?$"
