@@ -470,7 +470,7 @@ export default function CartPage() {
                   )}
                   {shipping > 0 && (
                     <div className="flex justify-between text-gray-700">
-                      <span>Delivery (Kingston)</span>
+                      <span>Shipping/Delivery</span>
                       <span>{formatCurrency(shipping)}</span>
                     </div>
                   )}
