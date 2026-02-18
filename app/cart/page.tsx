@@ -38,7 +38,6 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [checkoutForm, setCheckoutForm] = useState(false);
   const [formData, setFormData] = useState({
     shipping_street_line_1: '',
     shipping_street_line_2: '',
@@ -468,31 +467,29 @@ export default function CartPage() {
                       <span></span>
                     </div>
                   )}
-                  {shipping > 0 && (
-                    <div className="flex justify-between text-gray-700">
-                      <span>Shipping/Delivery</span>
-                      <span>{formatCurrency(shipping)}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between text-gray-700">
+                    <span>Shipping/Delivery</span>
+                    <span>{formatCurrency(shipping)}</span>
+                  </div>
                 </div>
                 <div className="flex justify-between text-xl font-bold text-gray-900">
                   <span>Total</span>
                   <span>{formatCurrency(total)}</span>
                 </div>
+
+                {/* Shipping Advisory */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                  <p className="text-xs md:text-sm text-gray-700">
+                    <span className="font-semibold text-blue-900">💡 Shipping Notice:</span> Your shipping/delivery cost is calculated based on your selected shipping address. {formData.shipping_state && formData.shipping_city ? 'Current: ' + formData.shipping_city + ', ' + formData.shipping_state : 'Enter your shipping address to see the correct shipping cost.'}
+                  </p>
+                </div>
               </div>
 
-              {/* Checkout Form */}
-              {!checkoutForm ? (
-                <button
-                  onClick={() => setCheckoutForm(true)}
-                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                >
-                  Proceed to Checkout
-                </button>
-              ) : (
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Shipping Address</h2>
-                  <form onSubmit={handleCheckout} className="space-y-6">
+              {/* Checkout Form - Always Visible */}
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-2">Shipping Address</h2>
+                <p className="text-sm text-gray-600 mb-4">Enter your shipping address (required). Your shipping cost is calculated based on your location and will update as you fill in your details.</p>
+                <form onSubmit={handleCheckout} className="space-y-6">
                     {/* Use Profile Address Checkbox - only if profile exists and country is Jamaica */}
                     {userProfile && userProfile.country === 'Jamaica' && (
                       <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -659,23 +656,15 @@ export default function CartPage() {
                     {/* Buttons */}
                     <div className="flex gap-3 pt-2">
                       <button
-                        type="button"
-                        onClick={() => setCheckoutForm(false)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        Back
-                      </button>
-                      <button
                         type="submit"
                         disabled={processingOrder}
-                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
+                        className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
                       >
                         {processingOrder ? 'Processing...' : 'Place Order'}
                       </button>
                     </div>
                   </form>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         )}
