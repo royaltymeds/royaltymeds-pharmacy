@@ -160,21 +160,69 @@ USING (user_id = auth.uid());
 USING (user_id = (SELECT auth.uid()));
 ```
 
-**Rule 2: Combine role checks into single policy per operation**
-```sql
--- ❌ BAD: Multiple permissive policies
-CREATE POLICY "select_doctors" ON table FOR SELECT 
-  USING (role = 'doctor');
-CREATE POLICY "select_admin" ON table FOR SELECT 
-  USING (role = 'admin');
+**Rule 2: CRITICAL - Never reference tables with overlapping RLS policies**
+RLS policies must NEVER check other tables that have their own RLS policies. This creates infinite recursion (error code 42P17).
 
--- ✅ GOOD: Single policy with OR logic
-CREATE POLICY "select_access" ON table FOR SELECT USING (
-  role = 'doctor' OR role = 'admin'
+```sql
+-- ❌ DEADLY: Creates circular recursion
+-- In user_profiles SELECT policy:
+USING (
+  user_id = (SELECT auth.uid())
+  OR EXISTS (
+    SELECT 1 FROM doctor_patient_links 
+    WHERE ... -- doctor_patient_links has its own RLS → RECURSION
+  )
+);
+
+-- ❌ DEADLY: Also creates recursion
+-- In user_profiles SELECT policy:
+USING (
+  user_id = (SELECT auth.uid())
+  OR role = (
+    SELECT role FROM users WHERE id = (SELECT auth.uid()) -- users table has RLS → RECURSION
+  )
+);
+
+-- ✅ SAFE: Pure self-read with zero cross-table dependencies
+USING (user_id = (SELECT auth.uid()))
+```
+
+**When you need role-based access:**
+- Do NOT check role in table RLS policies (causes recursion if users table has RLS)
+- Instead: Enforce role-based access at the API endpoint level using server-side auth verification
+- Pattern: API verifies `user.role` from session, then queries table with pure RLS policy
+
+```typescript
+// ✅ CORRECT: Role check in API layer, pure RLS on table
+const { data: { user } } = await supabase.auth.getUser();
+const userData = await supabase
+  .from("users")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+if (userData.role !== "admin") {
+  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+}
+
+// Now query with table that has pure self-read RLS:
+const { data } = await supabase
+  .from("admin_data")
+  .select("*")
+  // RLS policy is ONLY: USING (user_id = (SELECT auth.uid()))
+  // No role checks in the policy itself
+```
+
+**Rule 3: Combine permission levels into single policy ONLY when safe**
+```sql
+-- ✅ SAFE: Combining checks on SAME table (no cross-table lookups)
+CREATE POLICY "select_own_or_admin_view" ON orders FOR SELECT USING (
+  user_id = (SELECT auth.uid()) 
+  OR (SELECT auth.uid())::text = 'admin-user-id'
 );
 ```
 
-**Rule 3: Storage bucket policies are SEPARATE from table policies**
+**Rule 4: Storage bucket policies are SEPARATE from table policies**
 - Storage bucket RLS must be configured explicitly in `storage.objects`
 - Apply by bucket_id, not by file ownership (unless specific to that feature)
 - Current policy: All authenticated users can read/write royaltymeds_storage bucket
@@ -863,17 +911,48 @@ This prevents pre-rendering at build time when environment variables aren't avai
 1. ☑ **Role Compatibility**: Does this feature apply to patient, doctor, or pharmacist?
 2. ☑ **Authentication**: Using correct Supabase client pattern (server vs client)?
 3. ☑ **RLS Enforcement**: Will this respect row-level security policies?
-4. ☑ **Terminology**: UI terms match approved vocabulary (customer, pharmacist, doctor)?
-5. ☑ **Database Schema**: Required columns verified in migrations?
-6. ☑ **Security**: No secrets exposed, no service role in client queries?
-7. ☑ **Folder Structure**: Follows established `/app/` organization?
-8. ☑ **Error Handling**: Generic messages (no SQL/auth details)?
-9. ☑ **Edge Cases**: Handles missing data, auth failures, role mismatches?
-10. ☑ **Build**: Runs `npm run build` successfully with 0 errors?
+4. ☑ **RLS Safety**: RLS policies do NOT reference other RLS-protected tables (prevents 42P17 recursion)?
+5. ☑ **Terminology**: UI terms match approved vocabulary (customer, pharmacist, doctor)?
+6. ☑ **Database Schema**: Required columns verified in migrations?
+7. ☑ **Security**: No secrets exposed, no service role in client queries?
+8. ☑ **Folder Structure**: Follows established `/app/` organization?
+9. ☑ **Error Handling**: Generic messages (no SQL/auth details)?
+10. ☑ **Edge Cases**: Handles missing data, auth failures, role mismatches?
+11. ☑ **Build**: Runs `npm run build` successfully with 0 errors?
 
 ---
 
 ## 🐛 COMMON PROBLEMS & SOLUTIONS
+
+### Problem: Error Code 42P17 (Infinite Recursion in RLS Policy)
+**Symptom:** API returns `Error: code '42P17' infinite recursion detected in policy for relation "table_name"`
+**Root Cause:** RLS policy on table A references table B, which has its own RLS that references table A or another RLS-protected table
+**Example:** user_profiles SELECT policy checks doctor_patient_links table, which has RLS that references users table
+**Solution:** Remove ALL cross-table references from RLS policies
+```sql
+-- ❌ Current broken policy
+CREATE POLICY "user_profiles_select" ON user_profiles FOR SELECT USING (
+  user_id = (SELECT auth.uid())
+  OR EXISTS (
+    SELECT 1 FROM doctor_patient_links WHERE ... -- ← BAD: causes recursion
+  )
+);
+
+-- ✅ Fixed policy (zero cross-table dependencies)
+CREATE POLICY "user_profiles_select_self" ON user_profiles FOR SELECT USING (
+  user_id = (SELECT auth.uid())
+);
+
+-- Role checks moved to API layer instead:
+// In route.ts
+const userData = await supabase
+  .from("users")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+if (userData.role !== "admin") return Forbidden;
+```
+**Prevention:** When designing RLS policies, ask: "Does this policy query another table that also has RLS?" If yes, find a different approach or move the check to the API layer.
 
 ### Problem: 401 Unauthorized on API Calls
 **Symptom:** Fetch returns 401 even though user is logged in
