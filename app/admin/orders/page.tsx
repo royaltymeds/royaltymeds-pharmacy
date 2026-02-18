@@ -425,6 +425,25 @@ export default function AdminOrdersPage() {
                   {/* Order Details */}
                   {isExpanded && details && (
                     <div className="border-t border-gray-200 p-4 md:p-6 space-y-4 md:space-y-6 bg-gray-50">
+                      {/* COD Alert */}
+                      {order.shipping_collect_on_delivery && (
+                        <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 md:p-5">
+                          <div className="flex items-start gap-3">
+                            <div className="text-2xl flex-shrink-0 mt-1">💰</div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-red-900 text-base md:text-lg">
+                                CASH ON DELIVERY (COD)
+                              </h4>
+                              <p className="text-red-800 font-semibold text-sm md:text-base mt-1">
+                                Collect {formatCurrency(order.shipping_estimated_amount || 0)} on delivery
+                              </p>
+                              <p className="text-xs md:text-sm text-red-700 mt-2">
+                                ⚠️ Ensure delivery person collects payment before handing over package
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {/* Inventory Warning */}
                       {inventoryWarnings[order.id] && inventoryWarnings[order.id].length > 0 && !['processing', 'shipped', 'delivered', 'cancelled'].includes(order.status) && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -633,9 +652,10 @@ export default function AdminOrdersPage() {
                         <div className="flex justify-between text-gray-700 items-center">
                           <span>Delivery/Shipping</span>
                           {order.shipping_collect_on_delivery ? (
-                            <span className="text-sm">
-                              To be paid on delivery{order.shipping_estimated_amount ? ` (${formatCurrency(order.shipping_estimated_amount)})` : ''}
-                            </span>
+                            <div className="bg-red-50 border-2 border-red-400 rounded px-3 py-2 text-sm">
+                              <p className="font-bold text-red-700">💰 COD: {formatCurrency(order.shipping_estimated_amount || 0)}</p>
+                              <p className="text-xs text-red-600 font-medium mt-0.5">Collect on delivery</p>
+                            </div>
                           ) : editingShipping === order.id ? (
                             <div className="flex gap-2">
                               <input

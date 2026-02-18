@@ -292,16 +292,22 @@ export default function PatientOrdersPage() {
                           <span>Tax</span>
                           <span>{formatCurrency(order.tax_amount)}</span>
                         </div>
-                        <div className="flex justify-between text-gray-700">
-                          <span>Shipping</span>
-                          <span>
-                            {order.shipping_collect_on_delivery ? (
-                              <>To be paid on delivery{order.shipping_estimated_amount ? ` (${formatCurrency(order.shipping_estimated_amount)})` : ''}</>
-                            ) : (
-                              <>{formatCurrency(order.shipping_amount)}</>
-                            )}
-                          </span>
-                        </div>
+                        {order.shipping_collect_on_delivery ? (
+                          <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-3 my-2">
+                            <div className="flex justify-between items-center">
+                              <span className="font-semibold text-amber-900">Shipping/Delivery</span>
+                              <span className="text-amber-900 font-bold">
+                                To be paid on delivery{order.shipping_estimated_amount ? ` (${formatCurrency(order.shipping_estimated_amount)})` : ''}
+                              </span>
+                            </div>
+                            <p className="text-xs text-amber-800 mt-1 font-medium">⚠️ Payment required when delivery arrives</p>
+                          </div>
+                        ) : (
+                          <div className="flex justify-between text-gray-700">
+                            <span>Shipping</span>
+                            <span>{formatCurrency(order.shipping_amount)}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
                           <span>Total</span>
                           <span>{formatCurrency(order.total_amount)}</span>
