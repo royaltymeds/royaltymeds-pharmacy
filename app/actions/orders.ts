@@ -565,3 +565,65 @@ export async function updateOrderShipping(
   revalidatePath('/admin/orders');
   return data as Order;
 }
+
+// Update custom shipping rate for orders without standard rates
+export async function updateCustomShippingRate(
+  orderId: string,
+  customRate: number
+): Promise<Order> {
+  const supabase = getAdminClient();
+
+  // First, get the current order
+  const { data: currentOrder, error: fetchError } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', orderId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+
+  // Calculate subtotal (items + tax, without old shipping_amount)
+  const subtotal = currentOrder.total_amount - (currentOrder.shipping_amount || 0);
+  
+  // Calculate new total with custom rate
+  const newTotal = subtotal + customRate;
+
+  // Update shipping_custom_rate and total_amount
+  const { data, error } = await supabase
+    .from('orders')
+    .update({
+      shipping_custom_rate: customRate,
+      shipping_amount: customRate,
+      total_amount: newTotal,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', orderId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/orders');
+  return data as Order;
+}
+
+// Update shipping payment status (online vs on delivery) for custom rates
+export async function updateCustomShippingPaymentStatus(
+  orderId: string,
+  paidOnline: boolean
+): Promise<Order> {
+  const supabase = getAdminClient();
+
+  const { data, error } = await supabase
+    .from('orders')
+    .update({
+      shipping_paid_online: paidOnline,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', orderId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/patient/orders');
+  return data as Order;
+}

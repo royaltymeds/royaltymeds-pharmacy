@@ -263,19 +263,10 @@ export async function getShippingRateByLocation(parish: string, cityTown?: strin
     }
     console.log('[Shipping Rate Lookup] No parish match found. Parish error:', parishError?.message);
 
-    // Finally, fall back to the default shipping rate from payment_config
-    const { data: config, error: configError } = await supabase
-      .from('payment_config')
-      .select('default_shipping_cost')
-      .single();
-
-    if (configError || !config) {
-      console.log('[Shipping Rate Lookup] No config found, returning 0');
-      return 0; // No rate found, default to 0
-    }
-
-    console.log('[Shipping Rate Lookup] Using default shipping cost:', config.default_shipping_cost);
-    return config.default_shipping_cost || 0;
+    // No standard rate found for this location
+    // Return 0 to indicate custom rate will be set by admin
+    console.log('[Shipping Rate Lookup] No standard rate found, returning 0 (admin will set custom rate)');
+    return 0;
   } catch (error) {
     console.error('[Shipping Rate Lookup] Error fetching shipping rate by location:', error);
     // Return 0 on error to prevent breaking the checkout

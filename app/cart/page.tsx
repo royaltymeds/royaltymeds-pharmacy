@@ -52,6 +52,7 @@ export default function CartPage() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [pendingQuantities, setPendingQuantities] = useState<Record<string, number>>({});
   const [shipping, setShipping] = useState<number>(0);
+  const [shippingRateNotFound, setShippingRateNotFound] = useState(false);
   const [payOnDelivery, setPayOnDelivery] = useState<boolean>(false);
   const [shippingUpdating, setShippingUpdating] = useState(false);
   const quantityTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
@@ -127,16 +128,19 @@ export default function CartPage() {
             formData.shipping_city || undefined
           );
           setShipping(rate);
+          setShippingRateNotFound(rate === 0);
           // Keep loading state visible for at least 600ms
           await new Promise(resolve => setTimeout(resolve, 600));
         } catch (err) {
           console.error('Failed to calculate shipping rate:', err);
           setShipping(0);
+          setShippingRateNotFound(true);
         } finally {
           setShippingUpdating(false);
         }
       } else {
         setShipping(0);
+        setShippingRateNotFound(false);
         setShippingUpdating(false);
       }
     };
@@ -258,7 +262,8 @@ export default function CartPage() {
   const tax = paymentConfig && paymentConfig.tax_type === 'inclusive' ? 0 : 0;
   
   // Shipping is now calculated dynamically based on parish and city in the effect above
-  const total = subtotal + tax + (payOnDelivery ? 0 : shipping);
+  // Don't include shipping if no rate was found (shippingRateNotFound), unless paying on delivery
+  const total = subtotal + tax + (payOnDelivery ? 0 : (shippingRateNotFound ? 0 : shipping));
 
   // Handle checkout
   const handleCheckout = async (e: React.FormEvent) => {
@@ -678,7 +683,9 @@ export default function CartPage() {
                       <div className="flex justify-between text-gray-700">
                         <span>Shipping/Delivery</span>
                         <span>
-                          {payOnDelivery ? (
+                          {shippingRateNotFound ? (
+                            <span className="text-orange-600 font-medium">To be quoted</span>
+                          ) : payOnDelivery ? (
                             <>To be paid on delivery ({formatCurrency(shipping)})</>
                           ) : (
                             <>{formatCurrency(shipping)}</>
@@ -705,9 +712,17 @@ export default function CartPage() {
                     )}
 
                     {/* Shipping Advisory */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-                      <p className="text-xs md:text-sm text-gray-700">
-                        <span className="font-semibold text-blue-900">💡 Shipping Notice:</span> Your shipping/delivery cost is calculated based on your selected shipping address. {formData.shipping_state && formData.shipping_city ? 'Current: ' + formData.shipping_city + ', ' + formData.shipping_state : 'Enter your shipping address to see the correct shipping cost.'}
+                    <div className={`border rounded-lg p-3 mt-4 ${shippingRateNotFound ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
+                      <p className={`text-xs md:text-sm ${shippingRateNotFound ? 'text-orange-700' : 'text-gray-700'}`}>
+                        {shippingRateNotFound ? (
+                          <>
+                            <span className="font-semibold">📍 Custom Delivery Quote:</span> Your location requires a custom delivery quote. Your shipping/delivery cost will be calculated and updated after you place your order. You can also <Link href="/patient/home" className="text-orange-900 font-bold underline">contact us</Link> for a quote beforehand.
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-semibold text-blue-900">💡 Shipping Notice:</span> Your shipping/delivery cost is calculated based on your selected shipping address. {formData.shipping_state && formData.shipping_city ? 'Current: ' + formData.shipping_city + ', ' + formData.shipping_state : 'Enter your shipping address to see the correct shipping cost.'}
+                          </>
+                        )}
                       </p>
                     </div>
 
