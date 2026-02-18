@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
-import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
+import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, updateCustomShippingRate, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
 
@@ -189,17 +189,29 @@ export default function AdminOrdersPage() {
       }
       
       setSavingShipping(orderId);
-      await updateOrderShipping(orderId, newAmount);
+      const order = orders.find((o) => o.id === orderId);
+      
+      // If this was a location with no standard rate (was 0), use custom shipping update
+      if (order && order.shipping_amount === 0 && !order.shipping_custom_rate) {
+        await updateCustomShippingRate(orderId, newAmount);
+      } else {
+        await updateOrderShipping(orderId, newAmount);
+      }
       
       // Update orders list
       setOrders((prev) =>
         prev.map((order) => {
           if (order.id === orderId) {
-            // Calculate subtotal (items + tax, without shipping)
+            // Calculate subtotal (items + tax, without old shipping)
             const subtotal = order.total_amount - order.shipping_amount;
             // New total = subtotal + new shipping
             const newTotal = subtotal + newAmount;
-            return { ...order, shipping_amount: newAmount, total_amount: newTotal };
+            return { 
+              ...order, 
+              shipping_amount: newAmount, 
+              shipping_custom_rate: newAmount,
+              total_amount: newTotal 
+            };
           }
           return order;
         })
@@ -212,11 +224,13 @@ export default function AdminOrdersPage() {
           [orderId]: {
             ...prev[orderId],
             shipping_amount: newAmount,
+            shipping_custom_rate: newAmount,
             total_amount: (prev[orderId].total_amount - prev[orderId].shipping_amount + newAmount),
           },
         }));
       }
       
+      toast.success('Shipping cost updated');
       setError('');
       setShippingValues((prev) => {
         const updated = { ...prev };
@@ -656,6 +670,23 @@ export default function AdminOrdersPage() {
                               <p className="font-bold text-red-700">💰 COD: {formatCurrency(order.shipping_estimated_amount || 0)}</p>
                               <p className="text-xs text-red-600 font-medium mt-0.5">Collect on delivery</p>
                             </div>
+                          ) : order.shipping_amount === 0 && !order.shipping_custom_rate ? (
+                            // No standard rate found AND no custom rate set yet
+                            <div className="w-full max-w-xs">
+                              <div className="bg-orange-50 border-2 border-orange-400 rounded px-3 py-2 text-sm mb-2">
+                                <p className="font-bold text-orange-700">⚠️ No Standard Rate</p>
+                                <p className="text-xs text-orange-600 mt-0.5">Set custom shipping cost</p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setEditingShipping(order.id);
+                                  setShippingValues({ ...shippingValues, [order.id]: '0' });
+                                }}
+                                className="w-full px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 font-medium"
+                              >
+                                Set Custom Rate
+                              </button>
+                            </div>
                           ) : editingShipping === order.id ? (
                             <div className="flex gap-2">
                               <input
@@ -703,8 +734,17 @@ export default function AdminOrdersPage() {
                               }}
                               className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
                             >
-                              {formatCurrency(order.shipping_amount)}
-                              <span className="text-xs">(edit)</span>
+                              {order.shipping_custom_rate ? (
+                                <>
+                                  <span className="text-orange-600 font-medium">{formatCurrency(order.shipping_amount)} (Custom)</span>
+                                  <span className="text-xs">(edit)</span>
+                                </>
+                              ) : (
+                                <>
+                                  {formatCurrency(order.shipping_amount)}
+                                  <span className="text-xs">(edit)</span>
+                                </>
+                              )}
                             </button>
                           )}
                         </div>

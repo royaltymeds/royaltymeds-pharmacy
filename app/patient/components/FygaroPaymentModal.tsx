@@ -8,16 +8,22 @@ interface FygaroPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   order: Order;
+  paymentType?: 'full_order' | 'custom_shipping';
 }
 
 export function FygaroPaymentModal({
   isOpen,
   onClose,
   order,
+  paymentType = 'full_order',
 }: FygaroPaymentModalProps) {
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Determine the amount to pay based on payment type
+  const paymentAmount = paymentType === 'custom_shipping' ? order.shipping_custom_rate : order.total_amount;
+  const isCustomShipping = paymentType === 'custom_shipping';
 
   useEffect(() => {
     if (!isOpen) {
@@ -37,7 +43,7 @@ export function FygaroPaymentModal({
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            amount: order.total_amount,
+            amount: paymentAmount,
             orderId: order.id,
           }),
         });
@@ -59,7 +65,7 @@ export function FygaroPaymentModal({
     };
 
     generatePaymentUrl();
-  }, [isOpen, order.total_amount, order.id]);
+  }, [isOpen, paymentAmount, order.id]);
 
   const handleOpenPayment = () => {
     if (paymentUrl) {
@@ -75,7 +81,7 @@ export function FygaroPaymentModal({
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-white rounded-t-lg">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-            Card Payment
+            {isCustomShipping ? 'Pay Delivery' : 'Card Payment'}
           </h2>
           <button
             onClick={onClose}
@@ -111,9 +117,9 @@ export function FygaroPaymentModal({
             </div>
           ) : (
             <>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Order Total:</strong> JMD {parseFloat(order.total_amount?.toString() || '0').toFixed(2)}
+              <div className={`border rounded-lg p-4 ${isCustomShipping ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
+                <p className={`text-sm ${isCustomShipping ? 'text-orange-800' : 'text-blue-800'}`}>
+                  <strong>{isCustomShipping ? 'Delivery Cost:' : 'Order Total:'}</strong> JMD {parseFloat(paymentAmount?.toString() || '0').toFixed(2)}
                 </p>
               </div>
 

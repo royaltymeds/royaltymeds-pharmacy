@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
-import { getOrderWithItems } from '@/app/actions/orders';
+import { getOrderWithItems, updateCustomShippingPaymentStatus } from '@/app/actions/orders';
 import { getPaymentConfig } from '@/app/actions/payments';
 import { PaymentConfig } from '@/lib/types/payments';
 import { ChevronLeft, Package, Calendar, MapPin, CheckCircle, AlertCircle, Phone, MessageCircle, Mail, CreditCard, DollarSign } from 'lucide-react';
@@ -23,6 +23,7 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
   const [error, setError] = useState('');
   const [showFygaroModal, setShowFygaroModal] = useState(false);
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
+  const [customShippingPaymentType, setCustomShippingPaymentType] = useState<'cod' | 'online' | null>(null);
   const [bankConfig, setBankConfig] = useState<PaymentConfig | null>(null);
   const isSuccess = searchParams.get('success') === 'true';
 
@@ -71,6 +72,31 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
   const shouldShowPaymentButton = () => {
     // Show payment button for orders without items requiring confirmation and payment not yet completed
     return !hasItemsRequiringConfirmation() && order?.payment_status !== 'paid';
+  };
+
+  const handleCustomShippingPaymentOnline = async () => {
+    try {
+      // Mark that the custom shipping will be paid online
+      await updateCustomShippingPaymentStatus(order!.id, true);
+      setCustomShippingPaymentType('online');
+      // Open Fygaro modal for payment - it will use shipping_custom_rate as amount
+      setShowFygaroModal(true);
+    } catch (err) {
+      console.error('Failed to record shipping payment method:', err);
+    }
+  };
+
+  const handleCustomShippingPaymentCOD = async () => {
+    try {
+      // Mark that the custom shipping will be paid on delivery
+      await updateCustomShippingPaymentStatus(order!.id, false);
+      setCustomShippingPaymentType('cod');
+      // Refresh order to show updated status
+      const updatedOrder = await getOrderWithItems(orderId);
+      setOrder(updatedOrder);
+    } catch (err) {
+      console.error('Failed to record shipping payment method:', err);
+    }
   };
 
   if (loading) {
@@ -323,6 +349,44 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
                 )}
               </p>
             </div>
+
+            {/* Custom Shipping Payment Options - Only if custom rate is set */}
+            {order.shipping_custom_rate && order.shipping_custom_rate > 0 && (
+              <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-orange-900 mb-3 flex items-center gap-2">
+                  <span>📍 Custom Delivery Quote</span>
+                </h3>
+                <p className="text-sm sm:text-base text-orange-800 mb-4">
+                  <span className="font-semibold">JMD {order.shipping_custom_rate?.toFixed(2)}</span> - Custom Quote
+                </p>
+                
+                {order.shipping_paid_online ? (
+                  <div className="bg-green-100 border border-green-400 rounded px-3 py-2 text-sm text-green-800">
+                    ✓ Delivery payment scheduled for online payment
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm text-orange-800 font-medium mb-3">How would you like to pay for delivery?</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleCustomShippingPaymentCOD()}
+                        className="p-3 border-2 border-orange-300 rounded-lg hover:bg-orange-100 transition text-left"
+                      >
+                        <p className="font-semibold text-orange-900 text-sm">Pay on Delivery</p>
+                        <p className="text-xs text-orange-700 mt-1">Pay {order.shipping_custom_rate?.toFixed(2)} JMD when delivered</p>
+                      </button>
+                      <button
+                        onClick={() => handleCustomShippingPaymentOnline()}
+                        className="p-3 border-2 border-blue-300 rounded-lg hover:bg-blue-100 transition text-left"
+                      >
+                        <p className="font-semibold text-blue-900 text-sm">Pay Online Now</p>
+                        <p className="text-xs text-blue-700 mt-1">Pay {order.shipping_custom_rate?.toFixed(2)} JMD securely online</p>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -359,6 +423,7 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
               isOpen={showFygaroModal}
               onClose={() => setShowFygaroModal(false)}
               order={order}
+              paymentType={customShippingPaymentType === 'online' ? 'custom_shipping' : 'full_order'}
             />
 
             <BankTransferModal
