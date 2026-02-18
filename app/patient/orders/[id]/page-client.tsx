@@ -16,7 +16,6 @@ interface OrderDetailsClientProps {
 }
 
 export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [order, setOrder] = useState<OrderWithItems | null>(null);
   const [loading, setLoading] = useState(true);
