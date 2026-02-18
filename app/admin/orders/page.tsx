@@ -665,27 +665,43 @@ export default function AdminOrdersPage() {
                         </div>
                         <div className="flex justify-between text-gray-700 items-center">
                           <span>Delivery/Shipping</span>
-                          {order.shipping_collect_on_delivery ? (
-                            <div className="bg-red-50 border-2 border-red-400 rounded px-3 py-2 text-sm">
-                              <p className="font-bold text-red-700">💰 COD: {formatCurrency(order.shipping_estimated_amount || 0)}</p>
-                              <p className="text-xs text-red-600 font-medium mt-0.5">Collect on delivery</p>
-                            </div>
-                          ) : order.shipping_amount === 0 && !order.shipping_custom_rate ? (
-                            // No standard rate found AND no custom rate set yet
+                          {order.shipping_amount === 0 && !order.shipping_custom_rate ? (
+                            // No standard rate found AND no custom rate set yet - show input form
                             <div className="w-full max-w-xs">
                               <div className="bg-orange-50 border-2 border-orange-400 rounded px-3 py-2 text-sm mb-2">
                                 <p className="font-bold text-orange-700">⚠️ No Standard Rate</p>
-                                <p className="text-xs text-orange-600 mt-0.5">Set custom shipping cost</p>
+                                <p className="text-xs text-orange-600 mt-0.5">Set custom shipping cost below</p>
                               </div>
-                              <button
-                                onClick={() => {
-                                  setEditingShipping(order.id);
-                                  setShippingValues({ ...shippingValues, [order.id]: '0' });
-                                }}
-                                className="w-full px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 font-medium"
-                              >
-                                Set Custom Rate
-                              </button>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={shippingValues[order.id] ?? ''}
+                                  onChange={(e) => setShippingValues({ ...shippingValues, [order.id]: e.target.value })}
+                                  placeholder="Enter amount"
+                                  pattern="^[0-9]*(\.[0-9]{1,2})?$"
+                                  inputMode="decimal"
+                                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                                <button
+                                  onClick={() => handleUpdateShipping(order.id)}
+                                  disabled={savingShipping === order.id}
+                                  className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-1 whitespace-nowrap"
+                                >
+                                  {savingShipping === order.id ? (
+                                    <>
+                                      <Loader className="w-3 h-3 animate-spin" />
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    'Save'
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          ) : order.shipping_collect_on_delivery ? (
+                            <div className="bg-red-50 border-2 border-red-400 rounded px-3 py-2 text-sm">
+                              <p className="font-bold text-red-700">💰 COD: {formatCurrency(order.shipping_estimated_amount || 0)}</p>
+                              <p className="text-xs text-red-600 font-medium mt-0.5">Collect on delivery</p>
                             </div>
                           ) : editingShipping === order.id ? (
                             <div className="flex gap-2">
