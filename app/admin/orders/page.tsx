@@ -666,37 +666,35 @@ export default function AdminOrdersPage() {
                         <div className="flex justify-between text-gray-700 items-center">
                           <span>Delivery/Shipping</span>
                           {order.shipping_amount === 0 && !order.shipping_custom_rate ? (
-                            // No standard rate found AND no custom rate set yet - show input form
-                            <div className="w-full max-w-xs">
-                              <div className="bg-orange-50 border-2 border-orange-400 rounded px-3 py-2 text-sm mb-2">
+                            // No standard rate found AND no custom rate set yet - this takes precedence over COD
+                            <div className="flex gap-2 items-center">
+                              <div className="bg-orange-50 border-2 border-orange-400 rounded px-3 py-2 text-sm">
                                 <p className="font-bold text-orange-700">⚠️ No Standard Rate</p>
-                                <p className="text-xs text-orange-600 mt-0.5">Set custom shipping cost below</p>
+                                <p className="text-xs text-orange-600 mt-0.5">Enter custom shipping cost</p>
                               </div>
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  value={shippingValues[order.id] ?? ''}
-                                  onChange={(e) => setShippingValues({ ...shippingValues, [order.id]: e.target.value })}
-                                  placeholder="Enter amount"
-                                  pattern="^[0-9]*(\.[0-9]{1,2})?$"
-                                  inputMode="decimal"
-                                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                                />
-                                <button
-                                  onClick={() => handleUpdateShipping(order.id)}
-                                  disabled={savingShipping === order.id}
-                                  className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-1 whitespace-nowrap"
-                                >
-                                  {savingShipping === order.id ? (
-                                    <>
-                                      <Loader className="w-3 h-3 animate-spin" />
-                                      Saving...
-                                    </>
-                                  ) : (
-                                    'Save'
-                                  )}
-                                </button>
-                              </div>
+                              <input
+                                type="text"
+                                value={(shippingValues[order.id] ?? '0') || ''}
+                                onChange={(e) => setShippingValues({ ...shippingValues, [order.id]: e.target.value })}
+                                placeholder="0.00"
+                                pattern="^[0-9]*(\.[0-9]{1,2})?$"
+                                inputMode="decimal"
+                                className="w-20 px-2 py-1 border border-orange-300 rounded text-sm"
+                              />
+                              <button
+                                onClick={() => handleUpdateShipping(order.id)}
+                                disabled={savingShipping === order.id}
+                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-1 flex-shrink-0"
+                              >
+                                {savingShipping === order.id ? (
+                                  <>
+                                    <Loader className="w-3 h-3 animate-spin" />
+                                    Saving...
+                                  </>
+                                ) : (
+                                  'Set'
+                                )}
+                              </button>
                             </div>
                           ) : order.shipping_collect_on_delivery ? (
                             <div className="bg-red-50 border-2 border-red-400 rounded px-3 py-2 text-sm">
