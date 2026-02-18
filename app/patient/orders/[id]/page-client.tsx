@@ -113,14 +113,6 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <button
-            onClick={() => router.back()}
-            className="mb-6 flex items-center text-indigo-600 hover:text-indigo-800 font-medium text-sm sm:text-base"
-          >
-            <ChevronLeft className="w-4 h-4 mr-2 flex-shrink-0" />
-            Back to Orders
-          </button>
-
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-8">
             <div className="flex items-start gap-3 text-red-600 mb-4">
               <AlertCircle className="w-6 h-6 flex-shrink-0 mt-1" />
@@ -139,14 +131,6 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="mb-6 flex items-center text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Back to Orders
-        </button>
 
         {/* Success Message */}
         {isSuccess && (
@@ -398,22 +382,14 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
           </div>
         )}
 
-        {/* Action Buttons - Only shown for orders requiring pharmacy confirmation */}
+        {/* Action Buttons - Continue Shopping */}
         {!shouldShowPaymentButton() && (
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <Link
-              href="/patient/orders"
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors text-center whitespace-nowrap"
-            >
-              Back to Orders
-            </Link>
-            <Link
-              href="/store"
-              className="px-6 py-3 border border-indigo-600 text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors text-center whitespace-nowrap"
-            >
-              Continue Shopping
-            </Link>
-          </div>
+          <Link
+            href="/store"
+            className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors text-center whitespace-nowrap"
+          >
+            Continue Shopping
+          </Link>
         )}
 
         {/* Payment Modals */}
