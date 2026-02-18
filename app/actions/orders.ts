@@ -308,7 +308,7 @@ export async function getOrderWithItems(orderId: string): Promise<OrderWithItems
   // Get order
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('*')
+    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
     .eq('id', orderId)
     .single();
 
@@ -508,7 +508,7 @@ export async function getAdminOrderWithItems(orderId: string): Promise<OrderWith
   // Get order
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('*')
+    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
     .eq('id', orderId)
     .single();
 
