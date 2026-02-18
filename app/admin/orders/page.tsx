@@ -666,7 +666,7 @@ export default function AdminOrdersPage() {
                         <div className="flex justify-between text-gray-700 items-center">
                           <span>Delivery/Shipping</span>
                           {order.shipping_amount === 0 && !order.shipping_custom_rate ? (
-                            // No standard rate found AND no custom rate set yet - this takes precedence over COD
+                            // No standard rate found AND no custom rate set yet - show input for all (COD and non-COD)
                             <div className="flex gap-2 items-center">
                               <div className="bg-orange-50 border-2 border-orange-400 rounded px-3 py-2 text-sm">
                                 <p className="font-bold text-orange-700">⚠️ No Standard Rate</p>
@@ -684,16 +684,9 @@ export default function AdminOrdersPage() {
                               <button
                                 onClick={() => handleUpdateShipping(order.id)}
                                 disabled={savingShipping === order.id}
-                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-1 flex-shrink-0"
+                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400"
                               >
-                                {savingShipping === order.id ? (
-                                  <>
-                                    <Loader className="w-3 h-3 animate-spin" />
-                                    Saving...
-                                  </>
-                                ) : (
-                                  'Set'
-                                )}
+                                {savingShipping === order.id ? 'Saving...' : 'Set'}
                               </button>
                             </div>
                           ) : order.shipping_collect_on_delivery ? (
@@ -715,16 +708,9 @@ export default function AdminOrdersPage() {
                               <button
                                 onClick={() => handleUpdateShipping(order.id)}
                                 disabled={savingShipping === order.id}
-                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-1"
+                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:bg-gray-400"
                               >
-                                {savingShipping === order.id ? (
-                                  <>
-                                    <Loader className="w-3 h-3 animate-spin" />
-                                    Saving...
-                                  </>
-                                ) : (
-                                  'Save'
-                                )}
+                                {savingShipping === order.id ? 'Saving...' : 'Save'}
                               </button>
                               <button
                                 onClick={() => {
@@ -740,26 +726,21 @@ export default function AdminOrdersPage() {
                                 Cancel
                               </button>
                             </div>
-                          ) : (
+                          ) : order.shipping_custom_rate ? (
+                            // Only show edit button for custom rate orders
                             <button
                               onClick={() => {
                                 setEditingShipping(order.id);
                                 setShippingValues({ ...shippingValues, [order.id]: order.shipping_amount.toString() });
                               }}
-                              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+                              className="flex items-center gap-2 text-orange-600 hover:text-orange-700 font-medium"
                             >
-                              {order.shipping_custom_rate ? (
-                                <>
-                                  <span className="text-orange-600 font-medium">{formatCurrency(order.shipping_amount)} (Custom)</span>
-                                  <span className="text-xs">(edit)</span>
-                                </>
-                              ) : (
-                                <>
-                                  {formatCurrency(order.shipping_amount)}
-                                  <span className="text-xs">(edit)</span>
-                                </>
-                              )}
+                              <span>{formatCurrency(order.shipping_amount)} (Custom)</span>
+                              <span className="text-xs">(edit)</span>
                             </button>
+                          ) : (
+                            // Standard rate - no edit option
+                            <span>{formatCurrency(order.shipping_amount)}</span>
                           )}
                         </div>
                         <div className="flex justify-between text-base md:text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
