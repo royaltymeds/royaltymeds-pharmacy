@@ -52,6 +52,7 @@ export default function CartPage() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [pendingQuantities, setPendingQuantities] = useState<Record<string, number>>({});
   const [shipping, setShipping] = useState<number>(0);
+  const [payOnDelivery, setPayOnDelivery] = useState<boolean>(false);
   const quantityTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
   const { clearCart } = useCart();
 
@@ -233,7 +234,7 @@ export default function CartPage() {
   const tax = paymentConfig && paymentConfig.tax_type === 'inclusive' ? 0 : 0;
   
   // Shipping is now calculated dynamically based on parish and city in the effect above
-  const total = subtotal + tax + shipping;
+  const total = subtotal + tax + (payOnDelivery ? 0 : shipping);
 
   // Handle checkout
   const handleCheckout = async (e: React.FormEvent) => {
@@ -263,7 +264,8 @@ export default function CartPage() {
           country: 'Jamaica',
         },
         undefined,
-        formData.notes || undefined
+        formData.notes || undefined,
+        payOnDelivery
       );
 
       // Clear cart after successful order
@@ -495,6 +497,20 @@ export default function CartPage() {
                     </div>
                   )}
 
+                  {/* Cash on Delivery Option */}
+                  <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="payOnDelivery"
+                      checked={payOnDelivery}
+                      onChange={(e) => setPayOnDelivery(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                    />
+                    <label htmlFor="payOnDelivery" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      Pay shipping on delivery (Cash on Delivery)
+                    </label>
+                  </div>
+
                   {/* Shipping Address */}
                   <div>
                     <h3 className="text-base font-semibold text-gray-900 mb-3">Shipping Address</h3>
@@ -637,7 +653,13 @@ export default function CartPage() {
                       )}
                       <div className="flex justify-between text-gray-700">
                         <span>Shipping/Delivery</span>
-                        <span>{formatCurrency(shipping)}</span>
+                        <span>
+                          {payOnDelivery ? (
+                            <>To be paid on delivery ({formatCurrency(shipping)})</>
+                          ) : (
+                            <>{formatCurrency(shipping)}</>
+                          )}
+                        </span>
                       </div>
                     </div>
                     <div className="flex justify-between text-xl font-bold text-gray-900">

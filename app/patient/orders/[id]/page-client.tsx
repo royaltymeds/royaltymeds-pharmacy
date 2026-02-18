@@ -285,7 +285,13 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
               </div>
               <div className="flex justify-between text-sm sm:text-base text-gray-700">
                 <span>Shipping</span>
-                <span>${Number(order.shipping_amount).toFixed(2)}</span>
+                <span>
+                  {order.shipping_collect_on_delivery ? (
+                    <>To be paid on delivery{order.shipping_estimated_amount ? ` (${Number(order.shipping_estimated_amount).toFixed(2)})` : ''}</>
+                  ) : (
+                    <>${Number(order.shipping_amount).toFixed(2)}</>
+                  )}
+                </span>
               </div>
               <div className="border-t border-gray-200 pt-3 flex justify-between text-lg sm:text-xl font-bold text-gray-900">
                 <span>Total</span>

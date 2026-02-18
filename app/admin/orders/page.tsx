@@ -390,6 +390,9 @@ export default function AdminOrdersPage() {
                           <p className="text-xl md:text-2xl font-bold text-gray-900">
                             {formatCurrency(order.total_amount)}
                           </p>
+                          {order.shipping_collect_on_delivery && (
+                            <p className="text-xs text-gray-500 mt-1">Shipping to be paid on delivery{order.shipping_estimated_amount ? ` (${formatCurrency(order.shipping_estimated_amount)})` : ''}</p>
+                          )}
                         </div>
                       </div>
                     </div>

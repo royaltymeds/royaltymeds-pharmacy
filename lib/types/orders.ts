@@ -9,6 +9,8 @@ export interface Order {
   subtotal_amount: number;
   tax_amount: number;
   shipping_amount: number;
+  shipping_collect_on_delivery?: boolean;
+  shipping_estimated_amount?: number;
   shipping_street_line_1?: string;
   shipping_street_line_2?: string;
   shipping_city?: string;

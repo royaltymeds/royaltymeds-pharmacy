@@ -150,7 +150,8 @@ export async function clearCart(): Promise<void> {
 export async function createOrder(
   shippingAddress: StructuredAddress,
   billingAddress?: StructuredAddress,
-  notes?: string
+  notes?: string,
+  collectOnDelivery: boolean = false
 ): Promise<OrderWithItems> {
   const supabase = await getUserClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -209,8 +210,10 @@ export async function createOrder(
     shippingAddress.state,
     shippingAddress.city
   );
-  
-  const total = subtotal + tax + shipping;
+
+  // If customer chose to pay on delivery (COD), do NOT include shipping in the stored total
+  const shippingAmountForTotal = collectOnDelivery ? 0 : shipping;
+  const total = subtotal + tax + shippingAmountForTotal;
 
   // Check if any items require pharmacist confirmation
   const hasItemsRequiringConfirmation = orderItems.some((item) => item.pharm_confirm === true);
@@ -228,7 +231,9 @@ export async function createOrder(
       status: orderStatus,
       subtotal_amount: subtotal,
       tax_amount: tax,
-      shipping_amount: shipping,
+      shipping_amount: collectOnDelivery ? 0 : shipping,
+      shipping_collect_on_delivery: collectOnDelivery,
+      shipping_estimated_amount: collectOnDelivery ? shipping : null,
       total_amount: total,
       shipping_street_line_1: shippingAddress.streetLine1,
       shipping_street_line_2: shippingAddress.streetLine2 || null,
