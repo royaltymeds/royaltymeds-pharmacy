@@ -55,6 +55,7 @@ export default function CartPage() {
   const [payOnDelivery, setPayOnDelivery] = useState<boolean>(false);
   const [shippingUpdating, setShippingUpdating] = useState(false);
   const quantityTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const shippingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { clearCart } = useCart();
 
   // Load cart, drug details, and user profile
@@ -115,7 +116,7 @@ export default function CartPage() {
     loadUserProfile();
   }, []);
 
-  // Calculate shipping rate based on parish and city/town
+  // Calculate shipping rate based on parish and city/town (with debounce)
   useEffect(() => {
     const calculateShipping = async () => {
       if (formData.shipping_state) {
@@ -126,6 +127,8 @@ export default function CartPage() {
             formData.shipping_city || undefined
           );
           setShipping(rate);
+          // Keep loading state visible for at least 600ms
+          await new Promise(resolve => setTimeout(resolve, 600));
         } catch (err) {
           console.error('Failed to calculate shipping rate:', err);
           setShipping(0);
@@ -138,7 +141,21 @@ export default function CartPage() {
       }
     };
 
-    calculateShipping();
+    // Clear existing timeout
+    if (shippingTimeoutRef.current) {
+      clearTimeout(shippingTimeoutRef.current);
+    }
+
+    // Set new timeout with 800ms debounce
+    shippingTimeoutRef.current = setTimeout(() => {
+      calculateShipping();
+    }, 800);
+
+    return () => {
+      if (shippingTimeoutRef.current) {
+        clearTimeout(shippingTimeoutRef.current);
+      }
+    };
   }, [formData.shipping_state, formData.shipping_city]);
 
   // Handle quantity input change with debounce
