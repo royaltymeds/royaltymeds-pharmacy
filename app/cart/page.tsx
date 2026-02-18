@@ -91,8 +91,8 @@ export default function CartPage() {
           const profile = await response.json();
           if (profile) {
             setUserProfile(profile);
-            // Prefill shipping address from profile if it has address data
-            if (profile.street_address_line_1 || profile.city || profile.state) {
+            // Prefill shipping address from profile if country is Jamaica
+            if (profile.country === 'Jamaica') {
               setFormData(prev => ({
                 ...prev,
                 shipping_street_line_1: profile.street_address_line_1 || '',
@@ -462,8 +462,8 @@ export default function CartPage() {
                 <h2 className="text-lg font-bold text-gray-900 mb-2">Shipping Address</h2>
                 <p className="text-sm text-gray-600 mb-4">Enter your shipping address (required). Your shipping cost is calculated based on your location and will update as you fill in your details.</p>
                 <form onSubmit={handleCheckout} className="space-y-6">
-                  {/* Use Profile Address Checkbox - show if profile exists and has address data */}
-                  {userProfile && (userProfile.street_address_line_1 || userProfile.city || userProfile.state) && (
+                  {/* Use Profile Address Checkbox - only if profile exists and country is Jamaica */}
+                  {userProfile && userProfile.country === 'Jamaica' && (
                     <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <input
                         type="checkbox"
