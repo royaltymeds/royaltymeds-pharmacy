@@ -713,13 +713,22 @@ export default function CartPage() {
 
                     {/* Place Order Button (fits text) */}
                     <div className="mt-4 flex justify-end">
-                      <button
-                        type="submit"
-                        disabled={processingOrder || shippingUpdating}
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        {processingOrder ? 'Processing...' : 'Place Order'}
-                      </button>
+                      {(() => {
+                        const isAddressComplete = 
+                          formData.shipping_street_line_1.trim() &&
+                          formData.shipping_city.trim() &&
+                          formData.shipping_state.trim();
+                        return (
+                          <button
+                            type="submit"
+                            disabled={processingOrder || shippingUpdating || !isAddressComplete}
+                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            title={!isAddressComplete ? 'Please fill in all required shipping address fields' : ''}
+                          >
+                            {processingOrder ? 'Processing...' : 'Place Order'}
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </form>
