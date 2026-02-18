@@ -227,31 +227,41 @@ export async function getShippingRateByLocation(parish: string, cityTown?: strin
   try {
     const supabase = await createServerSupabaseClient();
 
-    // First try to find a rate for the specific parish + city/town combination
-    if (cityTown) {
+    console.log('[Shipping Rate Lookup] Parish:', parish, 'City:', cityTown);
+
+    // Trim and normalize inputs
+    const normalizedParish = parish?.trim() || '';
+    const normalizedCity = cityTown?.trim() || '';
+
+    // First try to find a rate for the specific parish + city/town combination (case-insensitive)
+    if (normalizedCity) {
       const { data: exactMatch, error: exactError } = await supabase
         .from('shipping_rates')
-        .select('rate')
-        .eq('parish', parish)
-        .eq('city_town', cityTown)
+        .select('rate, parish, city_town')
+        .ilike('parish', normalizedParish)
+        .ilike('city_town', normalizedCity)
         .single();
 
       if (!exactError && exactMatch) {
+        console.log('[Shipping Rate Lookup] Found exact match:', exactMatch);
         return exactMatch.rate;
       }
+      console.log('[Shipping Rate Lookup] No exact match found');
     }
 
-    // Then try to find a rate for just the parish (city_town is null)
+    // Then try to find a rate for just the parish with city_town as null (case-insensitive)
     const { data: parishMatch, error: parishError } = await supabase
       .from('shipping_rates')
-      .select('rate')
-      .eq('parish', parish)
+      .select('rate, parish, city_town')
+      .ilike('parish', normalizedParish)
       .is('city_town', null)
       .single();
 
     if (!parishError && parishMatch) {
+      console.log('[Shipping Rate Lookup] Found parish match:', parishMatch);
       return parishMatch.rate;
     }
+    console.log('[Shipping Rate Lookup] No parish match found. Parish error:', parishError?.message);
 
     // Finally, fall back to the default shipping rate from payment_config
     const { data: config, error: configError } = await supabase
@@ -260,12 +270,14 @@ export async function getShippingRateByLocation(parish: string, cityTown?: strin
       .single();
 
     if (configError || !config) {
+      console.log('[Shipping Rate Lookup] No config found, returning 0');
       return 0; // No rate found, default to 0
     }
 
+    console.log('[Shipping Rate Lookup] Using default shipping cost:', config.default_shipping_cost);
     return config.default_shipping_cost || 0;
   } catch (error) {
-    console.error('Error fetching shipping rate by location:', error);
+    console.error('[Shipping Rate Lookup] Error fetching shipping rate by location:', error);
     // Return 0 on error to prevent breaking the checkout
     return 0;
   }
