@@ -89,17 +89,19 @@ export default function CartPage() {
         const response = await fetch('/api/auth/get-profile');
         if (response.ok) {
           const profile = await response.json();
-          if (profile && profile.country === 'Jamaica') {
+          if (profile) {
             setUserProfile(profile);
-            // Prefill shipping address from profile if country is Jamaica
-            setFormData(prev => ({
-              ...prev,
-              shipping_street_line_1: profile.street_address_line_1 || '',
-              shipping_street_line_2: profile.street_address_line_2 || '',
-              shipping_city: profile.city || '',
-              shipping_state: profile.state || '',
-              shipping_postal_code: profile.postal_code || '',
-            }));
+            // Prefill shipping address from profile if it has address data
+            if (profile.street_address_line_1 || profile.city || profile.state) {
+              setFormData(prev => ({
+                ...prev,
+                shipping_street_line_1: profile.street_address_line_1 || '',
+                shipping_street_line_2: profile.street_address_line_2 || '',
+                shipping_city: profile.city || '',
+                shipping_state: profile.state || '',
+                shipping_postal_code: profile.postal_code || '',
+              }));
+            }
             setUseProfileAddress(false);
           }
         }
