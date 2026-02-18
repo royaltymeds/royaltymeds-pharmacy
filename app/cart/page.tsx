@@ -11,7 +11,7 @@ import { DEFAULT_INVENTORY_IMAGE } from '@/lib/constants/inventory';
 import { Trash2, Plus, Minus, ArrowLeft, AlertCircle } from 'lucide-react';
 import { getCart, removeFromCart, updateCartItem, createOrder } from '@/app/actions/orders';
 import { getOTCDrugById } from '@/app/actions/inventory';
-import { getPaymentConfig } from '@/app/actions/payments';
+import { getPaymentConfig, getShippingRateByLocation } from '@/app/actions/payments';
 import { useCart } from '@/lib/context/CartContext';
 
 const JAMAICAN_PARISHES = [
@@ -52,6 +52,7 @@ export default function CartPage() {
   const [useProfileAddress, setUseProfileAddress] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [pendingQuantities, setPendingQuantities] = useState<Record<string, number>>({});
+  const [shipping, setShipping] = useState<number>(0);
   const quantityTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
   const { clearCart } = useCart();
 
@@ -110,6 +111,28 @@ export default function CartPage() {
     loadCart();
     loadUserProfile();
   }, []);
+
+  // Calculate shipping rate based on parish and city/town
+  useEffect(() => {
+    const calculateShipping = async () => {
+      if (formData.shipping_state) {
+        try {
+          const rate = await getShippingRateByLocation(
+            formData.shipping_state,
+            formData.shipping_city || undefined
+          );
+          setShipping(rate);
+        } catch (err) {
+          console.error('Failed to calculate shipping rate:', err);
+          setShipping(0);
+        }
+      } else {
+        setShipping(0);
+      }
+    };
+
+    calculateShipping();
+  }, [formData.shipping_state, formData.shipping_city]);
 
   // Handle quantity input change with debounce
   const handleQuantityInputChange = (itemId: string, newQuantity: number) => {
@@ -210,9 +233,7 @@ export default function CartPage() {
   // Tax handling: if tax_type is 'inclusive', don't add extra tax (it's already in the price)
   const tax = paymentConfig && paymentConfig.tax_type === 'inclusive' ? 0 : 0;
   
-  // Shipping: use Kingston delivery cost from config if available, otherwise 0
-  const shipping = cartItems.length > 0 && paymentConfig ? paymentConfig.kingston_delivery_cost : 0;
-  
+  // Shipping is now calculated dynamically based on parish and city in the effect above
   const total = subtotal + tax + shipping;
 
   // Handle checkout

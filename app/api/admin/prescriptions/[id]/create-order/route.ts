@@ -149,7 +149,8 @@ export async function POST(
 
     // Calculate tax and shipping
     const tax = paymentConfig && paymentConfig.tax_type === "inclusive" ? 0 : 0;
-    const shipping = paymentConfig ? paymentConfig.kingston_delivery_cost : 0;
+    // For prescription orders, use the default shipping cost since address isn't available at this point
+    const shipping = paymentConfig ? (paymentConfig.default_shipping_cost || 0) : 0;
     const total = subtotal + tax + shipping;
 
     // console.log("[Create-Order] Totals - Subtotal:", subtotal, "Tax:", tax, "Shipping:", shipping, "Total:", total);

@@ -11,8 +11,20 @@ export interface PaymentConfig {
   // Tax configuration
   tax_type: 'none' | 'inclusive';
   tax_rate: number;
-  // Shipping/Delivery configuration
-  kingston_delivery_cost: number;
+  // Shipping/Delivery configuration - default rate for all other locations
+  default_shipping_cost: number;
+  // Legacy field (deprecated but kept for backwards compatibility)
+  kingston_delivery_cost?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShippingRate {
+  id: string;
+  parish: string;
+  city_town?: string | null; // null means applies to whole parish
+  rate: number;
+  is_default: boolean;
   created_at: string;
   updated_at: string;
 }

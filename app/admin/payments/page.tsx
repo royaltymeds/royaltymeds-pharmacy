@@ -2,8 +2,26 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, Check, Loader } from 'lucide-react';
-import { getPaymentConfig, updatePaymentConfig } from '@/app/actions/payments';
+import { AlertCircle, Check, Loader, Plus, Trash2 } from 'lucide-react';
+import { getPaymentConfig, updatePaymentConfig, getShippingRates, createShippingRate, updateShippingRate, deleteShippingRate } from '@/app/actions/payments';
+import { ShippingRate } from '@/lib/types/payments';
+
+const JAMAICAN_PARISHES = [
+  'Kingston',
+  'St. Andrew',
+  'St. Thomas',
+  'Portland',
+  'St. Mary',
+  'St. Ann',
+  'Trelawny',
+  'St. James',
+  'Hanover',
+  'Westmoreland',
+  'St. Elizabeth',
+  'Manchester',
+  'Clarendon',
+  'St. Catherine',
+];
 
 export default function PaymentConfigPage() {
   const [loading, setLoading] = useState(true);
@@ -20,10 +38,21 @@ export default function PaymentConfigPage() {
     additional_instructions: '',
     tax_type: 'inclusive' as 'none' | 'inclusive',
     tax_rate: 15,
-    kingston_delivery_cost: 0,
+    default_shipping_cost: 0,
   });
 
-  // Load config
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+  const [showAddRate, setShowAddRate] = useState(false);
+  const [newRate, setNewRate] = useState({
+    parish: '',
+    city_town: '',
+    rate: 0,
+    is_default: false,
+  });
+  const [savingRate, setSavingRate] = useState<string | null>(null);
+  const [deletingRate, setDeletingRate] = useState<string | null>(null);
+
+  // Load config and shipping rates
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -40,11 +69,14 @@ export default function PaymentConfigPage() {
             additional_instructions: data.additional_instructions || '',
             tax_type: data.tax_type || 'inclusive',
             tax_rate: data.tax_rate || 15,
-            kingston_delivery_cost: data.kingston_delivery_cost || 0,
+            default_shipping_cost: data.default_shipping_cost || data.kingston_delivery_cost || 0,
           });
         }
+
+        const rates = await getShippingRates();
+        setShippingRates(rates);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load payment config');
+        setError(err instanceof Error ? err.message : 'Failed to load configuration');
       } finally {
         setLoading(false);
       }
@@ -59,10 +91,83 @@ export default function PaymentConfigPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'kingston_delivery_cost' || name === 'tax_rate' 
+      [name]: name === 'default_shipping_cost' || name === 'tax_rate' 
         ? parseFloat(value === '' ? '0' : value) || 0 
         : value,
     }));
+  };
+
+  const handleRateInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setNewRate((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+              name === 'rate' ? parseFloat(value === '' ? '0' : value) || 0 : 
+              value,
+    }));
+  };
+
+  const handleAddRate = async () => {
+    try {
+      if (!newRate.parish) {
+        setError('Parish is required');
+        return;
+      }
+      if (newRate.rate < 0) {
+        setError('Rate must be a positive number');
+        return;
+      }
+
+      setSavingRate('adding');
+      setError('');
+
+      await createShippingRate({
+        parish: newRate.parish,
+        city_town: newRate.city_town || null,
+        rate: newRate.rate,
+        is_default: newRate.is_default,
+      });
+
+      const updatedRates = await getShippingRates();
+      setShippingRates(updatedRates);
+      setNewRate({ parish: '', city_town: '', rate: 0, is_default: false });
+      setShowAddRate(false);
+      setSuccess('Shipping rate added successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add shipping rate');
+    } finally {
+      setSavingRate(null);
+    }
+  };
+
+  const handleDeleteRate = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this shipping rate?')) {
+      return;
+    }
+
+    try {
+      setDeletingRate(id);
+      await deleteShippingRate(id);
+      setShippingRates(shippingRates.filter((r) => r.id !== id));
+      setSuccess('Shipping rate deleted successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete shipping rate');
+    } finally {
+      setDeletingRate(null);
+    }
+  };
+
+  const handleToggleDefault = async (id: string, currentDefault: boolean) => {
+    try {
+      setSavingRate(id);
+      await updateShippingRate(id, { is_default: !currentDefault });
+      const updatedRates = await getShippingRates();
+      setShippingRates(updatedRates);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update shipping rate');
+    } finally {
+      setSavingRate(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -318,17 +423,17 @@ export default function PaymentConfigPage() {
                 Shipping & Delivery Configuration
               </h2>
               <div className="space-y-4 md:space-y-6">
-                {/* Kingston Delivery Cost */}
+                {/* Default Shipping Cost */}
                 <div>
                   <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">
-                    Standard Delivery Cost (Kingston) *
+                    Default Shipping Cost (for all other locations) *
                   </label>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-700 font-medium">JMD</span>
                     <input
                       type="text"
-                      name="kingston_delivery_cost"
-                      value={formData.kingston_delivery_cost || ''}
+                      name="default_shipping_cost"
+                      value={formData.default_shipping_cost || ''}
                       onChange={handleInputChange}
                       placeholder="e.g., 500"
                       pattern="^[0-9]*(\.[0-9]{1,2})?$"
@@ -337,18 +442,192 @@ export default function PaymentConfigPage() {
                     />
                   </div>
                   <p className="text-xs md:text-sm text-gray-500 mt-2">
-                    Fixed delivery cost for Kingston area orders
+                    Default delivery cost applied to any location without a specific rate configured
                   </p>
                 </div>
 
-                {/* Custom Delivery Note */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
-                    Custom Delivery (Outside Kingston)
-                  </h3>
-                  <p className="text-xs md:text-sm text-gray-700">
-                    Custom delivery costs for orders outside Kingston can be set on a per-order basis by admins/pharmacists in the order management interface.
-                  </p>
+                {/* Location-Specific Rates Manager */}
+                <div className="border-t border-gray-200 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900">
+                      Location-Specific Rates
+                    </h3>
+                    {!showAddRate && (
+                      <button
+                        onClick={() => setShowAddRate(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                      >
+                        <Plus size={18} />
+                        Add Rate
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Add New Rate Form */}
+                  {showAddRate && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Parish *
+                          </label>
+                          <select
+                            name="parish"
+                            value={newRate.parish}
+                            onChange={handleRateInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          >
+                            <option value="">Select Parish</option>
+                            {JAMAICAN_PARISHES.map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            City/Town (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            name="city_town"
+                            value={newRate.city_town}
+                            onChange={handleRateInputChange}
+                            placeholder="e.g., Downtown Kingston"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Rate (JMD) *
+                          </label>
+                          <input
+                            type="text"
+                            name="rate"
+                            value={newRate.rate || ''}
+                            onChange={handleRateInputChange}
+                            placeholder="e.g., 500"
+                            pattern="^[0-9]*(\.[0-9]{1,2})?$"
+                            inputMode="decimal"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="is_default"
+                          name="is_default"
+                          checked={newRate.is_default}
+                          onChange={handleRateInputChange}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-2"
+                        />
+                        <label htmlFor="is_default" className="text-sm font-medium text-gray-700">
+                          Set as default rate
+                        </label>
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => {
+                            setShowAddRate(false);
+                            setNewRate({ parish: '', city_town: '', rate: 0, is_default: false });
+                          }}
+                          className="px-3 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 text-sm"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleAddRate}
+                          disabled={savingRate !== null}
+                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 text-sm flex items-center gap-1"
+                        >
+                          {savingRate && <Loader size={14} className="animate-spin" />}
+                          Save Rate
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Shipping Rates List */}
+                  {shippingRates.length > 0 && (
+                    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Parish</th>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">City/Town</th>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Rate (JMD)</th>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Default</th>
+                              <th className="px-4 py-3 text-right font-semibold text-gray-700">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {shippingRates.map((rate) => (
+                              <tr key={rate.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 text-gray-900">{rate.parish}</td>
+                                <td className="px-4 py-3 text-gray-600">
+                                  {rate.city_town || <span className="text-gray-400">Whole parish</span>}
+                                </td>
+                                <td className="px-4 py-3 text-gray-900 font-medium">{rate.rate.toFixed(2)}</td>
+                                <td className="px-4 py-3">
+                                  <button
+                                    onClick={() => handleToggleDefault(rate.id, rate.is_default)}
+                                    disabled={savingRate === rate.id}
+                                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                                      rate.is_default
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                    } ${savingRate === rate.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                  >
+                                    {rate.is_default ? 'Yes' : 'No'}
+                                  </button>
+                                </td>
+                                <td className="px-4 py-3 text-right space-x-2">
+                                  <button
+                                    onClick={() => handleDeleteRate(rate.id)}
+                                    disabled={deletingRate === rate.id}
+                                    className="inline-flex items-center gap-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded transition-colors text-xs"
+                                  >
+                                    {deletingRate === rate.id ? (
+                                      <Loader size={14} className="animate-spin" />
+                                    ) : (
+                                      <Trash2 size={14} />
+                                    )}
+                                    Delete
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {shippingRates.length === 0 && !showAddRate && (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <p className="text-gray-600 text-sm mb-3">No location-specific rates configured yet</p>
+                      <button
+                        onClick={() => setShowAddRate(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                      >
+                        <Plus size={18} />
+                        Add Your First Rate
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                  <h4 className="font-semibold text-gray-900 mb-2 text-sm">How rates are applied:</h4>
+                  <ul className="text-xs md:text-sm text-gray-700 space-y-1 list-disc list-inside">
+                    <li>If a specific parish + city/town combination exists, use that rate</li>
+                    <li>Else if the parish exists (without city), use that rate</li>
+                    <li>Else use the default shipping cost configured above</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -394,8 +673,9 @@ export default function PaymentConfigPage() {
             <ul className="space-y-2 text-xs md:text-sm text-gray-700">
               <li>• Tax is set to &quot;inclusive&quot; by default - the item price includes 15% GCT</li>
               <li>• Customers will see that GCT is included in the price, but no additional amount is added</li>
-              <li>• Standard delivery cost applies automatically to Kingston orders</li>
-              <li>• Custom delivery costs for outside Kingston are set per-order by admins/pharmacists</li>
+              <li>• Shipping rates are applied based on parish and city/town from the customer&apos;s address</li>
+              <li>• The default shipping cost is applied to locations without a specific rate configured</li>
+              <li>• Each location rate can be marked as &quot;default&quot; for that particular location</li>
             </ul>
           </div>
         </div>

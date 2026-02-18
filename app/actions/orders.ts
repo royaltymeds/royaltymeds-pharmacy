@@ -5,6 +5,7 @@ import { StructuredAddress } from '@/lib/types/address';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { getShippingRateByLocation } from './payments';
 
 // Create an admin client that bypasses RLS using service role key
 const getAdminClient = () => {
@@ -203,8 +204,11 @@ export async function createOrder(
   // Tax: if inclusive, don't add extra tax (already in price); otherwise 0
   const tax = paymentConfig && paymentConfig.tax_type === 'inclusive' ? 0 : 0;
   
-  // Shipping: use Kingston delivery cost from config
-  const shipping = paymentConfig ? paymentConfig.kingston_delivery_cost : 0;
+  // Shipping: look up rate based on parish and city/town from the address
+  const shipping = await getShippingRateByLocation(
+    shippingAddress.state,
+    shippingAddress.city
+  );
   
   const total = subtotal + tax + shipping;
 
