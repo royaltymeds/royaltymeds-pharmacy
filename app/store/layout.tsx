@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LayoutDashboard } from "lucide-react";
 import { StoreMobileSidebar } from "./StoreMobileSidebar";
 import { CartButtonWithBadge } from "./CartButtonWithBadge";
 import { MobileCartIconButton } from "./MobileCartIconButton";
@@ -31,11 +32,25 @@ export default function StoreLayout({
             </div>
 
             <div className="hidden lg:flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+              <Link
+                href="/patient/home"
+                className="px-3 py-2 rounded-md text-sm font-medium text-green-100 hover:text-white hover:bg-green-700 flex items-center gap-2"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Link>
               <CartButtonWithBadge />
             </div>
 
-            {/* Mobile: Cart icon and sidebar */}
+            {/* Mobile: Cart icon, dashboard, and sidebar */}
             <div className="lg:hidden flex items-center gap-2 flex-shrink-0">
+              <Link
+                href="/patient/home"
+                className="p-2 rounded-md text-green-100 hover:text-white hover:bg-green-700"
+                title="Dashboard"
+              >
+                <LayoutDashboard className="w-5 h-5" />
+              </Link>
               <MobileCartIconButton />
               <StoreMobileSidebar />
             </div>

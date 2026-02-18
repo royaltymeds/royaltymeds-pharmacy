@@ -382,14 +382,12 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
         )}
 
         {/* Action Buttons - Continue Shopping */}
-        {!shouldShowPaymentButton() && (
-          <Link
-            href="/store"
-            className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors text-center whitespace-nowrap"
-          >
-            Continue Shopping
-          </Link>
-        )}
+        <Link
+          href="/store"
+          className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors text-center whitespace-nowrap"
+        >
+          Continue Shopping
+        </Link>
 
         {/* Payment Modals */}
         {order && (
