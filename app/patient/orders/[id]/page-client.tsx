@@ -7,7 +7,7 @@ import { OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/
 import { getOrderWithItems, updateCustomShippingPaymentStatus } from '@/app/actions/orders';
 import { getPaymentConfig } from '@/app/actions/payments';
 import { PaymentConfig } from '@/lib/types/payments';
-import { ChevronLeft, Package, Calendar, MapPin, CheckCircle, AlertCircle, Phone, MessageCircle, Mail, CreditCard, DollarSign } from 'lucide-react';
+import { Package, Calendar, MapPin, CheckCircle, AlertCircle, Phone, MessageCircle, Mail, CreditCard, DollarSign } from 'lucide-react';
 import { FygaroPaymentModal } from '@/app/patient/components/FygaroPaymentModal';
 import { BankTransferModal } from '@/app/patient/components/BankTransferModal';
 
