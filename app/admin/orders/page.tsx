@@ -31,13 +31,6 @@ export default function AdminOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [ordersNeedingConfirmation, setOrdersNeedingConfirmation] = useState<Record<string, boolean>>({});
 
-  // Helper function to check if order has items requiring pharmacist confirmation
-  const hasItemsRequiringConfirmation = (orderId: string): boolean => {
-    const details = orderDetails[orderId];
-    if (!details || !details.items) return false;
-    return details.items.some((item) => item.pharm_confirm === true);
-  };
-
   // Load orders
   useEffect(() => {
     const loadOrders = async () => {
