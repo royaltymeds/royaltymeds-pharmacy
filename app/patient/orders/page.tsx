@@ -284,11 +284,7 @@ export default function PatientOrdersPage() {
                         <div className="flex justify-between text-gray-700">
                           <span>Subtotal</span>
                           <span>
-                            {formatCurrency(
-                              order.total_amount -
-                              order.tax_amount -
-                              order.shipping_amount
-                            )}
+                            {formatCurrency(order.subtotal_amount)}
                           </span>
                         </div>
                         <div className="flex justify-between text-gray-700">
