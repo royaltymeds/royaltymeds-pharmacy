@@ -291,7 +291,7 @@ export async function getOrdersByUser(): Promise<Order[]> {
 
   const { data, error } = await supabase
     .from('orders')
-    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
+    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, shipping_custom_rate, shipping_paid_online, shipping_custom_rate_collect_on_delivery, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -308,7 +308,7 @@ export async function getOrderWithItems(orderId: string): Promise<OrderWithItems
   // Get order
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
+    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, shipping_custom_rate, shipping_paid_online, shipping_custom_rate_collect_on_delivery, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
     .eq('id', orderId)
     .single();
 
@@ -341,7 +341,7 @@ export async function getAllOrders(): Promise<Order[]> {
   // Step 1: Fetch all orders
   const { data: orders, error: ordersError } = await supabase
     .from('orders')
-    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, shipping_custom_rate, shipping_paid_online, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
+    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, shipping_custom_rate, shipping_paid_online, shipping_custom_rate_collect_on_delivery, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (ordersError) throw new Error(ordersError.message);
@@ -522,7 +522,7 @@ export async function getAdminOrderWithItems(orderId: string): Promise<OrderWith
   // Get order
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
+    .select('id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, shipping_custom_rate, shipping_paid_online, shipping_custom_rate_collect_on_delivery, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at')
     .eq('id', orderId)
     .single();
 
@@ -639,5 +639,29 @@ export async function updateCustomShippingPaymentStatus(
 
   if (error) throw new Error(error.message);
   revalidatePath('/patient/orders');
+  return data as Order;
+}
+
+// Update custom rate COD flag
+export async function updateCustomRateCOD(
+  orderId: string,
+  collectOnDelivery: boolean
+): Promise<Order> {
+  'use server';
+
+  const supabase = getAdminClient();
+
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ shipping_custom_rate_collect_on_delivery: collectOnDelivery })
+    .eq('id', orderId)
+    .select(
+      'id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, shipping_custom_rate, shipping_paid_online, shipping_custom_rate_collect_on_delivery, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at'
+    )
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/admin/orders');
   return data as Order;
 }

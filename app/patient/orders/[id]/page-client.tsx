@@ -297,6 +297,8 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
                 <span>
                   {order.shipping_collect_on_delivery ? (
                     <>To be paid on delivery{order.shipping_estimated_amount ? ` (${Number(order.shipping_estimated_amount).toFixed(2)})` : ''}</>
+                  ) : order.shipping_custom_rate_collect_on_delivery ? (
+                    <>To be paid on delivery ({Number(order.shipping_custom_rate || 0).toFixed(2)})</>
                   ) : (
                     <>${Number(order.shipping_amount).toFixed(2)}</>
                   )}
@@ -335,7 +337,26 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
 
             {/* Custom Shipping Payment Options - Only if custom rate is set */}
             {order.shipping_custom_rate && order.shipping_custom_rate > 0 && (
-              <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 sm:p-6">
+              <>
+                {order.shipping_custom_rate_collect_on_delivery && (
+                  <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 sm:p-6">
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl flex-shrink-0 mt-1">💰</div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-red-900 text-base sm:text-lg">
+                          CASH ON DELIVERY (COD)
+                        </h4>
+                        <p className="text-red-800 font-semibold text-sm sm:text-base mt-1">
+                          Collect JMD {Number(order.shipping_custom_rate).toFixed(2)} on delivery
+                        </p>
+                        <p className="text-xs sm:text-sm text-red-700 mt-2">
+                          ⚠️ Ensure delivery person collects payment before handing over package
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 sm:p-6">
                 <h3 className="text-base sm:text-lg font-bold text-orange-900 mb-3 flex items-center gap-2">
                   <span>📍 Custom Delivery Quote</span>
                 </h3>
@@ -368,7 +389,8 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
+              </>
             )}
           </div>
         </div>

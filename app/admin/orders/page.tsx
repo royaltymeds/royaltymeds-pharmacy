@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
-import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, updateCustomShippingRate, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
+import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, updateCustomShippingRate, checkInventoryAvailability, updateInventoryOnShipment, updateCustomRateCOD } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
 
@@ -456,6 +456,25 @@ export default function AdminOrdersPage() {
                           </div>
                         </div>
                       )}
+                      {/* Custom Rate COD Alert */}
+                      {order.shipping_custom_rate_collect_on_delivery && (
+                        <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 md:p-5">
+                          <div className="flex items-start gap-3">
+                            <div className="text-2xl flex-shrink-0 mt-1">💰</div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-red-900 text-base md:text-lg">
+                                CASH ON DELIVERY (COD) - CUSTOM RATE
+                              </h4>
+                              <p className="text-red-800 font-semibold text-sm md:text-base mt-1">
+                                Collect {formatCurrency(order.shipping_custom_rate || 0)} on delivery
+                              </p>
+                              <p className="text-xs md:text-sm text-red-700 mt-2">
+                                ⚠️ Ensure delivery person collects payment before handing over package
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {/* Inventory Warning */}
                       {inventoryWarnings[order.id] && inventoryWarnings[order.id].length > 0 && !['processing', 'shipped', 'delivered', 'cancelled'].includes(order.status) && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -645,6 +664,62 @@ export default function AdminOrdersPage() {
                         </div>
                       </div>
 
+                      {/* Custom Rate COD Option */}
+                      {order.shipping_custom_rate && (
+                        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={order.shipping_custom_rate_collect_on_delivery ?? false}
+                              onChange={async (e) => {
+                                try {
+                                  const newValue = e.target.checked;
+                                  // Optimistically update UI
+                                  setOrders(
+                                    orders.map((o) =>
+                                      o.id === order.id
+                                        ? { ...o, shipping_custom_rate_collect_on_delivery: newValue }
+                                        : o
+                                    )
+                                  );
+                                  if (expandedOrderId === order.id && details) {
+                                    setOrderDetails((prev) => ({
+                                      ...prev,
+                                      [order.id]: {
+                                        ...details,
+                                        shipping_custom_rate_collect_on_delivery: newValue,
+                                      },
+                                    }));
+                                  }
+                                  // Update in database
+                                  await updateCustomRateCOD(order.id, newValue);
+                                  toast.success('COD setting updated');
+                                } catch (err) {
+                                  toast.error('Failed to update COD setting');
+                                  // Revert on error
+                                  setOrders(
+                                    orders.map((o) =>
+                                      o.id === order.id
+                                        ? { ...o, shipping_custom_rate_collect_on_delivery: !e.target.checked }
+                                        : o
+                                    )
+                                  );
+                                }
+                              }}
+                              className="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer"
+                            />
+                            <div>
+                              <p className="font-semibold text-blue-900">
+                                Allow COD Collection (Custom Rate)
+                              </p>
+                              <p className="text-sm text-blue-700 mt-1">
+                                When checked, the custom shipping amount will not be included in the order total. Collect {formatCurrency(order.shipping_custom_rate || 0)} from customer on delivery.
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+                      )}
+
                       {/* Pricing Summary */}
                       <div className="bg-white rounded-lg p-4 space-y-2 text-sm md:text-base">
                         <div className="flex justify-between text-gray-700">
@@ -747,46 +822,25 @@ export default function AdminOrdersPage() {
                         </div>
                       </div>
 
-                      {/* Addresses */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white rounded-lg p-4">
-                          <h5 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
-                            Shipping Address
-                          </h5>
-                          <p className="text-xs md:text-sm text-gray-600 whitespace-pre-wrap break-words">
-                            {order.shipping_street_line_1 ? (
-                              <>
-                                {order.shipping_street_line_1}
-                                {order.shipping_street_line_2 && <> {order.shipping_street_line_2}</>}
-                                <br />
-                                {order.shipping_city}, {order.shipping_state} {order.shipping_postal_code}
-                                <br />
-                                {order.shipping_country}
-                              </>
-                            ) : (
-                              'Not provided'
-                            )}
-                          </p>
-                        </div>
-                        <div className="bg-white rounded-lg p-4">
-                          <h5 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
-                            Billing Address
-                          </h5>
-                          <p className="text-xs md:text-sm text-gray-600 whitespace-pre-wrap break-words">
-                            {order.billing_street_line_1 ? (
-                              <>
-                                {order.billing_street_line_1}
-                                {order.billing_street_line_2 && <> {order.billing_street_line_2}</>}
-                                <br />
-                                {order.billing_city}, {order.billing_state} {order.billing_postal_code}
-                                <br />
-                                {order.billing_country}
-                              </>
-                            ) : (
-                              'Not provided'
-                            )}
-                          </p>
-                        </div>
+                      {/* Shipping Address */}
+                      <div className="bg-white rounded-lg p-4">
+                        <h5 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
+                          Shipping Address
+                        </h5>
+                        <p className="text-xs md:text-sm text-gray-600 whitespace-pre-wrap break-words">
+                          {order.shipping_street_line_1 ? (
+                            <>
+                              {order.shipping_street_line_1}
+                              {order.shipping_street_line_2 && <> {order.shipping_street_line_2}</>}
+                              <br />
+                              {order.shipping_city}, {order.shipping_state} {order.shipping_postal_code}
+                              <br />
+                              {order.shipping_country}
+                            </>
+                          ) : (
+                            'Not provided'
+                          )}
+                        </p>
                       </div>
 
                       {/* Notes */}
