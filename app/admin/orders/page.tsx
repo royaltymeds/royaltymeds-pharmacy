@@ -189,8 +189,9 @@ export default function AdminOrdersPage() {
       setSavingShipping(orderId);
       const order = orders.find((o) => o.id === orderId);
       
-      // If this was a location with no standard rate (was 0), use custom shipping update
-      if (order && order.shipping_amount === 0 && !order.shipping_custom_rate) {
+      // Use updateCustomShippingRate for custom rate scenarios - it sets collect_shipping_after_payment flag
+      // for payment_verified orders. This covers both new custom rates and editing existing ones.
+      if (order && (order.shipping_amount === 0 || order.shipping_custom_rate)) {
         await updateCustomShippingRate(orderId, newAmount);
       } else {
         await updateOrderShipping(orderId, newAmount);

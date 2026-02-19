@@ -563,12 +563,17 @@ export async function updateOrderShipping(
   // Calculate new total
   const newTotal = subtotal + shippingAmount;
 
+  // Determine if we should collect shipping after payment
+  // Set to true if order has payment_status = payment_verified and has custom rate
+  const collectAfterPayment = currentOrder.payment_status === 'payment_verified' && currentOrder.shipping_custom_rate;
+
   // Update both shipping_amount and total_amount
   const { data, error } = await supabase
     .from('orders')
     .update({
       shipping_amount: shippingAmount,
       total_amount: newTotal,
+      collect_shipping_after_payment: collectAfterPayment,
       updated_at: new Date().toISOString(),
     })
     .eq('id', orderId)
