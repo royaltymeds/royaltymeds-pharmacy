@@ -627,3 +627,16 @@ export async function updateCustomShippingPaymentStatus(
   revalidatePath('/patient/orders');
   return data as Order;
 }
+
+// Check if an order has items that need pharmacist confirmation
+export async function orderNeedsConfirmation(orderId: string): Promise<boolean> {
+  const supabase = getAdminClient();
+
+  const { data: items, error } = await supabase
+    .from('order_items')
+    .select('pharm_confirm')
+    .eq('order_id', orderId);
+
+  if (error) throw new Error(error.message);
+  return items?.some((item) => item.pharm_confirm === true) ?? false;
+}

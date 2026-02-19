@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
-import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, updateCustomShippingRate, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
+import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, updateCustomShippingRate, checkInventoryAvailability, updateInventoryOnShipment, orderNeedsConfirmation } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
 
@@ -29,6 +29,7 @@ export default function AdminOrdersPage() {
   const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
   const [verifyingPayment, setVerifyingPayment] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [ordersNeedingConfirmation, setOrdersNeedingConfirmation] = useState<Record<string, boolean>>({});
 
   // Helper function to check if order has items requiring pharmacist confirmation
   const hasItemsRequiringConfirmation = (orderId: string): boolean => {
@@ -98,6 +99,24 @@ export default function AdminOrdersPage() {
   //   };
   //   loadOrderDetails();
   // }, [paginatedOrders]);
+
+  // Load confirmation status for paginated orders (lightweight query for badge display)
+  useEffect(() => {
+    const loadConfirmationStatus = async () => {
+      for (const order of paginatedOrders) {
+        if (!(order.id in ordersNeedingConfirmation)) {
+          try {
+            const needsConfirm = await orderNeedsConfirmation(order.id);
+            setOrdersNeedingConfirmation((prev) => ({ ...prev, [order.id]: needsConfirm }));
+          } catch (err) {
+            console.error(`Failed to load confirmation status for order ${order.id}:`, err);
+          }
+        }
+      }
+    };
+
+    loadConfirmationStatus();
+  }, [paginatedOrders]);
 
   // Load order details when expanded
   const handleExpandOrder = async (orderId: string) => {
@@ -422,7 +441,7 @@ export default function AdminOrdersPage() {
                         >
                           {getStatusLabel(order.status)}
                         </div>
-                        {details && hasItemsRequiringConfirmation(order.id) && (
+                        {ordersNeedingConfirmation[order.id] && (
                           <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-100 border border-red-300 rounded-full">
                             <AlertCircle size={14} className="text-red-600 flex-shrink-0" />
                             <span className="text-xs font-semibold text-red-600">Needs Confirmation</span>
