@@ -664,62 +664,6 @@ export default function AdminOrdersPage() {
                         </div>
                       </div>
 
-                      {/* Custom Rate COD Option */}
-                      {order.shipping_custom_rate && (
-                        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-                          <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={order.shipping_custom_rate_collect_on_delivery ?? false}
-                              onChange={async (e) => {
-                                try {
-                                  const newValue = e.target.checked;
-                                  // Optimistically update UI
-                                  setOrders(
-                                    orders.map((o) =>
-                                      o.id === order.id
-                                        ? { ...o, shipping_custom_rate_collect_on_delivery: newValue }
-                                        : o
-                                    )
-                                  );
-                                  if (expandedOrderId === order.id && details) {
-                                    setOrderDetails((prev) => ({
-                                      ...prev,
-                                      [order.id]: {
-                                        ...details,
-                                        shipping_custom_rate_collect_on_delivery: newValue,
-                                      },
-                                    }));
-                                  }
-                                  // Update in database
-                                  await updateCustomRateCOD(order.id, newValue);
-                                  toast.success('COD setting updated');
-                                } catch (err) {
-                                  toast.error('Failed to update COD setting');
-                                  // Revert on error
-                                  setOrders(
-                                    orders.map((o) =>
-                                      o.id === order.id
-                                        ? { ...o, shipping_custom_rate_collect_on_delivery: !e.target.checked }
-                                        : o
-                                    )
-                                  );
-                                }
-                              }}
-                              className="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer"
-                            />
-                            <div>
-                              <p className="font-semibold text-blue-900">
-                                Allow COD Collection (Custom Rate)
-                              </p>
-                              <p className="text-sm text-blue-700 mt-1">
-                                When checked, the custom shipping amount will not be included in the order total. Collect {formatCurrency(order.shipping_custom_rate || 0)} from customer on delivery.
-                              </p>
-                            </div>
-                          </label>
-                        </div>
-                      )}
-
                       {/* Pricing Summary */}
                       <div className="bg-white rounded-lg p-4 space-y-2 text-sm md:text-base">
                         <div className="flex justify-between text-gray-700">
@@ -816,9 +760,72 @@ export default function AdminOrdersPage() {
                             <span>{formatCurrency(order.shipping_amount)}</span>
                           )}
                         </div>
+
+                        {/* Custom Rate COD Checkbox - positioned below shipping line */}
+                        {order.shipping_custom_rate && (
+                          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 mt-3">
+                            <label className="flex items-start gap-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={order.shipping_custom_rate_collect_on_delivery ?? false}
+                                onChange={async (e) => {
+                                  try {
+                                    const newValue = e.target.checked;
+                                    // Optimistically update UI
+                                    setOrders(
+                                      orders.map((o) =>
+                                        o.id === order.id
+                                          ? { ...o, shipping_custom_rate_collect_on_delivery: newValue }
+                                          : o
+                                      )
+                                    );
+                                    if (expandedOrderId === order.id && details) {
+                                      setOrderDetails((prev) => ({
+                                        ...prev,
+                                        [order.id]: {
+                                          ...details,
+                                          shipping_custom_rate_collect_on_delivery: newValue,
+                                        },
+                                      }));
+                                    }
+                                    // Update in database
+                                    await updateCustomRateCOD(order.id, newValue);
+                                    toast.success('COD setting updated');
+                                  } catch (err) {
+                                    toast.error('Failed to update COD setting');
+                                    // Revert on error
+                                    setOrders(
+                                      orders.map((o) =>
+                                        o.id === order.id
+                                          ? { ...o, shipping_custom_rate_collect_on_delivery: !e.target.checked }
+                                          : o
+                                      )
+                                    );
+                                  }
+                                }}
+                                className="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer mt-0.5 flex-shrink-0"
+                              />
+                              <div>
+                                <p className="font-semibold text-blue-900 text-sm">
+                                  Allow COD Collection (Custom Rate)
+                                </p>
+                                <p className="text-xs text-blue-700 mt-1">
+                                  When checked, the custom shipping amount will not be included in the order total. Collect {formatCurrency(order.shipping_custom_rate || 0)} from customer on delivery.
+                                </p>
+                              </div>
+                            </label>
+                          </div>
+                        )}
+
                         <div className="flex justify-between text-base md:text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
                           <span>Total</span>
-                          <span>{formatCurrency(order.total_amount)}</span>
+                          <span>
+                            {formatCurrency(
+                              order.shipping_custom_rate_collect_on_delivery
+                                ? order.total_amount - (order.shipping_custom_rate || 0)
+                                : order.total_amount
+                            )}
+                          </span>
                         </div>
                       </div>
 
