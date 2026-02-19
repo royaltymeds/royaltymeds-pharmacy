@@ -18,8 +18,6 @@ build/
 .env.*.local
 .env
 next-env.d.ts
-supabase
-supabase/migrations/
 REFERENCE_APP
 public/current_schemaReference.sql
 
