@@ -3,6 +3,7 @@ export interface Order {
   id: string;
   user_id: string;
   customer_name?: string;
+  needs_confirmation?: boolean; // Whether order has items requiring pharmacist confirmation
   order_number: string;
   status: 'pending' | 'confirmed' | 'payment_pending' | 'payment_verified' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total_amount: number;

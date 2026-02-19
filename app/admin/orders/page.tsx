@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
-import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, updateCustomShippingRate, checkInventoryAvailability, updateInventoryOnShipment, ordersNeedingConfirmationBatch } from '@/app/actions/orders';
+import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, updateCustomShippingRate, checkInventoryAvailability, updateInventoryOnShipment } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
 
@@ -29,7 +29,6 @@ export default function AdminOrdersPage() {
   const [receiptModalUrl, setReceiptModalUrl] = useState<string>('');
   const [verifyingPayment, setVerifyingPayment] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [ordersNeedingConfirmation, setOrdersNeedingConfirmation] = useState<Record<string, boolean>>({});
 
   // Load orders
   useEffect(() => {
@@ -94,24 +93,8 @@ export default function AdminOrdersPage() {
   // }, [paginatedOrders]);
 
   // Load confirmation status for paginated orders (lightweight query for badge display)
-  // DISABLED: Confirmation is loaded on-demand when order is expanded to avoid POST operations on page load
-  // useEffect(() => {
-  //   const loadConfirmationStatus = async () => {
-  //     // Only fetch orders we haven't cached yet
-  //     const ordersToFetch = paginatedOrders.filter((order) => !(order.id in ordersNeedingConfirmation));
-  //     if (!ordersToFetch.length) return;
-
-  //     try {
-  //       const confirmationStatus = await ordersNeedingConfirmationBatch(ordersToFetch.map((o) => o.id));
-  //       setOrdersNeedingConfirmation((prev) => ({ ...prev, ...confirmationStatus }));
-  //     } catch (err) {
-  //       console.error('Failed to load confirmation status:', err);
-  //     }
-  //   };
-
-  //   loadConfirmationStatus();
-  // }, [paginatedOrders]);
-
+  // DISABLED: Confirmation is now loaded with each order in the initial GET request (getAllOrders)
+  
   // Load order details when expanded
   const handleExpandOrder = async (orderId: string) => {
     if (expandedOrderId === orderId) {
@@ -126,12 +109,6 @@ export default function AdminOrdersPage() {
       try {
         const details = await getAdminOrderWithItems(orderId);
         setOrderDetails((prev) => ({ ...prev, [orderId]: details }));
-        
-        // Load confirmation status for badge display
-        if (!(orderId in ordersNeedingConfirmation)) {
-          const confirmationStatus = await ordersNeedingConfirmationBatch([orderId]);
-          setOrdersNeedingConfirmation((prev) => ({ ...prev, ...confirmationStatus }));
-        }
         
         // Check inventory availability for this order
         const { isAvailable, missingItems } = await checkInventoryAvailability(orderId);
@@ -441,7 +418,7 @@ export default function AdminOrdersPage() {
                         >
                           {getStatusLabel(order.status)}
                         </div>
-                        {ordersNeedingConfirmation[order.id] && (
+                        {order.needs_confirmation && (
                           <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-100 border border-red-300 rounded-full">
                             <AlertCircle size={14} className="text-red-600 flex-shrink-0" />
                             <span className="text-xs font-semibold text-red-600">Needs Confirmation</span>

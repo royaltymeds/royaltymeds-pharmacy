@@ -347,10 +347,11 @@ export async function getAllOrders(): Promise<Order[]> {
   if (ordersError) throw new Error(ordersError.message);
   if (!orders || orders.length === 0) return [];
 
-  // Step 2: Extract unique user_id values from orders
+  // Step 2: Extract order IDs and user IDs
+  const orderIds = (orders as any[]).map(o => o.id);
   const userIds = [...new Set((orders as any[]).map(o => o.user_id))];
 
-  // Step 3: Query user_profiles where user_profiles.user_id matches the extracted values
+  // Step 3: Query user_profiles for customer names
   const { data: profiles, error: profilesError } = await supabase
     .from('user_profiles')
     .select('user_id, full_name')
@@ -358,15 +359,28 @@ export async function getAllOrders(): Promise<Order[]> {
 
   if (profilesError) throw new Error(profilesError.message);
 
-  // Step 4: Create a map of user_id -> full_name for efficient lookup
+  // Step 4: Query order_items to check which orders need pharmacist confirmation
+  const { data: itemsNeedingConfirmation, error: itemsError } = await supabase
+    .from('order_items')
+    .select('order_id')
+    .in('order_id', orderIds)
+    .eq('pharm_confirm', true);
+
+  if (itemsError) throw new Error(itemsError.message);
+
+  // Step 5: Create maps for efficient lookup
   const profileMap = new Map(
     (profiles as any[]).map(p => [p.user_id, p.full_name])
   );
+  const ordersNeedingConfirmationSet = new Set(
+    (itemsNeedingConfirmation as any[]).map(item => item.order_id)
+  );
 
-  // Step 5: Attach customer_name to each order
+  // Step 6: Attach customer_name and confirmation status to each order
   return (orders as any[]).map(order => ({
     ...order,
-    customer_name: profileMap.get(order.user_id) || 'Unknown Customer'
+    customer_name: profileMap.get(order.user_id) || 'Unknown Customer',
+    needs_confirmation: ordersNeedingConfirmationSet.has(order.id)
   })) as Order[];
 }
 
@@ -626,25 +640,4 @@ export async function updateCustomShippingPaymentStatus(
   if (error) throw new Error(error.message);
   revalidatePath('/patient/orders');
   return data as Order;
-}
-
-// Check confirmation status for multiple orders in a single query
-export async function ordersNeedingConfirmationBatch(orderIds: string[]): Promise<Record<string, boolean>> {
-  if (!orderIds.length) return {};
-  
-  const supabase = getAdminClient();
-
-  const { data: items, error } = await supabase
-    .from('order_items')
-    .select('order_id, pharm_confirm')
-    .in('order_id', orderIds)
-    .eq('pharm_confirm', true);
-
-  if (error) throw new Error(error.message);
-
-  const result: Record<string, boolean> = {};
-  orderIds.forEach((id) => {
-    result[id] = items?.some((item) => item.order_id === id) ?? false;
-  });
-  return result;
 }
