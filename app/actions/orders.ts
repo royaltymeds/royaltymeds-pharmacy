@@ -654,24 +654,30 @@ export async function updateCustomRateCOD(
   // First, get the current order to calculate new total
   const { data: currentOrder, error: fetchError } = await supabase
     .from('orders')
-    .select('total_amount, shipping_custom_rate, shipping_custom_rate_collect_on_delivery')
+    .select('subtotal_amount, tax_amount, shipping_amount, shipping_custom_rate, shipping_collect_on_delivery, shipping_custom_rate_collect_on_delivery')
     .eq('id', orderId)
     .single();
 
   if (fetchError) throw new Error(fetchError.message);
   if (!currentOrder) throw new Error('Order not found');
 
-  // Calculate new total amount
-  // If enabling COD: subtract shipping_custom_rate from total
-  // If disabling COD: add shipping_custom_rate back to total
-  let newTotalAmount = currentOrder.total_amount;
+  // Calculate new total amount based on components
+  // Total = subtotal + tax + shipping (only if NOT collecting on delivery)
   
-  if (collectOnDelivery && !currentOrder.shipping_custom_rate_collect_on_delivery) {
-    // Enabling COD: remove shipping from total
-    newTotalAmount = currentOrder.total_amount - (currentOrder.shipping_custom_rate || 0);
-  } else if (!collectOnDelivery && currentOrder.shipping_custom_rate_collect_on_delivery) {
-    // Disabling COD: add shipping back to total
-    newTotalAmount = currentOrder.total_amount + (currentOrder.shipping_custom_rate || 0);
+  // Determine which shipping amount to use
+  const applicableShipping = (currentOrder.shipping_custom_rate && currentOrder.shipping_custom_rate > 0)
+    ? currentOrder.shipping_custom_rate
+    : currentOrder.shipping_amount;
+
+  // Check if order will be COD after this update
+  const willBeCOD = currentOrder.shipping_collect_on_delivery || collectOnDelivery;
+
+  // Calculate new total
+  let newTotalAmount = currentOrder.subtotal_amount + currentOrder.tax_amount;
+  
+  // Only add shipping if NOT COD
+  if (!willBeCOD) {
+    newTotalAmount += applicableShipping;
   }
 
   // Update order with new flag and recalculated total
