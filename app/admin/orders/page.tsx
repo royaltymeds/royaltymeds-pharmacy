@@ -79,6 +79,7 @@ export default function AdminOrdersPage() {
   }, [searchTerm, statusFilter]);
 
   // Load order details for paginated orders (for badge display and other info)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const loadOrderDetails = async () => {
       for (const order of paginatedOrders) {
@@ -95,7 +96,7 @@ export default function AdminOrdersPage() {
     };
 
     loadOrderDetails();
-  }, [paginatedOrders, orderDetails]);
+  }, [paginatedOrders]);
 
   // Load order details when expanded
   const handleExpandOrder = async (orderId: string) => {
