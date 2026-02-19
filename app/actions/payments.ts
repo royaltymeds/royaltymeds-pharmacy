@@ -235,33 +235,33 @@ export async function getShippingRateByLocation(parish: string, cityTown?: strin
 
     // First try to find a rate for the specific parish + city/town combination (case-insensitive)
     if (normalizedCity) {
-      const { data: exactMatch, error: exactError } = await supabase
+      const { data: exactMatches, error: exactError } = await supabase
         .from('shipping_rates')
         .select('rate, parish, city_town')
         .ilike('parish', normalizedParish)
         .ilike('city_town', normalizedCity)
-        .single();
+        .limit(1);
 
-      if (!exactError && exactMatch) {
-        console.log('[Shipping Rate Lookup] Found exact match:', exactMatch);
-        return exactMatch.rate;
+      if (!exactError && exactMatches && exactMatches.length > 0) {
+        console.log('[Shipping Rate Lookup] Found exact match:', exactMatches[0]);
+        return exactMatches[0].rate;
       }
       console.log('[Shipping Rate Lookup] No exact match found');
     }
 
     // Then try to find a rate for just the parish with city_town as null (case-insensitive)
-    const { data: parishMatch, error: parishError } = await supabase
+    const { data: parishMatches, error: parishError } = await supabase
       .from('shipping_rates')
       .select('rate, parish, city_town')
       .ilike('parish', normalizedParish)
       .is('city_town', null)
-      .single();
+      .limit(1);
 
-    if (!parishError && parishMatch) {
-      console.log('[Shipping Rate Lookup] Found parish match:', parishMatch);
-      return parishMatch.rate;
+    if (!parishError && parishMatches && parishMatches.length > 0) {
+      console.log('[Shipping Rate Lookup] Found parish match:', parishMatches[0]);
+      return parishMatches[0].rate;
     }
-    console.log('[Shipping Rate Lookup] No parish match found. Parish error:', parishError?.message);
+    console.log('[Shipping Rate Lookup] No parish match found');
 
     // No standard rate found for this location
     // Return 0 to indicate custom rate will be set by admin
