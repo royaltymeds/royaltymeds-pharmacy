@@ -628,15 +628,23 @@ export async function updateCustomShippingPaymentStatus(
   return data as Order;
 }
 
-// Check if an order has items that need pharmacist confirmation
-export async function orderNeedsConfirmation(orderId: string): Promise<boolean> {
+// Check confirmation status for multiple orders in a single query
+export async function ordersNeedingConfirmationBatch(orderIds: string[]): Promise<Record<string, boolean>> {
+  if (!orderIds.length) return {};
+  
   const supabase = getAdminClient();
 
   const { data: items, error } = await supabase
     .from('order_items')
-    .select('pharm_confirm')
-    .eq('order_id', orderId);
+    .select('order_id, pharm_confirm')
+    .in('order_id', orderIds)
+    .eq('pharm_confirm', true);
 
   if (error) throw new Error(error.message);
-  return items?.some((item) => item.pharm_confirm === true) ?? false;
+
+  const result: Record<string, boolean> = {};
+  orderIds.forEach((id) => {
+    result[id] = items?.some((item) => item.order_id === id) ?? false;
+  });
+  return result;
 }

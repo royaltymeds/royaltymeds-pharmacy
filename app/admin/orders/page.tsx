@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { Order, OrderWithItems, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/lib/types/orders';
 import { ChevronDown, Filter, Search, FileText, Check, X, AlertTriangle, Loader, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
-import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, updateCustomShippingRate, checkInventoryAvailability, updateInventoryOnShipment, orderNeedsConfirmation } from '@/app/actions/orders';
+import { getAllOrders, getAdminOrderWithItems, updateOrderStatus, updateOrderShipping, updateCustomShippingRate, checkInventoryAvailability, updateInventoryOnShipment, ordersNeedingConfirmationBatch } from '@/app/actions/orders';
 import { verifyPayment } from '@/app/actions/payments';
 import { formatCurrency } from '@/lib/utils/currency';
 
@@ -103,15 +103,15 @@ export default function AdminOrdersPage() {
   // Load confirmation status for paginated orders (lightweight query for badge display)
   useEffect(() => {
     const loadConfirmationStatus = async () => {
-      for (const order of paginatedOrders) {
-        if (!(order.id in ordersNeedingConfirmation)) {
-          try {
-            const needsConfirm = await orderNeedsConfirmation(order.id);
-            setOrdersNeedingConfirmation((prev) => ({ ...prev, [order.id]: needsConfirm }));
-          } catch (err) {
-            console.error(`Failed to load confirmation status for order ${order.id}:`, err);
-          }
-        }
+      // Only fetch orders we haven't cached yet
+      const ordersToFetch = paginatedOrders.filter((order) => !(order.id in ordersNeedingConfirmation));
+      if (!ordersToFetch.length) return;
+
+      try {
+        const confirmationStatus = await ordersNeedingConfirmationBatch(ordersToFetch.map((o) => o.id));
+        setOrdersNeedingConfirmation((prev) => ({ ...prev, ...confirmationStatus }));
+      } catch (err) {
+        console.error('Failed to load confirmation status:', err);
       }
     };
 
