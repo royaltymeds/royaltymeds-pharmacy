@@ -642,7 +642,7 @@ export async function updateCustomShippingPaymentStatus(
   return data as Order;
 }
 
-// Update custom rate COD flag
+// Update custom rate COD flag and recalculate total
 export async function updateCustomRateCOD(
   orderId: string,
   collectOnDelivery: boolean
@@ -651,9 +651,36 @@ export async function updateCustomRateCOD(
 
   const supabase = getAdminClient();
 
+  // First, get the current order to calculate new total
+  const { data: currentOrder, error: fetchError } = await supabase
+    .from('orders')
+    .select('total_amount, shipping_custom_rate, shipping_custom_rate_collect_on_delivery')
+    .eq('id', orderId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!currentOrder) throw new Error('Order not found');
+
+  // Calculate new total amount
+  // If enabling COD: subtract shipping_custom_rate from total
+  // If disabling COD: add shipping_custom_rate back to total
+  let newTotalAmount = currentOrder.total_amount;
+  
+  if (collectOnDelivery && !currentOrder.shipping_custom_rate_collect_on_delivery) {
+    // Enabling COD: remove shipping from total
+    newTotalAmount = currentOrder.total_amount - (currentOrder.shipping_custom_rate || 0);
+  } else if (!collectOnDelivery && currentOrder.shipping_custom_rate_collect_on_delivery) {
+    // Disabling COD: add shipping back to total
+    newTotalAmount = currentOrder.total_amount + (currentOrder.shipping_custom_rate || 0);
+  }
+
+  // Update order with new flag and recalculated total
   const { data, error } = await supabase
     .from('orders')
-    .update({ shipping_custom_rate_collect_on_delivery: collectOnDelivery })
+    .update({
+      shipping_custom_rate_collect_on_delivery: collectOnDelivery,
+      total_amount: newTotalAmount,
+    })
     .eq('id', orderId)
     .select(
       'id, user_id, order_number, status, total_amount, subtotal_amount, tax_amount, shipping_amount, shipping_collect_on_delivery, shipping_estimated_amount, shipping_custom_rate, shipping_paid_online, shipping_custom_rate_collect_on_delivery, payment_status, payment_method, receipt_url, transaction_id, is_prescription_order, prescription_id, doctor_prescription_id, shipping_street_line_1, shipping_street_line_2, shipping_city, shipping_state, shipping_postal_code, shipping_country, billing_street_line_1, billing_street_line_2, billing_city, billing_state, billing_postal_code, billing_country, notes, created_at, updated_at'

@@ -771,7 +771,7 @@ export default function AdminOrdersPage() {
                                 onChange={async (e) => {
                                   try {
                                     const newValue = e.target.checked;
-                                    // Optimistically update UI
+                                    // Optimistically update UI with new flag
                                     setOrders(
                                       orders.map((o) =>
                                         o.id === order.id
@@ -788,8 +788,27 @@ export default function AdminOrdersPage() {
                                         },
                                       }));
                                     }
-                                    // Update in database
-                                    await updateCustomRateCOD(order.id, newValue);
+                                    // Update in database - returns updated order with recalculated total
+                                    const updatedOrder = await updateCustomRateCOD(order.id, newValue);
+                                    
+                                    // Update orders list with the returned order (includes recalculated total)
+                                    setOrders(
+                                      orders.map((o) =>
+                                        o.id === order.id ? updatedOrder : o
+                                      )
+                                    );
+                                    
+                                    // Update expanded order details with updated data
+                                    if (expandedOrderId === order.id && details) {
+                                      setOrderDetails((prev) => ({
+                                        ...prev,
+                                        [order.id]: {
+                                          ...details,
+                                          ...updatedOrder,
+                                        },
+                                      }));
+                                    }
+                                    
                                     toast.success('COD setting updated');
                                   } catch (err) {
                                     toast.error('Failed to update COD setting');
@@ -819,13 +838,7 @@ export default function AdminOrdersPage() {
 
                         <div className="flex justify-between text-base md:text-lg font-bold text-gray-900 border-t border-gray-200 pt-2">
                           <span>Total</span>
-                          <span>
-                            {formatCurrency(
-                              order.shipping_custom_rate_collect_on_delivery
-                                ? order.total_amount - (order.shipping_custom_rate || 0)
-                                : order.total_amount
-                            )}
-                          </span>
+                          <span>{formatCurrency(order.total_amount)}</span>
                         </div>
                       </div>
 
