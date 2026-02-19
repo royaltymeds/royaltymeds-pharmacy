@@ -304,6 +304,21 @@ export default function OrderDetailsClient({ orderId }: OrderDetailsClientProps)
                   )}
                 </span>
               </div>
+
+              {/* Pay Delivery Online Button - Only for collect_shipping_after_payment orders */}
+              {order.collect_shipping_after_payment &&
+                !order.shipping_collect_on_delivery &&
+                !order.shipping_custom_rate_collect_on_delivery && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <button
+                      onClick={() => setShowFygaroModal(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm whitespace-nowrap inline-block"
+                    >
+                      Pay Delivery Online Now
+                    </button>
+                  </div>
+                )}
+
               <div className="border-t border-gray-200 pt-3 flex justify-between text-lg sm:text-xl font-bold text-gray-900">
                 <span>Total</span>
                 <span>${Number(order.total_amount).toFixed(2)}</span>

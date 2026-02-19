@@ -15,6 +15,7 @@ export interface Order {
   shipping_custom_rate?: number; // Custom rate set by admin
   shipping_paid_online?: boolean; // Whether custom shipping was paid online
   shipping_custom_rate_collect_on_delivery?: boolean; // Whether custom shipping rate can be collected via COD
+  collect_shipping_after_payment?: boolean; // Whether to collect custom shipping after initial payment verified
   shipping_street_line_1?: string;
   shipping_street_line_2?: string;
   shipping_city?: string;
