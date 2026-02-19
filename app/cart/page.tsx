@@ -526,20 +526,6 @@ export default function CartPage() {
                     </div>
                   )}
 
-                  {/* Cash on Delivery Option */}
-                  <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
-                    <input
-                      type="checkbox"
-                      id="payOnDelivery"
-                      checked={payOnDelivery}
-                      onChange={(e) => setPayOnDelivery(e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-300 cursor-pointer"
-                    />
-                    <label htmlFor="payOnDelivery" className="text-sm font-medium text-gray-700 cursor-pointer">
-                      Pay shipping on delivery (Cash on Delivery)
-                    </label>
-                  </div>
-
                   {/* Shipping Address */}
                   <div>
                     <h3 className="text-base font-semibold text-gray-900 mb-3">Shipping Address</h3>
@@ -691,6 +677,27 @@ export default function CartPage() {
                             <>{formatCurrency(shipping)}</>
                           )}
                         </span>
+                      </div>
+                      {/* Cash on Delivery Option */}
+                      <div className="flex items-center gap-3 pt-2">
+                        <input
+                          type="checkbox"
+                          id="payOnDelivery"
+                          checked={payOnDelivery}
+                          onChange={(e) => setPayOnDelivery(e.target.checked)}
+                          disabled={shippingRateNotFound}
+                          className="w-4 h-4 rounded border-gray-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        <label 
+                          htmlFor="payOnDelivery" 
+                          className={`text-sm font-medium cursor-pointer ${
+                            shippingRateNotFound 
+                              ? 'text-gray-400 cursor-not-allowed' 
+                              : 'text-blue-600 hover:text-blue-700'
+                          }`}
+                        >
+                          Pay shipping on delivery (Cash on Delivery)
+                        </label>
                       </div>
                     </div>
                     <div className="flex justify-between text-xl font-bold text-gray-900">
