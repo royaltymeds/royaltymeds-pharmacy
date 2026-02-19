@@ -94,22 +94,23 @@ export default function AdminOrdersPage() {
   // }, [paginatedOrders]);
 
   // Load confirmation status for paginated orders (lightweight query for badge display)
-  useEffect(() => {
-    const loadConfirmationStatus = async () => {
-      // Only fetch orders we haven't cached yet
-      const ordersToFetch = paginatedOrders.filter((order) => !(order.id in ordersNeedingConfirmation));
-      if (!ordersToFetch.length) return;
+  // DISABLED: Confirmation is loaded on-demand when order is expanded to avoid POST operations on page load
+  // useEffect(() => {
+  //   const loadConfirmationStatus = async () => {
+  //     // Only fetch orders we haven't cached yet
+  //     const ordersToFetch = paginatedOrders.filter((order) => !(order.id in ordersNeedingConfirmation));
+  //     if (!ordersToFetch.length) return;
 
-      try {
-        const confirmationStatus = await ordersNeedingConfirmationBatch(ordersToFetch.map((o) => o.id));
-        setOrdersNeedingConfirmation((prev) => ({ ...prev, ...confirmationStatus }));
-      } catch (err) {
-        console.error('Failed to load confirmation status:', err);
-      }
-    };
+  //     try {
+  //       const confirmationStatus = await ordersNeedingConfirmationBatch(ordersToFetch.map((o) => o.id));
+  //       setOrdersNeedingConfirmation((prev) => ({ ...prev, ...confirmationStatus }));
+  //     } catch (err) {
+  //       console.error('Failed to load confirmation status:', err);
+  //     }
+  //   };
 
-    loadConfirmationStatus();
-  }, [paginatedOrders]);
+  //   loadConfirmationStatus();
+  // }, [paginatedOrders]);
 
   // Load order details when expanded
   const handleExpandOrder = async (orderId: string) => {
@@ -125,6 +126,12 @@ export default function AdminOrdersPage() {
       try {
         const details = await getAdminOrderWithItems(orderId);
         setOrderDetails((prev) => ({ ...prev, [orderId]: details }));
+        
+        // Load confirmation status for badge display
+        if (!(orderId in ordersNeedingConfirmation)) {
+          const confirmationStatus = await ordersNeedingConfirmationBatch([orderId]);
+          setOrdersNeedingConfirmation((prev) => ({ ...prev, ...confirmationStatus }));
+        }
         
         // Check inventory availability for this order
         const { isAvailable, missingItems } = await checkInventoryAvailability(orderId);
