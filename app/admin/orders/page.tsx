@@ -82,24 +82,22 @@ export default function AdminOrdersPage() {
   }, [searchTerm, statusFilter]);
 
   // Load order details for paginated orders (for badge display and other info)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const loadOrderDetails = async () => {
-      for (const order of paginatedOrders) {
-        if (!orderDetails[order.id]) {
-          try {
-            const details = await getAdminOrderWithItems(order.id);
-            setOrderDetails((prev) => ({ ...prev, [order.id]: details }));
-          } catch (err) {
-            // Silently fail for badge loading
-            console.error(`Failed to load details for order ${order.id}:`, err);
-          }
-        }
-      }
-    };
-
-    loadOrderDetails();
-  }, [paginatedOrders]);
+  // DISABLED: This caused excessive POST requests. Load on-demand only when expanded.
+  // useEffect(() => {
+  //   const loadOrderDetails = async () => {
+  //     for (const order of paginatedOrders) {
+  //       if (!orderDetails[order.id]) {
+  //         try {
+  //           const details = await getAdminOrderWithItems(order.id);
+  //           setOrderDetails((prev) => ({ ...prev, [order.id]: details }));
+  //         } catch (err) {
+  //           console.error(`Failed to load details for order ${order.id}:`, err);
+  //         }
+  //       }
+  //     }
+  //   };
+  //   loadOrderDetails();
+  // }, [paginatedOrders]);
 
   // Load order details when expanded
   const handleExpandOrder = async (orderId: string) => {
