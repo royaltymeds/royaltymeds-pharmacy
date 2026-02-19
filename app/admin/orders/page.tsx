@@ -679,8 +679,8 @@ export default function AdminOrdersPage() {
                         </div>
                         <div className="flex justify-between text-gray-700 items-center">
                           <span>Delivery/Shipping</span>
-                          {order.shipping_amount === 0 && !order.shipping_custom_rate ? (
-                            // No standard rate found AND no custom rate set yet - show input for all (COD and non-COD)
+                          {order.shipping_amount === 0 && !order.shipping_custom_rate && !order.shipping_collect_on_delivery ? (
+                            // No standard rate found AND no custom rate set yet - show input only for non-COD orders
                             <div className="flex gap-2 items-center">
                               <div className="bg-orange-50 border-2 border-orange-400 rounded px-3 py-2 text-sm">
                                 <p className="font-bold text-orange-700">⚠️ No Standard Rate</p>
