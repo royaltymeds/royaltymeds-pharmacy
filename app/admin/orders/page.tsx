@@ -67,11 +67,14 @@ export default function AdminOrdersPage() {
     });
   }, [orders, searchTerm, statusFilter]);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+  // Calculate pagination - memoize to prevent effect re-triggers
+  const { totalPages, paginatedOrders } = useMemo(() => {
+    const pages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginated = filteredOrders.slice(startIndex, endIndex);
+    return { totalPages: pages, paginatedOrders: paginated };
+  }, [filteredOrders, currentPage]);
 
   // Reset to page 1 when filters change
   React.useEffect(() => {
