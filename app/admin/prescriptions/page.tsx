@@ -10,6 +10,7 @@ interface Prescription {
   prescription_number: string;
   patient_id: string;
   doctor_id: string;
+  customer_name?: string;
   medication_name: string;
   dosage: string;
   status: string;
@@ -46,6 +47,28 @@ async function getPrescriptions(): Promise<Prescription[]> {
       ...(patientPrescriptions || []).map((p: any) => ({ ...p, source: "patient" as const })),
       ...(doctorPrescriptions || []).map((p: any) => ({ ...p, source: "doctor" as const })),
     ].sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+
+    // Extract patient IDs
+    const patientIds = [...new Set(allPrescriptions.map(p => p.patient_id))];
+
+    // Fetch customer names from user_profiles
+    if (patientIds.length > 0) {
+      const { data: profiles } = await supabaseAdmin
+        .from('user_profiles')
+        .select('user_id, full_name')
+        .in('user_id', patientIds);
+
+      // Create a map of patient_id -> customer_name
+      const profileMap = new Map(
+        (profiles || []).map(p => [p.user_id, p.full_name])
+      );
+
+      // Attach customer names to prescriptions
+      return allPrescriptions.map(rx => ({
+        ...rx,
+        customer_name: profileMap.get(rx.patient_id) || 'Unknown Customer'
+      }));
+    }
 
     return allPrescriptions;
   } catch (error) {

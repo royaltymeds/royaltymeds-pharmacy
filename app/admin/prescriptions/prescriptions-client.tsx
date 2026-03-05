@@ -11,6 +11,7 @@ interface Prescription {
   prescription_number: string;
   patient_id: string;
   doctor_id: string;
+  customer_name?: string;
   medication_name: string;
   dosage: string;
   status: string;
@@ -269,10 +270,15 @@ export default function PrescriptionsClient({ prescriptions, initialPage }: Prop
                     <div className="flex items-start justify-between gap-2 sm:gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2 flex-wrap">
-                          <p className="font-medium text-gray-900 text-xs sm:text-sm font-mono">
-                            Rx #{rx.prescription_number}
-                          </p>
-                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 text-xs sm:text-sm font-mono">
+                              Rx #{rx.prescription_number}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-600 mt-1 break-words">
+                              {rx.customer_name || 'Unknown Customer'}
+                            </p>
+                          </div>
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
                             rx.source === "patient" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
                           }`}>
                             {rx.source === "patient" ? "Patient" : "Doctor"}
