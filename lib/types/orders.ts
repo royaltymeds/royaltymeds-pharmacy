@@ -32,6 +32,10 @@ export interface Order {
   payment_status?: 'unpaid' | 'pending' | 'paid' | 'failed';
   payment_method?: 'bank_transfer' | 'card' | null;
   receipt_url?: string;
+  is_prescription_order?: boolean; // Whether this is an order created from a prescription
+  prescription_id?: string; // Patient prescription ID if is_prescription_order
+  doctor_prescription_id?: string; // Doctor prescription ID if is_prescription_order
+  transaction_id?: string; // Payment transaction ID
   created_at: string;
   updated_at: string;
 }
