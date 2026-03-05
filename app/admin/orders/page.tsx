@@ -626,34 +626,38 @@ export default function AdminOrdersPage() {
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3 text-sm md:text-base">Items</h4>
                         <div className="space-y-3">
-                          {details.items.map((item) => (
+                          {details.items.map((item) => {
+                            // Only show confirmation badge for store orders, not prescription orders
+                            const showConfirmBadge = item.pharm_confirm === true && !order.is_prescription_order;
+                            
+                            return (
                             <div
                               key={item.id}
                               className={`rounded-lg p-4 flex flex-col md:flex-row md:justify-between md:items-center gap-2 border-2 ${
-                                item.pharm_confirm === true
+                                showConfirmBadge
                                   ? 'bg-red-50 border-red-200'
                                   : 'bg-white border-gray-200'
                               }`}
                             >
                               <div className="flex-1 min-w-0">
                                 <h5 className={`font-semibold text-sm md:text-base break-words ${
-                                  item.pharm_confirm === true ? 'text-red-700' : 'text-gray-900'
+                                  showConfirmBadge ? 'text-red-700' : 'text-gray-900'
                                 }`}>
                                   {item.drug_name}
                                 </h5>
                                 <p className={`text-xs md:text-sm mt-1 ${
-                                  item.pharm_confirm === true ? 'text-red-600' : 'text-gray-600'
+                                  showConfirmBadge ? 'text-red-600' : 'text-gray-600'
                                 }`}>
                                   Qty: {item.quantity} × {formatCurrency(item.unit_price)}
                                 </p>
                               </div>
                               <div className="flex items-center gap-3">
                                 <p className={`text-lg md:text-lg font-bold ${
-                                  item.pharm_confirm === true ? 'text-red-700' : 'text-gray-900'
+                                  showConfirmBadge ? 'text-red-700' : 'text-gray-900'
                                 }`}>
                                   {formatCurrency(item.unit_price * item.quantity)}
                                 </p>
-                                {item.pharm_confirm === true && (
+                                {showConfirmBadge && (
                                   <div className="flex items-center gap-1 px-2 py-1 bg-red-200 rounded">
                                     <AlertCircle size={14} className="text-red-700 flex-shrink-0" />
                                     <span className="text-xs font-semibold text-red-700">Confirm</span>
@@ -661,7 +665,8 @@ export default function AdminOrdersPage() {
                                 )}
                               </div>
                             </div>
-                          ))}
+                          );
+                          })}
                         </div>
                       </div>
 
