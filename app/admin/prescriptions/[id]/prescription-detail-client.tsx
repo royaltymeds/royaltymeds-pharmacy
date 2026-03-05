@@ -1454,79 +1454,10 @@ export default function PrescriptionDetailClient({
                   ) : null;
                 })()}
 
-                {/* Prescription File Upload */}
-                <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-900 mb-3">
-                    Update Prescription File <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex items-center gap-3 mb-4">
-                    <label className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg cursor-pointer transition border border-blue-200">
-                      <Download className="w-4 h-4" />
-                      <span className="text-sm font-medium">Choose File</span>
-                      <input
-                        type="file"
-                        onChange={handlePrescriptionFileSelect}
-                        disabled={isUploadingFile}
-                        className="hidden"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                      />
-                    </label>
-                    <button
-                      onClick={handlePrescriptionFileUpload}
-                      disabled={!selectedPrescriptionFile || isUploadingFile}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition flex items-center gap-2 w-auto"
-                    >
-                      {isUploadingFile ? (
-                        <>
-                          <Loader className="w-4 h-4 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        'Upload File'
-                      )}
-                    </button>
-                    {prescriptionFileUploaded && (
-                      <div className="flex items-center gap-2 text-green-600">
-                        <CheckCircle className="w-5 h-5" />
-                        <span className="text-sm font-medium">File uploaded</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* File Preview */}
-                  {prescriptionFilePreview && (
-                    <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <p className="text-xs text-gray-600 uppercase tracking-wide font-medium mb-2">
-                        Preview
-                      </p>
-                      {prescriptionFilePreview === "pdf" ? (
-                        <div className="flex items-center gap-2 p-3 bg-white rounded border border-gray-200">
-                          <Download className="w-6 h-6 text-red-500" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{prescriptionFileName}</p>
-                            <p className="text-xs text-gray-600">PDF Document</p>
-                          </div>
-                        </div>
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={prescriptionFilePreview}
-                          alt="Prescription preview"
-                          className="max-w-xs h-auto rounded border border-gray-200"
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  <p className="text-xs text-gray-600">
-                    Accepted formats: PDF, JPG, PNG
-                  </p>
-                </div>
-
                 <div className="flex gap-2">
                   <button
                     onClick={handleDoneFilling}
-                    disabled={isLoading || !prescriptionFileUploaded || prescription.prescription_items?.some(
+                    disabled={isLoading || prescription.prescription_items?.some(
                       (item: any) => (quantitiesBeingFilled[item.id] || 0) > item.quantity
                     )}
                     className="inline-block px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg transition flex items-center gap-2 w-auto"
@@ -1854,7 +1785,7 @@ export default function PrescriptionDetailClient({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setFileViewerOpen(true)}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
@@ -1869,6 +1800,73 @@ export default function PrescriptionDetailClient({
                   <Download className="w-4 h-4" />
                   Download
                 </button>
+              </div>
+
+              {/* Upload New File */}
+              <div className="border-t border-gray-200 pt-4">
+                <p className="text-sm font-medium text-gray-900 mb-3">Update File</p>
+                <div className="flex items-center gap-3 mb-4">
+                  <label className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg cursor-pointer transition border border-blue-200">
+                    <Download className="w-4 h-4" />
+                    <span className="text-sm font-medium">Choose File</span>
+                    <input
+                      type="file"
+                      onChange={handlePrescriptionFileSelect}
+                      disabled={isUploadingFile}
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                    />
+                  </label>
+                  <button
+                    onClick={handlePrescriptionFileUpload}
+                    disabled={!selectedPrescriptionFile || isUploadingFile}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition flex items-center gap-2 w-auto"
+                  >
+                    {isUploadingFile ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      'Upload File'
+                    )}
+                  </button>
+                  {prescriptionFileUploaded && (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="text-sm font-medium">File uploaded</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* File Preview */}
+                {prescriptionFilePreview && (
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-600 uppercase tracking-wide font-medium mb-2">
+                      Preview
+                    </p>
+                    {prescriptionFilePreview === "pdf" ? (
+                      <div className="flex items-center gap-2 p-3 bg-white rounded border border-gray-200">
+                        <Download className="w-6 h-6 text-red-500" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{prescriptionFileName}</p>
+                          <p className="text-xs text-gray-600">PDF Document</p>
+                        </div>
+                      </div>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={prescriptionFilePreview}
+                        alt="Prescription preview"
+                        className="max-w-xs h-auto rounded border border-gray-200"
+                      />
+                    )}
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-600 mt-2">
+                  Accepted formats: PDF, JPG, PNG
+                </p>
               </div>
             </div>
           )}
