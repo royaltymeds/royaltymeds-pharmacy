@@ -194,20 +194,14 @@ export async function POST(
     // console.log("[Create-Order] Order created successfully:", orderData.id);
 
     // Create order items
-    const insertItems = orderItems.map((item) => {
-      const quantity = item.quantity_filled || 1;
-      const unitPrice = item.total_price / quantity;
-      
-      return {
-        order_id: orderData.id,
-        drug_id: null, // No drug_id for prescription items
-        drug_name: item.medication_name,
-        quantity: quantity,
-        unit_price: unitPrice, // Calculate unit price for display
-        total_price: item.total_price,
-        pharm_confirm: false, // Prescription items do not need pharmacist confirmation (already verified by prescriptions)
-      };
-    });
+    const insertItems = orderItems.map((item) => ({
+      order_id: orderData.id,
+      drug_id: null, // No drug_id for prescription items
+      drug_name: item.medication_name,
+      quantity: item.quantity_filled || 1, // Use quantity_filled from prescription, default to 1 if not set
+      total_price: item.total_price,
+      pharm_confirm: false, // Prescription items do not need pharmacist confirmation (already verified by prescriptions)
+    }));
 
     // console.log("[Create-Order] Inserting", insertItems.length, "order items");
 
