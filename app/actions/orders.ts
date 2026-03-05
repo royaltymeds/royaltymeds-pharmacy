@@ -377,10 +377,11 @@ export async function getAllOrders(): Promise<Order[]> {
   );
 
   // Step 6: Attach customer_name and confirmation status to each order
+  // Note: Only show needs_confirmation badge for store orders, NOT for prescription orders
   return (orders as any[]).map(order => ({
     ...order,
     customer_name: profileMap.get(order.user_id) || 'Unknown Customer',
-    needs_confirmation: ordersNeedingConfirmationSet.has(order.id)
+    needs_confirmation: !order.is_prescription_order && ordersNeedingConfirmationSet.has(order.id)
   })) as Order[];
 }
 
