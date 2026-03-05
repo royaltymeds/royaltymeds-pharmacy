@@ -1,6 +1,7 @@
 import SignupForm from "@/components/auth/SignupForm";
 import Link from "next/link";
 import Image from "next/image";
+import { MapPinIcon, PhoneIcon, ClockIcon } from "lucide-react";
 
 export const metadata = {
   title: "Sign Up - RoyaltyMeds",
@@ -84,6 +85,98 @@ export default function SignupPage() {
         </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-8">
+            {/* Brand */}
+            <div className="text-center">
+              <span className="text-lg sm:text-xl font-bold text-white">
+                <span className="text-green-400">R</span>oyaltyMeds
+              </span>
+              <p className="text-xs sm:text-sm text-gray-400 mt-2">
+                Your trusted online pharmacy for prescriptions and OTC medications.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div className="text-center">
+              <h4 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Quick Links</h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
+                <li>
+                  <Link href="/#features" className="hover:text-green-400 transition">
+                    Features
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#how-it-works" className="hover:text-green-400 transition">
+                    How It Works
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/store" className="hover:text-green-400 transition">
+                    Store
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div className="text-center">
+              <h4 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Contact Us</h4>
+              <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm flex flex-col items-center">
+                <li className="flex items-center gap-2">
+                  <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs">Shop #8, 2 Auburn Terrace, Daytona Dr, Jamaica</span>
+                </li>
+                <li className="flex items-center gap-2 mt-2">
+                  <PhoneIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <a href="tel:+18765723720" className="hover:text-green-400 transition text-xs">
+                    +1 876-572-3720
+                  </a>
+                </li>
+                <li className="flex items-center gap-2 mt-2">
+                  <ClockIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs">24/7 Available</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Pharmacist Access */}
+            <div className="text-center">
+              <h4 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">For Pharmacists</h4>
+              <Link
+                href="/portal-redirect?from=footer"
+                className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-xs sm:text-sm"
+              >
+                Pharmacist Portal
+              </Link>
+              <p className="text-xs text-gray-400 mt-3 sm:mt-4">
+                Licensed pharmacists only
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-gray-700 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-400">
+            <p>
+              &copy; 2026 RoyaltyMeds. All rights reserved.
+            </p>
+            <div className="flex gap-4 sm:gap-6 text-xs">
+              <a href="#" className="hover:text-green-400 transition">
+                Privacy Policy
+              </a>
+              <a href="#" className="hover:text-green-400 transition">
+                Terms of Service
+              </a>
+              <a href="#" className="hover:text-green-400 transition">
+                Contact
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

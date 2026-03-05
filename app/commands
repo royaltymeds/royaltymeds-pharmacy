@@ -1,0 +1,3 @@
+this file contains command shortcuts for active AI sessions, when user types a shortcut, carry out the corresponding instruction.
+
+rbld = "execute run build and resolve errors"
