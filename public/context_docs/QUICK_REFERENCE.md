@@ -7,9 +7,9 @@
 **Status:** ✅ LIVE IN PRODUCTION & ACTIVELY MAINTAINED  
 **URL:** https://royaltymedsprescript.vercel.app  
 **Build:** Passing (0 errors)  
-**Commits:** 460+ across 39 days  
+**Commits:** 460+ across 56 days  
 **Features:** 155+ fully functional  
-**Latest Update:** Feb 16, 2026 - Prescription order pricing, address refactoring, dashboard redesign, OTC pharmacist confirmation, cart UX improvements    
+**Latest Update:** Mar 5, 2026 - Custom shipping rates, COD management, automatic payment collection flag, dual-COD system    
 
 ---
 
@@ -215,6 +215,32 @@
 - Verify payment receipts
 - Add notes/tracking info
 - Handle refunds/cancellations
+- **NEW:** Set custom shipping rates (Phase 12)
+- **NEW:** Configure COD payment collection (Phase 12)
+
+**Custom Shipping Rates & COD** (NEW - Phase 12):
+- **Admin Capabilities:**
+  - Set custom shipping rates for orders without standard rates
+  - Edit existing custom rates
+  - Toggle COD checkbox to collect on delivery
+  - Automatic payment collection flag for verified payments
+  
+- **Two COD Types:**
+  - Standard COD (from shipping config)
+  - Custom Rate COD (admin checkbox)
+  - Either can exclude shipping from total calculation
+  
+- **Payment Collection Workflow:**
+  - Admin sets custom rate on payment-verified order
+  - Automatic trigger sets `collect_shipping_after_payment` flag
+  - Patient sees "Pay Delivery Online Now" button
+  - Patient pays remaining shipping amount online
+  - Reduces cash handling on delivery
+  
+- **Total Calculation:**
+  - When COD enabled: `total = subtotal + tax`
+  - When COD disabled: `total = subtotal + tax + shipping`
+  - Real-time recalculation when toggling COD
 
 ---
 

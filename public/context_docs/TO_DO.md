@@ -1,7 +1,7 @@
 # Implementation Roadmap - RoyaltyMeds Platform
 
-**Last Updated:** February 16, 2026  
-**Status:** Production Ready - Phase 11 COMPLETE ✅, Features #2-7 COMPLETE ✅, Fygaro Payment Integration COMPLETE ✅, Patient Linking Restructured ✅, Multiple UX Improvements COMPLETE ✅  
+**Last Updated:** March 5, 2026  
+**Status:** Production Ready - Phase 11 COMPLETE ✅, Phase 12 IN PROGRESS 🟡, Features #2-7 COMPLETE ✅, Fygaro Payment Integration COMPLETE ✅, Custom Shipping Rates & COD COMPLETE ✅  
 **Priority:** FEATURE DEVELOPMENT + MAINTENANCE
 
 ## 🎯 Completion Criteria
@@ -15,6 +15,16 @@
 
 **Current Status:**
 - ✅ **Phase 11:** COMPLETE - Prescription pricing, address refactoring, dashboard redesign, cart UX, OTC confirmation (Feb 9-16) ✅
+- ✅ **Phase 12:** IN PROGRESS - Custom shipping rates, COD management, automatic payment collection flags (Mar 5) 🟡
+  - ✅ Admin custom rate setting with edit capability
+  - ✅ COD checkbox for custom rates with total recalculation
+  - ✅ Supabase trigger for auto-setting collect_shipping_after_payment flag
+  - ✅ Backup application-level logic for flag-setting
+  - ✅ Patient "Pay Delivery Online Now" button on order details
+  - ✅ Billing address removal from order details
+  - ✅ Total calculation formula fix (subtotal + tax + shipping)
+  - ✅ Removal of ordersNeedingConfirmationBatch function
+  - ✅ Deployed to production with 0 TypeScript errors
 - ✅ **Features #2-7:** COMPLETE - Database + APIs + UI Pages + Deployed to Production ✅
   - Feature #2: Prescription Refills ✅
   - Feature #3: Store Sales/Clearance ✅
@@ -25,29 +35,45 @@
 - ✅ **Fygaro Payment Integration:** COMPLETE - JWT gateway, JMD currency, webhooks, success page (Feb 8) ✅
 - ✅ **Project Maintenance:** COMPLETE - Gitignore audit, pretext revision, documentation system ✅
 - ✅ **Patient Linking Restructuring:** COMPLETE - Moved from doctor portal to admin portal (Feb 4) ✅
+- ✅ **Custom Shipping Rates & COD Management:** COMPLETE (Mar 5) ✅
+  - Admin can set custom rates for payment-verified orders
+  - Two independent COD flags: standard delivery + custom rate
+  - Auto-setting of payment collection flag when custom rate set
+  - Dual-layer trigger + backup logic for robustness
+  - Patient sees button to pay remaining shipping online
+  - Reduces cash handling on delivery
 - 🔨 **Feature #8:** PLANNED - Enhanced Authentication (Forgot Password, Remember Me, OTC Email Login)
 - 🔨 **Feature #9:** PLANNED - Inventory-Linked Prescription Items (OTC & Rx Dropdown Selection)
 - 🔨 **Features #10-13:** PLANNED - Inventory Categories (Snacks & Beverages, Fashion, Medical Disposables, Stationery)
 
-**Latest Session Work (Feb 16 Analysis):**
-- ✅ Prescription order pricing feature complete (Feb 9-11)
-- ✅ Comprehensive address field refactoring (Feb 11-15)
-- ✅ Patient dashboard redesigned with status summary (Feb 15)
-- ✅ Cart page UX overhaul completed (Feb 14-15)
-- ✅ OTC pharmacist confirmation feature added (Feb 16)
-- ✅ Production cleanup with console.log cleanup (Feb 11)
-- ✅ All documentation updated through Feb 16
+**Latest Session Work (Mar 5, 2026 - Phase 12 Analysis):**
+- ✅ Analyzed complete conversation history and git commits (10+ new commits)
+- ✅ Custom shipping rate feature fully implemented and tested
+- ✅ Admin can set/edit custom rates with real-time total updates
+- ✅ COD checkbox positioned in pricing summary below shipping line
+- ✅ Supabase trigger auto-sets payment collection flag (with database verification)
+- ✅ Backup application-level logic added for robustness
+- ✅ Patient portal shows "Pay Delivery Online Now" button when applicable
+- ✅ Negative subtotal bug fixed (was using wrong calculation formula)
+- ✅ Total calculation properly based on subtotal + tax + shipping logic
+- ✅ Billing address removed from admin order details (simplification)
+- ✅ .gitignore updated to allow migrations to be tracked in git
+- ✅ All 8+ documentation files updated with Phase 12 information
 - ✅ Build: 0 errors, deployment verified on Vercel
+- ✅ Pretext file updated with custom shipping rates section and Phase 12 details
+- ✅ All context docs updated with accurate dates and commit information
 
-**Latest Commits (Top 10):**
-- `2b4d450` - feat: add pharm_confirm badge to inventory items display
-- `c2bcc30` - feat: update confirmation field to pharmacist_confirm (pharm_confirm)
-- `8f68877` - feat: add needs_confirmation field for OTC items requiring customer confirmation
-- `6c24252` - fix: remove duplicate pending prescriptions query to fix count accuracy
-- `e9e5bdb` - fix: remove status filter from recent prescriptions list on patient home page
-- `e7c6542` - fix: add specialty field to doctor profile on creation
-- `859a40f` - refactor: update admin users page with structured address fields
-- `133c357` - resolving address issues
+**Latest Commits (Top 10 - Mar 5, 2026):**
+- `aa08420` - Add backup logic to set collect_shipping_after_payment flag when saving custom rate
+- `d26a2dd` - Add trigger to automatically set collect_shipping_after_payment flag when custom rate is applied
+- `626d2ae` - Add collect_shipping_after_payment flow for payment verified orders
+- `283807c` - Fix negative subtotal in patient orders page
+- `f11681a` - Fix total calculation to properly base on item costs and shipping
+- `f41ac10` - Update custom rate COD to recalculate actual order total
+- `5ca4137` - Fix custom rate COD checkbox positioning and total calculation
+- `8b03b37` - Add custom rate COD support and remove billing address from order details
+- `e16afe6` - Remove ordersNeedingConfirmationBatch function and references
+- `05d99da` - Fix custom rate persistence and eliminate POST operations on page load
 - `7fc19bb` - Fix: replace practice_address with structured address fields in prescription APIs and UI
 - `22f2bbc` - Improve API logging: check if prescription exists before checking patient_id match
 

@@ -1,11 +1,11 @@
 # Complete Git History & Feature Analysis
 **RoyaltyMeds Prescription Platform - 400+ Total Commits**
 
-**Analysis Date:** February 16, 2026  
+**Analysis Date:** March 5, 2026  
 **Repository:** royaltymeds_prescript  
-**Time Period:** January 8, 2026 - February 16, 2026 (39 days)  
+**Time Period:** January 8, 2026 - March 5, 2026 (56 days)  
 **Active Contributors:** 3 (princewebclient, GitHub Copilot, yueniqdevteam)  
-**Latest Commit:** 2b4d450 - feat: add pharm_confirm badge to inventory items display (Feb 16, 2026)
+**Latest Commit:** aa08420 - Add backup logic to set collect_shipping_after_payment flag when saving custom rate (Mar 5, 2026)
 
 ---
 
@@ -14,14 +14,14 @@
 | Metric | Value |
 |--------|-------|
 | **Total Commits** | 460+ |
-| **Project Duration** | 39 days |
-| **Active Days** | 34 days |
+| **Project Duration** | 56 days |
+| **Active Days** | 42 days |
 | **Busiest Day** | Jan 24, 2026 (27 commits in 20 hours) |
-| **Average Commits/Day** | ~12 commits |
-| **Lead Developer** | princewebclient (~390+ commits), GitHub Copilot (50+ commits), yueniqdevteam (~26 commits) |
+| **Average Commits/Day** | ~8 commits |
+| **Lead Developer** | princewebclient (~400+ commits), GitHub Copilot (50+ commits), yueniqdevteam (~26 commits) |
 | **Build Status** | ✅ Passing (0 errors) |
 | **Deployment Status** | ✅ Vercel Production (Live) |
-| **Latest Update** | Feb 16, 2026 - OTC pharmacist confirmation feature |
+| **Latest Update** | Mar 5, 2026 - Custom shipping rates & COD management with automatic payment collection
 
 ---
 
@@ -1132,9 +1132,108 @@ Multi-phase implementation of prescription order pricing system and comprehensiv
 
 ---
 
+### **Phase 12: Custom Shipping Rates & Payment Collection (Mar 5, 2026)**
+**Status:** 🟡 In Progress | **Commits:** 10+
 
+Implementation of custom shipping rate management with automatic payment collection flags for payment-verified orders:
 
-- ✅ All 391+ commits analyzed
+**Features Implemented:**
+- `e16afe6` - Remove ordersNeedingConfirmationBatch function and references
+- `8b03b37` - Add custom rate COD support and remove billing address from order details
+- `5ca4137` - Fix custom rate COD checkbox positioning and total calculation
+- `f41ac10` - Update custom rate COD to recalculate actual order total
+- `f11681a` - Fix total calculation to properly base on item costs and shipping
+- `283807c` - Fix negative subtotal in patient orders page
+- `626d2ae` - Add collect_shipping_after_payment flow for payment verified orders
+- `d26a2dd` - Add trigger to automatically set collect_shipping_after_payment flag
+- `aa08420` - Add backup logic to set collect_shipping_after_payment flag when saving custom rate
+
+**Key Features:**
+- **Admin Interface:**
+  - Set custom shipping rates for orders without standard rates
+  - Edit existing custom rates with "Save" button
+  - COD checkbox to collect shipping on delivery
+  - Real-time total recalculation
+  
+- **Custom Rate COD Logic:**
+  - Separate from standard delivery COD
+  - Admin-controlled via checkbox below shipping line
+  - When enabled: shipping NOT added to total
+  - Formula: `total = subtotal + tax (if COD)` vs `total = subtotal + tax + shipping (if not COD)`
+  
+- **Payment Collection After Verification:**
+  - Supabase trigger auto-sets `collect_shipping_after_payment` flag
+  - Condition: `shipping_custom_rate` set AND `payment_status = 'payment_verified'`
+  - Backup application-level logic in `updateCustomShippingRate()` and `updateOrderShipping()`
+  - Patient sees "Pay Delivery Online Now" button on order details
+  - Button only appears when conditions met: flag true AND both COD flags false
+  
+- **Database Migrations:**
+  - `20260219203430_add_shipping_custom_rate_collect_on_delivery.sql` - COD checkbox for custom rates
+  - `20260219211756_add_collect_shipping_after_payment.sql` - Payment collection flag
+  - `20260219213000_add_trigger_set_collect_shipping_after_payment.sql` - PostgreSQL trigger function
+  
+- **Updated Functions in app/actions/orders.ts:**
+  - `updateCustomShippingRate()` - Sets rate + auto-sets collect flag for payment_verified orders
+  - `updateCustomRateCOD()` - Toggles COD checkbox + recalculates total
+  - `updateOrderShipping()` - Now also sets collect_shipping_after_payment flag as backup
+  
+- **UI Improvements:**
+  - Custom rate editing with inline save button
+  - COD checkbox positioned below shipping line in admin panel
+  - "Pay Delivery Online Now" button in patient portal when applicable
+  - Removal of billing address section from order details (patients don't pay at address)
+
+**Billing Address Removal:**
+- Removed billing address display from admin order details
+- Customers only provide shipping address (required for delivery)
+- Simplifies form and reduces data collection
+
+**Total Calculation Fix:**
+- Fixed formula: Always calculate from components (subtotal + tax + shipping)
+- Never add/subtract from previous total (fragile)
+- Handles both COD types: standard delivery COD and custom rate COD
+- Real-time recalculation when toggling COD checkbox
+
+**Payment Flow:**
+```
+Order Created → Payment Verified
+  ↓
+Admin Sets Custom Rate
+  ↓
+[Option A: Trigger] → Auto-sets collect_shipping_after_payment flag
+[Option B: Backup] → Application-level function sets flag
+  ↓
+Patient Sees "Pay Delivery Online Now" Button
+  ↓
+Patient Pays Remaining Shipping Online
+  ↓
+Reduces Cash Handling at Delivery
+```
+
+**Key Improvements:**
+- Flexible shipping cost management
+- Support for post-payment shipping collection
+- Reduces cash on delivery risks
+- Two independent COD mechanisms (standard + custom rate)
+- Dual-layer flag-setting (trigger + backup application logic)
+- Real-time order total updates
+- Cleaner order detail UI without billing address
+
+**Validation & Testing:**
+- ✅ Trigger function created in Supabase
+- ✅ Backup application logic added for robustness
+- ✅ Total calculation formula verified across all scenarios
+- ✅ Admin page updated with custom rate editing
+- ✅ Patient portal shows button when applicable
+- ✅ Build passes with 0 TypeScript errors
+- ✅ Deployed to production
+
+---
+
+## ✅ COMPREHENSIVE PROJECT VERIFICATION
+
+**End of git history analysis through March 5, 2026**
 - ✅ All major features documented
 - ✅ Build status verified (passing)
 - ✅ Deployment confirmed (Vercel)

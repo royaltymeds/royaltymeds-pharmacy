@@ -8,9 +8,9 @@
 # This is your "context anchor" - it frames what the application is, how it works,
 # and what rules govern all modifications. Apply these rules consistently.
 #
-# Generated: February 1, 2026 (385+ commits, 14+ phases completed)
-# Last Revised: Complete comprehensive revision incorporating git history
-# Reference Docs: /public/context_docs/ (6 comprehensive analysis files)
+# Generated: February 1, 2026 | Updated: March 5, 2026 (460+ commits, Phase 12 in progress)
+# Last Revised: Custom shipping rates, payment collection, dual-flag COD system implemented
+# Reference Docs: /public/context_docs/ (8+ comprehensive analysis files)
 #
 # 📚 DOCUMENTATION GUIDELINES:
 # All new documentation files MUST be created in: /public/new_docs/
@@ -24,14 +24,14 @@
 **Project Name:** RoyaltyMeds Prescription Platform  
 **Type:** Healthcare E-Commerce + Prescription Management System  
 **Purpose:** Trusted online pharmacy (Jamaica) connecting doctors, patients, and pharmacists  
-**Status:** ✅ PRODUCTION LIVE (Feb 1, 2026)  
-**Maturity:** Phase 11 complete, 385+ commits delivered
+**Status:** ✅ PRODUCTION LIVE (Continuous updates through March 5, 2026)  
+**Maturity:** Phase 11 complete + Phase 12 in progress, 460+ commits delivered
 
 **Build Stats:**
-- 45+ routes (0 TypeScript errors, 0 ESLint warnings)
-- 130+ features across 14+ categories
+- 50+ routes (0 TypeScript errors, 0 ESLint warnings)
+- 155+ features across 15+ categories
 - Deployment: Vercel (https://royaltymedsprescript.vercel.app)
-- Database: Supabase PostgreSQL with optimized RLS
+- Database: Supabase PostgreSQL with optimized RLS (triggers, migrations)
 - Architecture: Next.js 15 + React 19 + Tailwind CSS
 
 ---
@@ -492,6 +492,55 @@ updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 **Status fields:**
 - Use CHECK constraints for allowed values
 - Example: `status CHECK (status IN ('pending', 'approved', 'dispensing', 'completed', 'rejected'))`
+
+### Custom Shipping Rates & COD Management (Phase 12)
+
+**Feature Overview:**
+Admin can set custom shipping rates for orders without standard rates, with optional Cash-on-Delivery (COD) collection. Two independent COD flags allow flexible payment collection strategies.
+
+**Database Columns (orders table):**
+```sql
+shipping_custom_rate numeric(10, 2)                    -- Amount admin sets
+shipping_custom_rate_collect_on_delivery boolean       -- COD checkbox (admin toggles)
+collect_shipping_after_payment boolean                 -- Auto-set by trigger/backup logic
+```
+
+**Business Rules:**
+
+1. **Setting Custom Rates:**
+   - Admin can only set custom rates for orders without standard rates OR when editing existing custom rates
+   - Uses `updateCustomShippingRate()` function
+   - Function automatically sets `collect_shipping_after_payment = true` if `payment_status = 'payment_verified'`
+
+2. **Two COD Scenarios:**
+   - `shipping_collect_on_delivery` — Standard delivery COD (from shipping config)
+   - `shipping_custom_rate_collect_on_delivery` — Custom rate COD (admin checkbox)
+   - **Logic:** When EITHER is true, shipping NOT added to order total
+
+3. **Payment Collection After Verification:**
+   - When order payment is verified AND admin sets custom rate:
+     - Database trigger auto-sets `collect_shipping_after_payment = true`
+     - Backup: `updateCustomShippingRate()` function also sets flag
+   - Patient sees "Pay Delivery Online Now" button on order details
+   - Button conditions: `collect_shipping_after_payment && !shipping_collect_on_delivery && !shipping_custom_rate_collect_on_delivery`
+
+4. **Total Calculation Formula:**
+   ```
+   If shipping_collect_on_delivery OR shipping_custom_rate_collect_on_delivery:
+     total = subtotal + tax
+   Else:
+     total = subtotal + tax + shipping_amount (or shipping_custom_rate if set)
+   ```
+
+**Key Functions in app/actions/orders.ts:**
+- `updateCustomShippingRate(orderId, customRate)` — Sets custom rate + collect_shipping_after_payment flag
+- `updateCustomRateCOD(orderId, isChecked)` — Toggles COD checkbox + recalculates total
+- `updateOrderShipping(orderId, amount)` — Updated to set collect_shipping_after_payment flag
+
+**Supabase Trigger:**
+- **File:** `supabase/migrations/20260219213000_add_trigger_set_collect_shipping_after_payment.sql`
+- **Behavior:** Automatically sets `collect_shipping_after_payment = true` when `shipping_custom_rate` is set/changed on `payment_verified` orders
+- **Backup Logic:** Application-level functions also set flag to ensure it works regardless of trigger behavior
 
 ---
 
@@ -1042,7 +1091,7 @@ const { data: signedUrl } = await supabase.storage
 
 ## 📊 PROJECT PHASES & FEATURES MATRIX
 
-### Completed Phases (1-11)
+### Completed Phases (1-11) & In Progress (12)
 
 **Phase 1:** Core Architecture & Setup (Routes, auth foundation)
 **Phase 2:** Multi-Role Portal System (Patient, Doctor, Admin separation)
@@ -1052,9 +1101,10 @@ const { data: signedUrl } = await supabase.storage
 **Phase 6:** Pharmacist Portal (Inventory, doctors, patients management)
 **Phase 7:** Prescription Management (Submit, fill, status tracking)
 **Phase 8:** E-Commerce (Store, inventory, images, pagination)
-**Phase 9:** Payment System (Bank transfer, cards, receipts)
+**Phase 9:** Payment System (Bank transfer, cards, Fygaro receipts)
 **Phase 10:** Order Management (Search, pagination, RLS optimization)
-**Phase 11:** Signup Validation (Duplicate prevention, profile requirements)
+**Phase 11:** Signup Validation & Confirmation (Duplicate prevention, OTC pharmacist confirmation)
+**Phase 12:** Custom Shipping Rates & Payment Collection (Admin sets rates, trigger-based COD, patient online payment)
 
 ### Feature Categories (130+)
 
@@ -1063,9 +1113,10 @@ const { data: signedUrl } = await supabase.storage
 - ✅ User Profiles (mandatory fields, duplicate prevention)
 - ✅ Prescription Management (dual system: patient + doctor)
 - ✅ Inventory Management (products, categories, images)
-- ✅ Order Management (track, search, pagination)
-- ✅ Payment Processing (bank transfer, cards)
+- ✅ Order Management (track, search, pagination, custom rates)
+- ✅ Payment Processing (bank transfer, cards, Fygaro gateway)
 - ✅ Doctor ↔ Pharmacist Workflow (submit, approve, reject)
+- ✅ Custom Shipping Rates & COD Management (admin sets, patient pays post-delivery)
 
 **UI/UX:**
 - ✅ Responsive Design (mobile-first)
