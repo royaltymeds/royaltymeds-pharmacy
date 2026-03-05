@@ -143,9 +143,32 @@ export default function PrescriptionDetailClient({
   };
 
   const canCreateOrder = (): boolean => {
-    return prescription.prescription_items?.every(
+    // Check if all items have prices AND at least one item has been filled
+    const allItemsHavePrices = prescription.prescription_items?.every(
       (item: any) => item.price && parseFloat(item.price.toString()) > 0
     ) || false;
+
+    const hasFilledItems = prescription.prescription_items?.some(
+      (item: any) => item.quantity_filled && parseInt(item.quantity_filled.toString()) > 0
+    ) || false;
+
+    return allItemsHavePrices && hasFilledItems;
+  };
+
+  const getCreateOrderButtonTitle = (): string => {
+    const allItemsHavePrices = prescription.prescription_items?.every(
+      (item: any) => item.price && parseFloat(item.price.toString()) > 0
+    ) || false;
+
+    if (!allItemsHavePrices) {
+      return "All medications must have prices set";
+    }
+
+    if (!canCreateOrder()) {
+      return "Please fill or partially fill at least one medication";
+    }
+
+    return "";
   };
 
   const handleCreatePrescriptionOrder = async () => {
@@ -1018,22 +1041,38 @@ export default function PrescriptionDetailClient({
 
             {/* Total Price and Create Order Button */}
             {prescription.prescription_items && prescription.prescription_items.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Total Prescription Price</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${calculateTotalPrice().toFixed(2)}
-                  </p>
+              <div className="space-y-4">
+                {/* Advisory Message */}
+                {!canCreateOrder() && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-blue-900 text-sm mb-1">Fill Prescription Before Creating Order</h4>
+                      <p className="text-sm text-blue-700">
+                        Please fill or partially fill at least one medication before creating an order. Enter the fill amount in the Fill Prescription section.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Order Summary and Button */}
+                <div className="bg-gray-50 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Prescription Price</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      ${calculateTotalPrice().toFixed(2)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleCreatePrescriptionOrder}
+                    disabled={isCreatingOrder || !canCreateOrder()}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition"
+                    title={getCreateOrderButtonTitle()}
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    {isCreatingOrder ? "Creating Order..." : "Create Prescription Order"}
+                  </button>
                 </div>
-                <button
-                  onClick={handleCreatePrescriptionOrder}
-                  disabled={isCreatingOrder || !canCreateOrder()}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition"
-                  title={!canCreateOrder() ? "All medications must have prices set" : ""}
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  {isCreatingOrder ? "Creating Order..." : "Create Prescription Order"}
-                </button>
               </div>
             )}
 
