@@ -630,6 +630,10 @@ export default function AdminOrdersPage() {
                             // Only show confirmation badge for store orders, not prescription orders
                             const showConfirmBadge = item.pharm_confirm === true && !order.is_prescription_order;
                             
+                            // For prescription orders, use total_price directly
+                            // For store orders, calculate from unit_price * quantity
+                            const itemPrice = order.is_prescription_order ? item.total_price : (item.unit_price * item.quantity);
+                            
                             return (
                             <div
                               key={item.id}
@@ -648,14 +652,18 @@ export default function AdminOrdersPage() {
                                 <p className={`text-xs md:text-sm mt-1 ${
                                   showConfirmBadge ? 'text-red-600' : 'text-gray-600'
                                 }`}>
-                                  Qty: {item.quantity} × {formatCurrency(item.unit_price)}
+                                  {order.is_prescription_order ? (
+                                    `Qty: ${item.quantity}`
+                                  ) : (
+                                    `Qty: ${item.quantity} × ${formatCurrency(item.unit_price)}`
+                                  )}
                                 </p>
                               </div>
                               <div className="flex items-center gap-3">
                                 <p className={`text-lg md:text-lg font-bold ${
                                   showConfirmBadge ? 'text-red-700' : 'text-gray-900'
                                 }`}>
-                                  {formatCurrency(item.unit_price * item.quantity)}
+                                  {formatCurrency(itemPrice)}
                                 </p>
                                 {showConfirmBadge && (
                                   <div className="flex items-center gap-1 px-2 py-1 bg-red-200 rounded">
