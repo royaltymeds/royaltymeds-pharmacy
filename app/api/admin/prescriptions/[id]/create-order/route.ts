@@ -131,18 +131,19 @@ export async function POST(
     let subtotal = 0;
     const orderItems: Array<{
       medication_name: string;
-      quantity_filled: number;
+      quantityFilled: number;  // Amount being filled in THIS operation
       total_price: number;
     }> = [];
 
     for (const item of items) {
       const totalPrice = parseFloat(item.price.toString());
+      // Use quantity_filled directly - this is the amount from the LAST fill operation (current operation amount)
       const quantityFilled = parseInt(item.quantity_filled?.toString() || "0");
       subtotal += totalPrice;
 
       orderItems.push({
         medication_name: item.medication_name,
-        quantity_filled: quantityFilled,
+        quantityFilled: quantityFilled,  // The actual amount filled in this operation
         total_price: totalPrice,
       });
     }
@@ -198,7 +199,7 @@ export async function POST(
       order_id: orderData.id,
       drug_id: null, // No drug_id for prescription items
       drug_name: item.medication_name,
-      quantity: item.quantity_filled || 1, // Use quantity_filled from prescription, default to 1 if not set
+      quantity: item.quantityFilled || 1, // Use quantityFilled (amount from THIS fill operation)
       total_price: item.total_price,
       pharm_confirm: false, // Prescription items do not need pharmacist confirmation (already verified by prescriptions)
     }));
