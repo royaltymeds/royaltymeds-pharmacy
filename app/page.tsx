@@ -180,7 +180,7 @@ export default async function HomePage() {
               ].map((company) => (
                 <div
                   key={company}
-                  className="rounded-lg border border-green-200 bg-white px-3 py-2 text-sm sm:text-base text-green-900"
+                  className="rounded-lg bg-white px-3 py-2 text-sm sm:text-base text-green-900"
                 >
                   {company}
                 </div>
