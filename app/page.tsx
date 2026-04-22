@@ -201,6 +201,18 @@ export default async function HomePage() {
         </div>
       </section>
 
+
+{/* add free delivery promo to homepage here */}
+              <div className="flex-1 border-l-4 border-green-600 pl-6 sm:pl-8">
+              <div className="inline-block mb-3 sm:mb-4 px-3 sm:px-4 py-1.5 bg-green-100 rounded-full">
+                <span className="text-xs sm:text-sm font-semibold text-green-700">FREE DELIVERY AVAILABLE</span>
+              </div>
+              <p className="text-base sm:text-lg text-gray-700 mb-6 sm:mb-8 leading-relaxed">
+                Get free delivery St. Catherine, Kingston and St. Andrew on your orders with us. We also offer fast, affordable delivery to all other parishes in Jamaica.
+              </p>
+            </div>
+
+
       {/* Features Section */}
       <section id="features" className="bg-gray-50 py-12 sm:py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

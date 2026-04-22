@@ -1,9 +1,9 @@
 -- Create RLS helper functions to avoid infinite recursion in policies
 -- These functions safely get current user information without causing policy loops
 
--- Drop functions if they exist to avoid conflicts
-DROP FUNCTION IF EXISTS current_user_id();
-DROP FUNCTION IF EXISTS current_user_role();
+-- Drop functions with CASCADE to remove dependent policies
+DROP FUNCTION IF EXISTS current_user_id() CASCADE;
+DROP FUNCTION IF EXISTS current_user_role() CASCADE;
 
 -- Function to get current user ID as text
 -- Safe to use in RLS policies without causing recursion
