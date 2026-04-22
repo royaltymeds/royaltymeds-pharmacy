@@ -201,16 +201,47 @@ export default async function HomePage() {
         </div>
       </section>
 
-
-{/* add free delivery promo to homepage here */}
-              <div className="flex-1 border-l-4 border-green-600 pl-6 sm:pl-8">
-              <div className="inline-block mb-3 sm:mb-4 px-3 sm:px-4 py-1.5 bg-green-100 rounded-full">
-                <span className="text-xs sm:text-sm font-semibold text-green-700">FREE DELIVERY AVAILABLE</span>
+      {/* Free Delivery Section */}
+      <section className="py-10 sm:py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-2xl border border-green-100 bg-green-50/50 p-5 sm:p-7 lg:p-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="max-w-3xl">
+                <p className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-green-700 mb-2">
+                  Delivery Coverage
+                </p>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+                  Free delivery in St. Catherine, Kingston, and St. Andrew
+                </h2>
+                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                  Enjoy free delivery in select areas and reliable, affordable delivery to every other parish across Jamaica.
+                </p>
               </div>
-              <p className="text-base sm:text-lg text-gray-700 mb-6 sm:mb-8 leading-relaxed">
-                Get free delivery St. Catherine, Kingston and St. Andrew on your orders with us. We also offer fast, affordable delivery to all other parishes in Jamaica.
-              </p>
+              <Link
+                href="/store"
+                className="w-fit px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm"
+              >
+                Shop Now
+              </Link>
             </div>
+            <div className="mt-5 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
+              {[
+                "Free: St. Catherine",
+                "Free: Kingston",
+                "Free: St. Andrew",
+                "Affordable rates: Other parishes",
+              ].map((area) => (
+                <span
+                  key={area}
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white text-gray-700 rounded-full text-xs sm:text-sm border border-gray-200"
+                >
+                  {area}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
 
       {/* Features Section */}
