@@ -161,10 +161,10 @@ export default async function HomePage() {
                 <span className="text-xs sm:text-sm font-semibold text-green-700">EXCLUSIVE PARTNER OFFER</span>
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
-                Special Discounts for Your Organization
+                Company Discounts Offered
               </h2>
               <p className="text-base sm:text-lg text-gray-700 mb-6 sm:mb-8 leading-relaxed">
-                If you&apos;re part of one of our partner organizations, you qualify for exclusive savings on all your pharmacy orders. Simply mention your organization at checkout.
+                If you&apos;re part of one of our partner companies, you qualify for exclusive savings on all your pharmacy orders. Simply mention your workplace at checkout.
               </p>
             </div>
 
