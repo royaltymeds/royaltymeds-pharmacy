@@ -83,13 +83,17 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
   };
 
   const addItem = (product: SupplierProduct) => {
+    const quantity = product.minimum_order_quantity && product.minimum_order_quantity > 0 
+      ? product.minimum_order_quantity 
+      : 1;
+    
     const newItem: RestockItem = {
       supplier_product_id: product.id,
       product_id: product.product_id,
       product_type: product.product_type,
       product_name: getProductName(product),
-      quantity_requested: product.minimum_order_quantity || 1,
-      unit_price: product.supplier_unit_price,
+      quantity_requested: quantity,
+      unit_price: product.supplier_unit_price || 0,
       temporary_id: Math.random().toString(36).substr(2, 9),
     };
 
@@ -282,8 +286,8 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
                   <input
                     type="number"
                     min="1"
-                    value={item.quantity_requested}
-                    onChange={(e) => updateItemQuantity(item.temporary_id!, parseInt(e.target.value))}
+                    value={isNaN(item.quantity_requested) ? '' : item.quantity_requested}
+                    onChange={(e) => updateItemQuantity(item.temporary_id!, parseInt(e.target.value) || 1)}
                     className="w-full px-2 py-2 border border-gray-300 rounded text-sm"
                   />
                 </div>
