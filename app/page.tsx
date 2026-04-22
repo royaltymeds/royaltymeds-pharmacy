@@ -204,7 +204,7 @@ export default async function HomePage() {
       {/* Free Delivery Section */}
       <section className="py-10 sm:py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-2xl border border-green-100 bg-green-50/50 p-5 sm:p-7 lg:p-8">
+          <div className="rounded-2xl bg-white p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="max-w-3xl">
                 <p className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-green-700 mb-2">
@@ -233,7 +233,7 @@ export default async function HomePage() {
               ].map((area) => (
                 <span
                   key={area}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white text-gray-700 rounded-full text-xs sm:text-sm border border-gray-200"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white text-gray-700 rounded-full text-xs sm:text-sm"
                 >
                   {area}
                 </span>
