@@ -150,6 +150,8 @@ export async function createSupplierProduct(
           supplier_id: input.supplier_id,
           product_id: input.product_id,
           product_type: input.product_type,
+          product_name: input.product_name,
+          is_inventory_item: input.is_inventory_item ?? true,
           supplier_sku: input.supplier_sku,
           supplier_unit_price: input.supplier_unit_price,
           minimum_order_quantity: input.minimum_order_quantity || 1,
