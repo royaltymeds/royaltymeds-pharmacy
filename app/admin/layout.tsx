@@ -71,6 +71,7 @@ export default async function AdminLayout({
     { href: "/admin/orders", label: "Orders" },
     { href: "/admin/refills", label: "Refills" },
     { href: "/admin/inventory", label: "Inventory" },
+    { href: "/admin/restock", label: "Restock" },
     { href: "/admin/doctors", label: "Doctors" },
     { href: "/admin/users", label: "Pharmacists" },
     { href: "/admin/transactions", label: "Transactions" },
