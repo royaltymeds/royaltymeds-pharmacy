@@ -157,7 +157,7 @@ export default async function HomePage() {
 
 
       {/* Promotions Section */}
-      <section className="bg-green-50 py-12 sm:py-16">
+      <section className="bg-white py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white border border-green-100 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-sm">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
@@ -192,51 +192,7 @@ export default async function HomePage() {
               ))}
             </div>
             <p className="text-xs sm:text-sm text-gray-600 mt-5 sm:mt-6">
-              To redeem the offer, mention your organization at checkout and our team will apply the partner rate.
-            </p>
-          </div>
-        </div>
-      </section>
-
-
-
-      {/* Promotions Section */}
-      <section className="bg-green-50 py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white border border-green-100 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-sm">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              20% Off for Team Members
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-700 mb-6 sm:mb-8">
-              We offer a <span className="font-semibold text-green-700">20% discount</span> to team members of the organizations below.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-              {[
-                "Govt. of Jamaica",
-                "Supreme Ventures",
-                "Nestle",
-                "J Wray & Nephew",
-                "Grace Kennedy",
-                "Digicel Jamaica",
-                "LIME Jamaica",
-                "CIBC",
-                "NCB",
-                "JMMB",
-                "BGLC",
-                "UWI Students",
-                "UWI Employees",
-                "TIP Friendly Society",
-              ].map((company) => (
-                <div
-                  key={company}
-                  className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm sm:text-base text-green-900"
-                >
-                  {company}
-                </div>
-              ))}
-            </div>
-            <p className="text-xs sm:text-sm text-gray-600 mt-5 sm:mt-6">
-              To redeem your discount, mention your organization during checkout or contact our support team.
+              To redeem the offer, mention your organization at checkout and our team will assist you.
             </p>
           </div>
         </div>
