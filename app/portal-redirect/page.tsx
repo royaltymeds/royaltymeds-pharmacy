@@ -60,7 +60,7 @@ export default function PortalRedirectPage() {
     };
 
     checkUserAndRedirect();
-  }, [mounted, router]);
+  }, [mounted, router, from]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">

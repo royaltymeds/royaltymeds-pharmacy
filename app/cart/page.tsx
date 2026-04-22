@@ -203,8 +203,9 @@ export default function CartPage() {
 
   // Cleanup timeouts on unmount
   useEffect(() => {
+    const timeouts = quantityTimeoutsRef.current;
     return () => {
-      Object.values(quantityTimeoutsRef.current).forEach(timeout => clearTimeout(timeout));
+      Object.values(timeouts).forEach(timeout => clearTimeout(timeout));
     };
   }, []);
 

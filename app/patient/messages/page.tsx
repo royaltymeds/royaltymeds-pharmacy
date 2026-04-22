@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
 
@@ -27,11 +27,7 @@ export default function MessagesPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  useEffect(() => {
-    loadConversations();
-  }, [filter]);
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -63,7 +59,11 @@ export default function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, supabase.auth]);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
 
   if (loading) {
     return (
