@@ -166,14 +166,6 @@ export default async function HomePage() {
               <p className="text-base sm:text-lg text-gray-700 mb-6 sm:mb-8 leading-relaxed">
                 If you&apos;re part of one of our partner organizations, you qualify for exclusive savings on all your pharmacy orders. Simply mention your organization at checkout.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <button className="px-6 sm:px-8 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base">
-                  View Your Discount
-                </button>
-                <button className="px-6 sm:px-8 py-2.5 sm:py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-sm sm:text-base">
-                  Learn More
-                </button>
-              </div>
             </div>
 
             {/* Right Section - Partner List */}
