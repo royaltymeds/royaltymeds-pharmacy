@@ -14,9 +14,10 @@ import { AlertCircle, Loader, CheckCircle, XCircle, Package, Clock } from 'lucid
 
 interface RestockRequestDetailProps {
   requestId: string;
+  userId: string;
 }
 
-export function RestockRequestDetail({ requestId }: RestockRequestDetailProps) {
+export function RestockRequestDetail({ requestId, userId }: RestockRequestDetailProps) {
   const [request, setRequest] = useState<RestockRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -57,10 +58,9 @@ export function RestockRequestDetail({ requestId }: RestockRequestDetailProps) {
     setActionLoading(true);
     setError(null);
 
-    // Get current user ID (would need to pass from parent or get from auth)
     const { error: approveError } = await approveRestockRequest(
       requestId,
-      'current-user-id',
+      userId,
       approvalNotes
     );
 
@@ -84,7 +84,7 @@ export function RestockRequestDetail({ requestId }: RestockRequestDetailProps) {
 
     const { error: rejectError } = await rejectRestockRequest(
       requestId,
-      'current-user-id',
+      userId,
       rejectionReason
     );
 
@@ -114,7 +114,7 @@ export function RestockRequestDetail({ requestId }: RestockRequestDetailProps) {
       const { error: statusError } = await updateRestockRequestStatus(
         requestId,
         'received',
-        'current-user-id'
+        userId
       );
 
       if (statusError) {

@@ -23,7 +23,7 @@ export default async function RestockRequestDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await getAuthUser();
+  const user = await getAuthUser();
   const { id } = await params;
 
   return (
@@ -38,7 +38,7 @@ export default async function RestockRequestDetailPage({
         <h1 className="text-3xl font-bold text-gray-900">Restock Order Details</h1>
       </div>
 
-      <RestockRequestDetail requestId={id} />
+      <RestockRequestDetail requestId={id} userId={user.id} />
     </div>
   );
 }
