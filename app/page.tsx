@@ -152,43 +152,62 @@ export default async function HomePage() {
 
 
       {/* Promotions Section */}
-      <section className="bg-white py-12 sm:py-16">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-green-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white border border-green-100 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-sm">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              Savings Offer for Partner Teams
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-700 mb-6 sm:mb-8">
-              If you work with one of the organizations below, you can access <span className="font-semibold text-green-700">special discounts</span> on your pharmacy order as part of our partner support program.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-              {[
-                "Govt. of Jamaica",
-                "Supreme Ventures",
-                "Nestle",
-                "J Wray & Nephew",
-                "Grace Kennedy",
-                "Digicel Jamaica",
-                "LIME Jamaica",
-                "CIBC",
-                "NCB",
-                "JMMB",
-                "BGLC",
-                "UWI Students",
-                "UWI Employees",
-                "TIP Friendly Society",
-              ].map((company) => (
-                <div
-                  key={company}
-                  className="rounded-lg bg-white px-3 py-2 text-sm sm:text-base text-green-900"
-                >
-                  {company}
-                </div>
-              ))}
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start lg:items-center">
+            {/* Left Section - Offer Details */}
+            <div className="flex-1 border-l-4 border-green-600 pl-6 sm:pl-8">
+              <div className="inline-block mb-3 sm:mb-4 px-3 sm:px-4 py-1.5 bg-green-100 rounded-full">
+                <span className="text-xs sm:text-sm font-semibold text-green-700">EXCLUSIVE PARTNER OFFER</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
+                Special Discounts for Your Organization
+              </h2>
+              <p className="text-base sm:text-lg text-gray-700 mb-6 sm:mb-8 leading-relaxed">
+                If you're part of one of our partner organizations, you qualify for exclusive savings on all your pharmacy orders. Simply mention your organization at checkout.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <button className="px-6 sm:px-8 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm sm:text-base">
+                  View Your Discount
+                </button>
+                <button className="px-6 sm:px-8 py-2.5 sm:py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-semibold text-sm sm:text-base">
+                  Learn More
+                </button>
+              </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mt-5 sm:mt-6">
-              To redeem the offer, mention your organization at checkout and our team will assist you.
-            </p>
+
+            {/* Right Section - Partner List */}
+            <div className="flex-1 w-full">
+              <p className="text-sm font-semibold text-gray-600 mb-4 uppercase tracking-wide">Our Partners Include:</p>
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                {[
+                  "Govt. of Jamaica",
+                  "Supreme Ventures",
+                  "Nestle",
+                  "J Wray & Nephew",
+                  "Grace Kennedy",
+                  "Digicel Jamaica",
+                  "LIME Jamaica",
+                  "CIBC",
+                  "NCB",
+                  "JMMB",
+                  "BGLC",
+                  "UWI Students",
+                  "UWI Employees",
+                  "TIP Friendly Society",
+                ].map((company) => (
+                  <div
+                    key={company}
+                    className="px-4 py-2.5 sm:px-5 sm:py-3 bg-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-medium text-gray-800 hover:bg-green-50"
+                  >
+                    {company}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs sm:text-sm text-gray-600 mt-6 sm:mt-8 italic">
+                Don't see your organization? Contact our support team to explore partnership opportunities.
+              </p>
+            </div>
           </div>
         </div>
       </section>
