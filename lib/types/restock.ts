@@ -32,6 +32,8 @@ export interface SupplierProduct {
   supplier_id: string;
   product_id: string;
   product_type: 'otc' | 'prescription';
+  product_name?: string;
+  is_inventory_item?: boolean;
   supplier_sku?: string;
   supplier_unit_price: number;
   minimum_order_quantity: number;
@@ -137,6 +139,8 @@ export interface CreateSupplierProductInput {
   supplier_id: string;
   product_id: string;
   product_type: 'otc' | 'prescription';
+  product_name?: string;
+  is_inventory_item?: boolean;
   supplier_sku?: string;
   supplier_unit_price: number;
   minimum_order_quantity?: number;

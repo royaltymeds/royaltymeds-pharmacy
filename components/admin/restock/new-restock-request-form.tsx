@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createRestockRequest, getSuppliers, getSupplierProducts } from '@/app/actions/restock';
+import { getOTCDrugs, getPrescriptionDrugs } from '@/app/actions/inventory';
 import { Supplier, SupplierProduct } from '@/lib/types/restock';
+import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { X, Plus, Loader, AlertCircle } from 'lucide-react';
 
 interface RestockItem {
@@ -28,6 +30,8 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [supplierProducts, setSupplierProducts] = useState<SupplierProduct[]>([]);
   const [items, setItems] = useState<RestockItem[]>([]);
+  const [otcDrugs, setOTCDrugs] = useState<OTCDrug[]>([]);
+  const [prescriptionDrugs, setPrescriptionDrugs] = useState<PrescriptionDrug[]>([]);
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
 
   const [loading, setLoading] = useState(false);
@@ -43,6 +47,18 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
 
   useEffect(() => {
     loadSuppliers();
+
+    const loadInventoryItems = async () => {
+      try {
+        const [otc, prescription] = await Promise.all([getOTCDrugs(), getPrescriptionDrugs()]);
+        setOTCDrugs(otc);
+        setPrescriptionDrugs(prescription);
+      } catch (err) {
+        console.error('Failed to load inventory items for restock form', err);
+      }
+    };
+
+    loadInventoryItems();
   }, [loadSuppliers]);
 
   const loadSupplierProducts = useCallback(async () => {
@@ -59,12 +75,19 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
     }
   }, [selectedSupplier, loadSupplierProducts]);
 
+
+  const getProductName = (product: SupplierProduct) => {
+    if (product.product_name) return product.product_name;
+    const catalog = product.product_type === 'otc' ? otcDrugs : prescriptionDrugs;
+    return catalog.find((item) => item.id === product.product_id)?.name || product.product_id;
+  };
+
   const addItem = (product: SupplierProduct) => {
     const newItem: RestockItem = {
       supplier_product_id: product.id,
       product_id: product.product_id,
       product_type: product.product_type,
-      product_name: `${product.product_id}`, // Will be replaced with actual product data
+      product_name: getProductName(product),
       quantity_requested: product.minimum_order_quantity || 1,
       unit_price: product.supplier_unit_price,
       temporary_id: Math.random().toString(36).substr(2, 9),
@@ -219,9 +242,10 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
                 >
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {product.supplier_sku || 'N/A'}
+                      {getProductName(product)}
                     </p>
                     <p className="text-xs text-gray-600">
+                      {product.supplier_sku ? `SKU: ${product.supplier_sku} | ` : ''}
                       Min Order: {product.minimum_order_quantity} | Price: ${Number(product.supplier_unit_price).toFixed(2)}/unit
                     </p>
                   </div>
