@@ -94,6 +94,11 @@ export default async function HomePage() {
       <section className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-16 lg:py-24 flex flex-col justify-center">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+            <div className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1.5 sm:px-4 sm:py-2">
+              <span className="text-xs sm:text-sm font-semibold text-green-800">
+                Special discounts available for select customers
+              </span>
+            </div>
             <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
               Your Trusted Online{" "}
               <span className="text-green-600">Pharmacy In Jamaica</span>
