@@ -103,6 +103,15 @@ export interface RestockHistory {
   created_at: string;
 }
 
+
+export interface RestockNotificationSettings {
+  id: string;
+  user_id: string;
+  whatsapp_target_number?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Form DTOs
 export interface CreateRestockRequestInput {
   supplier_id: string;

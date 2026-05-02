@@ -1,3 +1,44 @@
-1. when the submit restock order button is clicked, a toast and push notification is needed to advise admins/pharmacists of a new restock order being submitted, the submission of restock orders needs to be monitored in real-time, and the notification needs to be real-time. (realtime is enabled on our tables in supabase)
+1. ✅ Completed: Real-time restock submission notifications for admins/pharmacists
 
-2. our real-time notification system needs to be wired into a whatsapp business api that sends a message to a predetermined whatsapp number from the whatsapp account the browser is currently signed into (add an option to the restock page to configure the target number, this may require either a new table or columns in our schema, build a migration where needed, but I will push it to supabase)
+Implementation summary:
+- Added a real-time Supabase subscription in `components/admin/restock/restock-requests-list.tsx` that listens for `INSERT` events on `public.restock_requests`.
+- On each new restock submission, the UI now:
+  - Shows an in-app toast notification.
+  - Triggers a browser push notification using the Web Notifications API.
+  - Refreshes the restock order list immediately so monitoring is live.
+- Added `lib/client-notifications.ts` helper to standardize browser notification behavior and permission handling.
+- Added a submit-success toast in the new restock order form to confirm dispatching notification flow.
+
+How to verify:
+- Open `/admin/restock` in two sessions (e.g., admin and pharmacist).
+- In one session, submit a new restock order via `/admin/restock/new`.
+- Confirm in the other session (without manual refresh):
+  - A toast appears saying a new restock order was submitted.
+  - A browser notification appears (if permission is granted).
+  - The new order appears in the list in real-time.
+
+2. ✅ Completed: WhatsApp Business API wiring with configurable target number on restock page
+
+Implementation summary:
+- Added a new schema migration: `supabase/migrations/20260502090000_add_restock_notification_settings.sql`.
+  - Creates `public.restock_notification_settings` with per-user `whatsapp_target_number`.
+  - Enables RLS + policies and updated-at trigger.
+- Extended restock actions (`app/actions/restock.ts`) with:
+  - `getRestockNotificationSettings(userId)`
+  - `upsertRestockNotificationSettings(userId, whatsappTargetNumber)`
+- Updated the New Restock Order page form to include a WhatsApp target number input and persist it before submission.
+- `createRestockRequest` now looks up the configured target number and POSTs to configured WhatsApp endpoint using:
+  - `WHATSAPP_API_URL`
+  - `WHATSAPP_API_TOKEN` (optional bearer auth)
+- Message payload includes order number and total when restock is submitted.
+
+How to verify:
+- Apply/push the migration to Supabase.
+- Configure environment variables:
+  - `WHATSAPP_API_URL`
+  - `WHATSAPP_API_TOKEN` (if required by provider)
+- Go to `/admin/restock/new`, set target number, and submit order.
+- Confirm:
+  - Setting persists for the user (reload page and verify input retained).
+  - The configured API endpoint receives a POST payload with target number and message.
+  - WhatsApp message is delivered by your provider integration.
