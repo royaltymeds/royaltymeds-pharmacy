@@ -1,0 +1,3 @@
+1. when the submit restock order button is clicked, a toast and push notification is needed to advise admins/pharmacists of a new restock order being submitted, the submission of restock orders needs to be monitored in real-time, and the notification needs to be real-time. (realtime is enabled on our tables in supabase)
+
+2. our real-time notification system needs to be wired into a whatsapp business api that sends a message to a predetermined whatsapp number from the whatsapp account the browser is currently signed into (add an option to the restock page to configure the target number, this may require either a new table or columns in our schema, build a migration where needed, but I will push it to supabase)
