@@ -19,7 +19,6 @@ build/
 .env
 next-env.d.ts
 REFERENCE_APP
-public/current_schemaReference.sql
 
 # IDE
 .idea/
