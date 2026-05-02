@@ -57,30 +57,6 @@ export async function createSupplier(input: CreateSupplierInput): Promise<{ data
 
     if (error) return { data: null, error: error.message };
 
-    try {
-      const { data: settings } = await supabase
-        .from('restock_notification_settings')
-        .select('whatsapp_target_number')
-        .eq('user_id', pharmacistId)
-        .single();
-
-      const target = settings?.whatsapp_target_number;
-      if (target && process.env.WHATSAPP_API_URL) {
-        await fetch(process.env.WHATSAPP_API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(process.env.WHATSAPP_API_TOKEN ? { Authorization: `Bearer ${process.env.WHATSAPP_API_TOKEN}` } : {}),
-          },
-          body: JSON.stringify({
-            to: target,
-            message: `New restock order submitted: ${data.request_number} (Total: $${Number(data.total_amount || 0).toFixed(2)}).`,
-          }),
-        });
-      }
-    } catch (notificationError) {
-      console.error('Failed to send restock WhatsApp notification', notificationError);
-    }
 
     return { data, error: null };
   } catch (err) {
@@ -314,6 +290,31 @@ export async function createRestockRequest(
       // Rollback request if items failed
       await supabase.from('restock_requests').delete().eq('id', requestData.id);
       return { data: null, error: itemsError.message };
+    }
+
+    try {
+      const { data: settings } = await supabase
+        .from('restock_notification_settings')
+        .select('whatsapp_target_number')
+        .eq('user_id', pharmacistId)
+        .single();
+
+      const target = settings?.whatsapp_target_number;
+      if (target && process.env.WHATSAPP_API_URL) {
+        await fetch(process.env.WHATSAPP_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(process.env.WHATSAPP_API_TOKEN ? { Authorization: `Bearer ${process.env.WHATSAPP_API_TOKEN}` } : {}),
+          },
+          body: JSON.stringify({
+            to: target,
+            message: `New restock order submitted: ${requestData.request_number} (Total: $${Number(requestData.total_amount || 0).toFixed(2)}).`,
+          }),
+        });
+      }
+    } catch (notificationError) {
+      console.error('Failed to send restock WhatsApp notification', notificationError);
     }
 
     // Fetch complete request with items
