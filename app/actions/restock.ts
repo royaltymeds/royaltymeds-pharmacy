@@ -9,6 +9,7 @@ import {
   CreateSupplierInput,
   UpdateSupplierInput,
   CreateSupplierProductInput,
+  RestockNotificationSettings,
 } from '@/lib/types/restock';
 
 // Service role client for admin operations (bypass RLS)
@@ -55,6 +56,8 @@ export async function createSupplier(input: CreateSupplierInput): Promise<{ data
       .single();
 
     if (error) return { data: null, error: error.message };
+
+
     return { data, error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to create supplier' };
@@ -287,6 +290,31 @@ export async function createRestockRequest(
       // Rollback request if items failed
       await supabase.from('restock_requests').delete().eq('id', requestData.id);
       return { data: null, error: itemsError.message };
+    }
+
+    try {
+      const { data: settings } = await supabase
+        .from('restock_notification_settings')
+        .select('whatsapp_target_number')
+        .eq('user_id', pharmacistId)
+        .single();
+
+      const target = settings?.whatsapp_target_number;
+      if (target && process.env.WHATSAPP_API_URL) {
+        await fetch(process.env.WHATSAPP_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(process.env.WHATSAPP_API_TOKEN ? { Authorization: `Bearer ${process.env.WHATSAPP_API_TOKEN}` } : {}),
+          },
+          body: JSON.stringify({
+            to: target,
+            message: `New restock order submitted: ${requestData.request_number} (Total: $${Number(requestData.total_amount || 0).toFixed(2)}).`,
+          }),
+        });
+      }
+    } catch (notificationError) {
+      console.error('Failed to send restock WhatsApp notification', notificationError);
     }
 
     // Fetch complete request with items
@@ -572,5 +600,46 @@ export async function getRestockHistory(
     return { data, error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch restock history' };
+  }
+}
+
+
+export async function getRestockNotificationSettings(
+  userId: string
+): Promise<{ data: RestockNotificationSettings | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const { data, error } = await supabase
+      .from('restock_notification_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) return { data: null, error: error.message };
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch notification settings' };
+  }
+}
+
+export async function upsertRestockNotificationSettings(
+  userId: string,
+  whatsappTargetNumber: string
+): Promise<{ data: RestockNotificationSettings | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const { data, error } = await supabase
+      .from('restock_notification_settings')
+      .upsert({
+        user_id: userId,
+        whatsapp_target_number: whatsappTargetNumber || null,
+      }, { onConflict: 'user_id' })
+      .select('*')
+      .single();
+
+    if (error) return { data: null, error: error.message };
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to save notification settings' };
   }
 }

@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createRestockRequest, getSuppliers, getSupplierProducts } from '@/app/actions/restock';
+import { createRestockRequest, getSuppliers, getSupplierProducts, getRestockNotificationSettings, upsertRestockNotificationSettings } from '@/app/actions/restock';
 import { getOTCDrugs, getPrescriptionDrugs } from '@/app/actions/inventory';
 import { Supplier, SupplierProduct } from '@/lib/types/restock';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { X, Plus, Loader, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface RestockItem {
   supplier_product_id: string;
@@ -33,6 +34,7 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
   const [otcDrugs, setOTCDrugs] = useState<OTCDrug[]>([]);
   const [prescriptionDrugs, setPrescriptionDrugs] = useState<PrescriptionDrug[]>([]);
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
+  const [whatsAppTargetNumber, setWhatsAppTargetNumber] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,9 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
 
   useEffect(() => {
     loadSuppliers();
+    getRestockNotificationSettings(pharmacistId).then(({ data }) => {
+      if (data?.whatsapp_target_number) setWhatsAppTargetNumber(data.whatsapp_target_number);
+    });
 
     const loadInventoryItems = async () => {
       try {
@@ -59,7 +64,7 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
     };
 
     loadInventoryItems();
-  }, [loadSuppliers]);
+  }, [loadSuppliers, pharmacistId]);
 
   const loadSupplierProducts = useCallback(async () => {
     if (!selectedSupplier) return;
@@ -134,6 +139,13 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
     setLoading(true);
 
     try {
+      const { error: settingsError } = await upsertRestockNotificationSettings(pharmacistId, whatsAppTargetNumber);
+      if (settingsError) {
+        setError(settingsError);
+        setLoading(false);
+        return;
+      }
+
       const { data, error: submitError } = await createRestockRequest(pharmacistId, {
         supplier_id: selectedSupplier.id,
         items: items.map((item) => ({
@@ -153,6 +165,7 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
       }
 
       setSuccess(true);
+      toast.success('Restock order submitted. Admin/pharmacist realtime notifications were dispatched.');
       setTimeout(() => {
         router.push(`/admin/restock/${data?.id}`);
         router.refresh();
@@ -346,6 +359,24 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
           </div>
         </div>
       )}
+
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Notification Settings</h2>
+        <label htmlFor="wa-target" className="block text-sm font-medium text-gray-700 mb-2">
+          WhatsApp target number
+        </label>
+        <input
+          id="wa-target"
+          type="tel"
+          value={whatsAppTargetNumber}
+          onChange={(e) => setWhatsAppTargetNumber(e.target.value)}
+          placeholder="e.g. +15551234567"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+        />
+        <p className="text-xs text-gray-500 mt-2">
+          This number receives WhatsApp messages whenever a restock order is submitted.
+        </p>
+      </div>
 
       {/* Actions */}
       <div className="flex gap-3 pt-6">

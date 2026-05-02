@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { getRestockRequests } from '@/app/actions/restock';
 import { RestockRequest } from '@/lib/types/restock';
 import { ChevronRight, CheckCircle, XCircle, Package } from 'lucide-react';
+import { toast } from 'sonner';
+import { getSupabaseClient } from '@/lib/supabase-client';
+import { notifyBrowser } from '@/lib/client-notifications';
+import type { RealtimePostgresInsertPayload } from '@supabase/supabase-js';
 
 export function RestockRequestsList() {
   const [requests, setRequests] = useState<RestockRequest[]>([]);
@@ -22,6 +26,27 @@ export function RestockRequestsList() {
 
   useEffect(() => {
     loadRequests();
+  }, [loadRequests]);
+
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    const channel = supabase
+      .channel('restock-requests-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'restock_requests' },
+        (payload: RealtimePostgresInsertPayload<{ request_number?: string }>) => {
+          const requestNumber = payload.new.request_number || 'New restock order';
+          toast.success(`New restock order submitted: ${requestNumber}`);
+          notifyBrowser('New restock order submitted', { body: `Order ${requestNumber} was just submitted.` });
+          loadRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [loadRequests]);
 
   const getStatusColor = (status: string) => {
