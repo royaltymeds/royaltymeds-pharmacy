@@ -1,4 +1,4 @@
-1. ✅ Completed: Real-time restock submission notifications for admins/pharmacists
+1. Attempted but Not Working: Real-time restock submission notifications for admins/pharmacists
 
 Implementation summary:
 - Added a real-time Supabase subscription in `components/admin/restock/restock-requests-list.tsx` that listens for `INSERT` events on `public.restock_requests`.
@@ -17,7 +17,7 @@ How to verify:
   - A browser notification appears (if permission is granted).
   - The new order appears in the list in real-time.
 
-2. ✅ Completed: WhatsApp Business API wiring with configurable target number on restock page
+2. Attempted But Not Working: WhatsApp Business API wiring with configurable target number on restock page
 
 Implementation summary:
 - Added a new schema migration: `supabase/migrations/20260502090000_add_restock_notification_settings.sql`.
