@@ -711,27 +711,69 @@ export async function getRestockNotificationSettings(
   }
 }
 
+function isMissingRestockNotificationChannelColumnError(error: { message?: string; code?: string } | null) {
+  if (!error) return false;
+
+  const message = error.message || '';
+  return (
+    (error.code === 'PGRST204' || message.includes('schema cache')) &&
+    message.includes('restock_notification_settings') &&
+    (message.includes('whatsapp_notifications_enabled') ||
+      message.includes('sms_notifications_enabled') ||
+      message.includes('app_toast_notifications_enabled') ||
+      message.includes('push_notifications_enabled'))
+  );
+}
+
 export async function upsertRestockNotificationSettings(
   userId: string,
   input: UpdateRestockNotificationSettingsInput
 ): Promise<{ data: RestockNotificationSettings | null; error: string | null }> {
   try {
     const supabase = getServiceRoleClient();
+    const notification_email = input.notification_email || null;
+
     const { data, error } = await supabase
       .from('restock_notification_settings')
-      .upsert({
-        user_id: userId,
-        notification_email: input.notification_email || null,
-        whatsapp_notifications_enabled: input.whatsapp_notifications_enabled,
-        sms_notifications_enabled: input.sms_notifications_enabled,
-        app_toast_notifications_enabled: input.app_toast_notifications_enabled,
-        push_notifications_enabled: input.push_notifications_enabled,
-      }, { onConflict: 'user_id' })
+      .upsert(
+        {
+          user_id: userId,
+          notification_email,
+          whatsapp_notifications_enabled: input.whatsapp_notifications_enabled,
+          sms_notifications_enabled: input.sms_notifications_enabled,
+          app_toast_notifications_enabled: input.app_toast_notifications_enabled,
+          push_notifications_enabled: input.push_notifications_enabled,
+        },
+        { onConflict: 'user_id' }
+      )
       .select('*')
       .single();
 
-    if (error) return { data: null, error: error.message };
-    return { data, error: null };
+    if (!error) return { data, error: null };
+
+    if (!isMissingRestockNotificationChannelColumnError(error)) {
+      return { data: null, error: error.message };
+    }
+
+    console.warn(
+      'Restock notification channel preference columns are missing from the database schema cache; saving email only.',
+      error.message
+    );
+
+    const { data: emailOnlyData, error: emailOnlyError } = await supabase
+      .from('restock_notification_settings')
+      .upsert(
+        {
+          user_id: userId,
+          notification_email,
+        },
+        { onConflict: 'user_id' }
+      )
+      .select('*')
+      .single();
+
+    if (emailOnlyError) return { data: null, error: emailOnlyError.message };
+    return { data: emailOnlyData, error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to save notification settings' };
   }
