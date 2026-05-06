@@ -1,6 +1,7 @@
 'use server';
 
 import { createServerClient } from '@supabase/ssr';
+import nodemailer from 'nodemailer';
 import {
   Supplier,
   RestockRequest,
@@ -25,6 +26,103 @@ function getServiceRoleClient() {
       },
     }
   );
+}
+
+
+function getSmtpTransporter() {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
+
+function formatCurrency(amount: number | null | undefined) {
+  return `$${Number(amount || 0).toFixed(2)}`;
+}
+
+function escapeHtml(value: string | number | null | undefined) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+async function sendRestockRequestEmailNotification(
+  to: string,
+  request: RestockRequest,
+  items: CreateRestockRequestInput['items']
+) {
+  const transporter = getSmtpTransporter();
+  if (!transporter) {
+    console.warn('Restock email notification skipped because SMTP_USER or SMTP_PASS is not configured.');
+    return;
+  }
+
+  const subject = `New restock request submitted: ${request.request_number}`;
+  const itemRows = items
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(item.product_name)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(item.product_type)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${item.quantity_requested}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.unit_price)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.quantity_requested * item.unit_price)}</td>
+        </tr>`
+    )
+    .join('');
+  const textItems = items
+    .map(
+      (item) =>
+        `- ${item.product_name} (${item.product_type}): ${item.quantity_requested} x ${formatCurrency(item.unit_price)} = ${formatCurrency(item.quantity_requested * item.unit_price)}`
+    )
+    .join('\n');
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to,
+    subject,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5;">
+        <h2 style="margin-bottom: 16px;">New Restock Request Submitted</h2>
+        <p>A restock request was submitted and is ready for review.</p>
+        <p><strong>Request number:</strong> ${escapeHtml(request.request_number)}</p>
+        <p><strong>Total amount:</strong> ${formatCurrency(request.total_amount)}</p>
+        ${request.expected_delivery_date ? `<p><strong>Expected delivery date:</strong> ${escapeHtml(request.expected_delivery_date)}</p>` : ''}
+        <table style="border-collapse: collapse; width: 100%; margin-top: 16px;">
+          <thead>
+            <tr>
+              <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: left;">Product</th>
+              <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: left;">Type</th>
+              <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: right;">Qty</th>
+              <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: right;">Unit price</th>
+              <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: right;">Line total</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+      </div>
+    `,
+    text: `New Restock Request Submitted
+
+Request number: ${request.request_number}
+Total amount: ${formatCurrency(request.total_amount)}${request.expected_delivery_date ? `
+Expected delivery date: ${request.expected_delivery_date}` : ''}
+
+Items:
+${textItems}`,
+  });
 }
 
 // ============================================================================
@@ -295,26 +393,16 @@ export async function createRestockRequest(
     try {
       const { data: settings } = await supabase
         .from('restock_notification_settings')
-        .select('whatsapp_target_number')
+        .select('notification_email')
         .eq('user_id', pharmacistId)
         .single();
 
-      const target = settings?.whatsapp_target_number;
-      if (target && process.env.WHATSAPP_API_URL) {
-        await fetch(process.env.WHATSAPP_API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(process.env.WHATSAPP_API_TOKEN ? { Authorization: `Bearer ${process.env.WHATSAPP_API_TOKEN}` } : {}),
-          },
-          body: JSON.stringify({
-            to: target,
-            message: `New restock order submitted: ${requestData.request_number} (Total: $${Number(requestData.total_amount || 0).toFixed(2)}).`,
-          }),
-        });
+      const target = settings?.notification_email || process.env.RESTOCK_NOTIFICATION_EMAIL;
+      if (target) {
+        await sendRestockRequestEmailNotification(target, requestData, input.items);
       }
     } catch (notificationError) {
-      console.error('Failed to send restock WhatsApp notification', notificationError);
+      console.error('Failed to send restock email notification', notificationError);
     }
 
     // Fetch complete request with items
@@ -624,7 +712,7 @@ export async function getRestockNotificationSettings(
 
 export async function upsertRestockNotificationSettings(
   userId: string,
-  whatsappTargetNumber: string
+  notificationEmail: string
 ): Promise<{ data: RestockNotificationSettings | null; error: string | null }> {
   try {
     const supabase = getServiceRoleClient();
@@ -632,7 +720,7 @@ export async function upsertRestockNotificationSettings(
       .from('restock_notification_settings')
       .upsert({
         user_id: userId,
-        whatsapp_target_number: whatsappTargetNumber || null,
+        notification_email: notificationEmail || null,
       }, { onConflict: 'user_id' })
       .select('*')
       .single();

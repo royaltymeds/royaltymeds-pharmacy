@@ -34,7 +34,7 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
   const [otcDrugs, setOTCDrugs] = useState<OTCDrug[]>([]);
   const [prescriptionDrugs, setPrescriptionDrugs] = useState<PrescriptionDrug[]>([]);
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
-  const [whatsAppTargetNumber, setWhatsAppTargetNumber] = useState('');
+  const [notificationEmail, setNotificationEmail] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
   useEffect(() => {
     loadSuppliers();
     getRestockNotificationSettings(pharmacistId).then(({ data }) => {
-      if (data?.whatsapp_target_number) setWhatsAppTargetNumber(data.whatsapp_target_number);
+      if (data?.notification_email) setNotificationEmail(data.notification_email);
     });
 
     const loadInventoryItems = async () => {
@@ -139,7 +139,7 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
     setLoading(true);
 
     try {
-      const { error: settingsError } = await upsertRestockNotificationSettings(pharmacistId, whatsAppTargetNumber);
+      const { error: settingsError } = await upsertRestockNotificationSettings(pharmacistId, notificationEmail);
       if (settingsError) {
         setError(settingsError);
         setLoading(false);
@@ -165,7 +165,7 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
       }
 
       setSuccess(true);
-      toast.success('Restock order submitted. Admin/pharmacist realtime notifications were dispatched.');
+      toast.success('Restock order submitted. Email notification was dispatched.');
       setTimeout(() => {
         router.push(`/admin/restock/${data?.id}`);
         router.refresh();
@@ -362,19 +362,19 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
 
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Notification Settings</h2>
-        <label htmlFor="wa-target" className="block text-sm font-medium text-gray-700 mb-2">
-          WhatsApp target number
+        <label htmlFor="restock-notification-email" className="block text-sm font-medium text-gray-700 mb-2">
+          Notification email address
         </label>
         <input
-          id="wa-target"
-          type="tel"
-          value={whatsAppTargetNumber}
-          onChange={(e) => setWhatsAppTargetNumber(e.target.value)}
-          placeholder="e.g. +15551234567"
+          id="restock-notification-email"
+          type="email"
+          value={notificationEmail}
+          onChange={(e) => setNotificationEmail(e.target.value)}
+          placeholder="e.g. restock-alerts@example.com"
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
         />
         <p className="text-xs text-gray-500 mt-2">
-          This number receives WhatsApp messages whenever a restock order is submitted.
+          This email address receives a Gmail SMTP notification whenever a restock order is submitted.
         </p>
       </div>
 

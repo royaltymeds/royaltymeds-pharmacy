@@ -107,7 +107,7 @@ export interface RestockHistory {
 export interface RestockNotificationSettings {
   id: string;
   user_id: string;
-  whatsapp_target_number?: string;
+  notification_email?: string;
   created_at: string;
   updated_at: string;
 }
