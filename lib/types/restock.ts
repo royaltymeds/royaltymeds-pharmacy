@@ -107,9 +107,21 @@ export interface RestockHistory {
 export interface RestockNotificationSettings {
   id: string;
   user_id: string;
-  whatsapp_target_number?: string;
+  notification_email?: string;
+  whatsapp_notifications_enabled?: boolean;
+  sms_notifications_enabled?: boolean;
+  app_toast_notifications_enabled?: boolean;
+  push_notifications_enabled?: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface UpdateRestockNotificationSettingsInput {
+  notification_email: string;
+  whatsapp_notifications_enabled: boolean;
+  sms_notifications_enabled: boolean;
+  app_toast_notifications_enabled: boolean;
+  push_notifications_enabled: boolean;
 }
 
 // Form DTOs

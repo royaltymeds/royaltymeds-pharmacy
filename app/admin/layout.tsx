@@ -77,6 +77,7 @@ export default async function AdminLayout({
     { href: "/admin/transactions", label: "Transactions" },
     { href: "/admin/audit-logs", label: "Audit Logs" },
     { href: "/admin/email-templates", label: "Email Templates" },
+    { href: "/admin/notifications", label: "Notifications" },
     { href: "/admin/payments", label: "Payments Config" },
     { href: "/admin/patient-links", label: "Patient Links" },
   ];
