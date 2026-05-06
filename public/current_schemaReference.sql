@@ -452,7 +452,11 @@ CREATE TABLE public.restock_items (
 CREATE TABLE public.restock_notification_settings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL UNIQUE,
-  whatsapp_target_number text,
+  notification_email text,
+  whatsapp_notifications_enabled boolean NOT NULL DEFAULT false,
+  sms_notifications_enabled boolean NOT NULL DEFAULT false,
+  app_toast_notifications_enabled boolean NOT NULL DEFAULT true,
+  push_notifications_enabled boolean NOT NULL DEFAULT false,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT restock_notification_settings_pkey PRIMARY KEY (id),
