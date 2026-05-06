@@ -11,6 +11,7 @@ import {
   UpdateSupplierInput,
   CreateSupplierProductInput,
   RestockNotificationSettings,
+  UpdateRestockNotificationSettingsInput,
 } from '@/lib/types/restock';
 
 // Service role client for admin operations (bypass RLS)
@@ -395,9 +396,9 @@ export async function createRestockRequest(
         .from('restock_notification_settings')
         .select('notification_email')
         .eq('user_id', pharmacistId)
-        .single();
+        .maybeSingle();
 
-      const target = settings?.notification_email || process.env.RESTOCK_NOTIFICATION_EMAIL;
+      const target = settings?.notification_email;
       if (target) {
         await sendRestockRequestEmailNotification(target, requestData, input.items);
       }
@@ -712,7 +713,7 @@ export async function getRestockNotificationSettings(
 
 export async function upsertRestockNotificationSettings(
   userId: string,
-  notificationEmail: string
+  input: UpdateRestockNotificationSettingsInput
 ): Promise<{ data: RestockNotificationSettings | null; error: string | null }> {
   try {
     const supabase = getServiceRoleClient();
@@ -720,7 +721,11 @@ export async function upsertRestockNotificationSettings(
       .from('restock_notification_settings')
       .upsert({
         user_id: userId,
-        notification_email: notificationEmail || null,
+        notification_email: input.notification_email || null,
+        whatsapp_notifications_enabled: input.whatsapp_notifications_enabled,
+        sms_notifications_enabled: input.sms_notifications_enabled,
+        app_toast_notifications_enabled: input.app_toast_notifications_enabled,
+        push_notifications_enabled: input.push_notifications_enabled,
       }, { onConflict: 'user_id' })
       .select('*')
       .single();
