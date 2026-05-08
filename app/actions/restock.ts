@@ -360,7 +360,7 @@ export async function createRestockRequest(
           request_number: requestNumber,
           supplier_id: input.supplier_id,
           pharmacist_id: pharmacistId,
-          status: 'pending',
+          status: 'requested',
           total_amount: totalAmount,
           expected_delivery_date: input.expected_delivery_date,
         },
@@ -405,6 +405,8 @@ export async function createRestockRequest(
     } catch (notificationError) {
       console.error('Failed to send restock email notification', notificationError);
     }
+
+    await attachRequestToOpenPurchaseOrder(supabase, requestData.id, input.supplier_id);
 
     // Fetch complete request with items
     const { data, error } = await supabase
@@ -588,7 +590,7 @@ export async function rejectRestockRequest(
 
 export async function updateRestockRequestStatus(
   requestId: string,
-  status: 'pending' | 'approved' | 'rejected' | 'submitted' | 'received' | 'cancelled',
+  status: 'requested' | 'linked_to_po' | 'received' | 'cancelled',
   updatedBy: string,
   notes?: string
 ): Promise<{ data: RestockRequest | null; error: string | null }> {
@@ -689,6 +691,307 @@ export async function getRestockHistory(
     return { data, error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch restock history' };
+  }
+}
+
+
+// ============================================================================
+// REORDER SCHEDULE + PURCHASE ORDER OPERATIONS
+// ============================================================================
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function toDateOnly(date: Date) {
+  return date.toISOString().split('T')[0];
+}
+
+function parseDateOnly(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export async function getUpcomingReorders(): Promise<{ data: import('@/lib/types/restock').UpcomingReorder[] | null; error: string | null }> {
+  try {
+    const { data: suppliers, error } = await getSuppliers();
+    if (error) return { data: null, error };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const data = (suppliers || []).map((supplier) => {
+      let next: string | null = null;
+      let label = 'No schedule set';
+      const scheduleType = supplier.reorder_schedule_type;
+      const customDates = supplier.reorder_schedule_custom_dates || [];
+
+      if (scheduleType === 'weekly' || scheduleType === 'bi_weekly' || scheduleType === 'monthly') {
+        const interval = scheduleType === 'weekly' ? 7 : scheduleType === 'bi_weekly' ? 14 : 30;
+        let cursor = parseDateOnly(supplier.reorder_schedule_start_date) || today;
+        while (cursor < today) cursor = addDays(cursor, interval);
+        next = toDateOnly(cursor);
+        label = scheduleType === 'weekly' ? 'Weekly' : scheduleType === 'bi_weekly' ? 'Bi-weekly' : 'Monthly';
+      } else if (scheduleType === 'custom') {
+        const sorted = customDates.filter(Boolean).sort();
+        next = sorted.find((date) => (parseDateOnly(date) || today) >= today) || null;
+        if (!next && supplier.reorder_schedule_is_recurring && sorted.length > 0) {
+          const first = parseDateOnly(sorted[0]);
+          if (first) next = toDateOnly(new Date(today.getFullYear() + 1, first.getMonth(), first.getDate()));
+        }
+        label = supplier.reorder_schedule_is_recurring ? 'Custom recurring dates' : 'Custom dates';
+      }
+
+      return { supplier, next_reorder_date: next, schedule_label: label };
+    });
+
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to calculate upcoming reorders' };
+  }
+}
+
+export async function getPurchaseOrders(status?: string): Promise<{ data: import('@/lib/types/restock').PurchaseOrder[] | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    let query = supabase.from('purchase_orders').select(`
+      *,
+      supplier:suppliers(*),
+      items:purchase_order_items(*)
+    `);
+
+    if (status) query = query.eq('status', status);
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) return { data: null, error: error.message };
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch purchase orders' };
+  }
+}
+
+export async function getPurchaseOrderById(poId: string): Promise<{ data: import('@/lib/types/restock').PurchaseOrder | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const { data, error } = await supabase.from('purchase_orders').select(`
+      *,
+      supplier:suppliers(*),
+      items:purchase_order_items(*)
+    `).eq('id', poId).single();
+    if (error) return { data: null, error: error.message };
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch purchase order' };
+  }
+}
+
+async function attachRequestToOpenPurchaseOrder(supabase: ReturnType<typeof getServiceRoleClient>, requestId: string, supplierId: string) {
+  const { data: purchaseOrder } = await supabase
+    .from('purchase_orders')
+    .select('*')
+    .eq('supplier_id', supplierId)
+    .eq('status', 'open')
+    .order('reorder_date', { ascending: true })
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (!purchaseOrder) return;
+
+  const { data: items, error: itemsError } = await supabase
+    .from('restock_items')
+    .select('*')
+    .eq('restock_request_id', requestId);
+  if (itemsError || !items?.length) return;
+
+  const poItems = items.map((item) => ({
+    purchase_order_id: purchaseOrder.id,
+    restock_request_id: requestId,
+    restock_item_id: item.id,
+    product_id: item.product_id,
+    product_type: item.product_type,
+    product_name: item.product_name,
+    quantity_ordered: item.quantity_requested,
+    quantity_received: 0,
+    unit_price: item.unit_price,
+    total_price: item.total_price,
+    notes: item.notes,
+  }));
+
+  const { data: inserted } = await supabase.from('purchase_order_items').insert(poItems).select('id, restock_item_id');
+  if (inserted?.length) {
+    for (const insertedItem of inserted) {
+      await supabase
+        .from('restock_items')
+        .update({ purchase_order_item_id: insertedItem.id })
+        .eq('id', insertedItem.restock_item_id);
+    }
+  }
+
+  const addedTotal = items.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
+  await supabase
+    .from('purchase_orders')
+    .update({ total_amount: Number(purchaseOrder.total_amount || 0) + addedTotal, updated_at: new Date().toISOString() })
+    .eq('id', purchaseOrder.id);
+
+  await supabase
+    .from('restock_requests')
+    .update({ purchase_order_id: purchaseOrder.id, status: 'linked_to_po', updated_at: new Date().toISOString() })
+    .eq('id', requestId);
+}
+
+export async function createPurchaseOrder(
+  createdBy: string,
+  input: import('@/lib/types/restock').CreatePurchaseOrderInput
+): Promise<{ data: import('@/lib/types/restock').PurchaseOrder | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const poNumber = `PO-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+    const { data: requests, error: requestsError } = await supabase
+      .from('restock_requests')
+      .select('*, items:restock_items(*)')
+      .eq('supplier_id', input.supplier_id)
+      .in('status', ['requested'])
+      .is('purchase_order_id', null)
+      .order('created_at', { ascending: true });
+
+    if (requestsError) return { data: null, error: requestsError.message };
+
+    const totalAmount = (requests || []).reduce(
+      (sum, request) => sum + Number(request.total_amount || 0),
+      0
+    );
+
+    const { data: po, error: poError } = await supabase
+      .from('purchase_orders')
+      .insert({
+        po_number: poNumber,
+        supplier_id: input.supplier_id,
+        created_by: createdBy,
+        status: 'open',
+        reorder_date: input.reorder_date,
+        is_custom_reorder_date: input.is_custom_reorder_date || false,
+        total_amount: totalAmount,
+        notes: input.notes,
+      })
+      .select()
+      .single();
+
+    if (poError) return { data: null, error: poError.message };
+
+    const poItems = (requests || []).flatMap((request) =>
+      (request.items || []).map((item: any) => ({
+        purchase_order_id: po.id,
+        restock_request_id: request.id,
+        restock_item_id: item.id,
+        product_id: item.product_id,
+        product_type: item.product_type,
+        product_name: item.product_name,
+        quantity_ordered: item.quantity_requested,
+        quantity_received: 0,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        notes: item.notes,
+      }))
+    );
+
+    if (poItems.length > 0) {
+      const { data: insertedItems, error: itemsError } = await supabase
+        .from('purchase_order_items')
+        .insert(poItems)
+        .select('id, restock_item_id');
+
+      if (itemsError) {
+        await supabase.from('purchase_orders').delete().eq('id', po.id);
+        return { data: null, error: itemsError.message };
+      }
+
+      for (const insertedItem of insertedItems || []) {
+        await supabase
+          .from('restock_items')
+          .update({ purchase_order_item_id: insertedItem.id })
+          .eq('id', insertedItem.restock_item_id);
+      }
+    }
+
+    const requestIds = (requests || []).map((request) => request.id);
+    if (requestIds.length > 0) {
+      await supabase
+        .from('restock_requests')
+        .update({ purchase_order_id: po.id, status: 'linked_to_po', updated_at: new Date().toISOString() })
+        .in('id', requestIds);
+    }
+
+    return getPurchaseOrderById(po.id);
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to create purchase order' };
+  }
+}
+
+export async function updatePurchaseOrderStatus(
+  purchaseOrderId: string,
+  status: 'open' | 'received' | 'cancelled',
+  itemUpdates?: { itemId: string; quantity_received: number }[]
+): Promise<{ data: import('@/lib/types/restock').PurchaseOrder | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+
+    for (const update of itemUpdates || []) {
+      await supabase
+        .from('purchase_order_items')
+        .update({ quantity_received: update.quantity_received, updated_at: new Date().toISOString() })
+        .eq('id', update.itemId);
+    }
+
+    const updates: Record<string, any> = { status, updated_at: new Date().toISOString() };
+    if (status === 'received') updates.received_at = new Date().toISOString();
+    if (status === 'cancelled') updates.cancelled_at = new Date().toISOString();
+
+    const { error: updateError } = await supabase.from('purchase_orders').update(updates).eq('id', purchaseOrderId);
+    if (updateError) return { data: null, error: updateError.message };
+
+    const { data: poItems } = await supabase
+      .from('purchase_order_items')
+      .select('*')
+      .eq('purchase_order_id', purchaseOrderId);
+
+    if (status === 'received') {
+      for (const item of poItems || []) {
+        await supabase
+          .from('restock_items')
+          .update({ quantity_received: item.quantity_received, updated_at: new Date().toISOString() })
+          .eq('id', item.restock_item_id);
+      }
+
+      const requestIds = Array.from(new Set((poItems || []).map((item) => item.restock_request_id).filter(Boolean)));
+      if (requestIds.length > 0) {
+        await supabase
+          .from('restock_requests')
+          .update({ status: 'received', actual_delivery_date: toDateOnly(new Date()), updated_at: new Date().toISOString() })
+          .in('id', requestIds);
+      }
+    }
+
+    if (status === 'cancelled') {
+      const requestIds = Array.from(new Set((poItems || []).map((item) => item.restock_request_id).filter(Boolean)));
+      if (requestIds.length > 0) {
+        await supabase
+          .from('restock_requests')
+          .update({ status: 'requested', purchase_order_id: null, updated_at: new Date().toISOString() })
+          .in('id', requestIds);
+      }
+      await supabase.from('restock_items').update({ purchase_order_item_id: null }).in(
+        'id',
+        (poItems || []).map((item) => item.restock_item_id).filter(Boolean)
+      );
+    }
+
+    return getPurchaseOrderById(purchaseOrderId);
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to update purchase order' };
   }
 }
 

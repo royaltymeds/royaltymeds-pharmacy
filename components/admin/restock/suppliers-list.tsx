@@ -40,6 +40,11 @@ export function SuppliersList() {
     payment_terms: '',
     lead_time_days: 3,
     minimum_order_amount: 0,
+    reorder_schedule_type: '',
+    reorder_schedule_start_date: '',
+    reorder_schedule_custom_dates: [],
+    reorder_schedule_is_recurring: false,
+    reorder_schedule_notes: '',
     notes: '',
   });
 
@@ -175,6 +180,11 @@ export function SuppliersList() {
       payment_terms: supplier.payment_terms || '',
       lead_time_days: supplier.lead_time_days,
       minimum_order_amount: supplier.minimum_order_amount,
+      reorder_schedule_type: supplier.reorder_schedule_type || '',
+      reorder_schedule_start_date: supplier.reorder_schedule_start_date || '',
+      reorder_schedule_custom_dates: supplier.reorder_schedule_custom_dates || [],
+      reorder_schedule_is_recurring: supplier.reorder_schedule_is_recurring || false,
+      reorder_schedule_notes: supplier.reorder_schedule_notes || '',
       notes: supplier.notes || '',
     });
     setEditingId(supplier.id);
@@ -388,6 +398,20 @@ export function SuppliersList() {
                 </div>
               </div>
 
+              <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-900">
+                <p className="font-semibold uppercase tracking-wide text-blue-700">Re-order Schedule</p>
+                {supplier.reorder_schedule_type ? (
+                  <p className="mt-1">
+                    {supplier.reorder_schedule_type.replace('_', '-')}
+                    {supplier.reorder_schedule_start_date ? ` starting ${new Date(`${supplier.reorder_schedule_start_date}T00:00:00`).toLocaleDateString()}` : ''}
+                    {supplier.reorder_schedule_custom_dates?.length ? ` · ${supplier.reorder_schedule_custom_dates.length} custom date(s)` : ''}
+                    {supplier.reorder_schedule_is_recurring ? ' · recurring' : ''}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-blue-700">No schedule configured</p>
+                )}
+              </div>
+
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Linked Restock Items</p>
@@ -566,6 +590,77 @@ export function SuppliersList() {
                     onChange={(e) => setFormData({ ...formData, minimum_order_amount: parseFloat(e.target.value) || 0 })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
                   />
+                </div>
+
+                <div className="col-span-2 border-t border-gray-200 pt-4">
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">Supplier Re-order Schedule</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Type</label>
+                      <select
+                        value={formData.reorder_schedule_type || ''}
+                        onChange={(e) => setFormData({ ...formData, reorder_schedule_type: e.target.value as CreateSupplierInput['reorder_schedule_type'] })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                      >
+                        <option value="">No schedule</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="bi_weekly">Bi-weekly (every two weeks)</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="custom">Custom dates</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Start / Next Date</label>
+                      <input
+                        type="date"
+                        value={formData.reorder_schedule_start_date || ''}
+                        onChange={(e) => setFormData({ ...formData, reorder_schedule_start_date: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Custom Dates</label>
+                      <input
+                        type="text"
+                        value={(formData.reorder_schedule_custom_dates || []).join(', ')}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            reorder_schedule_custom_dates: e.target.value
+                              .split(',')
+                              .map((date) => date.trim())
+                              .filter(Boolean),
+                          })
+                        }
+                        placeholder="YYYY-MM-DD, YYYY-MM-DD"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Use this for custom schedules. Separate multiple selected dates with commas.</p>
+                    </div>
+
+                    <label className="col-span-2 flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={!!formData.reorder_schedule_is_recurring}
+                        onChange={(e) => setFormData({ ...formData, reorder_schedule_is_recurring: e.target.checked })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-600"
+                      />
+                      Make custom dates recurring annually
+                    </label>
+
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Notes</label>
+                      <input
+                        type="text"
+                        value={formData.reorder_schedule_notes || ''}
+                        onChange={(e) => setFormData({ ...formData, reorder_schedule_notes: e.target.value })}
+                        placeholder="e.g., Call supplier one week before monthly order"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="col-span-2">

@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import Link from 'next/link';
-import { Plus, Package, AlertCircle } from 'lucide-react';
+import { Plus, Package, ClipboardList } from 'lucide-react';
 import { RestockDashboard } from '@/components/admin/restock/restock-dashboard';
-import { RestockRequestsList } from '@/components/admin/restock/restock-requests-list';
+import { RestockWorkflowTabs } from '@/components/admin/restock/restock-workflow-tabs';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,19 +20,18 @@ async function getAuthUser() {
 }
 
 export default async function RestockPage() {
-  await getAuthUser();
+  const user = await getAuthUser();
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Restock Management</h1>
           <p className="text-gray-600 mt-2">
-            Manage suppliers and submit restock orders for inventory replenishment
+            Manage supplier request queues, scheduled re-orders, purchase orders, and receiving in one connected workflow.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Link
             href="/admin/restock/suppliers"
             className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
@@ -47,25 +46,28 @@ export default async function RestockPage() {
             <Plus className="w-4 h-4" />
             New Restock Order
           </Link>
+          <a
+            href="#purchase-order-workflow"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+          >
+            <ClipboardList className="w-4 h-4" />
+            Purchase Order
+          </a>
         </div>
       </div>
 
-      {/* Dashboard Stats */}
       <RestockDashboard />
 
-      {/* Pending Requests Alert */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-        <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <div>
-          <h3 className="font-semibold text-blue-900">Pending Approval</h3>
-          <p className="text-sm text-blue-700">
-            Check the list below for restock orders awaiting approval
-          </p>
-        </div>
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <h3 className="font-semibold text-blue-900">Purchase-order driven workflow</h3>
+        <p className="mt-1 text-sm text-blue-700">
+          Restock requests no longer require approval. Requests queue under each supplier, are added to open supplier purchase orders automatically, and are received from the purchase order.
+        </p>
       </div>
 
-      {/* Restock Requests List */}
-      <RestockRequestsList />
+      <div id="purchase-order-workflow">
+        <RestockWorkflowTabs userId={user.id} />
+      </div>
     </div>
   );
 }

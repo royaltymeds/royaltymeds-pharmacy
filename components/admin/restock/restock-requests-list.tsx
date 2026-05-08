@@ -51,22 +51,19 @@ export function RestockRequestsList() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, { bg: string; text: string; border: string }> = {
-      pending: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
-      approved: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-      rejected: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
-      submitted: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+      requested: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
+      linked_to_po: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
       received: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
       cancelled: { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
     };
-    return colors[status] || colors.pending;
+    return colors[status] || colors.requested;
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'linked_to_po':
       case 'received':
         return <CheckCircle className="w-4 h-4" />;
-      case 'rejected':
       case 'cancelled':
         return <XCircle className="w-4 h-4" />;
       default:
@@ -87,11 +84,10 @@ export function RestockRequestsList() {
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
             >
               <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="submitted">Submitted</option>
+              <option value="requested">Requested</option>
+              <option value="linked_to_po">Linked to PO</option>
               <option value="received">Received</option>
-              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
             </select>
           </div>
         </div>
@@ -131,7 +127,7 @@ export function RestockRequestsList() {
                         </h3>
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${colors.bg} ${colors.text} ${colors.border}`}>
                           {getStatusIcon(request.status)}
-                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                          {request.status.replace(/_/g, ' ').replace(/^./, (char) => char.toUpperCase())}
                         </span>
                       </div>
 
