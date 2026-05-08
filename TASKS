@@ -1,0 +1,10 @@
+1. We are going to refactor the restock management workflow:
+- we should be able to add a re-order schedule for each supplier from the manage suppliers page, the schedule should be able to be set for weekly, bi-weekly (every two weeks), monthly or custom (select dates and option to make custom recurring)
+- Restpck orders submitted no longer need approval, so the workflow that requires approval is no longer needed
+- The restock management page should show restock requests categorized by suppliers, all restock requests for a supplier should be listed under that supplier, the restock management page should have two tabs, one that shows the list of current restock requests listed under their supplier (so a section per supplier) and another tab that shows upcoming scheduled re-orders (it should show the next upcoming re-order scheduled for each supplier with supplier details)
+- from the section above the tabs where we have manage suppliers and the new restock order button, we should have a purchase order button, this should allow us to generate a purchase order for a supplier for the next upcoming re-order date scheduled (or for a custom re-order date), the items on the purchase order should be the items from current order requests under that supplier
+- the restock management page should have a third tab for purchase orders, where current purchase orders can be viewed and managed
+- when a restock order request is submitted and their is a purchase order open for the supplier, it should be automatically added to the purchase order
+- item/order receival should be done from the purchase order (so change the current workflow completely)
+- a purchase order should be in open status until either cancelled or received
+- the workflow should be fluid and connected, all of the pieces should be tied together so we do not have a broken and disconnected workflow
