@@ -22,8 +22,8 @@ export function RestockDashboard() {
     setLoading(false);
   };
 
-  const pending = requests.filter((r) => r.status === 'pending').length;
-  const approved = requests.filter((r) => r.status === 'approved').length;
+  const requested = requests.filter((r) => r.status === 'requested').length;
+  const linkedToPo = requests.filter((r) => r.status === 'linked_to_po').length;
   const received = requests.filter((r) => r.status === 'received').length;
 
   const statCards = [
@@ -34,14 +34,14 @@ export function RestockDashboard() {
       color: 'green',
     },
     {
-      title: 'Pending Approval',
-      value: pending,
+      title: 'Supplier Queue',
+      value: requested,
       icon: Clock,
       color: 'yellow',
     },
     {
-      title: 'Approved',
-      value: approved,
+      title: 'Linked to PO',
+      value: linkedToPo,
       icon: CheckCircle,
       color: 'blue',
     },
