@@ -145,6 +145,11 @@ export function SuppliersList() {
       payment_terms: '',
       lead_time_days: 3,
       minimum_order_amount: 0,
+      reorder_schedule_type: '',
+      reorder_schedule_start_date: '',
+      reorder_schedule_custom_dates: [],
+      reorder_schedule_is_recurring: false,
+      reorder_schedule_notes: '',
       notes: '',
     });
     setEditingId(null);
@@ -570,10 +575,11 @@ export function SuppliersList() {
                     Lead Time (days)
                   </label>
                   <input
-                    type="number"
-                    min="1"
-                    value={formData.lead_time_days}
-                    onChange={(e) => setFormData({ ...formData, lead_time_days: parseInt(e.target.value) || 3 })}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={Number.isNaN(formData.lead_time_days) ? '' : formData.lead_time_days}
+                    onChange={(e) => setFormData({ ...formData, lead_time_days: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
                   />
                 </div>
@@ -583,11 +589,11 @@ export function SuppliersList() {
                     Minimum Order Amount
                   </label>
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.minimum_order_amount}
-                    onChange={(e) => setFormData({ ...formData, minimum_order_amount: parseFloat(e.target.value) || 0 })}
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    value={Number.isNaN(formData.minimum_order_amount) ? '' : formData.minimum_order_amount}
+                    onChange={(e) => setFormData({ ...formData, minimum_order_amount: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
                   />
                 </div>
@@ -803,12 +809,12 @@ export function SuppliersList() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unit Price *</label>
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={productFormData.supplier_unit_price}
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    value={Number.isNaN(productFormData.supplier_unit_price) ? '' : productFormData.supplier_unit_price}
                     onChange={(e) =>
-                      setProductFormData({ ...productFormData, supplier_unit_price: parseFloat(e.target.value) || 0 })
+                      setProductFormData({ ...productFormData, supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })
                     }
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
@@ -819,11 +825,12 @@ export function SuppliersList() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Quantity</label>
                 <input
-                  type="number"
-                  min="1"
-                  value={productFormData.minimum_order_quantity}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={Number.isNaN(productFormData.minimum_order_quantity) ? '' : productFormData.minimum_order_quantity}
                   onChange={(e) =>
-                    setProductFormData({ ...productFormData, minimum_order_quantity: parseInt(e.target.value) || 1 })
+                    setProductFormData({ ...productFormData, minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
                 />
