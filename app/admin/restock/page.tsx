@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import Link from 'next/link';
-import { Plus, Package, ClipboardList } from 'lucide-react';
+import { Plus, Package } from 'lucide-react';
 import { RestockDashboard } from '@/components/admin/restock/restock-dashboard';
 import { RestockWorkflowTabs } from '@/components/admin/restock/restock-workflow-tabs';
 
@@ -46,13 +46,6 @@ export default async function RestockPage() {
             <Plus className="w-4 h-4" />
             New Restock Order
           </Link>
-          <a
-            href="#purchase-order-workflow"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
-          >
-            <ClipboardList className="w-4 h-4" />
-            Purchase Order
-          </a>
         </div>
       </div>
 
