@@ -1,3 +1,16 @@
 1. in the restock workflow, when a supplier is created, initially even when you add a re-order schedule it doesn't actually get updated to the database, it only successfully updates when you afterward edit and update the supplier
 
 2. all of the numerical input fields in the restock pages and components are of a type that is not user friendly, it's the type that lets you increase or decrease the value with the arrow keys, however that is not the type that we want, that type makes it difficult to change the value and difficult to delete a single digit, change all of them to a more input friendly type and we don't need to use the arrow keys to increase or decrease the values
+
+3. [{
+	"resource": "/c:/webapps/royaltymeds_prescript/tsconfig.json",
+	"owner": "typescript",
+	"severity": 8,
+	"message": "Option 'baseUrl' is deprecated and will stop functioning in TypeScript 7.0. Specify compilerOption '\"ignoreDeprecations\": \"6.0\"' to silence this error.\n  Visit https://aka.ms/ts6 for migration information.",
+	"source": "ts",
+	"startLineNumber": 27,
+	"startColumn": 5,
+	"endLineNumber": 27,
+	"endColumn": 14,
+	"origin": "extHost1"
+}]
