@@ -1,4 +1,6 @@
 -- Replace restock WhatsApp notification configuration with email notification configuration.
+-- Keep this as the only 20260506000000 migration; a duplicate timestamp will
+-- violate supabase_migrations.schema_migrations_pkey during db push.
 ALTER TABLE public.restock_notification_settings
   ADD COLUMN IF NOT EXISTS notification_email text;
 
