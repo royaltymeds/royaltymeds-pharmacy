@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import Link from 'next/link';
 import { Plus, Package } from 'lucide-react';
-import { RestockDashboard } from '@/components/admin/restock/restock-dashboard';
+/*import { RestockDashboard } from '@/components/admin/restock/restock-dashboard';*/
 import { RestockWorkflowTabs } from '@/components/admin/restock/restock-workflow-tabs';
 
 export const dynamic = 'force-dynamic';
@@ -49,7 +49,7 @@ export default async function RestockPage() {
         </div>
       </div>
 
-      <RestockDashboard />
+      {/* <RestockDashboard /> */}
 
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <h3 className="font-semibold text-blue-900">Purchase-order driven workflow</h3>
