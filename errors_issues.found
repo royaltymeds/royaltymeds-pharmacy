@@ -1,1 +1,5 @@
 1. on the upcoming scheduled re-orders tab in the restock page, when the generate purchase order button is clicked and the modal for generating the PO is opened, the modal should have the distributor selected from the card it was clicked from and it should not be able to be changed it should have the date from the next scheduled reorder and it should not be able to be changed (so both those fields should be disabled)
+
+2. if a purchase order has been created for an upcoming scheduled re-order, the 'generate purchase order' button on that card should change to 'view purchase order', also the generate PO button in the current request tab for that distributor should be updated to View PO (this is in line with the fact that once there is a linked PO for next upcoming order requests added to that supplier should be automatically added to that PO)
+
+3. when a purchase order is linked to re-order request, the status on the current requests page is being duplicated on the request cards
