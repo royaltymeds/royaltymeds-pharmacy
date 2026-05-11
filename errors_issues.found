@@ -2,7 +2,7 @@
 
 2. if a purchase order has been created for an upcoming scheduled re-order, the 'generate purchase order' button on that card should change to 'view purchase order', also the generate PO button in the current request tab for that distributor should be updated to View PO (this is in line with the fact that once there is a linked PO for next upcoming order requests added to that supplier should be automatically added to that PO)
 
-3. when a purchase order is linked to re-order request, the status on the current requests page is being duplicated on the request cards, the second status badge shouldn't be on the request cards it should be next to the distributor name instead if there is a link to PO for the next upcoming order
+3. when a purchase order is linked to re-order request, the status on the current requests page is being duplicated on the request cards, the second status badge shouldn't be on the request cards it should be next to the distributor name instead if there is a link to PO for the next upcoming
 
 4. purchase order receival needs to be more comprehensive, including but not limited to the ability to mark line items are received or not received
 
