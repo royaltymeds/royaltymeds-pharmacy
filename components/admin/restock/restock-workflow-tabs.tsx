@@ -191,7 +191,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     setActionLoading(true);
     const itemUpdates = receiveItems.map((item) => ({
       itemId: item.itemId,
-      quantity_received: item.received ? item.quantityReceived : 0,
+      quantity_received: item.received ? Math.min(item.quantityOrdered, Math.max(0, Number.isFinite(item.quantityReceived) ? item.quantityReceived : 0)) : 0,
     }));
     const { error: receiveError } = await updatePurchaseOrderStatus(receivingPurchaseOrder.id, 'received', itemUpdates);
     if (receiveError) {
@@ -516,16 +516,24 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                   <div className="mt-3">
                     <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Quantity received</label>
                     <input
-                      type="number"
-                      min={0}
-                      max={item.quantityOrdered}
-                      value={item.quantityReceived}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={Number.isNaN(item.quantityReceived) ? '' : item.quantityReceived}
                       disabled={!item.received}
-                      onChange={(event) => setReceiveItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? {
-                        ...currentItem,
-                        quantityReceived: Math.min(currentItem.quantityOrdered, Math.max(0, Number(event.target.value || 0))),
-                        received: Number(event.target.value || 0) > 0,
-                      } : currentItem))}
+                      onChange={(event) => setReceiveItems((current) => current.map((currentItem, itemIndex) => {
+                        if (itemIndex !== index) return currentItem;
+
+                        const quantityReceived = event.target.value === ''
+                          ? Number.NaN
+                          : Math.min(currentItem.quantityOrdered, Math.max(0, Number(event.target.value)));
+
+                        return {
+                          ...currentItem,
+                          quantityReceived,
+                          received: Number.isFinite(quantityReceived) && quantityReceived > 0,
+                        };
+                      }))}
                       className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                     />
                   </div>

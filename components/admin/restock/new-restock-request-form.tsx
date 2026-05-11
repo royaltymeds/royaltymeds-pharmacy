@@ -131,6 +131,11 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
       return;
     }
 
+    if (items.some((item) => !Number.isFinite(item.quantity_requested) || item.quantity_requested < 1)) {
+      setError('Please enter a quantity of at least 1 for every item');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -285,10 +290,11 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
                 <div className="w-32">
                   <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
                   <input
-                    type="number"
-                    min="1"
-                    value={isNaN(item.quantity_requested) ? '' : item.quantity_requested}
-                    onChange={(e) => updateItemQuantity(item.temporary_id!, parseInt(e.target.value) || 1)}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={Number.isNaN(item.quantity_requested) ? '' : item.quantity_requested}
+                    onChange={(e) => updateItemQuantity(item.temporary_id!, e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10))}
                     className="w-full px-2 py-2 border border-gray-300 rounded text-sm"
                   />
                 </div>
