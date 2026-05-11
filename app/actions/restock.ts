@@ -705,6 +705,26 @@ function addDays(date: Date, days: number) {
   return next;
 }
 
+function addCalendarMonths(date: Date, monthOffset: number) {
+  const targetYear = date.getFullYear();
+  const targetMonth = date.getMonth() + monthOffset;
+  const lastDayOfTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+  return new Date(targetYear, targetMonth, Math.min(date.getDate(), lastDayOfTargetMonth));
+}
+
+function getNextMonthlyReorderDate(startDate: Date, today: Date) {
+  const monthDifference = (today.getFullYear() - startDate.getFullYear()) * 12 + today.getMonth() - startDate.getMonth();
+  let monthOffset = Math.max(0, monthDifference);
+  let candidate = addCalendarMonths(startDate, monthOffset);
+
+  if (candidate < today) {
+    monthOffset += 1;
+    candidate = addCalendarMonths(startDate, monthOffset);
+  }
+
+  return candidate;
+}
+
 function toDateOnly(date: Date) {
   return date.toISOString().split('T')[0];
 }
@@ -730,9 +750,13 @@ export async function getUpcomingReorders(): Promise<{ data: import('@/lib/types
       const customDates = supplier.reorder_schedule_custom_dates || [];
 
       if (scheduleType === 'weekly' || scheduleType === 'bi_weekly' || scheduleType === 'monthly') {
-        const interval = scheduleType === 'weekly' ? 7 : scheduleType === 'bi_weekly' ? 14 : 30;
         let cursor = parseDateOnly(supplier.reorder_schedule_start_date) || today;
-        while (cursor < today) cursor = addDays(cursor, interval);
+        if (scheduleType === 'monthly') {
+          cursor = getNextMonthlyReorderDate(cursor, today);
+        } else {
+          const interval = scheduleType === 'weekly' ? 7 : 14;
+          while (cursor < today) cursor = addDays(cursor, interval);
+        }
         next = toDateOnly(cursor);
         label = scheduleType === 'weekly' ? 'Weekly' : scheduleType === 'bi_weekly' ? 'Bi-weekly' : 'Monthly';
       } else if (scheduleType === 'custom') {
@@ -966,12 +990,22 @@ export async function updatePurchaseOrderStatus(
           .eq('id', item.restock_item_id);
       }
 
-      const requestIds = Array.from(new Set((poItems || []).map((item) => item.restock_request_id).filter(Boolean)));
-      if (requestIds.length > 0) {
+      const itemsByRequest = (poItems || []).reduce<Record<string, any[]>>((groups, item) => {
+        if (!item.restock_request_id) return groups;
+        groups[item.restock_request_id] = [...(groups[item.restock_request_id] || []), item];
+        return groups;
+      }, {});
+
+      for (const [requestId, requestItems] of Object.entries(itemsByRequest)) {
+        const anyReceived = requestItems.some((item) => Number(item.quantity_received || 0) > 0);
         await supabase
           .from('restock_requests')
-          .update({ status: 'received', actual_delivery_date: toDateOnly(new Date()), updated_at: new Date().toISOString() })
-          .in('id', requestIds);
+          .update({
+            status: anyReceived ? 'received' : 'cancelled',
+            actual_delivery_date: anyReceived ? toDateOnly(new Date()) : null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', requestId);
       }
     }
 
