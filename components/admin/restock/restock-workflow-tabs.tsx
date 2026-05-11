@@ -272,7 +272,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                           {openPurchaseOrder ? (
                             <button
                               onClick={() => viewPurchaseOrder(openPurchaseOrder)}
-                              className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                              className="rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700"
                             >
                               View PO
                             </button>
@@ -342,7 +342,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                         {openPurchaseOrder ? (
                           <button
                             onClick={() => viewPurchaseOrder(openPurchaseOrder)}
-                            className="mt-4 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                            className="mt-4 w-full rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700"
                           >
                             View Purchase Order
                           </button>
