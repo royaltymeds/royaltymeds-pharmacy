@@ -1,13 +1,59 @@
-1. on the upcoming scheduled re-orders tab in the restock page, when the generate purchase order button is clicked and the modal for generating the PO is opened, the modal should have the distributor selected from the card it was clicked from and it should not be able to be changed it should have the date from the next scheduled reorder and it should not be able to be changed (so both those fields should be disabled)
+# Restock workflow issues found and resolutions
 
-2. if a purchase order has been created for an upcoming scheduled re-order, the 'generate purchase order' button on that card should change to 'view purchase order', also the generate PO button in the current request tab for that distributor should be updated to View PO (this is in line with the fact that once there is a linked PO for next upcoming order requests added to that supplier should be automatically added to that PO)
+Matched against TASKS: Phase 2 (server-side purchase-order linking, receiving, and schedule calculations) and Phase 4 (supplier-grouped requests, upcoming schedules, and purchase-order UI).
 
-3. when a purchase order is linked to re-order request, the status on the current requests page is being duplicated on the request cards, the second status badge shouldn't be on the request cards it should be next to the distributor name instead if there is a link to PO for the next upcoming
+## 1. Scheduled re-order Generate PO modal fields were editable
 
-4. purchase order receival needs to be more comprehensive, including but not limited to the ability to mark line items are received or not received
+**Issue:** On the Upcoming Scheduled Re-orders tab, clicking Generate Purchase Order opened the modal with the supplier and next scheduled re-order date populated, but both fields could still be changed.
 
-5. when a purchase order has been received, order requests linked to it should be marked as received if they were received, and cancelled if they were not received
+**Resolution:** The purchase-order modal now tracks whether it was opened from a supplier/schedule card. When it is opened from a scheduled re-order card or a supplier request queue, the supplier and re-order date are prefilled from that card and rendered as disabled fields. The general Purchase Order button still opens the modal with editable fields for manual PO creation.
 
-6. restock cards status need to used consistent color codes, right now for example current requests tab uses one color for all statuses
+**How to verify:** Open `/admin/restock`, go to Upcoming Scheduled Re-orders, click Generate Purchase Order on a supplier card, and confirm the Supplier and Re-order Date fields match the card and are disabled. Then click the top-level Purchase Order button and confirm those fields remain editable.
 
-7. the monthly restock frequency should not use the 30 day period method since it is intended to be calendar based, we need it to use the same day from each month (date by numbe) not 30 day cycles
+## 2. PO buttons did not switch to View PO after a scheduled PO was created
+
+**Issue:** After creating a purchase order for a supplier's upcoming scheduled re-order, the scheduled card and current request queue could still show Generate PO instead of directing the user to the open PO.
+
+**Resolution:** The workflow tab now derives the currently open purchase order for each supplier. If an open PO exists, the scheduled card shows View Purchase Order and the Current Requests supplier queue shows View PO. Clicking either button switches to the Purchase Orders tab and visually highlights the relevant PO.
+
+**How to verify:** Create a PO from an upcoming scheduled supplier card. Return to Upcoming Scheduled Re-orders and Current Requests for that supplier and confirm the button text is View Purchase Order/View PO. Click the button and confirm the Purchase Orders tab opens with that PO highlighted.
+
+## 3. Linked-to-PO status badge was duplicated on request cards
+
+**Issue:** Request cards in the Current Requests tab showed the normal request status badge and an additional linked-to-PO badge on the individual request card.
+
+**Resolution:** Individual request cards now show only the request status badge. When a supplier has an open linked PO, the linked PO badge is displayed next to the supplier/distributor name at the group header level instead.
+
+**How to verify:** Create or view a supplier queue with requests linked to an open PO. Confirm each request row has a single status badge and that the linked PO indicator appears beside the supplier name.
+
+## 4. PO receiving was all-or-nothing and not comprehensive enough
+
+**Issue:** Receiving a purchase order immediately marked every line item as fully received, with no way to mark individual line items as received or not received.
+
+**Resolution:** The Receive action now opens a receiving modal listing every PO line item. Each line item can be marked received or not received, and received quantities can be adjusted up to the ordered quantity before completing receiving.
+
+**How to verify:** Open `/admin/restock`, go to Purchase Orders, click Receive on an open PO, and confirm the modal lists all line items with a Received checkbox and Quantity received input. Uncheck one item, adjust another quantity, complete receiving, and confirm the PO item quantities reflect those choices.
+
+## 5. Linked requests were always marked received when a PO was received
+
+**Issue:** When a PO was received, every linked restock request was marked received, even if its line items were not received.
+
+**Resolution:** Server-side receiving now copies received quantities back to each linked restock item, groups PO items by restock request, and marks each linked request as received only when at least one of its line items has a received quantity. Requests whose linked line items were not received are marked cancelled.
+
+**How to verify:** Receive a PO containing line items from multiple requests, mark at least one request's line items not received, and complete receiving. Confirm requests with received quantities are marked received and requests with no received quantities are marked cancelled.
+
+## 6. Restock status colors were inconsistent
+
+**Issue:** The Current Requests tab used the same green badge styling for all restock request statuses.
+
+**Resolution:** Restock request statuses now use a shared color map: requested is yellow, linked_to_po is blue, received is green, and cancelled is red. Purchase-order status badges also use consistent status colors.
+
+**How to verify:** View Current Requests with requests in different statuses and confirm their badge colors differ by status. View Purchase Orders and confirm open, received, and cancelled PO badges use blue, green, and red respectively.
+
+## 7. Monthly re-order frequency used 30-day cycles instead of calendar months
+
+**Issue:** Monthly schedule calculation advanced by 30-day intervals, which drifted away from the intended calendar day of month.
+
+**Resolution:** Monthly schedules now calculate the next occurrence by calendar month while preserving the configured start date's day number. For shorter target months, the date clamps to the last day of that month instead of drifting by 30-day increments.
+
+**How to verify:** Configure a supplier with a monthly schedule start date such as `2026-01-15`; the next monthly occurrence should remain on the 15th of the applicable month, not 30 days after the previous occurrence. For a start date like `2026-01-31`, February should resolve to the last day of February and later months should continue from the original day number where possible.
