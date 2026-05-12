@@ -1,0 +1,11 @@
+1. in our restock management system we have a workflow that allows us to add suppliers then link items to suppliers, we want to add a workflow for adding items then linking suppliers to the items with the ability to set a different item price for each supplier (should be integrated into the current workflow and should be a part of the suppliers management page)
+
+2. restock order requests no longer need to account for an expected delivery date, so that aspect needs to be removed.
+
+3. the random numbers used for identifying restock requests and purchase orders should be based on date and time of submission similar to how we do with prescriptions
+
+4. purchase orders need to be able to be edited, when the items on a purchase order is edited the linked re-order request items should be updated as well
+
+5. purchase orders need a workflow update, currently after creation you can only receive orders, but before being able to receive orders we need to be able to place the order first, when the order is placed or being placed we should be able to set an expected delivery date for the order to be delivered (the PO status should reflect when an order is placed and the PO should show the expected delivery date)
+
+6. 
