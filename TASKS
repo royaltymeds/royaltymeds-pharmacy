@@ -8,4 +8,10 @@
 
 5. purchase orders need a workflow update, currently after creation you can only receive orders, but before being able to receive orders we need to be able to place the order first, when the order is placed or being placed we should be able to set an expected delivery date for the order to be delivered (the PO status should reflect when an order is placed and the PO should show the expected delivery date)
 
-6. 
+6. for restock items in the UI change unit price to unit cost
+
+7. in the re-order schedule options add a daily option (currently we have weekly, monthly etc.)
+
+8. we need to indicate that unit cost is per package in most cases, indicate use item descriptions/name to differentiate (add item descriptions to item details)
+
+SOME OF OUR CHANGES MAY REQUIRE BUILDING A MIGRATION FOR UPDATING THE SCHEMA, CURRENT SCHEMA IS REFERENCED IN CURRENT_SCHEMA_REFERENCE.SQL
