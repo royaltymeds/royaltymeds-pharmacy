@@ -12,7 +12,9 @@ import {
   CreateSupplierProductInput,
   RestockNotificationSettings,
   UpdateRestockNotificationSettingsInput,
+  UpdatePurchaseOrderInput,
 } from '@/lib/types/restock';
+import { generateRestockWorkflowNumber } from '@/lib/restock-number';
 
 // Service role client for admin operations (bypass RLS)
 function getServiceRoleClient() {
@@ -100,14 +102,13 @@ async function sendRestockRequestEmailNotification(
         <p>A restock request was submitted and is ready for review.</p>
         <p><strong>Request number:</strong> ${escapeHtml(request.request_number)}</p>
         <p><strong>Total amount:</strong> ${formatCurrency(request.total_amount)}</p>
-        ${request.expected_delivery_date ? `<p><strong>Expected delivery date:</strong> ${escapeHtml(request.expected_delivery_date)}</p>` : ''}
         <table style="border-collapse: collapse; width: 100%; margin-top: 16px;">
           <thead>
             <tr>
               <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: left;">Product</th>
               <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: left;">Type</th>
               <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: right;">Qty</th>
-              <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: right;">Unit price</th>
+              <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: right;">Unit cost</th>
               <th style="padding: 8px; border-bottom: 2px solid #d1d5db; text-align: right;">Line total</th>
             </tr>
           </thead>
@@ -118,8 +119,7 @@ async function sendRestockRequestEmailNotification(
     text: `New Restock Request Submitted
 
 Request number: ${request.request_number}
-Total amount: ${formatCurrency(request.total_amount)}${request.expected_delivery_date ? `
-Expected delivery date: ${request.expected_delivery_date}` : ''}
+Total amount: ${formatCurrency(request.total_amount)}
 
 Items:
 ${textItems}`,
@@ -352,7 +352,7 @@ export async function createRestockRequest(
     const supabase = getServiceRoleClient();
 
     // Generate unique request number
-    const requestNumber = `RR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    const requestNumber = generateRestockWorkflowNumber('RR');
 
     // Calculate total amount
     const totalAmount = input.items.reduce((sum, item) => sum + item.quantity_requested * item.unit_price, 0);
@@ -367,7 +367,6 @@ export async function createRestockRequest(
           pharmacist_id: pharmacistId,
           status: 'requested',
           total_amount: totalAmount,
-          expected_delivery_date: input.expected_delivery_date,
         },
       ])
       .select()
@@ -754,16 +753,17 @@ export async function getUpcomingReorders(): Promise<{ data: import('@/lib/types
       const scheduleType = supplier.reorder_schedule_type;
       const customDates = supplier.reorder_schedule_custom_dates || [];
 
-      if (scheduleType === 'weekly' || scheduleType === 'bi_weekly' || scheduleType === 'monthly') {
+      if (scheduleType === 'daily' || scheduleType === 'weekly' || scheduleType === 'bi_weekly' || scheduleType === 'three_weeks' || scheduleType === 'monthly') {
         let cursor = parseDateOnly(supplier.reorder_schedule_start_date) || today;
         if (scheduleType === 'monthly') {
           cursor = getNextMonthlyReorderDate(cursor, today);
         } else {
-          const interval = scheduleType === 'weekly' ? 7 : 14;
+          const intervalBySchedule = { daily: 1, weekly: 7, bi_weekly: 14, three_weeks: 21 } as const;
+          const interval = intervalBySchedule[scheduleType];
           while (cursor < today) cursor = addDays(cursor, interval);
         }
         next = toDateOnly(cursor);
-        label = scheduleType === 'weekly' ? 'Weekly' : scheduleType === 'bi_weekly' ? 'Bi-weekly' : 'Monthly';
+        label = scheduleType === 'daily' ? 'Daily' : scheduleType === 'weekly' ? 'Weekly' : scheduleType === 'bi_weekly' ? 'Bi-weekly' : scheduleType === 'three_weeks' ? 'Every 3 weeks' : 'Monthly';
       } else if (scheduleType === 'custom') {
         const sorted = customDates.filter(Boolean).sort();
         next = sorted.find((date) => (parseDateOnly(date) || today) >= today) || null;
@@ -877,7 +877,7 @@ export async function createPurchaseOrder(
 ): Promise<{ data: import('@/lib/types/restock').PurchaseOrder | null; error: string | null }> {
   try {
     const supabase = getServiceRoleClient();
-    const poNumber = `PO-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const poNumber = generateRestockWorkflowNumber('PO');
 
     const { data: requests, error: requestsError } = await supabase
       .from('restock_requests')
@@ -960,9 +960,161 @@ export async function createPurchaseOrder(
   }
 }
 
+
+export async function placePurchaseOrder(
+  purchaseOrderId: string,
+  expectedDeliveryDate: string
+): Promise<{ data: import('@/lib/types/restock').PurchaseOrder | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const now = new Date().toISOString();
+
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({
+        status: 'placed',
+        expected_delivery_date: expectedDeliveryDate,
+        placed_at: now,
+        updated_at: now,
+      })
+      .eq('id', purchaseOrderId);
+
+    if (error) return { data: null, error: error.message };
+    return getPurchaseOrderById(purchaseOrderId);
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to place purchase order' };
+  }
+}
+
+export async function updatePurchaseOrder(
+  purchaseOrderId: string,
+  input: UpdatePurchaseOrderInput
+): Promise<{ data: import('@/lib/types/restock').PurchaseOrder | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const now = new Date().toISOString();
+    const totalAmount = input.items.reduce((sum, item) => sum + item.quantity_ordered * item.unit_price, 0);
+
+    const { error: poError } = await supabase
+      .from('purchase_orders')
+      .update({ notes: input.notes, total_amount: totalAmount, updated_at: now })
+      .eq('id', purchaseOrderId);
+    if (poError) return { data: null, error: poError.message };
+
+    const { data: currentItems, error: currentError } = await supabase
+      .from('purchase_order_items')
+      .select('*')
+      .eq('purchase_order_id', purchaseOrderId);
+    if (currentError) return { data: null, error: currentError.message };
+
+    const submittedIds = input.items.map((item) => item.itemId).filter(Boolean) as string[];
+    const removedItems = (currentItems || []).filter((item) => !submittedIds.includes(item.id));
+
+    for (const removedItem of removedItems) {
+      if (removedItem.restock_item_id) {
+        await supabase
+          .from('restock_items')
+          .update({ purchase_order_item_id: null, updated_at: now })
+          .eq('id', removedItem.restock_item_id);
+      }
+      if (removedItem.restock_request_id) {
+        await supabase
+          .from('restock_requests')
+          .update({ purchase_order_id: null, status: 'requested', updated_at: now })
+          .eq('id', removedItem.restock_request_id);
+      }
+    }
+
+    if (removedItems.length > 0) {
+      const removedIds = removedItems.map((item) => item.id);
+      const { error: deleteError } = await supabase.from('purchase_order_items').delete().in('id', removedIds);
+      if (deleteError) return { data: null, error: deleteError.message };
+    }
+
+    for (const item of input.items) {
+      const total_price = item.quantity_ordered * item.unit_price;
+      if (item.itemId) {
+        const { error: updateError } = await supabase
+          .from('purchase_order_items')
+          .update({
+            product_id: item.product_id,
+            product_type: item.product_type,
+            product_name: item.product_name,
+            quantity_ordered: item.quantity_ordered,
+            unit_price: item.unit_price,
+            total_price,
+            notes: item.notes,
+            updated_at: now,
+          })
+          .eq('id', item.itemId);
+        if (updateError) return { data: null, error: updateError.message };
+      } else {
+        const { data: inserted, error: insertError } = await supabase
+          .from('purchase_order_items')
+          .insert({
+            purchase_order_id: purchaseOrderId,
+            restock_request_id: item.restock_request_id,
+            restock_item_id: item.restock_item_id,
+            product_id: item.product_id,
+            product_type: item.product_type,
+            product_name: item.product_name,
+            quantity_ordered: item.quantity_ordered,
+            quantity_received: 0,
+            unit_price: item.unit_price,
+            total_price,
+            notes: item.notes,
+          })
+          .select('id')
+          .single();
+        if (insertError) return { data: null, error: insertError.message };
+        if (inserted?.id && item.restock_item_id) {
+          await supabase
+            .from('restock_items')
+            .update({ purchase_order_item_id: inserted.id, updated_at: now })
+            .eq('id', item.restock_item_id);
+        }
+      }
+
+      if (item.restock_item_id) {
+        const { error: restockItemError } = await supabase
+          .from('restock_items')
+          .update({
+            product_id: item.product_id,
+            product_type: item.product_type,
+            product_name: item.product_name,
+            quantity_requested: item.quantity_ordered,
+            unit_price: item.unit_price,
+            total_price,
+            notes: item.notes,
+            updated_at: now,
+          })
+          .eq('id', item.restock_item_id);
+        if (restockItemError) return { data: null, error: restockItemError.message };
+      }
+    }
+
+    const requestIds = Array.from(new Set(input.items.map((item) => item.restock_request_id).filter(Boolean))) as string[];
+    for (const requestId of requestIds) {
+      const { data: restockItems } = await supabase
+        .from('restock_items')
+        .select('total_price')
+        .eq('restock_request_id', requestId);
+      const requestTotal = (restockItems || []).reduce((sum, item) => sum + Number(item.total_price || 0), 0);
+      await supabase
+        .from('restock_requests')
+        .update({ purchase_order_id: purchaseOrderId, status: 'linked_to_po', total_amount: requestTotal, updated_at: now })
+        .eq('id', requestId);
+    }
+
+    return getPurchaseOrderById(purchaseOrderId);
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to update purchase order' };
+  }
+}
+
 export async function updatePurchaseOrderStatus(
   purchaseOrderId: string,
-  status: 'open' | 'received' | 'cancelled',
+  status: 'open' | 'placed' | 'received' | 'cancelled',
   itemUpdates?: { itemId: string; quantity_received: number }[]
 ): Promise<{ data: import('@/lib/types/restock').PurchaseOrder | null; error: string | null }> {
   try {
@@ -976,6 +1128,7 @@ export async function updatePurchaseOrderStatus(
     }
 
     const updates: Record<string, any> = { status, updated_at: new Date().toISOString() };
+    if (status === 'placed') updates.placed_at = new Date().toISOString();
     if (status === 'received') updates.received_at = new Date().toISOString();
     if (status === 'cancelled') updates.cancelled_at = new Date().toISOString();
 

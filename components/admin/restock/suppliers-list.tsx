@@ -29,6 +29,18 @@ export function SuppliersList() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedSupplierForProduct, setSelectedSupplierForProduct] = useState<Supplier | null>(null);
   const [productSource, setProductSource] = useState<'inventory' | 'non_inventory'>('inventory');
+  const [showItemSupplierModal, setShowItemSupplierModal] = useState(false);
+  const [itemSupplierFormData, setItemSupplierFormData] = useState<CreateSupplierProductInput>({
+    supplier_id: '',
+    product_id: '',
+    product_type: 'otc',
+    product_name: '',
+    is_inventory_item: true,
+    supplier_sku: '',
+    supplier_unit_price: 0,
+    minimum_order_quantity: 1,
+    notes: '',
+  });
 
   const [formData, setFormData] = useState<CreateSupplierInput>({
     name: '',
@@ -66,6 +78,11 @@ export function SuppliersList() {
 
   const getProductOptions = (productType: 'otc' | 'prescription') => {
     return productType === 'otc' ? otcDrugs : prescriptionDrugs;
+  };
+
+  const getProductDescription = (productId: string, productType: 'otc' | 'prescription') => {
+    const products = getProductOptions(productType);
+    return products.find((product) => product.id === productId)?.description || '';
   };
 
   const resolveProductName = (productId: string, productType: 'otc' | 'prescription') => {
@@ -243,6 +260,45 @@ export function SuppliersList() {
     setActionLoading(false);
   };
 
+  const handleSubmitItemSupplier = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setActionLoading(true);
+
+    try {
+      const selectedItem = getProductOptions(itemSupplierFormData.product_type).find((item) => item.id === itemSupplierFormData.product_id);
+      const { error } = await createSupplierProduct({
+        ...itemSupplierFormData,
+        product_name: selectedItem?.name || itemSupplierFormData.product_name,
+        is_inventory_item: true,
+      });
+
+      if (error) {
+        setError(error);
+        setActionLoading(false);
+        return;
+      }
+
+      await loadSupplierProductsForSupplier(itemSupplierFormData.supplier_id);
+      setShowItemSupplierModal(false);
+      setItemSupplierFormData({
+        supplier_id: '',
+        product_id: '',
+        product_type: 'otc',
+        product_name: '',
+        is_inventory_item: true,
+        supplier_sku: '',
+        supplier_unit_price: 0,
+        minimum_order_quantity: 1,
+        notes: '',
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to link supplier to item');
+    }
+
+    setActionLoading(false);
+  };
+
   const handleSubmitProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -315,15 +371,24 @@ export function SuppliersList() {
     <div className="bg-white border border-gray-200 rounded-lg">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-gray-900">All Suppliers</h2>
-          <button
-            onClick={handleOpenCreate}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
-          >
-            <Plus className="w-4 h-4" />
-            Add Supplier
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleOpenCreate}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
+            >
+              <Plus className="w-4 h-4" />
+              Add Supplier
+            </button>
+            <button
+              onClick={() => setShowItemSupplierModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+            >
+              <Link2 className="w-4 h-4" />
+              Link Supplier to Item
+            </button>
+          </div>
         </div>
       </div>
 
@@ -447,6 +512,7 @@ export function SuppliersList() {
                             {' · '}
                             ${Number(product.supplier_unit_price).toFixed(2)}
                             {product.supplier_sku ? ` · SKU: ${product.supplier_sku}` : ''}
+                            {getProductDescription(product.product_id, product.product_type) ? ` · ${getProductDescription(product.product_id, product.product_type)}` : ''}
                           </p>
                         </div>
                         <button
@@ -609,8 +675,10 @@ export function SuppliersList() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
                       >
                         <option value="">No schedule</option>
+                        <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
                         <option value="bi_weekly">Bi-weekly (every two weeks)</option>
+                        <option value="three_weeks">Every 3 weeks</option>
                         <option value="monthly">Monthly</option>
                         <option value="custom">Custom dates</option>
                       </select>
@@ -703,6 +771,116 @@ export function SuppliersList() {
         </div>
       )}
 
+
+      {/* Item-first Supplier Link Modal */}
+      {showItemSupplierModal && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Link2 className="w-5 h-5 text-blue-600" />
+                Link Supplier to Item
+              </h2>
+              <button onClick={() => setShowItemSupplierModal(false)} className="p-1 hover:bg-gray-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitItemSupplier} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Item Type *</label>
+                <select
+                  value={itemSupplierFormData.product_type}
+                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: e.target.value as 'otc' | 'prescription', product_id: '', product_name: '' })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  <option value="otc">OTC</option>
+                  <option value="prescription">Prescription</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Item *</label>
+                <select
+                  value={itemSupplierFormData.product_id}
+                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_id: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  <option value="">-- Choose an item --</option>
+                  {getProductOptions(itemSupplierFormData.product_type).map((product) => (
+                    <option key={product.id} value={product.id}>{product.name}</option>
+                  ))}
+                </select>
+                {itemSupplierFormData.product_id && (
+                  <p className="mt-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
+                    {getProductDescription(itemSupplierFormData.product_id, itemSupplierFormData.product_type) || 'No item description saved. Use the item name/description to clarify package size when unit cost is per package.'}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
+                <select
+                  value={itemSupplierFormData.supplier_id}
+                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_id: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  <option value="">-- Choose a supplier --</option>
+                  {suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Supplier SKU</label>
+                  <input
+                    type="text"
+                    value={itemSupplierFormData.supplier_sku}
+                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_sku: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit Cost (usually per package) *</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    value={Number.isNaN(itemSupplierFormData.supplier_unit_price) ? '' : itemSupplierFormData.supplier_unit_price}
+                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Quantity</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={Number.isNaN(itemSupplierFormData.minimum_order_quantity) ? '' : itemSupplierFormData.minimum_order_quantity}
+                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <button type="submit" disabled={actionLoading} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300">
+                  {actionLoading ? 'Linking...' : 'Link Supplier'}
+                </button>
+                <button type="button" onClick={() => setShowItemSupplierModal(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Supplier Product Modal */}
       {showProductModal && selectedSupplierForProduct && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -780,6 +958,11 @@ export function SuppliersList() {
                       </option>
                     ))}
                   </select>
+                  {productFormData.product_id && (
+                    <p className="mt-2 rounded-lg bg-green-50 p-3 text-xs text-green-800">
+                      {getProductDescription(productFormData.product_id, productFormData.product_type) || 'No item description saved. Use item names/descriptions to differentiate package sizes when unit cost is per package.'}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div>
@@ -807,7 +990,7 @@ export function SuppliersList() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit Price *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit Cost (usually per package) *</label>
                   <input
                     type="text"
                     inputMode="decimal"

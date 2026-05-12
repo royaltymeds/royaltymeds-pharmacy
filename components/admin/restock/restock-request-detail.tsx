@@ -90,11 +90,10 @@ export function RestockRequestDetail({ requestId, userId }: RestockRequestDetail
           )}
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
           <InfoCard label="Supplier" value={request.supplier?.name || 'Unknown'} />
           <InfoCard label="Total" value={formatCurrency(request.total_amount)} />
           <InfoCard label="Requested" value={new Date(request.created_at).toLocaleDateString()} />
-          <InfoCard label="Expected Delivery" value={request.expected_delivery_date || 'Not set'} />
         </div>
 
         {request.purchase_order_id && (
@@ -112,13 +111,14 @@ export function RestockRequestDetail({ requestId, userId }: RestockRequestDetail
 
         <div className="overflow-hidden rounded-lg border border-gray-200">
           {(request.items || []).map((item) => (
-            <div key={item.id} className="grid gap-3 border-b border-gray-100 p-4 last:border-b-0 md:grid-cols-5">
+            <div key={item.id} className="grid gap-3 border-b border-gray-100 p-4 last:border-b-0 md:grid-cols-6">
               <div className="md:col-span-2">
                 <p className="font-medium text-gray-900">{item.product_name}</p>
                 <p className="text-xs uppercase text-gray-500">{item.product_type}</p>
               </div>
               <div><p className="text-xs text-gray-500">Requested</p><p className="font-medium text-gray-900">{item.quantity_requested}</p></div>
               <div><p className="text-xs text-gray-500">Received</p><p className="font-medium text-gray-900">{item.quantity_received}</p></div>
+              <div><p className="text-xs text-gray-500">Unit Cost</p><p className="font-medium text-gray-900">{formatCurrency(item.unit_price)}</p></div>
               <div><p className="text-xs text-gray-500">Line Total</p><p className="font-medium text-gray-900">{formatCurrency(item.total_price)}</p></div>
             </div>
           ))}
