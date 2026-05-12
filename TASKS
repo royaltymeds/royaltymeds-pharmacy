@@ -10,7 +10,7 @@
 
 6. for restock items in the UI change unit price to unit cost
 
-7. in the re-order schedule options add a daily option (currently we have weekly, monthly etc.)
+7. in the re-order schedule options add a daily option and an option for every 3 weeks (currently we have weekly, monthly etc.)
 
 8. we need to indicate that unit cost is per package in most cases, indicate use item descriptions/name to differentiate (add item descriptions to item details)
 
