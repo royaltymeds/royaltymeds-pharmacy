@@ -33,7 +33,6 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
   const [items, setItems] = useState<RestockItem[]>([]);
   const [otcDrugs, setOTCDrugs] = useState<OTCDrug[]>([]);
   const [prescriptionDrugs, setPrescriptionDrugs] = useState<PrescriptionDrug[]>([]);
-  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +147,6 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
           quantity_requested: item.quantity_requested,
           unit_price: item.unit_price,
         })),
-        expected_delivery_date: expectedDeliveryDate || undefined,
       });
 
       if (submitError) {
@@ -256,7 +254,7 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
                     </p>
                     <p className="text-xs text-gray-600">
                       {product.supplier_sku ? `SKU: ${product.supplier_sku} | ` : ''}
-                      Min Order: {product.minimum_order_quantity} | Price: ${Number(product.supplier_unit_price).toFixed(2)}/unit
+                      Min Order: {product.minimum_order_quantity} | Unit Cost: ${Number(product.supplier_unit_price).toFixed(2)}/package
                     </p>
                   </div>
                   <button
@@ -300,7 +298,7 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
                 </div>
 
                 <div className="w-32">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Unit Price</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Unit Cost</label>
                   <p className="text-sm font-medium text-gray-900">${Number(item.unit_price).toFixed(2)}</p>
                 </div>
 
@@ -330,26 +328,6 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
                 <p className="text-lg font-semibold text-gray-900">${total.toFixed(2)}</p>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Card: Additional Details */}
-      {items.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Details</h2>
-
-          <div>
-            <label htmlFor="delivery" className="block text-sm font-medium text-gray-700 mb-2">
-              Expected Delivery Date
-            </label>
-            <input
-              id="delivery"
-              type="date"
-              value={expectedDeliveryDate}
-              onChange={(e) => setExpectedDeliveryDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-            />
           </div>
         </div>
       )}

@@ -1,8 +1,8 @@
 // Restock Management Types
 
-export type ReorderScheduleCadence = 'weekly' | 'bi_weekly' | 'monthly' | 'custom';
+export type ReorderScheduleCadence = 'daily' | 'weekly' | 'bi_weekly' | 'three_weeks' | 'monthly' | 'custom';
 export type RestockRequestStatus = 'requested' | 'linked_to_po' | 'received' | 'cancelled';
-export type PurchaseOrderStatus = 'open' | 'received' | 'cancelled';
+export type PurchaseOrderStatus = 'open' | 'placed' | 'received' | 'cancelled';
 
 export interface Supplier {
   id: string;
@@ -81,7 +81,6 @@ export interface RestockRequest {
   status: RestockRequestStatus;
   total_amount?: number;
   requested_at: string;
-  expected_delivery_date?: string;
   actual_delivery_date?: string;
   created_at: string;
   updated_at: string;
@@ -122,6 +121,8 @@ export interface PurchaseOrder {
   is_custom_reorder_date: boolean;
   total_amount: number;
   notes?: string;
+  expected_delivery_date?: string;
+  placed_at?: string;
   received_at?: string;
   cancelled_at?: string;
   created_at: string;
@@ -177,7 +178,6 @@ export interface CreateRestockRequestInput {
     unit_price: number;
     notes?: string;
   }[];
-  expected_delivery_date?: string;
   notes?: string;
 }
 
@@ -220,5 +220,22 @@ export interface CreatePurchaseOrderInput {
   supplier_id: string;
   reorder_date: string;
   is_custom_reorder_date?: boolean;
+  notes?: string;
+}
+
+export interface UpdatePurchaseOrderItemInput {
+  itemId?: string;
+  restock_request_id?: string;
+  restock_item_id?: string;
+  product_id: string;
+  product_type: 'otc' | 'prescription';
+  product_name: string;
+  quantity_ordered: number;
+  unit_price: number;
+  notes?: string;
+}
+
+export interface UpdatePurchaseOrderInput {
+  items: UpdatePurchaseOrderItemInput[];
   notes?: string;
 }

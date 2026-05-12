@@ -5,12 +5,14 @@ import Link from 'next/link';
 import {
   createPurchaseOrder,
   getPurchaseOrders,
+  placePurchaseOrder,
+  updatePurchaseOrder,
   getRestockRequests,
   getUpcomingReorders,
   updatePurchaseOrderStatus,
 } from '@/app/actions/restock';
 import { PurchaseOrder, RestockRequest, UpcomingReorder } from '@/lib/types/restock';
-import { CalendarDays, ChevronRight, ClipboardList, Loader, Package, Truck, XCircle, type LucideIcon } from 'lucide-react';
+import { CalendarDays, ChevronRight, ClipboardList, Edit2, Loader, Package, Send, Truck, XCircle, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface RestockWorkflowTabsProps {
@@ -18,6 +20,18 @@ interface RestockWorkflowTabsProps {
 }
 
 type TabKey = 'requests' | 'schedule' | 'purchase_orders';
+
+type EditFormItem = {
+  itemId?: string;
+  restock_request_id?: string;
+  restock_item_id?: string;
+  product_id: string;
+  product_type: 'otc' | 'prescription';
+  product_name: string;
+  quantity_ordered: number;
+  unit_price: number;
+  notes?: string;
+};
 
 type ReceiveFormItem = {
   itemId: string;
@@ -55,6 +69,8 @@ function getPurchaseOrderStatusClasses(status: PurchaseOrder['status']) {
   switch (status) {
     case 'open':
       return 'border-blue-200 bg-blue-50 text-blue-700';
+    case 'placed':
+      return 'border-purple-200 bg-purple-50 text-purple-700';
     case 'received':
       return 'border-green-200 bg-green-50 text-green-700';
     case 'cancelled':
@@ -76,6 +92,11 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [poForm, setPoForm] = useState({ supplier_id: '', reorder_date: '', is_custom_reorder_date: false, notes: '' });
   const [poFormLocked, setPoFormLocked] = useState(false);
   const [receivingPurchaseOrder, setReceivingPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [placingPurchaseOrder, setPlacingPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
+  const [editingPurchaseOrder, setEditingPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [editItems, setEditItems] = useState<EditFormItem[]>([]);
+  const [editNotes, setEditNotes] = useState('');
   const [receiveItems, setReceiveItems] = useState<ReceiveFormItem[]>([]);
   const [focusedPurchaseOrderId, setFocusedPurchaseOrderId] = useState<string | null>(null);
 
@@ -168,6 +189,61 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       toast.error(cancelError);
     } else {
       toast.success('Purchase order cancelled.');
+      await loadData();
+    }
+    setActionLoading(false);
+  };
+
+  const openPlaceModal = (purchaseOrder: PurchaseOrder) => {
+    setPlacingPurchaseOrder(purchaseOrder);
+    setExpectedDeliveryDate(purchaseOrder.expected_delivery_date || '');
+  };
+
+  const openEditModal = (purchaseOrder: PurchaseOrder) => {
+    setEditingPurchaseOrder(purchaseOrder);
+    setEditNotes(purchaseOrder.notes || '');
+    setEditItems((purchaseOrder.items || []).map((item) => ({
+      itemId: item.id,
+      restock_request_id: item.restock_request_id,
+      restock_item_id: item.restock_item_id,
+      product_id: item.product_id,
+      product_type: item.product_type,
+      product_name: item.product_name,
+      quantity_ordered: item.quantity_ordered,
+      unit_price: item.unit_price,
+      notes: item.notes,
+    })));
+  };
+
+  const handlePlacePurchaseOrder = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!placingPurchaseOrder) return;
+    setActionLoading(true);
+    const { error: placeError } = await placePurchaseOrder(placingPurchaseOrder.id, expectedDeliveryDate);
+    if (placeError) {
+      setError(placeError);
+      toast.error(placeError);
+    } else {
+      toast.success('Purchase order placed with expected delivery date.');
+      setPlacingPurchaseOrder(null);
+      setExpectedDeliveryDate('');
+      await loadData();
+    }
+    setActionLoading(false);
+  };
+
+  const handleEditPurchaseOrder = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editingPurchaseOrder) return;
+    setActionLoading(true);
+    const { error: editError } = await updatePurchaseOrder(editingPurchaseOrder.id, { items: editItems, notes: editNotes });
+    if (editError) {
+      setError(editError);
+      toast.error(editError);
+    } else {
+      toast.success('Purchase order and linked restock request items updated.');
+      setEditingPurchaseOrder(null);
+      setEditItems([]);
       await loadData();
     }
     setActionLoading(false);
@@ -377,18 +453,38 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                             </span>
                           </div>
                           <p className="mt-1 text-sm text-gray-600">
-                            {po.supplier?.name} · Re-order date {formatDate(po.reorder_date)} · {(po.items || []).length} line item(s) · {formatCurrency(po.total_amount)}
+                            {po.supplier?.name} · Re-order date {formatDate(po.reorder_date)} · Expected delivery {formatDate(po.expected_delivery_date)} · {(po.items || []).length} line item(s) · {formatCurrency(po.total_amount)}
                           </p>
                         </div>
-                        {po.status === 'open' && (
+                        {(po.status === 'open' || po.status === 'placed') && (
                           <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => openReceiveModal(po)}
-                              disabled={actionLoading}
-                              className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-gray-300"
-                            >
-                              <Truck className="h-4 w-4" /> Receive
-                            </button>
+                            {po.status === 'open' && (
+                              <>
+                                <button
+                                  onClick={() => openEditModal(po)}
+                                  disabled={actionLoading}
+                                  className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:bg-gray-100"
+                                >
+                                  <Edit2 className="h-4 w-4" /> Edit
+                                </button>
+                                <button
+                                  onClick={() => openPlaceModal(po)}
+                                  disabled={actionLoading}
+                                  className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:bg-gray-300"
+                                >
+                                  <Send className="h-4 w-4" /> Place Order
+                                </button>
+                              </>
+                            )}
+                            {po.status === 'placed' && (
+                              <button
+                                onClick={() => openReceiveModal(po)}
+                                disabled={actionLoading}
+                                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-gray-300"
+                              >
+                                <Truck className="h-4 w-4" /> Receive
+                              </button>
+                            )}
                             <button
                               onClick={() => handleCancelPurchaseOrder(po)}
                               disabled={actionLoading}
@@ -402,9 +498,10 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                       {(po.items || []).length > 0 && (
                         <div className="mt-4 overflow-hidden rounded-lg border border-gray-200">
                           {(po.items || []).map((item) => (
-                            <div key={item.id} className="grid grid-cols-1 gap-2 border-b border-gray-100 p-3 text-sm last:border-b-0 md:grid-cols-4">
+                            <div key={item.id} className="grid grid-cols-1 gap-2 border-b border-gray-100 p-3 text-sm last:border-b-0 md:grid-cols-5">
                               <span className="font-medium text-gray-900">{item.product_name}</span>
                               <span className="text-gray-600">Ordered: {item.quantity_ordered}</span>
+                              <span className="text-gray-600">Unit Cost: {formatCurrency(item.unit_price)}</span>
                               <span className="text-gray-600">Received: {item.quantity_received}</span>
                               <span className="text-gray-900">{formatCurrency(item.total_price)}</span>
                             </div>
@@ -474,6 +571,115 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 {actionLoading ? 'Generating...' : 'Generate PO'}
               </button>
               <button type="button" onClick={() => setShowPoModal(false)} className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+
+      {placingPurchaseOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+          <form onSubmit={handlePlacePurchaseOrder} className="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">Place {placingPurchaseOrder.po_number}</h2>
+              <button type="button" onClick={() => setPlacingPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
+            </div>
+            <p className="mb-4 text-sm text-gray-600">Set the expected delivery date before marking this purchase order as placed.</p>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Expected Delivery Date *</label>
+            <input
+              type="date"
+              value={expectedDeliveryDate}
+              onChange={(event) => setExpectedDeliveryDate(event.target.value)}
+              required
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600"
+            />
+            <div className="mt-6 flex gap-3">
+              <button type="submit" disabled={actionLoading} className="flex-1 rounded-lg bg-purple-600 px-4 py-2 font-semibold text-white hover:bg-purple-700 disabled:bg-gray-300">
+                {actionLoading ? 'Placing...' : 'Place Order'}
+              </button>
+              <button type="button" onClick={() => setPlacingPurchaseOrder(null)} className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {editingPurchaseOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+          <form onSubmit={handleEditPurchaseOrder} className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Edit {editingPurchaseOrder.po_number}</h2>
+                <p className="text-sm text-gray-600">Changes to linked purchase order lines also update the matching restock request items.</p>
+              </div>
+              <button type="button" onClick={() => setEditingPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
+            </div>
+            <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+              {editItems.map((item, index) => (
+                <div key={item.itemId || index} className="rounded-lg border border-gray-200 p-4">
+                  <div className="grid gap-3 md:grid-cols-4">
+                    <div className="md:col-span-2">
+                      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Item Name</label>
+                      <input
+                        type="text"
+                        value={item.product_name}
+                        onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, product_name: event.target.value } : currentItem))}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Quantity</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={Number.isNaN(item.quantity_ordered) ? '' : item.quantity_ordered}
+                        onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: event.target.value === '' ? Number.NaN : Math.max(1, parseInt(event.target.value, 10)) } : currentItem))}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost</label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*[.]?[0-9]*"
+                        value={Number.isNaN(item.unit_price) ? '' : item.unit_price}
+                        onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: event.target.value === '' ? Number.NaN : parseFloat(event.target.value) } : currentItem))}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditItems((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                    className="mt-3 text-sm font-medium text-red-700 hover:text-red-800"
+                  >
+                    Remove line
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <label className="mb-1 block text-sm font-medium text-gray-700">Notes</label>
+              <textarea
+                value={editNotes}
+                onChange={(event) => setEditNotes(event.target.value)}
+                rows={3}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              />
+            </div>
+            <div className="mt-6 flex gap-3">
+              <button type="submit" disabled={actionLoading || editItems.length === 0} className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300">
+                {actionLoading ? 'Saving...' : 'Save Changes'}
+              </button>
+              <button type="button" onClick={() => setEditingPurchaseOrder(null)} className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">
                 Cancel
               </button>
             </div>

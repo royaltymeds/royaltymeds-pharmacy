@@ -1,17 +1,37 @@
-1. in our restock management system we have a workflow that allows us to add suppliers then link items to suppliers, we want to add a workflow for adding items then linking suppliers to the items with the ability to set a different item price for each supplier (should be integrated into the current workflow and should be a part of the suppliers management page)
+1. COMPLETED — Added an item-first supplier-linking workflow to the suppliers management page.
+   - What changed: The suppliers page now supports both workflows: linking items from a supplier card and linking a supplier from a selected inventory item via the new "Link Supplier to Item" modal. Both workflows save supplier-specific item cost, SKU, and minimum order quantity through supplier_products.
+   - How to verify: Open Admin > Restock > Manage Suppliers, click "Link Supplier to Item", choose an OTC or prescription inventory item, choose a supplier, set a supplier-specific unit cost, submit, and confirm the linked item appears under that supplier. Also verify the existing supplier-card "+ Link Item" workflow still works.
 
-2. restock order requests no longer need to account for an expected delivery date, so that aspect needs to be removed.
+2. COMPLETED — Removed expected delivery date from restock order requests.
+   - What changed: New restock requests no longer collect or submit expected_delivery_date, restock request detail no longer displays it, and a migration drops restock_requests.expected_delivery_date. Expected delivery now belongs to purchase orders only.
+   - How to verify: Create a restock order and confirm there is no expected delivery field in the request form or request detail page. Apply the migration and confirm restock_requests no longer has expected_delivery_date.
 
-3. the random numbers used for identifying restock requests and purchase orders should be based on date and time of submission similar to how we do with prescriptions
+3. COMPLETED — Replaced random restock and purchase order identifiers with date/time-based identifiers.
+   - What changed: Added a shared restock workflow number generator that creates RR/PO numbers from day, month, date, time, and milliseconds, similar to prescription numbering.
+   - How to verify: Create a restock request and a purchase order. Confirm request_number and po_number follow the RR-DAILYDATE-HHMMSS-SSS and PO-DAILYDATE-HHMMSS-SSS pattern instead of random suffixes.
 
-4. purchase orders need to be able to be edited, when the items on a purchase order is edited the linked re-order request items should be updated as well
+4. COMPLETED — Added purchase order editing that synchronizes linked restock request items.
+   - What changed: Open purchase orders now have an Edit action. Quantity, item name, unit cost, notes, and removed lines are saved to purchase_order_items and the matching restock_items/stock request totals are updated.
+   - How to verify: Generate a purchase order from a restock request, click Edit while the PO status is open, change quantity or unit cost, save, then confirm the PO line total and linked restock request item quantity/unit cost/total reflect the edit.
 
-5. purchase orders need a workflow update, currently after creation you can only receive orders, but before being able to receive orders we need to be able to place the order first, when the order is placed or being placed we should be able to set an expected delivery date for the order to be delivered (the PO status should reflect when an order is placed and the PO should show the expected delivery date)
+5. COMPLETED — Added a place-order step before receiving purchase orders.
+   - What changed: Purchase orders now support open → placed → received. Open POs can be edited or placed. Placing requires an expected delivery date, saves placed_at and expected_delivery_date, updates the PO status to placed, and only placed POs can be received.
+   - How to verify: Generate a PO and confirm the Receive button is not shown while status is open. Click Place Order, enter an expected delivery date, submit, and confirm the status becomes placed, expected delivery is displayed, and Receive becomes available.
 
-6. for restock items in the UI change unit price to unit cost
+6. COMPLETED — Changed restock UI wording from unit price to unit cost.
+   - What changed: Restock forms, supplier-item linking, restock item displays, purchase order line displays, and restock notification table headings now use "Unit Cost" language for restock costs.
+   - How to verify: Review the restock request form, supplier management item link modals, restock request detail, and purchase order list. Confirm restock cost labels say Unit Cost.
 
-7. in the re-order schedule options add a daily option and an option for every 3 weeks (currently we have weekly, monthly etc.)
+7. COMPLETED — Added daily and every-3-weeks re-order schedule options.
+   - What changed: Supplier reorder schedule types now include daily and every 3 weeks in TypeScript types, UI options, upcoming reorder calculations, and the migration constraint. The migration also seeds matching restock_frequencies rows.
+   - How to verify: Edit a supplier, choose Daily or Every 3 weeks, save, then verify the Upcoming Scheduled Re-orders tab calculates the next reorder date using 1-day or 21-day intervals.
 
-8. we need to indicate that unit cost is per package in most cases, indicate use item descriptions/name to differentiate (add item descriptions to item details)
+8. COMPLETED — Clarified that unit cost is usually per package and exposed item descriptions during supplier linking.
+   - What changed: Supplier item link modals label cost as "Unit Cost (usually per package)" and show inventory item descriptions when an item is selected. Linked item summaries also include saved item descriptions when available.
+   - How to verify: In Manage Suppliers, link an item to a supplier from either workflow, select an inventory item with a description, and confirm the description appears under the item selection and in linked item details.
 
-SOME OF OUR CHANGES MAY REQUIRE BUILDING A MIGRATION FOR UPDATING THE SCHEMA, CURRENT SCHEMA IS REFERENCED IN CURRENT_SCHEMA_REFERENCE.SQL
+Schema migration created: supabase/migrations/20260512000000_complete_restock_workflow_tasks.sql
+Programmatic verification run:
+- npx tsc --noEmit
+- npm run lint
+- npm run build (compiled successfully, then failed while collecting page data because required Supabase environment variables were not set in this environment)
