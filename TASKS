@@ -1,3 +1,7 @@
 1. the re-order requests need to show the name of the user who submitted the request
 
 2. we need to add the ability to upload / import items to restock management from spreadsheets (excel or csv) with the ability to map columns from the spreadsheet to our schema columns
+
+3. restock page needs a request history tab, requests received should be shown in that tab and should not be shown in the current requests tab
+
+4. when multiple restock requests are submitted for the same PO, on the PO items should be merged that are the same items, so the same item even if it is on multiple requests on that PO, should have one line with the total requested
