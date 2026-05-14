@@ -88,3 +88,5 @@ See this log for the ancestor stack trace.
   569 |                   <h3 className="text-sm font-semibold text-gray-900">{supplier.name}</h3>
 
 Next.js version: 15.5.9 (Webpack)
+
+2. when restock request, and PO statuses are changed, the modals need to update them same time, a refresh or closing the modal first is required at the moment for it to update in the modals, that should not be the case for each modal that allows status changes
