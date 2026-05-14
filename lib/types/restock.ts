@@ -1,8 +1,9 @@
 // Restock Management Types
 
 export type ReorderScheduleCadence = 'daily' | 'weekly' | 'bi_weekly' | 'three_weeks' | 'monthly' | 'custom';
-export type RestockRequestStatus = 'requested' | 'linked_to_po' | 'received' | 'cancelled';
+export type RestockRequestStatus = 'requested' | 'linked_to_po' | 'received' | 'cancelled' | 'on_hold';
 export type PurchaseOrderStatus = 'open' | 'placed' | 'received' | 'cancelled';
+export type RestockItemHoldStatus = 'active' | 'on_hold';
 export type PurchaseOrderSource = 'scheduled' | 'manual';
 
 export interface Supplier {
@@ -59,8 +60,13 @@ export interface SupplierProduct {
 
 export interface RestockItem {
   id: string;
-  restock_request_id: string;
+  restock_request_id?: string;
   purchase_order_item_id?: string;
+  held_from_request_id?: string;
+  hold_status?: RestockItemHoldStatus;
+  held_at?: string;
+  held_by?: string;
+  hold_notes?: string;
   product_id: string;
   product_type: 'otc' | 'prescription';
   product_name: string;
@@ -92,6 +98,7 @@ export interface RestockRequest {
     email: string;
     full_name?: string;
   };
+  held_items_count?: number;
 }
 
 export interface PurchaseOrderItem {
