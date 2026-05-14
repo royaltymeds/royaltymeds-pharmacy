@@ -49,6 +49,45 @@ function getSmtpTransporter() {
   });
 }
 
+
+const RESTOCK_REQUEST_SELECT = `
+  *,
+  supplier:suppliers(*),
+  pharmacist:users!restock_requests_pharmacist_id_fkey(
+    email,
+    user_profiles!user_profiles_user_id_fkey(full_name)
+  ),
+  items:restock_items(*)
+`;
+
+type RestockRequestWithNestedProfile = RestockRequest & {
+  pharmacist?: RestockRequest['pharmacist'] & {
+    user_profiles?: { full_name?: string | null } | { full_name?: string | null }[] | null;
+  };
+};
+
+function normalizeRestockRequestPharmacist(request: RestockRequestWithNestedProfile | null): RestockRequest | null {
+  if (!request) return null;
+
+  const profile = Array.isArray(request.pharmacist?.user_profiles)
+    ? request.pharmacist?.user_profiles[0]
+    : request.pharmacist?.user_profiles;
+
+  return {
+    ...request,
+    pharmacist: request.pharmacist
+      ? {
+          email: request.pharmacist.email,
+          full_name: profile?.full_name || undefined,
+        }
+      : undefined,
+  };
+}
+
+function normalizeRestockRequests(data: RestockRequestWithNestedProfile[] | null): RestockRequest[] | null {
+  return data?.map((request) => normalizeRestockRequestPharmacist(request) as RestockRequest) || null;
+}
+
 function formatCurrency(amount: number | null | undefined) {
   return `$${Number(amount || 0).toFixed(2)}`;
 }
@@ -448,19 +487,12 @@ export async function createRestockRequest(
     // Fetch complete request with items
     const { data, error } = await supabase
       .from('restock_requests')
-      .select(
-        `
-        *,
-        supplier:suppliers(*),
-        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
-        items:restock_items(*)
-      `
-      )
+      .select(RESTOCK_REQUEST_SELECT)
       .eq('id', requestData.id)
       .single();
 
     if (error) return { data: null, error: error.message };
-    return { data, error: null };
+    return { data: normalizeRestockRequestPharmacist(data), error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to create restock request' };
   }
@@ -472,14 +504,7 @@ export async function getRestockRequests(
   try {
     const supabase = getServiceRoleClient();
 
-    let query = supabase.from('restock_requests').select(
-      `
-        *,
-        supplier:suppliers(*),
-        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
-        items:restock_items(*)
-      `
-    );
+    let query = supabase.from('restock_requests').select(RESTOCK_REQUEST_SELECT);
 
     if (status) {
       query = query.eq('status', status);
@@ -488,7 +513,7 @@ export async function getRestockRequests(
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) return { data: null, error: error.message };
-    return { data, error: null };
+    return { data: normalizeRestockRequests(data), error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch restock requests' };
   }
@@ -502,19 +527,12 @@ export async function getRestockRequestById(
 
     const { data, error } = await supabase
       .from('restock_requests')
-      .select(
-        `
-        *,
-        supplier:suppliers(*),
-        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
-        items:restock_items(*)
-      `
-      )
+      .select(RESTOCK_REQUEST_SELECT)
       .eq('id', requestId)
       .single();
 
     if (error) return { data: null, error: error.message };
-    return { data, error: null };
+    return { data: normalizeRestockRequestPharmacist(data), error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch restock request' };
   }
@@ -562,19 +580,12 @@ export async function approveRestockRequest(
     // Fetch updated request
     const { data, error } = await supabase
       .from('restock_requests')
-      .select(
-        `
-        *,
-        supplier:suppliers(*),
-        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
-        items:restock_items(*)
-      `
-      )
+      .select(RESTOCK_REQUEST_SELECT)
       .eq('id', requestId)
       .single();
 
     if (error) return { data: null, error: error.message };
-    return { data, error: null };
+    return { data: normalizeRestockRequestPharmacist(data), error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to approve restock request' };
   }
@@ -612,19 +623,12 @@ export async function rejectRestockRequest(
     // Fetch updated request
     const { data, error } = await supabase
       .from('restock_requests')
-      .select(
-        `
-        *,
-        supplier:suppliers(*),
-        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
-        items:restock_items(*)
-      `
-      )
+      .select(RESTOCK_REQUEST_SELECT)
       .eq('id', requestId)
       .single();
 
     if (error) return { data: null, error: error.message };
-    return { data, error: null };
+    return { data: normalizeRestockRequestPharmacist(data), error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to reject restock request' };
   }
@@ -678,19 +682,12 @@ export async function updateRestockRequestStatus(
     // Fetch updated request
     const { data, error } = await supabase
       .from('restock_requests')
-      .select(
-        `
-        *,
-        supplier:suppliers(*),
-        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
-        items:restock_items(*)
-      `
-      )
+      .select(RESTOCK_REQUEST_SELECT)
       .eq('id', requestId)
       .single();
 
     if (error) return { data: null, error: error.message };
-    return { data, error: null };
+    return { data: normalizeRestockRequestPharmacist(data), error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to update restock request status' };
   }
