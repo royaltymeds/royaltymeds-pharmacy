@@ -9,3 +9,5 @@
 5. the purchase order tab in restock management, instead of showing the items on the purchase order on the list page, should show the list of purchase orders then open a modal when each is clicked, the modal should have the purchase order details (use our preferred modal design as per our context documents), do the same for the current requests tab and for the suppliers management page, also do the same for upcoming reschedules (show the date on those cards though, and put the generate PO for those in the modal - those meaning upcoming scheduled re-orders)
 
 6. we need to distinguish from PO's that are from a re-order schedule and POs that are manually generated, POs that are manually generated should require manually linking requests to that PO, those POs should not be treated the same as scheduled ones, so they should not affect the other tabs in the same way
+
+7. the pharmacist/admin dashboard does not need the stats section or the cards that enumerate the counts, the sections needed should focus more on navigating to the most useful pages, like restock and pages hidden under more in the header
