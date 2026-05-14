@@ -1,9 +1,37 @@
-1. the current request tab, it should display the list of suppliers (not with the current requests), when a supplier is clicked/selected a modal should open (use our preferred modal design), that modal should have a paginated list of current requests (same details on the cards as they have now) when a request card is clicked, it should open the request detail modal (same one we have now), we should be able to go back to the list of requests from that modal (the request history tab needs this exact design as well, same implementation)
+Completed tasks and verification notes
+=====================================
 
-2. the upcoming scheduled re-orders should be a list with the suppliers names, the cards should be expandable, the cards before being expanded should show the supplier name, frequency and upcoming date, when expanded it should show the supplier details and reveal the generate PO button / View PO button (so no longer use the modal)
+1. Current Requests and Request History supplier-first modal workflow
+   - Completed: The Current Requests tab now renders only supplier summary cards. Selecting a supplier opens the app's existing centered/backdrop modal design with a paginated list of that supplier's current request cards. Selecting a request opens the existing request detail modal, and a back link returns to the supplier request list without losing the supplier context.
+   - Completed: Request History uses the same supplier-first design and the same paginated supplier request-list modal implementation for historical received/cancelled requests.
+   - Verify truthfully: Open the restock workflow, go to Current Requests, confirm suppliers are the only top-level cards, click a supplier, verify a paginated request-list modal appears, click a request, then use the back link to return to the supplier list. Repeat the same flow from Request History.
+   - Code verification: Review `components/admin/restock/restock-workflow-tabs.tsx` for `openRequestSupplierModal`, `selectedRequestSupplier`, request-list pagination, and the request detail back link.
 
-3. the purchase order tab needs to also show the list of suppliers that have purchase orders, actually it needs different sections for different status POs, each section should be a tab of it's own, each section should show the list of suppliers with POs in it's status, when you click the supplier a modal should open showing you a list of POs for that supplier for that status, the list should be paginated
+2. Upcoming Scheduled Re-orders expandable supplier cards
+   - Completed: Upcoming Scheduled Re-orders is now a supplier list with expandable cards. Collapsed cards show supplier name, frequency/schedule label, and upcoming reorder date. Expanded cards reveal supplier details and either a Generate PO button or a View PO button when an open PO already exists.
+   - Completed: The previous scheduled reorder detail modal was removed; the action buttons now live in the expanded card.
+   - Verify truthfully: Open Upcoming Scheduled Re-orders, confirm each card is collapsed by default with supplier, schedule, and upcoming date. Expand a card and confirm contact/lead-time/minimum-order details plus Generate PO or View PO are shown inline with no schedule modal.
+   - Code verification: Review `components/admin/restock/restock-workflow-tabs.tsx` for `expandedScheduleSupplierId` and the schedule tab expandable-card rendering.
 
-4. manual purchase orders should be able to have items linked to them even after the PO has been created
+3. Purchase Orders status tabs, supplier lists, and paginated PO modal
+   - Completed: The Purchase Orders tab now contains nested status tabs for Open, Placed, Received, and Cancelled purchase orders.
+   - Completed: Each status section shows suppliers that have POs in that status. Selecting a supplier opens a modal with a paginated list of that supplier's POs for the selected status, including the same PO actions where applicable.
+   - Verify truthfully: Open Purchase Orders, switch between the Open/Placed/Received/Cancelled status tabs, verify each tab shows supplier cards rather than a flat PO list, click a supplier, and confirm the modal lists only POs for that supplier and status with Previous/Next pagination.
+   - Code verification: Review `components/admin/restock/restock-workflow-tabs.tsx` for `purchaseOrderStatusTabs`, `purchaseOrdersByStatusAndSupplier`, `openPurchaseOrderSupplierModal`, and `selectedPurchaseOrderSupplier` pagination.
 
-5. the manage suppliers page should also show first the list of suppliers, then when the supplier is clicked it should show a modal with pagination that lists the linked items, the linked items should be able to be edited
+4. Manual purchase orders can link items after creation
+   - Completed: The PO edit modal now loads the selected PO supplier's linked products and includes an "Add linked supplier items" section. Users can add supplier-linked products to an existing PO, including manual POs, after the PO has been created.
+   - Completed: Added lines are submitted through the existing `updatePurchaseOrder` flow, which inserts new purchase order items when an edited line does not have an existing item id.
+   - Verify truthfully: Create or open a manual PO in Open status, choose Edit, add a product from the linked supplier items section, save, and reopen the PO to confirm the new line remains on the PO.
+   - Code verification: Review `components/admin/restock/restock-workflow-tabs.tsx` for `loadSupplierProductsForPo` in `openEditModal`, `addProductToEditPurchaseOrder`, and the edit-modal linked supplier item picker.
+
+5. Manage Suppliers supplier-first modal with paginated editable linked items
+   - Completed: Manage Suppliers now shows a top-level supplier list first. Supplier cards summarize linked item count and supplier details instead of rendering all linked items inline.
+   - Completed: Selecting a supplier opens a modal with a paginated list of linked items. Linked item fields can be edited in the modal and saved through `updateSupplierProduct`; items can still be unlinked and new items can be linked.
+   - Verify truthfully: Open Manage Suppliers, confirm the page starts with supplier cards only, click a supplier, verify a paginated linked-item modal appears, edit a linked item field, save it, and confirm the change persists after reload or reopening the supplier modal.
+   - Code verification: Review `components/admin/restock/suppliers-list.tsx` for `selectedSupplierDetails`, supplier item pagination, `updateSupplierProductDraft`, `handleSaveSupplierProduct`, and the supplier details modal.
+
+Programmatic verification performed
+==================================
+
+- `npx tsc --noEmit` completed successfully after the implementation.
