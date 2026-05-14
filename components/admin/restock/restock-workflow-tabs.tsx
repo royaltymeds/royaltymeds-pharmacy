@@ -15,6 +15,7 @@ import {
 import { PurchaseOrder, RestockRequest, SupplierProduct, UpcomingReorder } from '@/lib/types/restock';
 import { CalendarDays, ChevronDown, ChevronRight, ClipboardList, Edit2, Loader, Package, Send, Truck, XCircle, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConfirmationModal } from './confirmation-modal';
 
 interface RestockWorkflowTabsProps {
   userId: string;
@@ -24,6 +25,7 @@ type TabKey = 'requests' | 'request_history' | 'schedule' | 'purchase_orders';
 type PurchaseOrderStatusFilter = PurchaseOrder['status'];
 
 const PAGE_SIZE = 5;
+const ITEM_SELECTOR_PAGE_SIZE = 15;
 
 type ManualPoItem = {
   supplier_product_id: string;
@@ -116,7 +118,10 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null);
   const [expandedScheduleSupplierId, setExpandedScheduleSupplierId] = useState<string | null>(null);
   const [supplierProducts, setSupplierProducts] = useState<SupplierProduct[]>([]);
+  const [supplierProductSearch, setSupplierProductSearch] = useState('');
+  const [supplierProductPage, setSupplierProductPage] = useState(1);
   const [manualPoItems, setManualPoItems] = useState<ManualPoItem[]>([]);
+  const [pendingConfirmation, setPendingConfirmation] = useState<{ title: string; message: string; confirmLabel: string; onConfirm: () => void } | null>(null);
   const [selectedRequestSupplier, setSelectedRequestSupplier] = useState<{ supplierId: string; supplierName: string; requests: RestockRequest[]; mode: 'current' | 'history' } | null>(null);
   const [requestSupplierPage, setRequestSupplierPage] = useState(1);
   const [activePurchaseOrderStatus, setActivePurchaseOrderStatus] = useState<PurchaseOrderStatusFilter>('open');
@@ -148,7 +153,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
   const openPurchaseOrdersBySupplier = useMemo(() => {
     return purchaseOrders.reduce<Record<string, PurchaseOrder>>((groups, purchaseOrder) => {
-      if (purchaseOrder.status !== 'open') return groups;
+      if (purchaseOrder.status !== 'open' || purchaseOrder.source === 'manual') return groups;
       const existing = groups[purchaseOrder.supplier_id];
       if (!existing || purchaseOrder.reorder_date < existing.reorder_date) {
         groups[purchaseOrder.supplier_id] = purchaseOrder;
@@ -236,6 +241,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     setPoFormLocked(lockFields);
     setManualPoItems([]);
     setSupplierProducts([]);
+    setSupplierProductSearch('');
+    setSupplierProductPage(1);
     if (supplierId) void loadSupplierProductsForPo(supplierId);
     setShowPoModal(true);
   };
@@ -270,8 +277,17 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     setActionLoading(false);
   };
 
+  const confirmCancelRequest = (request: RestockRequest) => {
+    setPendingConfirmation({
+      title: `Cancel ${request.request_number}?`,
+      message: request.purchase_order_id ? 'The linked purchase order will be cancelled and the request will return to the queue according to the current workflow.' : 'This request will move to cancelled history.',
+      confirmLabel: 'Cancel request',
+      onConfirm: () => void handleCancelRequest(request),
+    });
+  };
+
   const handleCancelRequest = async (request: RestockRequest) => {
-    if (!confirm(`Cancel ${request.request_number}?`)) return;
+    setPendingConfirmation(null);
     setActionLoading(true);
     if (request.purchase_order_id) {
       const { error: cancelError } = await updatePurchaseOrderStatus(request.purchase_order_id, 'cancelled');
@@ -285,8 +301,17 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     setActionLoading(false);
   };
 
+  const confirmCancelPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
+    setPendingConfirmation({
+      title: `Cancel ${purchaseOrder.po_number}?`,
+      message: purchaseOrder.source === 'manual' ? 'This manual purchase order will be cancelled.' : 'Linked requests will return to requested status.',
+      confirmLabel: 'Cancel PO',
+      onConfirm: () => void handleCancelPurchaseOrder(purchaseOrder),
+    });
+  };
+
   const handleCancelPurchaseOrder = async (purchaseOrder: PurchaseOrder) => {
-    if (!confirm(`Cancel ${purchaseOrder.po_number}? Linked requests will return to requested status.`)) return;
+    setPendingConfirmation(null);
     setActionLoading(true);
     const { error: cancelError } = await updatePurchaseOrderStatus(purchaseOrder.id, 'cancelled');
     if (cancelError) {
@@ -307,6 +332,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const openEditModal = (purchaseOrder: PurchaseOrder) => {
     setEditingPurchaseOrder(purchaseOrder);
     setEditNotes(purchaseOrder.notes || '');
+    setSupplierProductSearch('');
+    setSupplierProductPage(1);
     void loadSupplierProductsForPo(purchaseOrder.supplier_id);
     setEditItems((purchaseOrder.items || []).map((item) => ({
       itemId: item.id,
@@ -424,10 +451,39 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     { key: 'purchase_orders', label: 'Purchase Orders', count: purchaseOrders.length },
   ];
 
+  const filteredSupplierProducts = supplierProducts.filter((product) => {
+    const search = supplierProductSearch.trim().toLowerCase();
+    if (!search) return true;
+    return [product.product_name, product.product_id, product.product_type, product.supplier_sku, product.notes]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(search));
+  });
+  const supplierProductTotalPages = Math.max(1, Math.ceil(filteredSupplierProducts.length / ITEM_SELECTOR_PAGE_SIZE));
+  const paginatedSupplierProducts = filteredSupplierProducts.slice((supplierProductPage - 1) * ITEM_SELECTOR_PAGE_SIZE, supplierProductPage * ITEM_SELECTOR_PAGE_SIZE);
+
   const selectedRequestSupplierTotalPages = selectedRequestSupplier ? Math.max(1, Math.ceil(selectedRequestSupplier.requests.length / PAGE_SIZE)) : 1;
   const selectedRequestSupplierRequests = selectedRequestSupplier ? selectedRequestSupplier.requests.slice((requestSupplierPage - 1) * PAGE_SIZE, requestSupplierPage * PAGE_SIZE) : [];
   const selectedPurchaseOrderSupplierTotalPages = selectedPurchaseOrderSupplier ? Math.max(1, Math.ceil(selectedPurchaseOrderSupplier.purchaseOrders.length / PAGE_SIZE)) : 1;
   const selectedPurchaseOrderSupplierPurchaseOrders = selectedPurchaseOrderSupplier ? selectedPurchaseOrderSupplier.purchaseOrders.slice((purchaseOrderSupplierPage - 1) * PAGE_SIZE, purchaseOrderSupplierPage * PAGE_SIZE) : [];
+
+  useEffect(() => {
+    setSelectedRequest((current) => current ? requests.find((request) => request.id === current.id) || null : null);
+    setPlacingPurchaseOrder((current) => current ? purchaseOrders.find((purchaseOrder) => purchaseOrder.id === current.id) || current : null);
+    setReceivingPurchaseOrder((current) => current ? purchaseOrders.find((purchaseOrder) => purchaseOrder.id === current.id) || current : null);
+    setEditingPurchaseOrder((current) => current ? purchaseOrders.find((purchaseOrder) => purchaseOrder.id === current.id) || current : null);
+    setSelectedPurchaseOrder((current) => current ? purchaseOrders.find((purchaseOrder) => purchaseOrder.id === current.id) || null : null);
+    setSelectedRequestSupplier((current) => {
+      if (!current) return null;
+      const source = current.mode === 'current' ? requestsBySupplier : requestHistoryBySupplier;
+      const updated = source[current.supplierId];
+      return updated ? { ...current, supplierName: updated.supplierName, requests: updated.requests } : null;
+    });
+    setSelectedPurchaseOrderSupplier((current) => {
+      if (!current) return null;
+      const updated = purchaseOrdersByStatusAndSupplier[current.status][current.supplierId];
+      return updated ? { ...current, supplierName: updated.supplierName, purchaseOrders: updated.purchaseOrders } : null;
+    });
+  }, [purchaseOrders, purchaseOrdersByStatusAndSupplier, requestHistoryBySupplier, requests, requestsBySupplier]);
 
   return (
     <div className="space-y-4">
@@ -606,7 +662,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 <label className="mb-1 block text-sm font-medium text-gray-700">Supplier *</label>
                 <select
                   value={poForm.supplier_id}
-                  onChange={(event) => { setPoForm({ ...poForm, supplier_id: event.target.value }); setManualPoItems([]); void loadSupplierProductsForPo(event.target.value); }}
+                  onChange={(event) => { setPoForm({ ...poForm, supplier_id: event.target.value }); setManualPoItems([]); setSupplierProductSearch(''); setSupplierProductPage(1); void loadSupplierProductsForPo(event.target.value); }}
                   required
                   disabled={poFormLocked}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
@@ -650,15 +706,29 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
                   <h3 className="font-semibold text-blue-900">Manual PO supplier products</h3>
                   <p className="text-sm text-blue-800">Add linked supplier products directly to this manual purchase order. These lines do not move restock requests.</p>
+                  <input
+                    type="search"
+                    value={supplierProductSearch}
+                    onChange={(event) => { setSupplierProductSearch(event.target.value); setSupplierProductPage(1); }}
+                    placeholder="Search supplier items"
+                    className="mt-3 w-full rounded-lg border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
                   <div className="mt-3 max-h-40 space-y-2 overflow-y-auto rounded-lg bg-white p-2">
                     {supplierProducts.length === 0 ? (
                       <p className="p-2 text-sm text-gray-500">No active products are linked to this supplier.</p>
-                    ) : supplierProducts.map((product) => (
+                    ) : filteredSupplierProducts.length === 0 ? (
+                      <p className="p-2 text-sm text-gray-500">No linked supplier products match your search.</p>
+                    ) : paginatedSupplierProducts.map((product) => (
                       <button key={product.id} type="button" onClick={() => addManualPoItem(product)} disabled={manualPoItems.some((item) => item.supplier_product_id === product.id)} className="flex w-full items-center justify-between rounded border border-gray-200 p-2 text-left text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400">
                         <span>{product.product_name || product.product_id}</span>
                         <span>{formatCurrency(product.supplier_unit_price)}</span>
                       </button>
                     ))}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-sm text-blue-900">
+                    <button type="button" onClick={() => setSupplierProductPage((page) => Math.max(1, page - 1))} disabled={supplierProductPage === 1} className="rounded border border-blue-200 px-2 py-1 font-semibold disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
+                    <span>Page {supplierProductPage} of {supplierProductTotalPages} · 15 per page</span>
+                    <button type="button" onClick={() => setSupplierProductPage((page) => Math.min(supplierProductTotalPages, page + 1))} disabled={supplierProductPage === supplierProductTotalPages} className="rounded border border-blue-200 px-2 py-1 font-semibold disabled:cursor-not-allowed disabled:opacity-50">Next</button>
                   </div>
                   {manualPoItems.length > 0 && (
                     <div className="mt-3 space-y-2">
@@ -787,10 +857,19 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
               <h3 className="font-semibold text-blue-900">Add linked supplier items</h3>
               <p className="text-sm text-blue-800">Manual purchase orders can be linked to additional supplier products after creation.</p>
+              <input
+                type="search"
+                value={supplierProductSearch}
+                onChange={(event) => { setSupplierProductSearch(event.target.value); setSupplierProductPage(1); }}
+                placeholder="Search supplier items"
+                className="mt-3 w-full rounded-lg border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+              />
               <div className="mt-3 max-h-40 space-y-2 overflow-y-auto rounded-lg bg-white p-2">
                 {supplierProducts.length === 0 ? (
                   <p className="p-2 text-sm text-gray-500">No active products are linked to this supplier.</p>
-                ) : supplierProducts.map((product) => {
+                ) : filteredSupplierProducts.length === 0 ? (
+                  <p className="p-2 text-sm text-gray-500">No linked supplier products match your search.</p>
+                ) : paginatedSupplierProducts.map((product) => {
                   const alreadyAdded = editItems.some((item) => item.product_id === product.product_id && item.product_type === product.product_type);
                   return (
                     <button key={product.id} type="button" onClick={() => addProductToEditPurchaseOrder(product)} disabled={alreadyAdded} className="flex w-full items-center justify-between rounded border border-gray-200 p-2 text-left text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400">
@@ -799,6 +878,11 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                     </button>
                   );
                 })}
+              </div>
+              <div className="mt-3 flex items-center justify-between text-sm text-blue-900">
+                <button type="button" onClick={() => setSupplierProductPage((page) => Math.max(1, page - 1))} disabled={supplierProductPage === 1} className="rounded border border-blue-200 px-2 py-1 font-semibold disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
+                <span>Page {supplierProductPage} of {supplierProductTotalPages} · 15 per page</span>
+                <button type="button" onClick={() => setSupplierProductPage((page) => Math.min(supplierProductTotalPages, page + 1))} disabled={supplierProductPage === supplierProductTotalPages} className="rounded border border-blue-200 px-2 py-1 font-semibold disabled:cursor-not-allowed disabled:opacity-50">Next</button>
               </div>
             </div>
 
@@ -924,7 +1008,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               ))}
             </div>
             {selectedRequest.status === 'requested' && (
-              <button type="button" onClick={() => handleCancelRequest(selectedRequest)} disabled={actionLoading} className="mt-4 w-full rounded-lg border border-red-200 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100">
+              <button type="button" onClick={() => confirmCancelRequest(selectedRequest)} disabled={actionLoading} className="mt-4 w-full rounded-lg border border-red-200 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100">
                 Cancel Request
               </button>
             )}
@@ -984,7 +1068,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                       <div className="flex flex-wrap gap-2">
                         {po.status === 'open' && <><button onClick={(event) => { event.stopPropagation(); setSelectedPurchaseOrderSupplier(null); openEditModal(po); }} disabled={actionLoading} className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:bg-gray-100"><Edit2 className="h-4 w-4" /> Edit</button><button onClick={(event) => { event.stopPropagation(); setSelectedPurchaseOrderSupplier(null); openPlaceModal(po); }} disabled={actionLoading} className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:bg-gray-300"><Send className="h-4 w-4" /> Place Order</button></>}
                         {po.status === 'placed' && <button onClick={(event) => { event.stopPropagation(); setSelectedPurchaseOrderSupplier(null); openReceiveModal(po); }} disabled={actionLoading} className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-gray-300"><Truck className="h-4 w-4" /> Receive</button>}
-                        <button onClick={(event) => { event.stopPropagation(); handleCancelPurchaseOrder(po); }} disabled={actionLoading} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100"><XCircle className="h-4 w-4" /> Cancel</button>
+                        <button onClick={(event) => { event.stopPropagation(); confirmCancelPurchaseOrder(po); }} disabled={actionLoading} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100"><XCircle className="h-4 w-4" /> Cancel</button>
                       </div>
                     )}
                   </div>
@@ -999,6 +1083,16 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={!!pendingConfirmation}
+        title={pendingConfirmation?.title || ''}
+        message={pendingConfirmation?.message || ''}
+        confirmLabel={pendingConfirmation?.confirmLabel}
+        loading={actionLoading}
+        onConfirm={() => pendingConfirmation?.onConfirm()}
+        onCancel={() => setPendingConfirmation(null)}
+      />
 
       {selectedPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
