@@ -5,3 +5,5 @@
 3. restock page needs a request history tab, requests received should be shown in that tab and should not be shown in the current requests tab
 
 4. when multiple restock requests are submitted for the same PO, on the PO items should be merged that are the same items, so the same item even if it is on multiple requests on that PO, should have one line with the total requested
+
+5. the purchase order tab in restock management, instead of showing the items on the purchase order on the list page, should show the list of purchase orders then open a modal when each is clicked, the modal should have the purchase order details (use our preferred modal design as per our context documents)
