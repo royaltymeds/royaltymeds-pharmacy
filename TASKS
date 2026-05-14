@@ -6,18 +6,18 @@
    What was done: Restock workflow tabs now separate `Current Requests` from `Request History`; only `requested` items remain in Current Requests, while linked/received/cancelled requests appear in Request History.
    How to verify: Generate a PO from a request or receive/cancel a PO, then confirm the request leaves Current Requests and appears under Request History. (this tab needs to have a similar design to the current requests tab, where the previous requests are listed under suppliers, the requests themselves should not be listed, when you click the supplier you should get a modal with the list of requests that are from the suppliers history, also requests with the status 'linked to po' should not be a part of this page, those should remain under current requests)
 
-*. COMPLETED — Merge duplicate PO items for multiple requests on the same PO.
+3. NOT DONE — Merge duplicate PO items for multiple requests on the same PO.
    What was done: Purchase order creation now merges restock items with the same product id, product type, and unit price into one PO line with summed quantity and total while preserving request linkage.
-   How to verify: Submit two restock requests for the same supplier/product/unit price, generate one scheduled/request-queue PO, and confirm the PO details modal shows one combined line with the total requested quantity.
+   How to verify: Submit two restock requests for the same supplier/product/unit price, generate one scheduled/request-queue PO, and confirm the PO details modal shows one combined line with the total requested quantity. (this was verified as not completed, on the POs what should happen is that if the same item came from different requests, it should not be treated as multiple items or multiple lines, it should be merged into one single PO line with the total from all that item's requests)
 
-*. COMPLETED — Modal-based details for PO, current requests, supplier management, and upcoming schedules.
+4. PARTIALLY DONE — Modal-based details for PO, current requests, supplier management, and upcoming schedules.
    What was done: Purchase Orders now list PO summary cards and open a details modal for line items. Current Requests open a request details modal. Upcoming Scheduled Re-orders show date/summary cards and put Generate PO inside the schedule detail modal. Supplier management already used preferred modal styling for supplier/item operations and was extended for bulk item-supplier linking.
-   How to verify: In Restock Management, click a request card, PO card, and upcoming schedule card; confirm each opens a modal and that line-item details are no longer expanded directly on the PO list page.
+   How to verify: In Restock Management, click a request card, PO card, and upcoming schedule card; confirm each opens a modal and that line-item details are no longer expanded directly on the PO list page. (this was verified as only partially done, what is lacking is that the current request modal when a modal for a request is open should allow for canceling a request, modal should allow same actions the request details page does, modal should show just the same information as does the request details page)
 
-*. COMPLETED — Distinguish scheduled vs manual POs.
+5. PARTIALLY DONE — Distinguish scheduled vs manual POs.
    What was done: Added a `purchase_orders.source` column with `scheduled` and `manual` values. Manually-created POs are marked manual and do not auto-link current requests; scheduled/request-queue POs still auto-link current supplier requests.
-   How to verify: Create a PO with `Manual - do not auto-link requests` and confirm open requests stay in Current Requests; then create/generate a scheduled/request-queue PO and confirm matching requests link and move to Request History.
+   How to verify: Create a PO with `Manual - do not auto-link requests` and confirm open requests stay in Current Requests; then create/generate a scheduled/request-queue PO and confirm matching requests link and move to Request History. (this has been verified as only partially done, while we can prevent requests from being added to manual PO, there is no way for us to add items to a manual PO, we need to be able to add items to manual PO from supplier products)
 
-*. COMPLETED — Pharmacist/admin dashboard navigation focus.
+6. PARTIALLY DONE — Pharmacist/admin dashboard navigation focus.
    What was done: Removed the top count/stat card section and replaced it with navigation-focused cards for high-value admin destinations such as Restock Management, Prescriptions, Orders, Refills, Inventory, and More Admin Tools.
-   How to verify: Open Admin Dashboard and confirm it shows navigation cards instead of count/stat cards.
+   How to verify: Open Admin Dashboard and confirm it shows navigation cards instead of count/stat cards. (one of the navigation items goes to a more page that does not exist, that page needs to be built using our design principles as per our context docs and patterned after other page designs we used where SSR is the focus with client side only displaying data, although this page in question should just have navigation links similar to the one on the dashboard to all pages)
