@@ -379,6 +379,46 @@ CREATE TABLE public.prescriptions (
   CONSTRAINT prescriptions_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.users(id),
   CONSTRAINT prescriptions_doctor_id_fkey FOREIGN KEY (doctor_id) REFERENCES public.users(id)
 );
+CREATE TABLE public.purchase_order_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  purchase_order_id uuid NOT NULL,
+  restock_request_id uuid,
+  restock_item_id uuid,
+  product_id uuid NOT NULL,
+  product_type text NOT NULL CHECK (product_type = ANY (ARRAY['otc'::text, 'prescription'::text])),
+  product_name text NOT NULL,
+  quantity_ordered integer NOT NULL CHECK (quantity_ordered > 0),
+  quantity_received integer DEFAULT 0 CHECK (quantity_received >= 0),
+  unit_price numeric NOT NULL,
+  total_price numeric NOT NULL,
+  notes text,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT purchase_order_items_pkey PRIMARY KEY (id),
+  CONSTRAINT purchase_order_items_purchase_order_id_fkey FOREIGN KEY (purchase_order_id) REFERENCES public.purchase_orders(id),
+  CONSTRAINT purchase_order_items_restock_request_id_fkey FOREIGN KEY (restock_request_id) REFERENCES public.restock_requests(id),
+  CONSTRAINT purchase_order_items_restock_item_id_fkey FOREIGN KEY (restock_item_id) REFERENCES public.restock_items(id)
+);
+CREATE TABLE public.purchase_orders (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  po_number text NOT NULL UNIQUE,
+  supplier_id uuid NOT NULL,
+  created_by uuid NOT NULL,
+  status text NOT NULL DEFAULT 'open'::text CHECK (status = ANY (ARRAY['open'::text, 'placed'::text, 'received'::text, 'cancelled'::text])),
+  reorder_date date NOT NULL,
+  is_custom_reorder_date boolean DEFAULT false,
+  total_amount numeric DEFAULT 0,
+  notes text,
+  received_at timestamp with time zone,
+  cancelled_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  expected_delivery_date date,
+  placed_at timestamp with time zone,
+  CONSTRAINT purchase_orders_pkey PRIMARY KEY (id),
+  CONSTRAINT purchase_orders_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id),
+  CONSTRAINT purchase_orders_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id)
+);
 CREATE TABLE public.refill_requests (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   prescription_id uuid NOT NULL,
@@ -446,19 +486,21 @@ CREATE TABLE public.restock_items (
   notes text,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  purchase_order_item_id uuid,
   CONSTRAINT restock_items_pkey PRIMARY KEY (id),
-  CONSTRAINT restock_items_restock_request_id_fkey FOREIGN KEY (restock_request_id) REFERENCES public.restock_requests(id)
+  CONSTRAINT restock_items_restock_request_id_fkey FOREIGN KEY (restock_request_id) REFERENCES public.restock_requests(id),
+  CONSTRAINT restock_items_purchase_order_item_id_fkey FOREIGN KEY (purchase_order_item_id) REFERENCES public.purchase_order_items(id)
 );
 CREATE TABLE public.restock_notification_settings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL UNIQUE,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
   notification_email text,
   whatsapp_notifications_enabled boolean NOT NULL DEFAULT false,
   sms_notifications_enabled boolean NOT NULL DEFAULT false,
   app_toast_notifications_enabled boolean NOT NULL DEFAULT true,
   push_notifications_enabled boolean NOT NULL DEFAULT false,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT restock_notification_settings_pkey PRIMARY KEY (id),
   CONSTRAINT restock_notification_settings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
@@ -467,21 +509,22 @@ CREATE TABLE public.restock_requests (
   request_number text NOT NULL UNIQUE,
   supplier_id uuid NOT NULL,
   pharmacist_id uuid NOT NULL,
-  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'submitted'::text, 'received'::text, 'cancelled'::text])),
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['requested'::text, 'linked_to_po'::text, 'received'::text, 'cancelled'::text])),
   total_amount numeric,
   requested_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   approved_at timestamp with time zone,
   approved_by uuid,
-  expected_delivery_date date,
   actual_delivery_date date,
   rejection_reason text,
   approval_notes text,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  purchase_order_id uuid,
   CONSTRAINT restock_requests_pkey PRIMARY KEY (id),
   CONSTRAINT restock_requests_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id),
   CONSTRAINT restock_requests_pharmacist_id_fkey FOREIGN KEY (pharmacist_id) REFERENCES public.users(id),
-  CONSTRAINT restock_requests_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES public.users(id)
+  CONSTRAINT restock_requests_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES public.users(id),
+  CONSTRAINT restock_requests_purchase_order_id_fkey FOREIGN KEY (purchase_order_id) REFERENCES public.purchase_orders(id)
 );
 CREATE TABLE public.sessions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -541,6 +584,11 @@ CREATE TABLE public.suppliers (
   notes text,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  reorder_schedule_type text CHECK (reorder_schedule_type = ANY (ARRAY['daily'::text, 'weekly'::text, 'bi_weekly'::text, 'three_weeks'::text, 'monthly'::text, 'custom'::text])),
+  reorder_schedule_start_date date,
+  reorder_schedule_custom_dates ARRAY DEFAULT '{}'::date[],
+  reorder_schedule_is_recurring boolean DEFAULT false,
+  reorder_schedule_notes text,
   CONSTRAINT suppliers_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.testimonials (
