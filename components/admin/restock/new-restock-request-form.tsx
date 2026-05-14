@@ -10,6 +10,8 @@ import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { X, Plus, Loader, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
+const SUPPLIER_PRODUCT_PAGE_SIZE = 15;
+
 interface RestockItem {
   supplier_product_id: string;
   product_id: string;
@@ -30,6 +32,8 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [supplierProducts, setSupplierProducts] = useState<SupplierProduct[]>([]);
+  const [supplierProductSearch, setSupplierProductSearch] = useState('');
+  const [supplierProductPage, setSupplierProductPage] = useState(1);
   const [items, setItems] = useState<RestockItem[]>([]);
   const [otcDrugs, setOTCDrugs] = useState<OTCDrug[]>([]);
   const [prescriptionDrugs, setPrescriptionDrugs] = useState<PrescriptionDrug[]>([]);
@@ -168,6 +172,17 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
     }
   };
 
+
+  const filteredSupplierProducts = supplierProducts.filter((product) => {
+    const search = supplierProductSearch.trim().toLowerCase();
+    if (!search) return true;
+    return [getProductName(product), product.supplier_sku, product.product_type, product.notes]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(search));
+  });
+  const supplierProductTotalPages = Math.max(1, Math.ceil(filteredSupplierProducts.length / SUPPLIER_PRODUCT_PAGE_SIZE));
+  const paginatedSupplierProducts = filteredSupplierProducts.slice((supplierProductPage - 1) * SUPPLIER_PRODUCT_PAGE_SIZE, supplierProductPage * SUPPLIER_PRODUCT_PAGE_SIZE);
+
   const total = calculateTotal();
 
   return (
@@ -205,6 +220,9 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
               onChange={(e) => {
                 const supplier = suppliers.find((s) => s.id === e.target.value);
                 setSelectedSupplier(supplier || null);
+                setSupplierProductSearch('');
+                setSupplierProductPage(1);
+                setItems([]);
               }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
             >
@@ -238,37 +256,58 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
       {/* Card: Select Items */}
       {selectedSupplier && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Add Items</h2>
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Add Items</h2>
+              <p className="text-sm text-gray-600">Showing up to 15 linked supplier items per page.</p>
+            </div>
+            <input
+              type="search"
+              value={supplierProductSearch}
+              onChange={(event) => { setSupplierProductSearch(event.target.value); setSupplierProductPage(1); }}
+              placeholder="Search items by name, SKU, type, or notes"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 lg:max-w-sm"
+            />
+          </div>
 
           {supplierProducts.length === 0 ? (
             <p className="text-gray-500">No products available for this supplier</p>
+          ) : filteredSupplierProducts.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-gray-500">No products match your search.</p>
           ) : (
-            <div className="space-y-2">
-              {supplierProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-gray-300"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {getProductName(product)}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      {product.supplier_sku ? `SKU: ${product.supplier_sku} | ` : ''}
-                      Min Order: {product.minimum_order_quantity} | Unit Cost: ${Number(product.supplier_unit_price).toFixed(2)}/package
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => addItem(product)}
-                    disabled={items.some((i) => i.supplier_product_id === product.id)}
-                    className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:bg-gray-300"
+            <>
+              <div className="space-y-2">
+                {paginatedSupplierProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-gray-300"
                   >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {getProductName(product)}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {product.supplier_sku ? `SKU: ${product.supplier_sku} | ` : ''}
+                        Min Order: {product.minimum_order_quantity} | Unit Cost: ${Number(product.supplier_unit_price).toFixed(2)}/package
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => addItem(product)}
+                      disabled={items.some((i) => i.supplier_product_id === product.id)}
+                      className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:bg-gray-300"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex items-center justify-between">
+                <button type="button" onClick={() => setSupplierProductPage((page) => Math.max(1, page - 1))} disabled={supplierProductPage === 1} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
+                <span className="text-sm text-gray-600">Page {supplierProductPage} of {supplierProductTotalPages} · {filteredSupplierProducts.length} matching item(s)</span>
+                <button type="button" onClick={() => setSupplierProductPage((page) => Math.min(supplierProductTotalPages, page + 1))} disabled={supplierProductPage === supplierProductTotalPages} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">Next</button>
+              </div>
+            </>
           )}
         </div>
       )}

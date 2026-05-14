@@ -15,9 +15,10 @@ import {
 import { getOTCDrugs, getPrescriptionDrugs } from '@/app/actions/inventory';
 import { Supplier, CreateSupplierInput, CreateSupplierProductInput, SupplierProduct } from '@/lib/types/restock';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
-import { Plus, Edit2, Trash2, AlertCircle, Loader, X, Link2, Pill, Upload, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, AlertCircle, Loader, X, Link2, Pill, Upload, ChevronRight, ChevronDown } from 'lucide-react';
+import { ConfirmationModal } from './confirmation-modal';
 
-const SUPPLIER_ITEMS_PAGE_SIZE = 5;
+const SUPPLIER_ITEMS_PAGE_SIZE = 20;
 
 export function SuppliersList() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -29,8 +30,12 @@ export function SuppliersList() {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [expandedSupplierIds, setExpandedSupplierIds] = useState<string[]>([]);
   const [selectedSupplierDetails, setSelectedSupplierDetails] = useState<Supplier | null>(null);
   const [supplierItemsPage, setSupplierItemsPage] = useState(1);
+  const [supplierItemsSearch, setSupplierItemsSearch] = useState('');
+  const [expandedSupplierProductId, setExpandedSupplierProductId] = useState<string | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<{ title: string; message: string; confirmLabel: string; onConfirm: () => void } | null>(null);
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedSupplierForProduct, setSelectedSupplierForProduct] = useState<Supplier | null>(null);
@@ -226,9 +231,15 @@ export function SuppliersList() {
     setShowModal(true);
   };
 
+  const toggleSupplierExpanded = (supplierId: string) => {
+    setExpandedSupplierIds((current) => current.includes(supplierId) ? current.filter((id) => id !== supplierId) : [...current, supplierId]);
+  };
+
   const handleOpenSupplierDetails = (supplier: Supplier) => {
     setSelectedSupplierDetails(supplier);
     setSupplierItemsPage(1);
+    setSupplierItemsSearch('');
+    setExpandedSupplierProductId(null);
   };
 
   const updateSupplierProductDraft = (supplierId: string, productId: string, updates: Partial<SupplierProduct>) => {
@@ -476,9 +487,17 @@ export function SuppliersList() {
     setActionLoading(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this supplier?')) return;
+  const confirmDeleteSupplier = (id: string) => {
+    setPendingConfirmation({
+      title: 'Delete supplier?',
+      message: 'This removes the supplier record from the active supplier list. This action cannot be undone.',
+      confirmLabel: 'Delete supplier',
+      onConfirm: () => void handleDelete(id),
+    });
+  };
 
+  const handleDelete = async (id: string) => {
+    setPendingConfirmation(null);
     setActionLoading(true);
     const { error } = await deleteSupplier(id);
 
@@ -490,9 +509,17 @@ export function SuppliersList() {
     setActionLoading(false);
   };
 
-  const handleDeleteSupplierProduct = async (supplierId: string, supplierProductId: string) => {
-    if (!confirm('Remove this linked item from supplier?')) return;
+  const confirmDeleteSupplierProduct = (supplierId: string, supplierProductId: string) => {
+    setPendingConfirmation({
+      title: 'Unlink supplier item?',
+      message: 'This removes the item from this supplier but does not delete the underlying inventory item.',
+      confirmLabel: 'Unlink item',
+      onConfirm: () => void handleDeleteSupplierProduct(supplierId, supplierProductId),
+    });
+  };
 
+  const handleDeleteSupplierProduct = async (supplierId: string, supplierProductId: string) => {
+    setPendingConfirmation(null);
     setActionLoading(true);
 
     const { error } = await deleteSupplierProduct(supplierProductId);
@@ -507,8 +534,15 @@ export function SuppliersList() {
   };
 
   const selectedSupplierProducts = selectedSupplierDetails ? supplierProductsMap[selectedSupplierDetails.id] || [] : [];
-  const selectedSupplierItemsTotalPages = Math.max(1, Math.ceil(selectedSupplierProducts.length / SUPPLIER_ITEMS_PAGE_SIZE));
-  const paginatedSelectedSupplierProducts = selectedSupplierProducts.slice((supplierItemsPage - 1) * SUPPLIER_ITEMS_PAGE_SIZE, supplierItemsPage * SUPPLIER_ITEMS_PAGE_SIZE);
+  const filteredSelectedSupplierProducts = selectedSupplierProducts.filter((product) => {
+    const search = supplierItemsSearch.trim().toLowerCase();
+    if (!search) return true;
+    return [product.product_name, product.product_id, product.supplier_sku, product.notes, product.product_type]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(search));
+  });
+  const selectedSupplierItemsTotalPages = Math.max(1, Math.ceil(filteredSelectedSupplierProducts.length / SUPPLIER_ITEMS_PAGE_SIZE));
+  const paginatedSelectedSupplierProducts = filteredSelectedSupplierProducts.slice((supplierItemsPage - 1) * SUPPLIER_ITEMS_PAGE_SIZE, supplierItemsPage * SUPPLIER_ITEMS_PAGE_SIZE);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg">
@@ -562,57 +596,58 @@ export function SuppliersList() {
         </div>
       ) : (
         <div className="divide-y divide-gray-200">
-          {suppliers.map((supplier) => (
-            <button key={supplier.id} type="button" onClick={() => handleOpenSupplierDetails(supplier)} className="w-full px-6 py-4 text-left transition-colors hover:bg-gray-50">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">{supplier.name}</h3>
-                  <p className="mt-1 text-xs text-gray-500">{supplier.contact_person || supplier.email || supplier.phone || 'No primary contact'}</p>
-                  <p className="mt-2 text-sm text-gray-600">{(supplierProductsMap[supplier.id] || []).length} linked item(s) · Lead time {supplier.lead_time_days} days · Min order ${Number(supplier.minimum_order_amount).toFixed(2)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={(event) => { event.stopPropagation(); handleOpenProductModal(supplier); }}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded"
-                    title="Link item to supplier"
-                  >
-                    <Link2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(event) => { event.stopPropagation(); handleOpenEdit(supplier); }}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                    title="Edit supplier"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(event) => { event.stopPropagation(); handleDelete(supplier.id); }}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded"
-                    title="Delete supplier"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <ChevronRight className="h-5 w-5 text-gray-400" />
-                </div>
-              </div>
-              <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-900">
-                <p className="font-semibold uppercase tracking-wide text-blue-700">Re-order Schedule</p>
-                {supplier.reorder_schedule_type ? (
-                  <p className="mt-1">
-                    {supplier.reorder_schedule_type.replace('_', '-')}
-                    {supplier.reorder_schedule_start_date ? ` starting ${new Date(`${supplier.reorder_schedule_start_date}T00:00:00`).toLocaleDateString()}` : ''}
-                    {supplier.reorder_schedule_custom_dates?.length ? ` · ${supplier.reorder_schedule_custom_dates.length} custom date(s)` : ''}
-                    {supplier.reorder_schedule_is_recurring ? ' · recurring' : ''}
-                  </p>
-                ) : (
-                  <p className="mt-1 text-blue-700">No schedule configured</p>
+          {suppliers.map((supplier) => {
+            const isExpanded = expandedSupplierIds.includes(supplier.id);
+            const linkedItemCount = (supplierProductsMap[supplier.id] || []).length;
+
+            return (
+              <section key={supplier.id} className="px-6 py-4 transition-colors hover:bg-gray-50">
+                <button type="button" onClick={() => toggleSupplierExpanded(supplier.id)} className="flex w-full items-start justify-between gap-3 text-left">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">{supplier.name}</h3>
+                    <p className="mt-1 text-xs text-gray-500">{supplier.contact_person || supplier.email || supplier.phone || 'No primary contact'}</p>
+                    <p className="mt-2 text-sm text-gray-600">{linkedItemCount} linked item(s) · Lead time {supplier.lead_time_days} days</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-400">
+                    {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                  </div>
+                </button>
+                {isExpanded && (
+                  <div className="mt-4 space-y-4 rounded-lg border border-gray-200 bg-white p-4">
+                    <dl className="grid gap-3 text-sm md:grid-cols-3">
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Email</dt><dd className="mt-1 text-gray-900">{supplier.email || 'Not provided'}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Phone</dt><dd className="mt-1 text-gray-900">{supplier.phone || 'Not provided'}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Minimum order</dt><dd className="mt-1 text-gray-900">${Number(supplier.minimum_order_amount).toFixed(2)}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Payment terms</dt><dd className="mt-1 text-gray-900">{supplier.payment_terms || 'Not provided'}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">City</dt><dd className="mt-1 text-gray-900">{supplier.city || 'Not provided'}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Address</dt><dd className="mt-1 text-gray-900">{supplier.address || 'Not provided'}</dd></div>
+                    </dl>
+                    <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-900">
+                      <p className="font-semibold uppercase tracking-wide text-blue-700">Re-order Schedule</p>
+                      {supplier.reorder_schedule_type ? (
+                        <p className="mt-1">
+                          {supplier.reorder_schedule_type.replace('_', '-')}
+                          {supplier.reorder_schedule_start_date ? ` starting ${new Date(`${supplier.reorder_schedule_start_date}T00:00:00`).toLocaleDateString()}` : ''}
+                          {supplier.reorder_schedule_custom_dates?.length ? ` · ${supplier.reorder_schedule_custom_dates.length} custom date(s)` : ''}
+                          {supplier.reorder_schedule_is_recurring ? ' · recurring' : ''}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-blue-700">No schedule configured</p>
+                      )}
+                      {supplier.reorder_schedule_notes && <p className="mt-1">{supplier.reorder_schedule_notes}</p>}
+                    </div>
+                    {supplier.notes && <p className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">{supplier.notes}</p>}
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => handleOpenSupplierDetails(supplier)} className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700"><Pill className="h-4 w-4" /> View linked items</button>
+                      <button type="button" onClick={() => handleOpenProductModal(supplier)} className="inline-flex items-center gap-2 rounded-lg border border-green-200 px-3 py-2 text-sm font-semibold text-green-700 hover:bg-green-50"><Link2 className="h-4 w-4" /> Link item</button>
+                      <button type="button" onClick={() => handleOpenEdit(supplier)} className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"><Edit2 className="h-4 w-4" /> Edit</button>
+                      <button type="button" onClick={() => confirmDeleteSupplier(supplier.id)} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"><Trash2 className="h-4 w-4" /> Delete</button>
+                    </div>
+                  </div>
                 )}
-              </div>
-            </button>
-          ))}
+              </section>
+            );
+          })}
         </div>
       )}
 
@@ -623,87 +658,116 @@ export function SuppliersList() {
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">{selectedSupplierDetails.name} linked items</h2>
-                <p className="text-sm text-gray-600">Page {supplierItemsPage} of {selectedSupplierItemsTotalPages} · {selectedSupplierProducts.length} linked item(s)</p>
+                <p className="text-sm text-gray-600">Page {supplierItemsPage} of {selectedSupplierItemsTotalPages} · {filteredSelectedSupplierProducts.length} shown of {selectedSupplierProducts.length} linked item(s)</p>
               </div>
               <button onClick={() => setSelectedSupplierDetails(null)} className="p-1 hover:bg-gray-100 rounded">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="mb-4 flex flex-wrap gap-2">
-              <button type="button" onClick={() => handleOpenProductModal(selectedSupplierDetails)} className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700">
-                <Link2 className="h-4 w-4" /> Link Item
-              </button>
-              <button type="button" onClick={() => handleOpenEdit(selectedSupplierDetails)} className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50">
-                <Edit2 className="h-4 w-4" /> Edit Supplier
-              </button>
+            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => handleOpenProductModal(selectedSupplierDetails)} className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700">
+                  <Link2 className="h-4 w-4" /> Link Item
+                </button>
+                <button type="button" onClick={() => handleOpenEdit(selectedSupplierDetails)} className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50">
+                  <Edit2 className="h-4 w-4" /> Edit Supplier
+                </button>
+              </div>
+              <input
+                type="search"
+                value={supplierItemsSearch}
+                onChange={(event) => { setSupplierItemsSearch(event.target.value); setSupplierItemsPage(1); setExpandedSupplierProductId(null); }}
+                placeholder="Search linked items by name, SKU, type, or notes"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 lg:max-w-sm"
+              />
             </div>
 
             {selectedSupplierProducts.length === 0 ? (
               <div className="rounded-lg border border-dashed border-gray-300 px-6 py-10 text-center text-sm text-gray-500">No items linked yet.</div>
+            ) : filteredSelectedSupplierProducts.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-gray-300 px-6 py-10 text-center text-sm text-gray-500">No linked items match your search.</div>
             ) : (
               <div className="space-y-3">
-                {paginatedSelectedSupplierProducts.map((product) => (
-                  <div key={product.id} className="rounded-lg border border-gray-200 p-4">
-                    <div className="grid gap-3 md:grid-cols-6">
-                      <label className="md:col-span-2 text-xs font-medium uppercase tracking-wide text-gray-500">Item Name
-                        <input
-                          type="text"
-                          value={product.product_name || ''}
-                          onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { product_name: e.target.value })}
-                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                        />
-                      </label>
-                      <label className="text-xs font-medium uppercase tracking-wide text-gray-500">SKU
-                        <input
-                          type="text"
-                          value={product.supplier_sku || ''}
-                          onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_sku: e.target.value })}
-                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                        />
-                      </label>
-                      <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          pattern="[0-9]*[.]?[0-9]*"
-                          value={Number.isNaN(product.supplier_unit_price) ? '' : product.supplier_unit_price}
-                          onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
-                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                        />
-                      </label>
-                      <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Min Qty
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={Number.isNaN(product.minimum_order_quantity) ? '' : product.minimum_order_quantity}
-                          onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
-                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                        />
-                      </label>
-                      <div className="flex items-end gap-2">
-                        <button type="button" onClick={() => handleSaveSupplierProduct(selectedSupplierDetails.id, product)} disabled={actionLoading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300">Save</button>
-                        <button type="button" onClick={() => handleDeleteSupplierProduct(selectedSupplierDetails.id, product.id)} disabled={actionLoading} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100">Unlink</button>
-                      </div>
+                {paginatedSelectedSupplierProducts.map((product) => {
+                  const isExpanded = expandedSupplierProductId === product.id;
+
+                  return (
+                    <div key={product.id} className="rounded-lg border border-gray-200 p-4">
+                      <button type="button" onClick={() => setExpandedSupplierProductId(isExpanded ? null : product.id)} className="flex w-full items-center justify-between gap-3 text-left">
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900">{product.product_name || product.product_id}</h3>
+                          <p className="mt-1 text-xs text-gray-600">
+                            <span className="uppercase">{product.product_type}</span> · {product.is_inventory_item === false ? 'Non-Inventory' : 'Inventory'} · SKU {product.supplier_sku || 'not set'} · Unit {Number(product.supplier_unit_price || 0).toFixed(2)} · Min {product.minimum_order_quantity || 1}
+                          </p>
+                        </div>
+                        {isExpanded ? <ChevronDown className="h-5 w-5 text-gray-400" /> : <ChevronRight className="h-5 w-5 text-gray-400" />}
+                      </button>
+
+                      {isExpanded && (
+                        <div className="mt-4 border-t border-gray-200 pt-4">
+                          <div className="grid gap-3 md:grid-cols-6">
+                            <label className="md:col-span-2 text-xs font-medium uppercase tracking-wide text-gray-500">Item Name
+                              <input
+                                type="text"
+                                value={product.product_name || ''}
+                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { product_name: e.target.value })}
+                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              />
+                            </label>
+                            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">SKU
+                              <input
+                                type="text"
+                                value={product.supplier_sku || ''}
+                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_sku: e.target.value })}
+                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              />
+                            </label>
+                            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                pattern="[0-9]*[.]?[0-9]*"
+                                value={Number.isNaN(product.supplier_unit_price) ? '' : product.supplier_unit_price}
+                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              />
+                            </label>
+                            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Min Qty
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={Number.isNaN(product.minimum_order_quantity) ? '' : product.minimum_order_quantity}
+                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
+                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              />
+                            </label>
+                            <div className="flex items-end gap-2">
+                              <button type="button" onClick={() => handleSaveSupplierProduct(selectedSupplierDetails.id, product)} disabled={actionLoading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300">Save</button>
+                              <button type="button" onClick={() => confirmDeleteSupplierProduct(selectedSupplierDetails.id, product.id)} disabled={actionLoading} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100">Unlink</button>
+                            </div>
+                          </div>
+                          <label className="mt-3 block text-xs font-medium uppercase tracking-wide text-gray-500">Notes
+                            <textarea
+                              value={product.notes || ''}
+                              onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { notes: e.target.value })}
+                              rows={2}
+                              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                            />
+                          </label>
+                          <p className="mt-2 text-xs text-gray-500">{getProductDescription(product.product_id, product.product_type) || 'No inventory description available.'}</p>
+                        </div>
+                      )}
                     </div>
-                    <label className="mt-3 block text-xs font-medium uppercase tracking-wide text-gray-500">Notes
-                      <textarea
-                        value={product.notes || ''}
-                        onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { notes: e.target.value })}
-                        rows={2}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                      />
-                    </label>
-                    <p className="mt-2 text-xs text-gray-500"><span className="uppercase">{product.product_type}</span> · {product.is_inventory_item === false ? 'Non-Inventory' : 'Inventory'}{getProductDescription(product.product_id, product.product_type) ? ` · ${getProductDescription(product.product_id, product.product_type)}` : ''}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
             <div className="mt-4 flex items-center justify-between">
               <button type="button" onClick={() => setSupplierItemsPage((page) => Math.max(1, page - 1))} disabled={supplierItemsPage === 1} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
-              <span className="text-sm text-gray-600">Showing {paginatedSelectedSupplierProducts.length} item(s)</span>
+              <span className="text-sm text-gray-600">Showing {paginatedSelectedSupplierProducts.length} item(s), 20 per page</span>
               <button type="button" onClick={() => setSupplierItemsPage((page) => Math.min(selectedSupplierItemsTotalPages, page + 1))} disabled={supplierItemsPage === selectedSupplierItemsTotalPages} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">Next</button>
             </div>
           </div>
@@ -1299,6 +1363,16 @@ export function SuppliersList() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={!!pendingConfirmation}
+        title={pendingConfirmation?.title || ''}
+        message={pendingConfirmation?.message || ''}
+        confirmLabel={pendingConfirmation?.confirmLabel}
+        loading={actionLoading}
+        onConfirm={() => pendingConfirmation?.onConfirm()}
+        onCancel={() => setPendingConfirmation(null)}
+      />
     </div>
   );
 }

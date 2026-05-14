@@ -1,92 +1,54 @@
-1. SUPPLIES MANAGEMENT PAGE
-## Error Type
-Console Error
+# Restock Errors / Issues Resolution Log
 
-## Error Message
-In HTML, <button> cannot be a descendant of <button>.
-This will cause a hydration error.
+Updated: 2026-05-14
 
-  ...
-    <ScrollAndFocusHandler segmentPath={[...]}>
-      <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
-        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
-          <LoadingBoundary loading={null}>
-            <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
-              <RedirectBoundary>
-                <RedirectErrorBoundary router={{...}}>
-                  <InnerLayoutRouter url="/admin/res..." tree={[...]} cacheNode={{lazyData:null, ...}} ...>
-                    <SegmentViewNode type="page" pagePath="admin/rest...">
-                      <SegmentTrieNode>
-                      <SuppliersPage>
-                        <div className="space-y-6">
-                          <div>
-                          <SuppliersList>
-                            <div className="bg-white b...">
-                              <div>
-                              <div className="divide-y d...">
->                               <button
->                                 type="button"
->                                 onClick={function onClick}
->                                 className="w-full px-6 py-4 text-left transition-colors hover:bg-gray-50"
->                               >
-                                  <div className="flex items...">
-                                    <div>
-                                    <div className="flex items...">
->                                     <button
->                                       type="button"
->                                       onClick={function onClick}
->                                       className="p-2 text-green-600 hover:bg-green-50 rounded"
->                                       title="Link item to supplier"
->                                     >
-                                      ...
-                                  ...
-                                ...
-                    ...
-                  ...
-        ...
+## 1. Supplies Management Page hydration error: `<button>` cannot be a descendant of `<button>`
 
+### Original issue
+The Manage Suppliers page rendered the entire supplier card as a `<button>`, and that card contained child action `<button>` elements for linking items, editing, and deleting. React/Next.js correctly reported this invalid HTML nesting as a hydration risk:
 
+- `In HTML, <button> cannot be a descendant of <button>.`
+- Affected component: `components/admin/restock/suppliers-list.tsx`.
 
-    at button (<anonymous>:null:null)
-    at eval (components\admin\restock\suppliers-list.tsx:574:19)
-    at Array.map (<anonymous>:null:null)
-    at SuppliersList (components\admin\restock\suppliers-list.tsx:565:22)
-    at SuppliersPage (app\admin\restock\suppliers\page.tsx:38:7)
+### Resolution completed
+- Replaced the all-encompassing supplier card `<button>` with a semantic `<section>` wrapper.
+- Kept only the supplier card header as a single toggle button.
+- Moved action buttons into the expanded card content so they are siblings in normal content, not descendants of another button.
+- Added explicit expandable-card behavior to satisfy the Manage Suppliers task at the same time.
+- Added a dedicated **View linked items** button in the expanded supplier content to open the linked-items modal.
 
-## Code Frame
-  572 |                 </div>
-  573 |                 <div className="flex items-center gap-2">
-> 574 |                   <button
-      |                   ^
-  575 |                     type="button"
-  576 |                     onClick={(event) => { event.stopPropagation(); handleOpenProductModal(supplier); }}
-  577 |                     className="p-2 text-green-600 hover:bg-green-50 rounded"
+### How to verify truthfully
+1. Navigate to `/admin/restock/suppliers`.
+2. Open browser dev tools and confirm the console no longer reports nested-button hydration warnings.
+3. Inspect a supplier card in the Elements panel and confirm the card wrapper is a `<section>`, the header is a single `<button>`, and the action buttons are not nested inside that header button.
+4. Expand a supplier and confirm Link Item, Edit, Delete, and View linked items buttons all work.
+5. Programmatic verification performed: `npx tsc --noEmit --pretty false` and `npm run lint` both passed.
 
-Next.js version: 15.5.9 (Webpack)
+## 2. Restock request and PO status changes were stale inside open modals
 
-## Error Type
-Console Error
+### Original issue
+When restock request statuses or purchase order statuses changed, open modals could continue displaying stale request/PO data until the modal was closed or the page was refreshed. The workflow state was reloaded, but selected modal state still pointed at the old object snapshots.
 
-## Error Message
-<button> cannot contain a nested <button>.
-See this log for the ancestor stack trace.
+### Resolution completed
+- Added a synchronization effect in `RestockWorkflowTabs` that reconciles open modal selections against the latest loaded `requests` and `purchaseOrders` arrays.
+- The sync updates these open modal states after data reloads:
+  - selected restock request detail modal,
+  - selected request supplier grouped modal,
+  - selected purchase order detail modal,
+  - selected purchase order supplier grouped modal,
+  - placing purchase order modal,
+  - receiving purchase order modal,
+  - editing purchase order modal.
+- Purchase order supplier modals now refresh their grouped list from the latest status-specific PO grouping after status changes.
+- Request supplier modals now refresh their grouped list from the latest current/history request grouping after status changes.
+- The existing status-change handlers still call `loadData()`, and the new synchronization effect ensures the still-open modals reflect the new data immediately after that reload.
 
+### How to verify truthfully
+1. Open a Current Requests supplier group modal, open a request, cancel it, and confirm the surrounding request modal/list updates without needing a full page refresh.
+2. Open a Purchase Orders supplier group modal for open POs, cancel one PO, and confirm the modal's PO list updates to remove or reclassify the cancelled PO after the action completes.
+3. Open a placed PO receive modal, complete receiving, and confirm the PO status/detail data updates immediately after the action completes.
+4. Open an open PO edit modal, save changes, and confirm the latest PO line data is reflected after the data reload.
+5. Programmatic verification performed: `npx tsc --noEmit --pretty false` and `npm run lint` both passed.
 
-    at button (<anonymous>:null:null)
-    at eval (components\admin\restock\suppliers-list.tsx:566:13)
-    at Array.map (<anonymous>:null:null)
-    at SuppliersList (components\admin\restock\suppliers-list.tsx:565:22)
-    at SuppliersPage (app\admin\restock\suppliers\page.tsx:38:7)
-
-## Code Frame
-  564 |         <div className="divide-y divide-gray-200">
-  565 |           {suppliers.map((supplier) => (
-> 566 |             <button key={supplier.id} type="button" onClick={() => handleOpenSupplierDetails(supplier)} className="w-full px-6 py-4 text-left transition-colors hover:bg-gray-50">
-      |             ^
-  567 |               <div className="flex items-start justify-between gap-3">
-  568 |                 <div>
-  569 |                   <h3 className="text-sm font-semibold text-gray-900">{supplier.name}</h3>
-
-Next.js version: 15.5.9 (Webpack)
-
-2. when restock request, and PO statuses are changed, the modals need to update them same time, a refresh or closing the modal first is required at the moment for it to update in the modals, that should not be the case for each modal that allows status changes
+## Additional verification note
+- `npm run build` was attempted. The optimized production compile completed successfully, but the build failed while collecting page data because this environment does not define the required Supabase URL for an unrelated API route. The exact environment error was `supabaseUrl is required`.

@@ -6,6 +6,7 @@ import { getRestockRequestById, updateRestockRequestStatus } from '@/app/actions
 import { RestockRequest } from '@/lib/types/restock';
 import { ArrowLeft, Loader, Package, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConfirmationModal } from './confirmation-modal';
 
 interface RestockRequestDetailProps {
   requestId: string;
@@ -20,6 +21,7 @@ export function RestockRequestDetail({ requestId, userId }: RestockRequestDetail
   const [request, setRequest] = useState<RestockRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
 
   useEffect(() => {
     loadRequest();
@@ -34,7 +36,8 @@ export function RestockRequestDetail({ requestId, userId }: RestockRequestDetail
   };
 
   const handleCancel = async () => {
-    if (!request || !confirm('Cancel this restock request?')) return;
+    if (!request) return;
+    setShowCancelConfirmation(false);
     setActionLoading(true);
     const { error } = await updateRestockRequestStatus(request.id, 'cancelled', userId, 'Cancelled from restock detail page');
     if (error) toast.error(error);
@@ -80,7 +83,7 @@ export function RestockRequestDetail({ requestId, userId }: RestockRequestDetail
 
           {request.status === 'requested' && (
             <button
-              onClick={handleCancel}
+              onClick={() => setShowCancelConfirmation(true)}
               disabled={actionLoading}
               className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2 font-medium text-red-700 hover:bg-red-50 disabled:bg-gray-100"
             >
@@ -124,6 +127,15 @@ export function RestockRequestDetail({ requestId, userId }: RestockRequestDetail
           ))}
         </div>
       </div>
+      <ConfirmationModal
+        isOpen={showCancelConfirmation}
+        title="Cancel restock request?"
+        message="This restock request will move to cancelled history and will no longer be included in active purchase order workflows."
+        confirmLabel="Cancel request"
+        loading={actionLoading}
+        onConfirm={handleCancel}
+        onCancel={() => setShowCancelConfirmation(false)}
+      />
     </div>
   );
 }
