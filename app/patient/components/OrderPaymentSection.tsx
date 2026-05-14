@@ -21,8 +21,11 @@ export function OrderPaymentSection({
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
   const [showFygaroModal, setShowFygaroModal] = useState(false);
 
-  // Only show payment options when order is confirmed or payment_pending and not yet paid
-  if ((order.status !== 'confirmed' && order.status !== 'payment_pending') || order.payment_status === 'paid') {
+  // Store orders require confirmation/payment_pending; prescription orders are admin-created and payable as soon as they are visible to the patient.
+  const canPayPrescriptionOrder = !!order.is_prescription_order && order.payment_status !== 'paid' && order.status !== 'cancelled';
+  const canPayStoreOrder = (order.status === 'confirmed' || order.status === 'payment_pending') && order.payment_status !== 'paid';
+
+  if (!canPayPrescriptionOrder && !canPayStoreOrder) {
     return null;
   }
 

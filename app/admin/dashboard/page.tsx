@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
-import { AlertCircle, CheckCircle, Clock, TrendingUp } from "lucide-react";
+
 
 export const dynamic = "force-dynamic";
 
@@ -122,7 +122,7 @@ export default async function AdminDashboard() {
   }
 
   const dashboardData = await getDashboardData();
-  const { prescriptionStats, orderStats, refillStats, pendingPrescriptions } = dashboardData;
+  const { pendingPrescriptions } = dashboardData;
 
   return (
     <div className="space-y-3 sm:space-y-4 md:space-y-6">
@@ -139,74 +139,22 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
-        {/* Pending Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-yellow-500">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-gray-600 text-xs md:text-sm font-medium">Pending</p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{prescriptionStats.pending}</p>
-            </div>
-            <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:w-10 text-yellow-500 flex-shrink-0 hidden sm:block" />
-          </div>
-          <Link
-            href="/admin/prescriptions"
-            className="text-green-600 text-xs md:text-sm font-medium mt-2 sm:mt-3 hover:text-green-700 inline-block"
-          >
-            View all →
+      {/* Navigation Cards */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          { href: '/admin/restock', title: 'Restock Management', description: 'Review requests, supplier schedules, purchase orders, and receiving.' },
+          { href: '/admin/prescriptions', title: 'Prescription Review', description: 'Process patient and doctor-submitted prescriptions.' },
+          { href: '/admin/orders', title: 'Orders', description: 'Manage OTC and prescription order payment, fulfillment, and delivery.' },
+          { href: '/admin/refills', title: 'Refill Requests', description: 'Review and respond to patient refill requests.' },
+          { href: '/admin/inventory', title: 'Inventory', description: 'Maintain OTC and prescription catalog availability.' },
+          { href: '/admin/more', title: 'More Admin Tools', description: 'Open additional configuration and operational pages.' },
+        ].map((item) => (
+          <Link key={item.href} href={item.href} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition hover:border-green-300 hover:shadow-md">
+            <h2 className="text-base font-semibold text-gray-900">{item.title}</h2>
+            <p className="mt-2 text-sm text-gray-600">{item.description}</p>
+            <span className="mt-4 inline-block text-sm font-semibold text-green-700">Open →</span>
           </Link>
-        </div>
-
-        {/* Approved Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-green-600">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-gray-600 text-xs md:text-sm font-medium">Approved</p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{prescriptionStats.approved}</p>
-            </div>
-            <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:w-10 text-green-600 flex-shrink-0 hidden sm:block" />
-          </div>
-          <p className="text-gray-600 text-xs mt-2 sm:mt-3">
-            {prescriptionStats.total > 0
-              ? `${Math.round((prescriptionStats.approved / prescriptionStats.total) * 100)}% of total`
-              : "No prescriptions"}
-          </p>
-        </div>
-
-        {/* Processing Prescriptions */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-blue-600">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-gray-600 text-xs md:text-sm font-medium">Processing</p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{prescriptionStats.processing}</p>
-            </div>
-            <Clock className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:w-10 text-blue-600 flex-shrink-0 hidden sm:block" />
-          </div>
-          <Link
-            href="/admin/prescriptions"
-            className="text-green-600 text-xs md:text-sm font-medium mt-2 sm:mt-3 hover:text-green-700 inline-block"
-          >
-            View all →
-          </Link>
-        </div>
-
-        {/* Pending Refills */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-t-4 border-orange-500">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-gray-600 text-xs md:text-sm font-medium">Refills</p>
-              <p className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{refillStats.pending}</p>
-            </div>
-            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:w-10 text-orange-600 flex-shrink-0 hidden sm:block" />
-          </div>
-          <Link
-            href="/admin/refills"
-            className="text-green-600 text-xs md:text-sm font-medium mt-2 sm:mt-3 hover:text-green-700 inline-block"
-          >
-            View all →
-          </Link>
-        </div>
+        ))}
       </div>
 
       {/* Quick Actions */}
@@ -254,67 +202,8 @@ export default async function AdminDashboard() {
           </Link>
         </div>
 
-        {/* Quick Stats */}
-        <div className="bg-white rounded-lg shadow p-3 sm:p-6">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Overall Statistics</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b text-xs sm:text-sm">
-              <span className="text-gray-600">Total Prescriptions</span>
-              <span className="font-semibold text-gray-900">{prescriptionStats.total}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b text-xs sm:text-sm">
-              <span className="text-gray-600">Total Orders</span>
-              <span className="font-semibold text-gray-900">{orderStats.total}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b text-xs sm:text-sm">
-              <span className="text-gray-600">Approval Rate</span>
-              <span className="font-semibold text-gray-900">
-                {prescriptionStats.total > 0
-                  ? `${Math.round((prescriptionStats.approved / prescriptionStats.total) * 100)}%`
-                  : "N/A"}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 text-xs sm:text-sm">
-              <span className="text-gray-600">Rejection Rate</span>
-              <span className="font-semibold text-gray-900">
-                {prescriptionStats.total > 0
-                  ? `${Math.round((prescriptionStats.rejected / prescriptionStats.total) * 100)}%`
-                  : "N/A"}
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Navigation Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-        <Link
-          href="/admin/prescriptions"
-          className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-l-4 border-green-600 hover:shadow-lg transition"
-        >
-          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-2">Manage Prescriptions</h3>
-          <p className="text-gray-600 text-xs md:text-sm mb-4">Review and approve patient prescriptions</p>
-          <span className="text-green-600 font-medium text-xs md:text-sm">Go to Prescriptions →</span>
-        </Link>
-
-        <Link
-          href="/admin/orders"
-          className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-l-4 border-blue-600 hover:shadow-lg transition"
-        >
-          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-2">Manage Orders</h3>
-          <p className="text-gray-600 text-xs md:text-sm mb-4">Update order status and tracking</p>
-          <span className="text-blue-600 font-medium text-xs md:text-sm">Go to Orders →</span>
-        </Link>
-
-        <Link
-          href="/admin/refills"
-          className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 border-l-4 border-green-600 hover:shadow-lg transition col-span-1 sm:col-span-2 lg:col-span-1"
-        >
-          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-2">Process Refills</h3>
-          <p className="text-gray-600 text-xs md:text-sm mb-4">Approve or reject refill requests</p>
-          <span className="text-green-600 font-medium text-xs md:text-sm">Go to Refills →</span>
-        </Link>
-      </div>
     </div>
   );
 }

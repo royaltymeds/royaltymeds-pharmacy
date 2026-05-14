@@ -8,6 +8,7 @@ import {
   deleteSupplier,
   getSupplierProducts,
   createSupplierProduct,
+  createSupplierProductsBulk,
   deleteSupplierProduct,
 } from '@/app/actions/restock';
 import { getOTCDrugs, getPrescriptionDrugs } from '@/app/actions/inventory';
@@ -30,6 +31,9 @@ export function SuppliersList() {
   const [selectedSupplierForProduct, setSelectedSupplierForProduct] = useState<Supplier | null>(null);
   const [productSource, setProductSource] = useState<'inventory' | 'non_inventory'>('inventory');
   const [showItemSupplierModal, setShowItemSupplierModal] = useState(false);
+  const [selectedSupplierIdsForItem, setSelectedSupplierIdsForItem] = useState<string[]>([]);
+  const [samePriceForSelectedSuppliers, setSamePriceForSelectedSuppliers] = useState(true);
+  const [supplierPriceOverrides, setSupplierPriceOverrides] = useState<Record<string, number>>({});
   const [itemSupplierFormData, setItemSupplierFormData] = useState<CreateSupplierProductInput>({
     supplier_id: '',
     product_id: '',
@@ -267,11 +271,22 @@ export function SuppliersList() {
 
     try {
       const selectedItem = getProductOptions(itemSupplierFormData.product_type).find((item) => item.id === itemSupplierFormData.product_id);
-      const { error } = await createSupplierProduct({
+      const supplierIds = selectedSupplierIdsForItem.length > 0 ? selectedSupplierIdsForItem : [itemSupplierFormData.supplier_id].filter(Boolean);
+      if (supplierIds.length === 0) {
+        setError('Select at least one supplier.');
+        setActionLoading(false);
+        return;
+      }
+
+      const payloads = supplierIds.map((supplierId) => ({
         ...itemSupplierFormData,
+        supplier_id: supplierId,
+        supplier_unit_price: samePriceForSelectedSuppliers ? itemSupplierFormData.supplier_unit_price : supplierPriceOverrides[supplierId] ?? itemSupplierFormData.supplier_unit_price,
         product_name: selectedItem?.name || itemSupplierFormData.product_name,
         is_inventory_item: true,
-      });
+      }));
+
+      const { error } = await createSupplierProductsBulk(payloads);
 
       if (error) {
         setError(error);
@@ -279,8 +294,10 @@ export function SuppliersList() {
         return;
       }
 
-      await loadSupplierProductsForSupplier(itemSupplierFormData.supplier_id);
+      await Promise.all(supplierIds.map((supplierId) => loadSupplierProductsForSupplier(supplierId)));
       setShowItemSupplierModal(false);
+      setSelectedSupplierIdsForItem([]);
+      setSupplierPriceOverrides({});
       setItemSupplierFormData({
         supplier_id: '',
         product_id: '',
@@ -820,17 +837,56 @@ export function SuppliersList() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
-                <select
-                  value={itemSupplierFormData.supplier_id}
-                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_id: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  <option value="">-- Choose a supplier --</option>
-                  {suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Suppliers *</label>
+                <div className="max-h-44 space-y-2 overflow-y-auto rounded-lg border border-gray-300 p-3">
+                  {suppliers.map((supplier) => (
+                    <label key={supplier.id} className="flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={selectedSupplierIdsForItem.includes(supplier.id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setSelectedSupplierIdsForItem((current) => checked ? [...current, supplier.id] : current.filter((id) => id !== supplier.id));
+                          setItemSupplierFormData((current) => ({ ...current, supplier_id: checked ? supplier.id : current.supplier_id === supplier.id ? '' : current.supplier_id }));
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                      />
+                      {supplier.name}
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">Select one or more suppliers to bulk-link this item.</p>
               </div>
+
+              {selectedSupplierIdsForItem.length > 1 && (
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={samePriceForSelectedSuppliers}
+                    onChange={(e) => setSamePriceForSelectedSuppliers(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                  />
+                  Use the same unit cost for every selected supplier
+                </label>
+              )}
+
+              {!samePriceForSelectedSuppliers && selectedSupplierIdsForItem.length > 1 && (
+                <div className="space-y-2 rounded-lg border border-blue-100 bg-blue-50 p-3">
+                  {selectedSupplierIdsForItem.map((supplierId) => (
+                    <label key={supplierId} className="grid grid-cols-2 items-center gap-3 text-sm">
+                      <span className="font-medium text-blue-900">{suppliers.find((supplier) => supplier.id === supplierId)?.name}</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*[.]?[0-9]*"
+                        value={Number.isNaN(supplierPriceOverrides[supplierId]) ? '' : supplierPriceOverrides[supplierId] ?? itemSupplierFormData.supplier_unit_price}
+                        onChange={(e) => setSupplierPriceOverrides({ ...supplierPriceOverrides, [supplierId]: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                        className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      />
+                    </label>
+                  ))}
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>

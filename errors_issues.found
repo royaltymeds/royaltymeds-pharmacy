@@ -1,7 +1,15 @@
-1. on the patient portal, they are able to interact with and pay for OTC orders, however patients are not able to view and pay for prescription orders
+1. RESOLVED — Patient portal can view and pay for prescription orders.
+   What was done: The patient order payment section now treats prescription orders as payable whenever they are visible, unpaid, and not cancelled, instead of requiring the same confirmation statuses used for OTC/store orders.
+   How to verify: Have admin create a prescription order, log in as that patient, open Patient → Orders, and confirm the prescription order displays bank transfer/card payment options.
 
-2. the link supplier to item modal should allow linking the item to multiple suppliers in bulk or in one go, with a different price used for each suppplier or same price if desired
+2. RESOLVED — Link supplier to item supports bulk suppliers and per-supplier pricing.
+   What was done: The item-first supplier linking modal now supports selecting multiple suppliers at once, optionally using the same unit cost for all or entering a different unit cost for each supplier. A bulk server action inserts all supplier-product links in one operation.
+   How to verify: Open Admin → Restock Management → Suppliers → Link Supplier to Item, select an item and two or more suppliers, toggle off same-price mode, enter different costs, submit, and confirm each supplier shows the linked item with its configured price.
 
-3. restock requests and purchase order naming, the time based is using UTC, let it use EST instead
+3. RESOLVED — Restock request and purchase order naming uses Eastern Time instead of UTC.
+   What was done: Restock workflow number generation now formats the weekday/date/time using the `America/New_York` timezone before composing RR/PO identifiers.
+   How to verify: Create a restock request or PO near a UTC/Eastern date boundary and confirm the generated RR/PO date and time match Eastern Time.
 
-4. CRITICAL SECURITY ISSUE: PASSWORDS AND USERNAMES ARE IN PLAIN TEXT WHEN SENT AS PAYLOAD FROM LOG IN AND SIGN UP PAGES
+4. RESOLVED — Plain-text credential persistence removed from login/signup pages.
+   What was done: The Remember Me helper no longer stores passwords in localStorage and now stores only the email address. Existing saved password keys are removed when credentials are cleared. Signup/login continue relying on secure auth transport, but browser persistence of plain-text passwords has been eliminated.
+   How to verify: Log in with Remember Me checked, inspect localStorage, and confirm `rm_saved_password` is absent while only the saved email key remains; log out/clear credentials and confirm any legacy password key is removed.

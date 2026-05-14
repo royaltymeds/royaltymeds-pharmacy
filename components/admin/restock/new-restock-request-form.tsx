@@ -7,7 +7,7 @@ import { createRestockRequest, getSuppliers, getSupplierProducts } from '@/app/a
 import { getOTCDrugs, getPrescriptionDrugs } from '@/app/actions/inventory';
 import { Supplier, SupplierProduct } from '@/lib/types/restock';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
-import { X, Plus, Loader, AlertCircle } from 'lucide-react';
+import { X, Plus, Loader, AlertCircle, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface RestockItem {
@@ -37,6 +37,9 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [importRows, setImportRows] = useState<Record<string, string>[]>([]);
+  const [importColumns, setImportColumns] = useState<string[]>([]);
+  const [columnMap, setColumnMap] = useState({ productName: '', quantity: '', unitPrice: '', productType: '' });
 
   const loadSuppliers = useCallback(async () => {
     const { data } = await getSuppliers();
@@ -79,6 +82,71 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
     if (product.product_name) return product.product_name;
     const catalog = product.product_type === 'otc' ? otcDrugs : prescriptionDrugs;
     return catalog.find((item) => item.id === product.product_id)?.name || product.product_id;
+  };
+
+
+  const parseDelimitedText = (text: string) => {
+    const delimiter = text.includes('\t') ? '\t' : ',';
+    const lines = text.split(/\r?\n/).filter((line) => line.trim());
+    const parseLine = (line: string) => line.split(delimiter).map((cell) => cell.trim().replace(/^"|"$/g, ''));
+    const headers = parseLine(lines[0] || '');
+    const rows = lines.slice(1).map((line) => {
+      const values = parseLine(line);
+      return headers.reduce<Record<string, string>>((row, header, index) => {
+        row[header] = values[index] || '';
+        return row;
+      }, {});
+    });
+    setImportColumns(headers);
+    setImportRows(rows);
+    const findColumn = (...candidates: string[]) => headers.find((header) => candidates.some((candidate) => header.toLowerCase().includes(candidate))) || '';
+    setColumnMap({
+      productName: findColumn('product', 'item', 'name'),
+      quantity: findColumn('quantity', 'qty'),
+      unitPrice: findColumn('price', 'cost', 'unit'),
+      productType: findColumn('type'),
+    });
+  };
+
+  const handleImportFile = async (file: File) => {
+    if (!file.name.match(/\.(csv|tsv|txt|xls|xlsx)$/i)) {
+      setError('Upload a CSV, TSV, or spreadsheet file saved as delimited text.');
+      return;
+    }
+    const text = await file.text();
+    parseDelimitedText(text);
+  };
+
+  const applyImportedRows = () => {
+    if (!columnMap.productName || !columnMap.quantity) {
+      setError('Map at least Product Name and Quantity before importing.');
+      return;
+    }
+
+    const importedItems = importRows.map((row, index) => {
+      const importedName = row[columnMap.productName]?.trim();
+      const matchedSupplierProduct = supplierProducts.find((product) => getProductName(product).toLowerCase() === importedName?.toLowerCase());
+      if (!importedName || !matchedSupplierProduct) return null;
+      const quantity = Math.max(1, parseInt(row[columnMap.quantity] || '1', 10) || 1);
+      const unitPrice = columnMap.unitPrice ? parseFloat(row[columnMap.unitPrice] || '') : Number.NaN;
+      return {
+        supplier_product_id: matchedSupplierProduct.id,
+        product_id: matchedSupplierProduct.product_id,
+        product_type: (columnMap.productType && row[columnMap.productType] === 'prescription' ? 'prescription' : matchedSupplierProduct.product_type) as 'otc' | 'prescription',
+        product_name: getProductName(matchedSupplierProduct),
+        quantity_requested: quantity,
+        unit_price: Number.isFinite(unitPrice) ? unitPrice : matchedSupplierProduct.supplier_unit_price || 0,
+        temporary_id: `import-${Date.now()}-${index}`,
+      };
+    }).filter(Boolean) as RestockItem[];
+
+    if (importedItems.length === 0) {
+      setError("No imported rows matched this supplier's linked items. Check names and mapping.");
+      return;
+    }
+
+    setItems((current) => [...current.filter((item) => !importedItems.some((imported) => imported.supplier_product_id === item.supplier_product_id)), ...importedItems]);
+    toast.success(`Imported ${importedItems.length} restock item(s).`);
   };
 
   const addItem = (product: SupplierProduct) => {
@@ -239,6 +307,43 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Add Items</h2>
 
+
+          <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="flex items-center gap-2 text-blue-900">
+              <Upload className="h-4 w-4" />
+              <h3 className="font-semibold">Import items from spreadsheet</h3>
+            </div>
+            <p className="mt-1 text-sm text-blue-800">Upload CSV/TSV or spreadsheet-exported delimited text, then map columns to product name, quantity, type, and unit cost.</p>
+            <input
+              type="file"
+              accept=".csv,.tsv,.txt,.xls,.xlsx"
+              onChange={(event) => event.target.files?.[0] && handleImportFile(event.target.files[0])}
+              className="mt-3 block w-full text-sm text-gray-700"
+            />
+            {importColumns.length > 0 && (
+              <div className="mt-4 grid gap-3 md:grid-cols-4">
+                {([
+                  ['productName', 'Product Name *'],
+                  ['quantity', 'Quantity *'],
+                  ['unitPrice', 'Unit Cost'],
+                  ['productType', 'Product Type'],
+                ] as const).map(([key, label]) => (
+                  <label key={key} className="text-sm font-medium text-blue-900">
+                    {label}
+                    <select
+                      value={columnMap[key]}
+                      onChange={(event) => setColumnMap({ ...columnMap, [key]: event.target.value })}
+                      className="mt-1 w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-gray-900"
+                    >
+                      <option value="">Do not map</option>
+                      {importColumns.map((column) => <option key={column} value={column}>{column}</option>)}
+                    </select>
+                  </label>
+                ))}
+                <button type="button" onClick={applyImportedRows} className="self-end rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">Import mapped rows</button>
+              </div>
+            )}
+          </div>
           {supplierProducts.length === 0 ? (
             <p className="text-gray-500">No products available for this supplier</p>
           ) : (
