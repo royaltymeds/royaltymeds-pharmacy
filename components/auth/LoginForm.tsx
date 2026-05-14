@@ -26,7 +26,6 @@ export default function LoginForm() {
     const savedCredentials = getSavedCredentials();
     if (savedCredentials) {
       setEmail(savedCredentials.email);
-      setPassword(savedCredentials.password);
     }
   }, []);
 
@@ -69,7 +68,7 @@ export default function LoginForm() {
 
       // If "Remember me" is checked, save credentials for next login
       if (rememberMe) {
-        saveCredentials(email, password);
+        saveCredentials(email);
       } else {
         clearCredentials(); // Clear saved credentials if unchecked
       }

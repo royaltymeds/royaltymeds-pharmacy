@@ -1,26 +1,23 @@
 /**
  * Credentials Persistence Utilities
  * 
- * Handles "Remember me" functionality by storing username/email and password
- * in localStorage for convenience on next login.
+ * Handles "Remember me" functionality by storing only the username/email
+ * in localStorage for convenience on next login. Passwords are never persisted.
  */
 
 export interface SavedCredentials {
   email: string;
-  password: string;
+  password?: never;
 }
 
 const EMAIL_KEY = "rm_saved_email";
-const PASSWORD_KEY = "rm_saved_password";
 
 /**
- * Saves user credentials when "Remember me" is checked
- * Note: Credentials are stored in plain text in localStorage.
- * For production, consider using more secure storage or encryption.
+ * Saves the user's email when "Remember me" is checked.
+ * Passwords are intentionally not saved in browser storage.
  */
-export function saveCredentials(email: string, password: string): void {
+export function saveCredentials(email: string): void {
   localStorage.setItem(EMAIL_KEY, email);
-  localStorage.setItem(PASSWORD_KEY, password);
 }
 
 /**
@@ -28,10 +25,8 @@ export function saveCredentials(email: string, password: string): void {
  */
 export function getSavedCredentials(): SavedCredentials | null {
   const email = localStorage.getItem(EMAIL_KEY);
-  const password = localStorage.getItem(PASSWORD_KEY);
-
-  if (email && password) {
-    return { email, password };
+  if (email) {
+    return { email };
   }
 
   return null;
@@ -41,7 +36,7 @@ export function getSavedCredentials(): SavedCredentials | null {
  * Checks if credentials are saved
  */
 export function hassSavedCredentials(): boolean {
-  return Boolean(localStorage.getItem(EMAIL_KEY) && localStorage.getItem(PASSWORD_KEY));
+  return Boolean(localStorage.getItem(EMAIL_KEY));
 }
 
 /**
@@ -50,5 +45,5 @@ export function hassSavedCredentials(): boolean {
  */
 export function clearCredentials(): void {
   localStorage.removeItem(EMAIL_KEY);
-  localStorage.removeItem(PASSWORD_KEY);
+  localStorage.removeItem('rm_saved_password');
 }

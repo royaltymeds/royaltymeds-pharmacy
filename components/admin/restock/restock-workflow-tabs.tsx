@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import {
   createPurchaseOrder,
   getPurchaseOrders,
@@ -19,7 +18,7 @@ interface RestockWorkflowTabsProps {
   userId: string;
 }
 
-type TabKey = 'requests' | 'schedule' | 'purchase_orders';
+type TabKey = 'requests' | 'request_history' | 'schedule' | 'purchase_orders';
 
 type EditFormItem = {
   itemId?: string;
@@ -89,7 +88,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPoModal, setShowPoModal] = useState(false);
-  const [poForm, setPoForm] = useState({ supplier_id: '', reorder_date: '', is_custom_reorder_date: false, notes: '' });
+  const [poForm, setPoForm] = useState({ supplier_id: '', reorder_date: '', is_custom_reorder_date: false, source: 'manual' as 'manual' | 'scheduled', notes: '' });
   const [poFormLocked, setPoFormLocked] = useState(false);
   const [receivingPurchaseOrder, setReceivingPurchaseOrder] = useState<PurchaseOrder | null>(null);
   const [placingPurchaseOrder, setPlacingPurchaseOrder] = useState<PurchaseOrder | null>(null);
@@ -99,6 +98,9 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [editNotes, setEditNotes] = useState('');
   const [receiveItems, setReceiveItems] = useState<ReceiveFormItem[]>([]);
   const [focusedPurchaseOrderId, setFocusedPurchaseOrderId] = useState<string | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RestockRequest | null>(null);
+  const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<UpcomingReorder | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -134,8 +136,11 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     }, {});
   }, [purchaseOrders]);
 
+  const currentRequests = useMemo(() => requests.filter((request) => request.status === 'requested'), [requests]);
+  const requestHistory = useMemo(() => requests.filter((request) => request.status !== 'requested'), [requests]);
+
   const requestsBySupplier = useMemo(() => {
-    return requests.reduce<Record<string, { supplierName: string; requests: RestockRequest[] }>>((groups, request) => {
+    return currentRequests.reduce<Record<string, { supplierName: string; requests: RestockRequest[] }>>((groups, request) => {
       const key = request.supplier_id;
       if (!groups[key]) {
         groups[key] = { supplierName: request.supplier?.name || 'Unknown Supplier', requests: [] };
@@ -143,13 +148,14 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       groups[key].requests.push(request);
       return groups;
     }, {});
-  }, [requests]);
+  }, [currentRequests]);
 
   const openPurchaseOrderModal = (supplierId?: string, reorderDate?: string | null, lockFields = false) => {
     setPoForm({
       supplier_id: supplierId || '',
       reorder_date: reorderDate || new Date().toISOString().split('T')[0],
       is_custom_reorder_date: !reorderDate,
+      source: lockFields ? 'scheduled' : 'manual',
       notes: '',
     });
     setPoFormLocked(lockFields);
@@ -158,6 +164,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
   const viewPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
     setFocusedPurchaseOrderId(purchaseOrder.id);
+    setSelectedPurchaseOrder(purchaseOrder);
     setActiveTab('purchase_orders');
   };
 
@@ -171,7 +178,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       setError(createError);
       toast.error(createError);
     } else {
-      toast.success('Purchase order created and linked to current supplier requests.');
+      toast.success(poForm.source === 'manual' ? 'Manual purchase order created. Link requests in Edit before it affects request queues.' : 'Purchase order created and linked to current supplier requests.');
       setShowPoModal(false);
       await loadData();
       setActiveTab('purchase_orders');
@@ -283,7 +290,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   };
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
-    { key: 'requests', label: 'Current Requests', count: requests.length },
+    { key: 'requests', label: 'Current Requests', count: currentRequests.length },
+    { key: 'request_history', label: 'Request History', count: requestHistory.length },
     { key: 'schedule', label: 'Upcoming Scheduled Re-orders', count: upcomingReorders.filter((item) => item.next_reorder_date).length },
     { key: 'purchase_orders', label: 'Purchase Orders', count: purchaseOrders.length },
   ];
@@ -363,7 +371,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                         </div>
                         <div className="divide-y divide-gray-200 rounded-lg bg-white">
                           {group.requests.map((request) => (
-                            <Link key={request.id} href={`/admin/restock/${request.id}`} className="flex items-center justify-between p-4 hover:bg-gray-50">
+                            <button key={request.id} type="button" onClick={() => setSelectedRequest(request)} className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50">
                               <div>
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="font-semibold text-gray-900">{request.request_number}</span>
@@ -372,16 +380,34 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                                   </span>
                                 </div>
                                 <p className="mt-1 text-sm text-gray-600">
-                                  {(request.items || []).length} item(s) · {formatCurrency(request.total_amount)} · Requested {new Date(request.created_at).toLocaleDateString()}
+                                  {(request.items || []).length} item(s) · {formatCurrency(request.total_amount)} · Submitted by {request.pharmacist?.full_name || request.pharmacist?.email || 'Unknown user'} · Requested {new Date(request.created_at).toLocaleDateString()}
                                 </p>
                               </div>
                               <ChevronRight className="h-5 w-5 text-gray-400" />
-                            </Link>
+                            </button>
                           ))}
                         </div>
                       </section>
                     );
                   })
+                )}
+              </div>
+            )}
+
+            {activeTab === 'request_history' && (
+              <div className="space-y-3">
+                {requestHistory.length === 0 ? (
+                  <EmptyState icon={ClipboardList} title="No request history yet" subtitle="Requests linked to POs, received, or cancelled will appear here." />
+                ) : (
+                  requestHistory.map((request) => (
+                    <button key={request.id} type="button" onClick={() => setSelectedRequest(request)} className="w-full rounded-lg border border-gray-200 p-4 text-left hover:bg-gray-50">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-gray-900">{request.request_number}</span>
+                        <span className={`rounded-full border px-2 py-1 text-xs font-medium ${getRestockStatusClasses(request.status)}`}>{request.status.replace(/_/g, ' ')}</span>
+                      </div>
+                      <p className="mt-1 text-sm text-gray-600">{request.supplier?.name} · Submitted by {request.pharmacist?.full_name || request.pharmacist?.email || 'Unknown user'} · {(request.items || []).length} item(s) · {formatCurrency(request.total_amount)}</p>
+                    </button>
+                  ))
                 )}
               </div>
             )}
@@ -395,7 +421,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                     const openPurchaseOrder = openPurchaseOrdersBySupplier[item.supplier.id];
 
                     return (
-                      <div key={item.supplier.id} className="rounded-lg border border-gray-200 p-4">
+                      <button key={item.supplier.id} type="button" onClick={() => setSelectedSchedule(item)} className="rounded-lg border border-gray-200 p-4 text-left hover:bg-gray-50">
                         <div className="mb-3 flex items-start justify-between gap-3">
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
@@ -415,22 +441,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                           <div><dt className="text-gray-500">Contact</dt><dd className="font-medium text-gray-900">{item.supplier.contact_person || item.supplier.email || item.supplier.phone || 'Not provided'}</dd></div>
                           <div><dt className="text-gray-500">Lead time</dt><dd className="font-medium text-gray-900">{item.supplier.lead_time_days} day(s)</dd></div>
                         </dl>
-                        {openPurchaseOrder ? (
-                          <button
-                            onClick={() => viewPurchaseOrder(openPurchaseOrder)}
-                            className="mt-4 w-full rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700"
-                          >
-                            View Purchase Order
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => openPurchaseOrderModal(item.supplier.id, item.next_reorder_date, true)}
-                            className="mt-4 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                          >
-                            Generate Purchase Order
-                          </button>
-                        )}
-                      </div>
+                        <p className="mt-4 text-sm font-semibold text-green-700">Open details →</p>
+                      </button>
                     );
                   })
                 )}
@@ -443,7 +455,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                   <EmptyState icon={ClipboardList} title="No purchase orders yet" subtitle="Generate purchase orders from the supplier request queues or schedules." />
                 ) : (
                   purchaseOrders.map((po) => (
-                    <div key={po.id} className={`rounded-lg border p-4 ${focusedPurchaseOrderId === po.id ? 'border-blue-300 bg-blue-50/40' : 'border-gray-200'}`}>
+                    <div key={po.id} onClick={() => setSelectedPurchaseOrder(po)} className={`cursor-pointer rounded-lg border p-4 hover:bg-gray-50 ${focusedPurchaseOrderId === po.id ? 'border-blue-300 bg-blue-50/40' : 'border-gray-200'}`}>
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
@@ -453,7 +465,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                             </span>
                           </div>
                           <p className="mt-1 text-sm text-gray-600">
-                            {po.supplier?.name} · Re-order date {formatDate(po.reorder_date)} · Expected delivery {formatDate(po.expected_delivery_date)} · {(po.items || []).length} line item(s) · {formatCurrency(po.total_amount)}
+                            {po.supplier?.name} · {po.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Re-order date {formatDate(po.reorder_date)} · Expected delivery {formatDate(po.expected_delivery_date)} · {(po.items || []).length} line item(s) · {formatCurrency(po.total_amount)}
                           </p>
                         </div>
                         {(po.status === 'open' || po.status === 'placed') && (
@@ -461,14 +473,14 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                             {po.status === 'open' && (
                               <>
                                 <button
-                                  onClick={() => openEditModal(po)}
+                                  onClick={(event) => { event.stopPropagation(); openEditModal(po); }}
                                   disabled={actionLoading}
                                   className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:bg-gray-100"
                                 >
                                   <Edit2 className="h-4 w-4" /> Edit
                                 </button>
                                 <button
-                                  onClick={() => openPlaceModal(po)}
+                                  onClick={(event) => { event.stopPropagation(); openPlaceModal(po); }}
                                   disabled={actionLoading}
                                   className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:bg-gray-300"
                                 >
@@ -478,7 +490,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                             )}
                             {po.status === 'placed' && (
                               <button
-                                onClick={() => openReceiveModal(po)}
+                                onClick={(event) => { event.stopPropagation(); openReceiveModal(po); }}
                                 disabled={actionLoading}
                                 className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-gray-300"
                               >
@@ -486,7 +498,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                               </button>
                             )}
                             <button
-                              onClick={() => handleCancelPurchaseOrder(po)}
+                              onClick={(event) => { event.stopPropagation(); handleCancelPurchaseOrder(po); }}
                               disabled={actionLoading}
                               className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100"
                             >
@@ -495,19 +507,6 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                           </div>
                         )}
                       </div>
-                      {(po.items || []).length > 0 && (
-                        <div className="mt-4 overflow-hidden rounded-lg border border-gray-200">
-                          {(po.items || []).map((item) => (
-                            <div key={item.id} className="grid grid-cols-1 gap-2 border-b border-gray-100 p-3 text-sm last:border-b-0 md:grid-cols-5">
-                              <span className="font-medium text-gray-900">{item.product_name}</span>
-                              <span className="text-gray-600">Ordered: {item.quantity_ordered}</span>
-                              <span className="text-gray-600">Unit Cost: {formatCurrency(item.unit_price)}</span>
-                              <span className="text-gray-600">Received: {item.quantity_received}</span>
-                              <span className="text-gray-900">{formatCurrency(item.total_price)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   ))
                 )}
@@ -551,6 +550,19 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                 />
               </div>
+              {!poFormLocked && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">PO Source</label>
+                  <select
+                    value={poForm.source}
+                    onChange={(event) => setPoForm({ ...poForm, source: event.target.value as 'manual' | 'scheduled', is_custom_reorder_date: event.target.value === 'manual' })}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                  >
+                    <option value="manual">Manual - do not auto-link requests</option>
+                    <option value="scheduled">Scheduled/request queue - auto-link current requests</option>
+                  </select>
+                </div>
+              )}
               {poFormLocked && (
                 <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
                   Supplier and re-order date are locked because this purchase order is being generated from a scheduled re-order card.
@@ -755,6 +767,69 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+
+      {selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">{selectedRequest.request_number}</h2>
+              <button type="button" onClick={() => setSelectedRequest(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
+            </div>
+            <p className="text-sm text-gray-600">Supplier: {selectedRequest.supplier?.name || 'Unknown'} · Submitted by {selectedRequest.pharmacist?.full_name || selectedRequest.pharmacist?.email || 'Unknown user'} · Status: {selectedRequest.status.replace(/_/g, ' ')}</p>
+            <div className="mt-4 divide-y rounded-lg border border-gray-200">
+              {(selectedRequest.items || []).map((item) => (
+                <div key={item.id} className="grid gap-2 p-3 text-sm md:grid-cols-4">
+                  <span className="font-medium text-gray-900">{item.product_name}</span>
+                  <span>Qty: {item.quantity_requested}</span>
+                  <span>Unit: {formatCurrency(item.unit_price)}</span>
+                  <span>Total: {formatCurrency(item.total_price)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedPurchaseOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">{selectedPurchaseOrder.po_number}</h2>
+              <button type="button" onClick={() => setSelectedPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
+            </div>
+            <p className="text-sm text-gray-600">{selectedPurchaseOrder.supplier?.name} · {selectedPurchaseOrder.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Status: {selectedPurchaseOrder.status} · Total {formatCurrency(selectedPurchaseOrder.total_amount)}</p>
+            <div className="mt-4 divide-y rounded-lg border border-gray-200">
+              {(selectedPurchaseOrder.items || []).map((item) => (
+                <div key={item.id} className="grid gap-2 p-3 text-sm md:grid-cols-5">
+                  <span className="font-medium text-gray-900">{item.product_name}</span>
+                  <span>Ordered: {item.quantity_ordered}</span>
+                  <span>Unit: {formatCurrency(item.unit_price)}</span>
+                  <span>Received: {item.quantity_received}</span>
+                  <span>{formatCurrency(item.total_price)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedSchedule && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">{selectedSchedule.supplier.name}</h2>
+              <button type="button" onClick={() => setSelectedSchedule(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
+            </div>
+            <dl className="space-y-2 text-sm">
+              <div><dt className="text-gray-500">Next re-order</dt><dd className="font-medium text-gray-900">{formatDate(selectedSchedule.next_reorder_date)}</dd></div>
+              <div><dt className="text-gray-500">Schedule</dt><dd className="font-medium text-gray-900">{selectedSchedule.schedule_label}</dd></div>
+              <div><dt className="text-gray-500">Contact</dt><dd className="font-medium text-gray-900">{selectedSchedule.supplier.contact_person || selectedSchedule.supplier.email || selectedSchedule.supplier.phone || 'Not provided'}</dd></div>
+            </dl>
+            <button onClick={() => { setSelectedSchedule(null); openPurchaseOrderModal(selectedSchedule.supplier.id, selectedSchedule.next_reorder_date, true); }} className="mt-6 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">Generate PO</button>
+          </div>
         </div>
       )}
     </div>

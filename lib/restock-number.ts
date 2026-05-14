@@ -1,18 +1,27 @@
 /**
- * Generate restock workflow identifiers from the submission date and time.
+ * Generate restock workflow identifiers from the Eastern Time submission date and time.
  * Format: PREFIX-DDDMMMDD-HHMMSS-SSS
  * Example: RR-TUEJAN12-103055-042
  */
 export function generateRestockWorkflowNumber(prefix: 'RR' | 'PO', date: Date = new Date()): string {
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const easternParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => easternParts.find((item) => item.type === type)?.value || '';
 
-  const dayOfWeek = daysOfWeek[date.getDay()].toUpperCase();
-  const month = months[date.getMonth()].toUpperCase();
-  const dayOfMonth = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const dayOfWeek = part('weekday').toUpperCase();
+  const month = part('month').toUpperCase();
+  const dayOfMonth = part('day').padStart(2, '0');
+  const hours = part('hour').padStart(2, '0');
+  const minutes = part('minute').padStart(2, '0');
+  const seconds = part('second').padStart(2, '0');
   const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
 
   return `${prefix}-${dayOfWeek}${month}${dayOfMonth}-${hours}${minutes}${seconds}-${milliseconds}`;

@@ -3,6 +3,7 @@
 export type ReorderScheduleCadence = 'daily' | 'weekly' | 'bi_weekly' | 'three_weeks' | 'monthly' | 'custom';
 export type RestockRequestStatus = 'requested' | 'linked_to_po' | 'received' | 'cancelled';
 export type PurchaseOrderStatus = 'open' | 'placed' | 'received' | 'cancelled';
+export type PurchaseOrderSource = 'scheduled' | 'manual';
 
 export interface Supplier {
   id: string;
@@ -117,6 +118,7 @@ export interface PurchaseOrder {
   supplier_id: string;
   created_by: string;
   status: PurchaseOrderStatus;
+  source?: PurchaseOrderSource;
   reorder_date: string;
   is_custom_reorder_date: boolean;
   total_amount: number;
@@ -220,6 +222,7 @@ export interface CreatePurchaseOrderInput {
   supplier_id: string;
   reorder_date: string;
   is_custom_reorder_date?: boolean;
+  source?: PurchaseOrderSource;
   notes?: string;
 }
 
