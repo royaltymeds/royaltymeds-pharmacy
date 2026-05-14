@@ -452,7 +452,7 @@ export async function createRestockRequest(
         `
         *,
         supplier:suppliers(*),
-        pharmacist:users(email, full_name),
+        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
         items:restock_items(*)
       `
       )
@@ -476,7 +476,7 @@ export async function getRestockRequests(
       `
         *,
         supplier:suppliers(*),
-        pharmacist:users(email, full_name),
+        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
         items:restock_items(*)
       `
     );
@@ -506,7 +506,7 @@ export async function getRestockRequestById(
         `
         *,
         supplier:suppliers(*),
-        pharmacist:users(email, full_name),
+        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
         items:restock_items(*)
       `
       )
@@ -566,7 +566,7 @@ export async function approveRestockRequest(
         `
         *,
         supplier:suppliers(*),
-        pharmacist:users(email, full_name),
+        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
         items:restock_items(*)
       `
       )
@@ -616,7 +616,7 @@ export async function rejectRestockRequest(
         `
         *,
         supplier:suppliers(*),
-        pharmacist:users(email, full_name),
+        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
         items:restock_items(*)
       `
       )
@@ -682,7 +682,7 @@ export async function updateRestockRequestStatus(
         `
         *,
         supplier:suppliers(*),
-        pharmacist:users(email, full_name),
+        pharmacist:users!restock_requests_pharmacist_id_fkey(email, full_name),
         items:restock_items(*)
       `
       )
