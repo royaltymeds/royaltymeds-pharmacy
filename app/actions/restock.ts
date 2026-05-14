@@ -58,7 +58,7 @@ const RESTOCK_REQUEST_SELECT = `
     email,
     user_profiles!user_profiles_user_id_fkey(full_name)
   ),
-  items:restock_items(*)
+  items:restock_items!restock_items_restock_request_id_fkey(*)
 `;
 
 type RestockRequestWithNestedProfile = RestockRequest & {
@@ -891,7 +891,7 @@ export async function releaseHeldRestockRequestToPurchaseOrder(
 
     const { data: request, error: requestError } = await supabase
       .from('restock_requests')
-      .select('*, items:restock_items(*)')
+      .select('*, items:restock_items!restock_items_restock_request_id_fkey(*)')
       .eq('id', requestId)
       .single();
     if (requestError) return { data: null, error: requestError.message };
@@ -1283,7 +1283,7 @@ export async function createPurchaseOrder(
 
     const { data: requests, error: requestsError } = await supabase
       .from('restock_requests')
-      .select('*, items:restock_items(*)')
+      .select('*, items:restock_items!restock_items_restock_request_id_fkey(*)')
       .eq('supplier_id', input.supplier_id)
       .in('status', ['requested'])
       .is('purchase_order_id', null)
