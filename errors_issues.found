@@ -1,0 +1,90 @@
+1. SUPPLIES MANAGEMENT PAGE
+## Error Type
+Console Error
+
+## Error Message
+In HTML, <button> cannot be a descendant of <button>.
+This will cause a hydration error.
+
+  ...
+    <ScrollAndFocusHandler segmentPath={[...]}>
+      <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+          <LoadingBoundary loading={null}>
+            <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <InnerLayoutRouter url="/admin/res..." tree={[...]} cacheNode={{lazyData:null, ...}} ...>
+                    <SegmentViewNode type="page" pagePath="admin/rest...">
+                      <SegmentTrieNode>
+                      <SuppliersPage>
+                        <div className="space-y-6">
+                          <div>
+                          <SuppliersList>
+                            <div className="bg-white b...">
+                              <div>
+                              <div className="divide-y d...">
+>                               <button
+>                                 type="button"
+>                                 onClick={function onClick}
+>                                 className="w-full px-6 py-4 text-left transition-colors hover:bg-gray-50"
+>                               >
+                                  <div className="flex items...">
+                                    <div>
+                                    <div className="flex items...">
+>                                     <button
+>                                       type="button"
+>                                       onClick={function onClick}
+>                                       className="p-2 text-green-600 hover:bg-green-50 rounded"
+>                                       title="Link item to supplier"
+>                                     >
+                                      ...
+                                  ...
+                                ...
+                    ...
+                  ...
+        ...
+
+
+
+    at button (<anonymous>:null:null)
+    at eval (components\admin\restock\suppliers-list.tsx:574:19)
+    at Array.map (<anonymous>:null:null)
+    at SuppliersList (components\admin\restock\suppliers-list.tsx:565:22)
+    at SuppliersPage (app\admin\restock\suppliers\page.tsx:38:7)
+
+## Code Frame
+  572 |                 </div>
+  573 |                 <div className="flex items-center gap-2">
+> 574 |                   <button
+      |                   ^
+  575 |                     type="button"
+  576 |                     onClick={(event) => { event.stopPropagation(); handleOpenProductModal(supplier); }}
+  577 |                     className="p-2 text-green-600 hover:bg-green-50 rounded"
+
+Next.js version: 15.5.9 (Webpack)
+
+## Error Type
+Console Error
+
+## Error Message
+<button> cannot contain a nested <button>.
+See this log for the ancestor stack trace.
+
+
+    at button (<anonymous>:null:null)
+    at eval (components\admin\restock\suppliers-list.tsx:566:13)
+    at Array.map (<anonymous>:null:null)
+    at SuppliersList (components\admin\restock\suppliers-list.tsx:565:22)
+    at SuppliersPage (app\admin\restock\suppliers\page.tsx:38:7)
+
+## Code Frame
+  564 |         <div className="divide-y divide-gray-200">
+  565 |           {suppliers.map((supplier) => (
+> 566 |             <button key={supplier.id} type="button" onClick={() => handleOpenSupplierDetails(supplier)} className="w-full px-6 py-4 text-left transition-colors hover:bg-gray-50">
+      |             ^
+  567 |               <div className="flex items-start justify-between gap-3">
+  568 |                 <div>
+  569 |                   <h3 className="text-sm font-semibold text-gray-900">{supplier.name}</h3>
+
+Next.js version: 15.5.9 (Webpack)
