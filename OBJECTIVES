@@ -1,4 +1,4 @@
 1. automated restock emails should send PO's, emails should only be sent when there is an open PO for each supplier (THIS HAS TO BE DONE ON SUPABASE, NOT IN OUR NODE PROJECT)
 2. send emails at 9 AM EST instead of 8 AM EST
 3. restock requests need to be able to be put on hold if supplier does not yet have item in stock, requests on hold should be able to be changed from on hold to available/requested (at which point they should be included on upcoming/generated PO)
-4. add pagination and search to the restock management pages
+4. add pagination and search to the restock management pages <active>

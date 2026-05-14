@@ -3,3 +3,5 @@
 2. the suppliers linked items modal, it should display a list of items (paginated with 20 per page) the items should be expandable, when an item is clicked that is when you should get the option to edit that item, this again is to avoid clutter and to keep it simple
 
 3. when adding a new restock order, the add items section needs to show the list of items paginated, with up to 15 items per page in its paginated section
+
+4. on all restock pages and modals where we have used pagination, we need a seacrch box to be able to search and select items for the purpose needed in each of those cases, also on POs when adding supplier items from edit or creation modal we need to have search there as well
