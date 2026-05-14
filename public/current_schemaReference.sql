@@ -415,6 +415,7 @@ CREATE TABLE public.purchase_orders (
   updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
   expected_delivery_date date,
   placed_at timestamp with time zone,
+  source text NOT NULL DEFAULT 'scheduled'::text CHECK (source = ANY (ARRAY['scheduled'::text, 'manual'::text])),
   CONSTRAINT purchase_orders_pkey PRIMARY KEY (id),
   CONSTRAINT purchase_orders_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id),
   CONSTRAINT purchase_orders_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id)
