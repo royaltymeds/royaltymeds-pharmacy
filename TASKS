@@ -1,17 +1,9 @@
-1. RESOLVED — Spreadsheet import for restock management.
-   The spreadsheet import was removed from the New Restock Request flow and moved into Supplier Management's Bulk Link Items modal, where staff can upload CSV/TSV rows, map columns, and create/link many inventory or non-inventory supplier products to one or more suppliers in one operation.
+1. the current request tab, it should display the list of suppliers (not with the current requests), when a supplier is clicked/selected a modal should open (use our preferred modal design), that modal should have a paginated list of current requests (same details on the cards as they have now) when a request card is clicked, it should open the request detail modal (same one we have now), we should be able to go back to the list of requests from that modal (the request history tab needs this exact design as well, same implementation)
 
-2. RESOLVED — Restock request history tab.
-   Request History now excludes `linked_to_po` requests, keeps active linked requests in Current Requests, groups history by supplier, and opens a supplier-history modal containing that supplier's received/cancelled requests.
+2. the upcoming scheduled re-orders should be a list with the suppliers names, the cards should be expandable, the cards before being expanded should show the supplier name, frequency and upcoming date, when expanded it should show the supplier details and reveal the generate PO button / View PO button (so no longer use the modal)
 
-3. RESOLVED — Merge duplicate PO items for multiple requests on the same PO.
-   Scheduled/request-queue PO generation and automatic request attachment merge duplicate product/type/unit-cost lines into one purchase-order line. Receiving and unlinking logic now operates through all restock items attached to the merged PO line.
+3. the purchase order tab needs to also show the list of suppliers that have purchase orders, actually it needs different sections for different status POs, each section should be a tab of it's own, each section should show the list of suppliers with POs in it's status, when you click the supplier a modal should open showing you a list of POs for that supplier for that status, the list should be paginated
 
-4. RESOLVED — Modal-based details for PO, current requests, supplier management, and upcoming schedules.
-   The current request modal now mirrors the request detail information more closely and exposes request cancellation for open requested requests.
+4. manual purchase orders should be able to have items linked to them even after the PO has been created
 
-5. RESOLVED — Distinguish scheduled vs manual POs.
-   Manual POs no longer auto-link current requests and now support adding linked supplier products directly to the manual PO during creation.
-
-6. RESOLVED — Pharmacist/admin dashboard navigation focus.
-   The missing `/admin/more` destination now exists as a server-rendered admin directory of navigation cards to all admin workspaces.
+5. the manage suppliers page should also show first the list of suppliers, then when the supplier is clicked it should show a modal with pagination that lists the linked items, the linked items should be able to be edited

@@ -1,5 +1,0 @@
-1. RESOLVED — Patient portal can view and pay for prescription orders.
-   The patient order payment section treats visible, unpaid, non-cancelled prescription orders as payable.
-
-2. RESOLVED — Link supplier to item supports bulk suppliers, per-supplier pricing, and non-inventory items.
-   Supplier Management's Bulk Link Items modal now supports inventory and non-inventory item linking, multiple suppliers, per-supplier pricing, and spreadsheet bulk uploads for inventory/non-inventory supplier products.
