@@ -224,6 +224,14 @@ export interface CreatePurchaseOrderInput {
   is_custom_reorder_date?: boolean;
   source?: PurchaseOrderSource;
   notes?: string;
+  items?: {
+    product_id: string;
+    product_type: 'otc' | 'prescription';
+    product_name: string;
+    quantity_ordered: number;
+    unit_price: number;
+    notes?: string;
+  }[];
 }
 
 export interface UpdatePurchaseOrderItemInput {
