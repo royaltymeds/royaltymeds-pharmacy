@@ -7,3 +7,5 @@
 4. on all restock pages and modals where we have used pagination, we need a seacrch box to be able to search and select items for the purpose needed in each of those cases, also on POs when adding supplier items from edit or creation modal we need to have search there as well
 
 5. when a manual PO is requested, the card on the upcoming scheduled re-orders should not be linked to it so as to change the generate po button to view po, there is still a need to generate po based on the schedule even if a manual PO exists for the supplier, manual POs and scheduled re-orders may follow different workflows
+
+6. currently the restock pages that invoke a confirmation message, they are using the browser default message box, instead design a reusable modal component that they can all use for confirmation messages
