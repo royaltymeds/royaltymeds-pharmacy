@@ -10,19 +10,19 @@
 -- -----------------------------------------------------------------------------
 -- 1. Pin function search paths so functions do not inherit caller/role search_path.
 -- -----------------------------------------------------------------------------
-ALTER FUNCTION IF EXISTS public.set_collect_shipping_after_payment()
+ALTER FUNCTION public.set_collect_shipping_after_payment()
   SET search_path = public, pg_temp;
 
-ALTER FUNCTION IF EXISTS public.update_restock_notification_settings_updated_at()
+ALTER FUNCTION public.update_restock_notification_settings_updated_at()
   SET search_path = public, pg_temp;
 
-ALTER FUNCTION IF EXISTS public.current_user_id()
+ALTER FUNCTION public.current_user_id()
   SET search_path = public, pg_temp;
 
-ALTER FUNCTION IF EXISTS public.current_user_role()
+ALTER FUNCTION public.current_user_role()
   SET search_path = public, pg_temp;
 
-ALTER FUNCTION IF EXISTS public.current_user_role_from_jwt()
+ALTER FUNCTION public.current_user_role_from_jwt()
   SET search_path = public, pg_temp;
 
 -- -----------------------------------------------------------------------------
