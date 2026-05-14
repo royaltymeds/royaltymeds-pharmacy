@@ -3,3 +3,5 @@
 2. the link supplier to item modal should allow linking the item to multiple suppliers in bulk or in one go, with a different price used for each suppplier or same price if desired
 
 3. restock requests and purchase order naming, the time based is using UTC, let it use EST instead
+
+4. CRITICAL SECURITY ISSUE: PASSWORDS AND USERNAMES ARE IN PLAIN TEXT WHEN SENT AS PAYLOAD FROM LOG IN AND SIGN UP PAGES
