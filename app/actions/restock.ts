@@ -892,9 +892,10 @@ function mergePurchaseOrderItems(requests: any[], purchaseOrderId: string) {
 async function attachRequestToOpenPurchaseOrder(supabase: ReturnType<typeof getServiceRoleClient>, requestId: string, supplierId: string) {
   const { data: purchaseOrder } = await supabase
     .from('purchase_orders')
-    .select('*')
+    .select('*, items:purchase_order_items(*)')
     .eq('supplier_id', supplierId)
     .eq('status', 'open')
+    .neq('source', 'manual')
     .order('reorder_date', { ascending: true })
     .order('created_at', { ascending: true })
     .limit(1)
@@ -908,27 +909,53 @@ async function attachRequestToOpenPurchaseOrder(supabase: ReturnType<typeof getS
     .eq('restock_request_id', requestId);
   if (itemsError || !items?.length) return;
 
-  const poItems = items.map((item) => ({
-    purchase_order_id: purchaseOrder.id,
-    restock_request_id: requestId,
-    restock_item_id: item.id,
-    product_id: item.product_id,
-    product_type: item.product_type,
-    product_name: item.product_name,
-    quantity_ordered: item.quantity_requested,
-    quantity_received: 0,
-    unit_price: item.unit_price,
-    total_price: item.total_price,
-    notes: item.notes,
-  }));
+  for (const item of items) {
+    const existing = (purchaseOrder.items || []).find((poItem: any) =>
+      poItem.product_id === item.product_id &&
+      poItem.product_type === item.product_type &&
+      Number(poItem.unit_price || 0).toFixed(4) === Number(item.unit_price || 0).toFixed(4)
+    );
 
-  const { data: inserted } = await supabase.from('purchase_order_items').insert(poItems).select('id, restock_item_id');
-  if (inserted?.length) {
-    for (const insertedItem of inserted) {
+    if (existing) {
+      const quantity_ordered = Number(existing.quantity_ordered || 0) + Number(item.quantity_requested || 0);
+      const total_price = Number(existing.total_price || 0) + Number(item.total_price || 0);
+      await supabase
+        .from('purchase_order_items')
+        .update({
+          quantity_ordered,
+          total_price,
+          notes: [existing.notes, item.notes].filter(Boolean).join(' | '),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existing.id);
       await supabase
         .from('restock_items')
-        .update({ purchase_order_item_id: insertedItem.id })
-        .eq('id', insertedItem.restock_item_id);
+        .update({ purchase_order_item_id: existing.id })
+        .eq('id', item.id);
+    } else {
+      const { data: inserted } = await supabase
+        .from('purchase_order_items')
+        .insert({
+          purchase_order_id: purchaseOrder.id,
+          restock_request_id: requestId,
+          restock_item_id: item.id,
+          product_id: item.product_id,
+          product_type: item.product_type,
+          product_name: item.product_name,
+          quantity_ordered: item.quantity_requested,
+          quantity_received: 0,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          notes: item.notes,
+        })
+        .select('id')
+        .single();
+      if (inserted?.id) {
+        await supabase
+          .from('restock_items')
+          .update({ purchase_order_item_id: inserted.id })
+          .eq('id', item.id);
+      }
     }
   }
 
@@ -962,10 +989,11 @@ export async function createPurchaseOrder(
 
     if (requestsError) return { data: null, error: requestsError.message };
 
-    const totalAmount = (requests || []).reduce(
-      (sum, request) => sum + Number(request.total_amount || 0),
-      0
-    );
+    const source = input.source || (input.is_custom_reorder_date ? 'manual' : 'scheduled');
+    const manualItems = input.items || [];
+    const totalAmount = source === 'manual'
+      ? manualItems.reduce((sum, item) => sum + item.quantity_ordered * item.unit_price, 0)
+      : (requests || []).reduce((sum, request) => sum + Number(request.total_amount || 0), 0);
 
     const { data: po, error: poError } = await supabase
       .from('purchase_orders')
@@ -978,14 +1006,35 @@ export async function createPurchaseOrder(
         is_custom_reorder_date: input.is_custom_reorder_date || false,
         total_amount: totalAmount,
         notes: input.notes,
-        source: input.source || (input.is_custom_reorder_date ? 'manual' : 'scheduled'),
+        source,
       })
       .select()
       .single();
 
     if (poError) return { data: null, error: poError.message };
 
-    if ((input.source || (input.is_custom_reorder_date ? 'manual' : 'scheduled')) !== 'manual') {
+    if (source === 'manual' && manualItems.length > 0) {
+      const { error: manualItemsError } = await supabase
+        .from('purchase_order_items')
+        .insert(manualItems.map((item) => ({
+          purchase_order_id: po.id,
+          product_id: item.product_id,
+          product_type: item.product_type,
+          product_name: item.product_name,
+          quantity_ordered: item.quantity_ordered,
+          quantity_received: 0,
+          unit_price: item.unit_price,
+          total_price: item.quantity_ordered * item.unit_price,
+          notes: item.notes,
+        })));
+
+      if (manualItemsError) {
+        await supabase.from('purchase_orders').delete().eq('id', po.id);
+        return { data: null, error: manualItemsError.message };
+      }
+    }
+
+    if (source !== 'manual') {
       const mergedItems = mergePurchaseOrderItems(requests || [], po.id);
       const poItems = mergedItems.map(({ source_restock_item_ids, source_restock_request_ids, ...item }) => item);
 
@@ -1075,13 +1124,25 @@ export async function updatePurchaseOrder(
     const removedItems = (currentItems || []).filter((item) => !submittedIds.includes(item.id));
 
     for (const removedItem of removedItems) {
-      if (removedItem.restock_item_id) {
+      const { data: linkedRestockItems } = await supabase
+        .from('restock_items')
+        .select('id, restock_request_id')
+        .eq('purchase_order_item_id', removedItem.id);
+
+      if (linkedRestockItems?.length) {
         await supabase
           .from('restock_items')
           .update({ purchase_order_item_id: null, updated_at: now })
-          .eq('id', removedItem.restock_item_id);
-      }
-      if (removedItem.restock_request_id) {
+          .in('id', linkedRestockItems.map((item) => item.id));
+
+        const requestIds = Array.from(new Set(linkedRestockItems.map((item) => item.restock_request_id).filter(Boolean)));
+        if (requestIds.length > 0) {
+          await supabase
+            .from('restock_requests')
+            .update({ purchase_order_id: null, status: 'requested', updated_at: now })
+            .in('id', requestIds);
+        }
+      } else if (removedItem.restock_request_id) {
         await supabase
           .from('restock_requests')
           .update({ purchase_order_id: null, status: 'requested', updated_at: now })
@@ -1205,44 +1266,70 @@ export async function updatePurchaseOrderStatus(
       .eq('purchase_order_id', purchaseOrderId);
 
     if (status === 'received') {
-      for (const item of poItems || []) {
-        await supabase
+      const poItemIds = (poItems || []).map((item) => item.id);
+      const receivedByPoItemId = new Map((poItems || []).map((item) => [item.id, Number(item.quantity_received || 0)]));
+
+      if (poItemIds.length > 0) {
+        const { data: linkedRestockItems } = await supabase
           .from('restock_items')
-          .update({ quantity_received: item.quantity_received, updated_at: new Date().toISOString() })
-          .eq('id', item.restock_item_id);
-      }
+          .select('id, restock_request_id, purchase_order_item_id, quantity_requested, created_at')
+          .in('purchase_order_item_id', poItemIds)
+          .order('created_at', { ascending: true });
 
-      const itemsByRequest = (poItems || []).reduce<Record<string, any[]>>((groups, item) => {
-        if (!item.restock_request_id) return groups;
-        groups[item.restock_request_id] = [...(groups[item.restock_request_id] || []), item];
-        return groups;
-      }, {});
+        const remainingByPoItemId = new Map(receivedByPoItemId);
+        for (const restockItem of linkedRestockItems || []) {
+          const remaining = remainingByPoItemId.get(restockItem.purchase_order_item_id) || 0;
+          const quantityReceived = Math.min(Number(restockItem.quantity_requested || 0), remaining);
+          remainingByPoItemId.set(restockItem.purchase_order_item_id, Math.max(0, remaining - quantityReceived));
+          await supabase
+            .from('restock_items')
+            .update({ quantity_received: quantityReceived, updated_at: new Date().toISOString() })
+            .eq('id', restockItem.id);
+        }
 
-      for (const [requestId, requestItems] of Object.entries(itemsByRequest)) {
-        const anyReceived = requestItems.some((item) => Number(item.quantity_received || 0) > 0);
-        await supabase
-          .from('restock_requests')
-          .update({
-            status: anyReceived ? 'received' : 'cancelled',
-            actual_delivery_date: anyReceived ? toDateOnly(new Date()) : null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', requestId);
+        const requestIds = Array.from(new Set((linkedRestockItems || []).map((item) => item.restock_request_id).filter(Boolean)));
+        for (const requestId of requestIds) {
+          const { data: requestItems } = await supabase
+            .from('restock_items')
+            .select('quantity_received')
+            .eq('restock_request_id', requestId);
+          const anyReceived = (requestItems || []).some((item) => Number(item.quantity_received || 0) > 0);
+          await supabase
+            .from('restock_requests')
+            .update({
+              status: anyReceived ? 'received' : 'cancelled',
+              actual_delivery_date: anyReceived ? toDateOnly(new Date()) : null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', requestId);
+        }
       }
     }
 
     if (status === 'cancelled') {
-      const requestIds = Array.from(new Set((poItems || []).map((item) => item.restock_request_id).filter(Boolean)));
-      if (requestIds.length > 0) {
-        await supabase
-          .from('restock_requests')
-          .update({ status: 'requested', purchase_order_id: null, updated_at: new Date().toISOString() })
-          .in('id', requestIds);
+      const poItemIds = (poItems || []).map((item) => item.id);
+      if (poItemIds.length > 0) {
+        const { data: linkedRestockItems } = await supabase
+          .from('restock_items')
+          .select('id, restock_request_id')
+          .in('purchase_order_item_id', poItemIds);
+
+        const requestIds = Array.from(new Set((linkedRestockItems || []).map((item) => item.restock_request_id).filter(Boolean)));
+        if (requestIds.length > 0) {
+          await supabase
+            .from('restock_requests')
+            .update({ status: 'requested', purchase_order_id: null, updated_at: new Date().toISOString() })
+            .in('id', requestIds);
+        }
+
+        const restockItemIds = (linkedRestockItems || []).map((item) => item.id);
+        if (restockItemIds.length > 0) {
+          await supabase
+            .from('restock_items')
+            .update({ purchase_order_item_id: null, updated_at: new Date().toISOString() })
+            .in('id', restockItemIds);
+        }
       }
-      await supabase.from('restock_items').update({ purchase_order_item_id: null }).in(
-        'id',
-        (poItems || []).map((item) => item.restock_item_id).filter(Boolean)
-      );
     }
 
     return getPurchaseOrderById(purchaseOrderId);

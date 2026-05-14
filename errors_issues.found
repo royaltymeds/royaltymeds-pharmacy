@@ -1,7 +1,5 @@
 1. RESOLVED — Patient portal can view and pay for prescription orders.
-   What was done: The patient order payment section now treats prescription orders as payable whenever they are visible, unpaid, and not cancelled, instead of requiring the same confirmation statuses used for OTC/store orders.
-   How to verify: Have admin create a prescription order, log in as that patient, open Patient → Orders, and confirm the prescription order displays bank transfer/card payment options.
+   The patient order payment section treats visible, unpaid, non-cancelled prescription orders as payable.
 
-2. PARTIALLY RESOLVED — Link supplier to item supports bulk suppliers and per-supplier pricing.
-   What was done: The item-first supplier linking modal now supports selecting multiple suppliers at once, optionally using the same unit cost for all or entering a different unit cost for each supplier. A bulk server action inserts all supplier-product links in one operation.
-   How to verify: Open Admin → Restock Management → Suppliers → Link Supplier to Item, select an item and two or more suppliers, toggle off same-price mode, enter different costs, submit, and confirm each supplier shows the linked item with its configured price. (this has been verified as partially resolved, it only suppports inventory items, it needs to support non inventory items)
+2. RESOLVED — Link supplier to item supports bulk suppliers, per-supplier pricing, and non-inventory items.
+   Supplier Management's Bulk Link Items modal now supports inventory and non-inventory item linking, multiple suppliers, per-supplier pricing, and spreadsheet bulk uploads for inventory/non-inventory supplier products.

@@ -14,7 +14,7 @@ import {
 import { getOTCDrugs, getPrescriptionDrugs } from '@/app/actions/inventory';
 import { Supplier, CreateSupplierInput, CreateSupplierProductInput, SupplierProduct } from '@/lib/types/restock';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
-import { Plus, Edit2, Trash2, AlertCircle, Loader, X, Link2, Pill } from 'lucide-react';
+import { Plus, Edit2, Trash2, AlertCircle, Loader, X, Link2, Pill, Upload } from 'lucide-react';
 
 export function SuppliersList() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -33,6 +33,10 @@ export function SuppliersList() {
   const [showItemSupplierModal, setShowItemSupplierModal] = useState(false);
   const [selectedSupplierIdsForItem, setSelectedSupplierIdsForItem] = useState<string[]>([]);
   const [samePriceForSelectedSuppliers, setSamePriceForSelectedSuppliers] = useState(true);
+  const [itemSupplierSource, setItemSupplierSource] = useState<'inventory' | 'non_inventory'>('inventory');
+  const [bulkImportRows, setBulkImportRows] = useState<Record<string, string>[]>([]);
+  const [bulkImportColumns, setBulkImportColumns] = useState<string[]>([]);
+  const [bulkImportColumnMap, setBulkImportColumnMap] = useState({ productName: '', productType: '', unitPrice: '', supplierSku: '', minimumOrderQuantity: '', notes: '' });
   const [supplierPriceOverrides, setSupplierPriceOverrides] = useState<Record<string, number>>({});
   const [itemSupplierFormData, setItemSupplierFormData] = useState<CreateSupplierProductInput>({
     supplier_id: '',
@@ -264,13 +268,92 @@ export function SuppliersList() {
     setActionLoading(false);
   };
 
+  const parseBulkSupplierItems = (text: string) => {
+    const delimiter = text.includes('\t') ? '\t' : ',';
+    const parseLine = (line: string) => line.split(delimiter).map((cell) => cell.trim().replace(/^"|"$/g, ''));
+    const lines = text.split(/\r?\n/).filter((line) => line.trim());
+    const headers = parseLine(lines[0] || '');
+    const rows = lines.slice(1).map((line) => {
+      const values = parseLine(line);
+      return headers.reduce<Record<string, string>>((row, header, index) => {
+        row[header] = values[index] || '';
+        return row;
+      }, {});
+    });
+    const findColumn = (...candidates: string[]) => headers.find((header) => candidates.some((candidate) => header.toLowerCase().includes(candidate))) || '';
+    setBulkImportColumns(headers);
+    setBulkImportRows(rows);
+    setBulkImportColumnMap({
+      productName: findColumn('product', 'item', 'name'),
+      productType: findColumn('type'),
+      unitPrice: findColumn('price', 'cost', 'unit'),
+      supplierSku: findColumn('sku'),
+      minimumOrderQuantity: findColumn('minimum', 'moq', 'quantity'),
+      notes: findColumn('note'),
+    });
+  };
+
+  const handleBulkSupplierItemImport = async () => {
+    setError(null);
+    const supplierIds = selectedSupplierIdsForItem.length > 0 ? selectedSupplierIdsForItem : [itemSupplierFormData.supplier_id].filter(Boolean);
+    if (supplierIds.length === 0) {
+      setError('Select at least one supplier before importing items.');
+      return;
+    }
+    if (!bulkImportColumnMap.productName || !bulkImportColumnMap.unitPrice) {
+      setError('Map at least Product Name and Unit Cost before importing.');
+      return;
+    }
+
+    const payloads: CreateSupplierProductInput[] = [];
+    for (const row of bulkImportRows) {
+      const productName = row[bulkImportColumnMap.productName]?.trim();
+      if (!productName) continue;
+      const normalizedType = row[bulkImportColumnMap.productType]?.toLowerCase().includes('prescription') ? 'prescription' : itemSupplierFormData.product_type;
+      const inventoryMatch = getProductOptions(normalizedType).find((item) => item.name.toLowerCase() === productName.toLowerCase());
+      const unitCost = parseFloat(row[bulkImportColumnMap.unitPrice] || '');
+      const minimumOrderQuantity = bulkImportColumnMap.minimumOrderQuantity ? parseInt(row[bulkImportColumnMap.minimumOrderQuantity] || '1', 10) : 1;
+
+      for (const supplierId of supplierIds) {
+        payloads.push({
+          supplier_id: supplierId,
+          product_id: inventoryMatch?.id || crypto.randomUUID(),
+          product_type: normalizedType,
+          product_name: inventoryMatch?.name || productName,
+          is_inventory_item: Boolean(inventoryMatch),
+          supplier_sku: bulkImportColumnMap.supplierSku ? row[bulkImportColumnMap.supplierSku] : itemSupplierFormData.supplier_sku,
+          supplier_unit_price: Number.isFinite(unitCost) ? unitCost : itemSupplierFormData.supplier_unit_price,
+          minimum_order_quantity: Number.isFinite(minimumOrderQuantity) && minimumOrderQuantity > 0 ? minimumOrderQuantity : 1,
+          notes: bulkImportColumnMap.notes ? row[bulkImportColumnMap.notes] : itemSupplierFormData.notes,
+        });
+      }
+    }
+
+    if (payloads.length === 0) {
+      setError('No valid import rows were found.');
+      return;
+    }
+
+    setActionLoading(true);
+    const { error } = await createSupplierProductsBulk(payloads);
+    if (error) {
+      setError(error);
+    } else {
+      await Promise.all(supplierIds.map((supplierId) => loadSupplierProductsForSupplier(supplierId)));
+      setBulkImportRows([]);
+      setBulkImportColumns([]);
+      setShowItemSupplierModal(false);
+    }
+    setActionLoading(false);
+  };
+
   const handleSubmitItemSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setActionLoading(true);
 
     try {
-      const selectedItem = getProductOptions(itemSupplierFormData.product_type).find((item) => item.id === itemSupplierFormData.product_id);
+      const selectedItem = itemSupplierSource === 'inventory' ? getProductOptions(itemSupplierFormData.product_type).find((item) => item.id === itemSupplierFormData.product_id) : null;
       const supplierIds = selectedSupplierIdsForItem.length > 0 ? selectedSupplierIdsForItem : [itemSupplierFormData.supplier_id].filter(Boolean);
       if (supplierIds.length === 0) {
         setError('Select at least one supplier.');
@@ -282,8 +365,9 @@ export function SuppliersList() {
         ...itemSupplierFormData,
         supplier_id: supplierId,
         supplier_unit_price: samePriceForSelectedSuppliers ? itemSupplierFormData.supplier_unit_price : supplierPriceOverrides[supplierId] ?? itemSupplierFormData.supplier_unit_price,
+        product_id: itemSupplierSource === 'inventory' ? itemSupplierFormData.product_id : crypto.randomUUID(),
         product_name: selectedItem?.name || itemSupplierFormData.product_name,
-        is_inventory_item: true,
+        is_inventory_item: itemSupplierSource === 'inventory',
       }));
 
       const { error } = await createSupplierProductsBulk(payloads);
@@ -296,6 +380,9 @@ export function SuppliersList() {
 
       await Promise.all(supplierIds.map((supplierId) => loadSupplierProductsForSupplier(supplierId)));
       setShowItemSupplierModal(false);
+      setItemSupplierSource('inventory');
+      setBulkImportRows([]);
+      setBulkImportColumns([]);
       setSelectedSupplierIdsForItem([]);
       setSupplierPriceOverrides({});
       setItemSupplierFormData({
@@ -403,7 +490,7 @@ export function SuppliersList() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
             >
               <Link2 className="w-4 h-4" />
-              Link Supplier to Item
+              Bulk Link Items
             </button>
           </div>
         </div>
@@ -804,35 +891,65 @@ export function SuppliersList() {
             </div>
 
             <form onSubmit={handleSubmitItemSupplier} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Item Type *</label>
-                <select
-                  value={itemSupplierFormData.product_type}
-                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: e.target.value as 'otc' | 'prescription', product_id: '', product_name: '' })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  <option value="otc">OTC</option>
-                  <option value="prescription">Prescription</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Item Source *</label>
+                  <select value={itemSupplierSource} onChange={(e) => { const source = e.target.value as 'inventory' | 'non_inventory'; setItemSupplierSource(source); setItemSupplierFormData({ ...itemSupplierFormData, is_inventory_item: source === 'inventory', product_id: '', product_name: '' }); }} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    <option value="inventory">Inventory Item</option>
+                    <option value="non_inventory">Non-Inventory Item</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Item Type *</label>
+                  <select
+                    value={itemSupplierFormData.product_type}
+                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: e.target.value as 'otc' | 'prescription', product_id: '', product_name: '' })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+                    <option value="otc">OTC</option>
+                    <option value="prescription">Prescription</option>
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Item *</label>
-                <select
-                  value={itemSupplierFormData.product_id}
-                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_id: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  <option value="">-- Choose an item --</option>
-                  {getProductOptions(itemSupplierFormData.product_type).map((product) => (
-                    <option key={product.id} value={product.id}>{product.name}</option>
-                  ))}
-                </select>
-                {itemSupplierFormData.product_id && (
-                  <p className="mt-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
-                    {getProductDescription(itemSupplierFormData.product_id, itemSupplierFormData.product_type) || 'No item description saved. Use the item name/description to clarify package size when unit cost is per package.'}
-                  </p>
+              {itemSupplierSource === 'inventory' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Item *</label>
+                  <select
+                    value={itemSupplierFormData.product_id}
+                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_id: e.target.value })}
+                    required={bulkImportRows.length === 0}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+                    <option value="">-- Choose an item --</option>
+                    {getProductOptions(itemSupplierFormData.product_type).map((product) => (
+                      <option key={product.id} value={product.id}>{product.name}</option>
+                    ))}
+                  </select>
+                  {itemSupplierFormData.product_id && (
+                    <p className="mt-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
+                      {getProductDescription(itemSupplierFormData.product_id, itemSupplierFormData.product_type) || 'No item description saved. Use the item name/description to clarify package size when unit cost is per package.'}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Non-Inventory Item Name *</label>
+                  <input type="text" value={itemSupplierFormData.product_name} onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_name: e.target.value })} required={bulkImportRows.length === 0} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="e.g., Packaging Labels" />
+                </div>
+              )}
+
+              <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-blue-900"><Upload className="h-4 w-4" /> Spreadsheet bulk upload</div>
+                <p className="mt-1 text-xs text-blue-800">Upload CSV/TSV rows to create and link many inventory or non-inventory items to the selected supplier(s).</p>
+                <input type="file" accept=".csv,.tsv,.txt,.xls,.xlsx" onChange={(e) => e.target.files?.[0]?.text().then(parseBulkSupplierItems)} className="mt-2 block w-full text-sm" />
+                {bulkImportColumns.length > 0 && (
+                  <div className="mt-3 grid gap-2 md:grid-cols-3">
+                    {([['productName','Product Name *'],['productType','Product Type'],['unitPrice','Unit Cost *'],['supplierSku','Supplier SKU'],['minimumOrderQuantity','MOQ'],['notes','Notes']] as const).map(([key,label]) => (
+                      <label key={key} className="text-xs font-medium text-blue-900">{label}<select value={bulkImportColumnMap[key]} onChange={(e) => setBulkImportColumnMap({ ...bulkImportColumnMap, [key]: e.target.value })} className="mt-1 w-full rounded border border-blue-200 bg-white px-2 py-1 text-gray-900"><option value="">Do not map</option>{bulkImportColumns.map((column) => <option key={column} value={column}>{column}</option>)}</select></label>
+                    ))}
+                    <button type="button" onClick={handleBulkSupplierItemImport} disabled={actionLoading} className="self-end rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300">Import & Link {bulkImportRows.length} Rows</button>
+                  </div>
                 )}
               </div>
 
