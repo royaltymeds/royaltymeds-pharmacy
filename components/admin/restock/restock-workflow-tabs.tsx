@@ -9,10 +9,15 @@ import {
   getRestockRequests,
   getSupplierProducts,
   updateRestockRequestStatus,
+  putRestockRequestOnHold,
+  putRestockItemOnHold,
+  getHeldRestockItems,
+  releaseHeldRestockRequestToPurchaseOrder,
+  releaseHeldRestockItemToPurchaseOrder,
   getUpcomingReorders,
   updatePurchaseOrderStatus,
 } from '@/app/actions/restock';
-import { PurchaseOrder, RestockRequest, SupplierProduct, UpcomingReorder } from '@/lib/types/restock';
+import { PurchaseOrder, RestockItem, RestockRequest, SupplierProduct, UpcomingReorder } from '@/lib/types/restock';
 import { CalendarDays, ChevronDown, ChevronRight, ClipboardList, Edit2, Loader, Package, Send, Truck, XCircle, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmationModal } from './confirmation-modal';
@@ -22,7 +27,7 @@ interface RestockWorkflowTabsProps {
 }
 
 type TabKey = 'requests' | 'request_history' | 'schedule' | 'purchase_orders';
-type PurchaseOrderStatusFilter = PurchaseOrder['status'];
+type PurchaseOrderStatusFilter = PurchaseOrder['status'] | 'on_hold';
 
 const PAGE_SIZE = 5;
 const ITEM_SELECTOR_PAGE_SIZE = 15;
@@ -75,6 +80,8 @@ function getRestockStatusClasses(status: RestockRequest['status']) {
       return 'border-green-200 bg-green-50 text-green-700';
     case 'cancelled':
       return 'border-red-200 bg-red-50 text-red-700';
+    case 'on_hold':
+      return 'border-orange-200 bg-orange-50 text-orange-700';
     default:
       return 'border-gray-200 bg-gray-50 text-gray-700';
   }
@@ -100,6 +107,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [requests, setRequests] = useState<RestockRequest[]>([]);
   const [upcomingReorders, setUpcomingReorders] = useState<UpcomingReorder[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [heldItems, setHeldItems] = useState<RestockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,23 +135,27 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [activePurchaseOrderStatus, setActivePurchaseOrderStatus] = useState<PurchaseOrderStatusFilter>('open');
   const [selectedPurchaseOrderSupplier, setSelectedPurchaseOrderSupplier] = useState<{ supplierId: string; supplierName: string; status: PurchaseOrderStatusFilter; purchaseOrders: PurchaseOrder[] } | null>(null);
   const [purchaseOrderSupplierPage, setPurchaseOrderSupplierPage] = useState(1);
+  const [releaseTarget, setReleaseTarget] = useState<{ kind: 'request' | 'item'; id: string; supplierId: string; label: string } | null>(null);
+  const [releasePurchaseOrderId, setReleasePurchaseOrderId] = useState('');
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [requestResult, scheduleResult, poResult] = await Promise.all([
+    const [requestResult, scheduleResult, poResult, heldItemResult] = await Promise.all([
       getRestockRequests(),
       getUpcomingReorders(),
       getPurchaseOrders(),
+      getHeldRestockItems(),
     ]);
 
-    if (requestResult.error || scheduleResult.error || poResult.error) {
-      setError(requestResult.error || scheduleResult.error || poResult.error || 'Failed to load restock workflow');
+    if (requestResult.error || scheduleResult.error || poResult.error || heldItemResult.error) {
+      setError(requestResult.error || scheduleResult.error || poResult.error || heldItemResult.error || 'Failed to load restock workflow');
     }
 
     setRequests(requestResult.data || []);
     setUpcomingReorders(scheduleResult.data || []);
     setPurchaseOrders(poResult.data || []);
+    setHeldItems(heldItemResult.data || []);
     setLoading(false);
   }, []);
 
@@ -163,6 +175,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   }, [purchaseOrders]);
 
   const currentRequests = useMemo(() => requests.filter((request) => request.status === 'requested' || request.status === 'linked_to_po'), [requests]);
+  const heldRequests = useMemo(() => requests.filter((request) => request.status === 'on_hold'), [requests]);
   const requestHistory = useMemo(() => requests.filter((request) => request.status === 'received' || request.status === 'cancelled'), [requests]);
 
   const requestsBySupplier = useMemo(() => {
@@ -192,6 +205,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     { status: 'placed', label: 'Placed' },
     { status: 'received', label: 'Received' },
     { status: 'cancelled', label: 'Cancelled' },
+    { status: 'on_hold', label: 'On Hold' },
   ];
 
   const purchaseOrdersByStatusAndSupplier = useMemo(() => {
@@ -203,7 +217,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       }
       groups[status][supplierId].purchaseOrders.push(purchaseOrder);
       return groups;
-    }, { open: {}, placed: {}, received: {}, cancelled: {} });
+    }, { open: {}, placed: {}, received: {}, cancelled: {}, on_hold: {} });
   }, [purchaseOrders]);
 
   const openRequestSupplierModal = (supplierId: string, group: { supplierName: string; requests: RestockRequest[] }, mode: 'current' | 'history') => {
@@ -298,6 +312,71 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     }
     setSelectedRequest(null);
     await loadData();
+    setActionLoading(false);
+  };
+
+
+  const handlePutRequestOnHold = async (request: RestockRequest) => {
+    setActionLoading(true);
+    const { error: holdError } = await putRestockRequestOnHold(request.id, userId, 'Supplier does not currently have the requested items in stock.');
+    if (holdError) {
+      setError(holdError);
+      toast.error(holdError);
+    } else {
+      toast.success('Restock request moved to the Purchase Orders on-hold queue.');
+      setSelectedRequest(null);
+      await loadData();
+      setActiveTab('purchase_orders');
+      setActivePurchaseOrderStatus('on_hold');
+    }
+    setActionLoading(false);
+  };
+
+  const handlePutItemOnHold = async (item: RestockItem) => {
+    setActionLoading(true);
+    const { error: holdError } = await putRestockItemOnHold(item.id, userId, 'Supplier does not currently have this line item in stock.');
+    if (holdError) {
+      setError(holdError);
+      toast.error(holdError);
+    } else {
+      toast.success('Item orphaned from its request and moved to the Purchase Orders on-hold queue.');
+      await loadData();
+      setActiveTab('purchase_orders');
+      setActivePurchaseOrderStatus('on_hold');
+    }
+    setActionLoading(false);
+  };
+
+  const openReleaseHeldRequest = (request: RestockRequest) => {
+    const firstOpenPo = purchaseOrders.find((po) => po.status === 'open' && po.supplier_id === request.supplier_id);
+    setReleaseTarget({ kind: 'request', id: request.id, supplierId: request.supplier_id, label: request.request_number });
+    setReleasePurchaseOrderId(firstOpenPo?.id || '');
+  };
+
+  const openReleaseHeldItem = (item: RestockItem) => {
+    const supplierId = requests.find((request) => request.id === item.held_from_request_id)?.supplier_id || '';
+    const firstOpenPo = purchaseOrders.find((po) => po.status === 'open' && po.supplier_id === supplierId);
+    setReleaseTarget({ kind: 'item', id: item.id, supplierId, label: item.product_name });
+    setReleasePurchaseOrderId(firstOpenPo?.id || '');
+  };
+
+  const handleReleaseFromHold = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!releaseTarget || !releasePurchaseOrderId) return;
+    setActionLoading(true);
+    const result = releaseTarget.kind === 'request'
+      ? await releaseHeldRestockRequestToPurchaseOrder(releaseTarget.id, releasePurchaseOrderId, userId)
+      : await releaseHeldRestockItemToPurchaseOrder(releaseTarget.id, releasePurchaseOrderId, userId);
+
+    if (result.error) {
+      setError(result.error);
+      toast.error(result.error);
+    } else {
+      toast.success(releaseTarget.kind === 'request' ? 'Held request linked to the selected purchase order.' : 'Held item linked to a new system-generated request and the selected purchase order.');
+      setReleaseTarget(null);
+      setReleasePurchaseOrderId('');
+      await loadData();
+    }
     setActionLoading(false);
   };
 
@@ -448,7 +527,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     { key: 'requests', label: 'Current Requests', count: currentRequests.length },
     { key: 'request_history', label: 'Request History', count: requestHistory.length },
     { key: 'schedule', label: 'Upcoming Scheduled Re-orders', count: upcomingReorders.filter((item) => item.next_reorder_date).length },
-    { key: 'purchase_orders', label: 'Purchase Orders', count: purchaseOrders.length },
+    { key: 'purchase_orders', label: 'Purchase Orders', count: purchaseOrders.length + heldRequests.length + heldItems.length },
   ];
 
   const filteredSupplierProducts = supplierProducts.filter((product) => {
@@ -617,7 +696,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
                   {purchaseOrderStatusTabs.map((statusTab) => {
-                    const statusCount = purchaseOrders.filter((po) => po.status === statusTab.status).length;
+                    const statusCount = statusTab.status === 'on_hold' ? heldRequests.length + heldItems.length : purchaseOrders.filter((po) => po.status === statusTab.status).length;
                     return (
                       <button key={statusTab.status} type="button" onClick={() => setActivePurchaseOrderStatus(statusTab.status)} className={`rounded-lg px-3 py-2 text-sm font-semibold ${activePurchaseOrderStatus === statusTab.status ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                         {statusTab.label} ({statusCount})
@@ -625,7 +704,36 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                     );
                   })}
                 </div>
-                {purchaseOrders.length === 0 ? (
+                {activePurchaseOrderStatus === 'on_hold' ? (
+                  heldRequests.length === 0 && heldItems.length === 0 ? (
+                    <EmptyState icon={Package} title="No requests or items on hold" subtitle="Requests and orphaned line items put on hold will appear here until linked to an open PO." />
+                  ) : (
+                    <div className="space-y-4">
+                      {heldRequests.map((request) => (
+                        <section key={request.id} className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="min-w-0">
+                              <h3 className="break-words font-semibold text-orange-950">Held request {request.request_number}</h3>
+                              <p className="mt-1 break-words text-sm text-orange-800">{request.supplier?.name || 'Unknown supplier'} · {(request.items || []).length} item(s) · {formatCurrency(request.total_amount)}</p>
+                            </div>
+                            <button type="button" onClick={() => openReleaseHeldRequest(request)} className="rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white hover:bg-orange-700">Link to PO</button>
+                          </div>
+                        </section>
+                      ))}
+                      {heldItems.map((item) => (
+                        <section key={item.id} className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="min-w-0">
+                              <h3 className="break-words font-semibold text-amber-950">Held item {item.product_name}</h3>
+                              <p className="mt-1 break-words text-sm text-amber-800">Qty {item.quantity_requested} · Unit {formatCurrency(item.unit_price)} · Total {formatCurrency(item.total_price)}</p>
+                            </div>
+                            <button type="button" onClick={() => openReleaseHeldItem(item)} className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700">Create request and link to PO</button>
+                          </div>
+                        </section>
+                      ))}
+                    </div>
+                  )
+                ) : purchaseOrders.length === 0 ? (
                   <EmptyState icon={ClipboardList} title="No purchase orders yet" subtitle="Generate purchase orders from the supplier request queues or schedules." />
                 ) : Object.keys(purchaseOrdersByStatusAndSupplier[activePurchaseOrderStatus]).length === 0 ? (
                   <EmptyState icon={ClipboardList} title={`No ${activePurchaseOrderStatus} purchase orders`} subtitle="Suppliers with purchase orders in this status will appear here." />
@@ -652,7 +760,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {showPoModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <form onSubmit={handleCreatePurchaseOrder} className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-lg">
+          <form onSubmit={handleCreatePurchaseOrder} className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Generate Purchase Order</h2>
               <button type="button" onClick={() => setShowPoModal(false)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
@@ -769,7 +877,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {placingPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <form onSubmit={handlePlacePurchaseOrder} className="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+          <form onSubmit={handlePlacePurchaseOrder} className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Place {placingPurchaseOrder.po_number}</h2>
               <button type="button" onClick={() => setPlacingPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
@@ -797,7 +905,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {editingPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <form onSubmit={handleEditPurchaseOrder} className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-lg">
+          <form onSubmit={handleEditPurchaseOrder} className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Edit {editingPurchaseOrder.po_number}</h2>
@@ -909,7 +1017,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {receivingPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <form onSubmit={handleReceivePurchaseOrder} className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+          <form onSubmit={handleReceivePurchaseOrder} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Receive {receivingPurchaseOrder.po_number}</h2>
@@ -981,7 +1089,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 {selectedRequestSupplier && <button type="button" onClick={() => setSelectedRequest(null)} className="mb-1 text-sm font-medium text-blue-700 hover:text-blue-800">← Back to {selectedRequestSupplier.supplierName} requests</button>}
@@ -999,17 +1107,32 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             </div>
             <div className="mt-4 divide-y rounded-lg border border-gray-200">
               {(selectedRequest.items || []).map((item) => (
-                <div key={item.id} className="grid gap-2 p-3 text-sm md:grid-cols-4">
-                  <span className="font-medium text-gray-900">{item.product_name}</span>
-                  <span>Qty: {item.quantity_requested}</span>
-                  <span>Unit: {formatCurrency(item.unit_price)}</span>
-                  <span>Total: {formatCurrency(item.total_price)}</span>
+                <div key={item.id} className="grid min-w-0 gap-2 p-3 text-sm md:grid-cols-[minmax(0,2fr)_minmax(5rem,1fr)_minmax(6rem,1fr)_minmax(6rem,1fr)_auto]">
+                  <span className="min-w-0 break-words font-medium text-gray-900">{item.product_name}</span>
+                  <span className="break-words">Qty: {item.quantity_requested}</span>
+                  <span className="break-words">Unit: {formatCurrency(item.unit_price)}</span>
+                  <span className="break-words">Total: {formatCurrency(item.total_price)}</span>
+                  {selectedRequest.status === 'requested' && (
+                    <button type="button" onClick={() => handlePutItemOnHold(item)} disabled={actionLoading} className="rounded border border-orange-200 px-2 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-50 disabled:bg-gray-100">
+                      Hold item
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
             {selectedRequest.status === 'requested' && (
-              <button type="button" onClick={() => confirmCancelRequest(selectedRequest)} disabled={actionLoading} className="mt-4 w-full rounded-lg border border-red-200 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100">
-                Cancel Request
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <button type="button" onClick={() => handlePutRequestOnHold(selectedRequest)} disabled={actionLoading} className="w-full rounded-lg border border-orange-200 px-4 py-2 font-semibold text-orange-700 hover:bg-orange-50 disabled:bg-gray-100">
+                  Put Request On Hold
+                </button>
+                <button type="button" onClick={() => confirmCancelRequest(selectedRequest)} disabled={actionLoading} className="w-full rounded-lg border border-red-200 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100">
+                  Cancel Request
+                </button>
+              </div>
+            )}
+            {selectedRequest.status === 'on_hold' && (
+              <button type="button" onClick={() => openReleaseHeldRequest(selectedRequest)} disabled={actionLoading} className="mt-4 w-full rounded-lg bg-orange-600 px-4 py-2 font-semibold text-white hover:bg-orange-700 disabled:bg-gray-300">
+                Remove From Hold and Link to PO
               </button>
             )}
           </div>
@@ -1018,7 +1141,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {selectedRequestSupplier && !selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-lg">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">{selectedRequestSupplier.supplierName} {selectedRequestSupplier.mode === 'current' ? 'current requests' : 'request history'}</h2>
@@ -1029,9 +1152,9 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             <div className="divide-y rounded-lg border border-gray-200">
               {selectedRequestSupplierRequests.map((request) => (
                 <button key={request.id} type="button" onClick={() => setSelectedRequest(request)} className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-gray-900">{request.request_number}</span><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getRestockStatusClasses(request.status)}`}>{request.status.replace(/_/g, ' ')}</span></div>
-                    <p className="mt-1 text-sm text-gray-600">{(request.items || []).length} item(s) · {formatCurrency(request.total_amount)} · Submitted by {request.pharmacist?.full_name || request.pharmacist?.email || 'Unknown user'} · Requested {new Date(request.created_at).toLocaleDateString()}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2"><span className="break-words font-semibold text-gray-900">{request.request_number}</span><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getRestockStatusClasses(request.status)}`}>{request.status.replace(/_/g, ' ')}</span></div>
+                    <p className="mt-1 break-words text-sm text-gray-600">{(request.items || []).length} item(s) · {formatCurrency(request.total_amount)} · Submitted by {request.pharmacist?.full_name || request.pharmacist?.email || 'Unknown user'} · Requested {new Date(request.created_at).toLocaleDateString()}</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-gray-400" />
                 </button>
@@ -1048,7 +1171,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {selectedPurchaseOrderSupplier && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-4xl rounded-lg bg-white p-6 shadow-lg">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">{selectedPurchaseOrderSupplier.supplierName} {selectedPurchaseOrderSupplier.status} purchase orders</h2>
@@ -1060,9 +1183,9 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               {selectedPurchaseOrderSupplierPurchaseOrders.map((po) => (
                 <div key={po.id} onClick={() => setSelectedPurchaseOrder(po)} className={`cursor-pointer p-4 hover:bg-gray-50 ${focusedPurchaseOrderId === po.id ? 'bg-blue-50/40' : ''}`}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold text-gray-900">{po.po_number}</h3><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getPurchaseOrderStatusClasses(po.status)}`}>{po.status}</span></div>
-                      <p className="mt-1 text-sm text-gray-600">{po.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Re-order date {formatDate(po.reorder_date)} · Expected delivery {formatDate(po.expected_delivery_date)} · {(po.items || []).length} line item(s) · {formatCurrency(po.total_amount)}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2"><h3 className="break-words font-semibold text-gray-900">{po.po_number}</h3><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getPurchaseOrderStatusClasses(po.status)}`}>{po.status}</span></div>
+                      <p className="mt-1 break-words text-sm text-gray-600">{po.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Re-order date {formatDate(po.reorder_date)} · Expected delivery {formatDate(po.expected_delivery_date)} · {(po.items || []).length} line item(s) · {formatCurrency(po.total_amount)}</p>
                     </div>
                     {(po.status === 'open' || po.status === 'placed') && (
                       <div className="flex flex-wrap gap-2">
@@ -1084,6 +1207,44 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
         </div>
       )}
 
+
+      {releaseTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+          <form onSubmit={handleReleaseFromHold} className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Release from hold</h2>
+                <p className="text-sm text-gray-600">{releaseTarget.label}</p>
+              </div>
+              <button type="button" onClick={() => setReleaseTarget(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
+            </div>
+            <p className="mb-4 text-sm text-gray-600">
+              Choose an open manual or scheduled PO for this supplier. Orphaned held items will also be attached to a new system-generated restock request.
+            </p>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Open purchase order *</label>
+            <select
+              value={releasePurchaseOrderId}
+              onChange={(event) => setReleasePurchaseOrderId(event.target.value)}
+              required
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-600"
+            >
+              <option value="">Select an open PO</option>
+              {purchaseOrders.filter((po) => po.status === 'open' && po.supplier_id === releaseTarget.supplierId).map((po) => (
+                <option key={po.id} value={po.id}>{po.po_number} · {po.source === 'manual' ? 'Manual' : 'Scheduled'} · {formatDate(po.reorder_date)}</option>
+              ))}
+            </select>
+            <div className="mt-6 flex gap-3">
+              <button type="submit" disabled={actionLoading || !releasePurchaseOrderId} className="flex-1 rounded-lg bg-orange-600 px-4 py-2 font-semibold text-white hover:bg-orange-700 disabled:bg-gray-300">
+                {actionLoading ? 'Linking...' : 'Link to PO'}
+              </button>
+              <button type="button" onClick={() => setReleaseTarget(null)} className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <ConfirmationModal
         isOpen={!!pendingConfirmation}
         title={pendingConfirmation?.title || ''}
@@ -1096,7 +1257,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {selectedPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-lg">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">{selectedPurchaseOrder.po_number}</h2>
               <button type="button" onClick={() => setSelectedPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
@@ -1104,12 +1265,12 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             <p className="text-sm text-gray-600">{selectedPurchaseOrder.supplier?.name} · {selectedPurchaseOrder.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Status: {selectedPurchaseOrder.status} · Total {formatCurrency(selectedPurchaseOrder.total_amount)}</p>
             <div className="mt-4 divide-y rounded-lg border border-gray-200">
               {(selectedPurchaseOrder.items || []).map((item) => (
-                <div key={item.id} className="grid gap-2 p-3 text-sm md:grid-cols-5">
-                  <span className="font-medium text-gray-900">{item.product_name}</span>
-                  <span>Ordered: {item.quantity_ordered}</span>
-                  <span>Unit: {formatCurrency(item.unit_price)}</span>
-                  <span>Received: {item.quantity_received}</span>
-                  <span>{formatCurrency(item.total_price)}</span>
+                <div key={item.id} className="grid min-w-0 gap-2 p-3 text-sm md:grid-cols-[minmax(0,2fr)_minmax(5rem,1fr)_minmax(6rem,1fr)_minmax(6rem,1fr)_minmax(6rem,1fr)]">
+                  <span className="min-w-0 break-words font-medium text-gray-900">{item.product_name}</span>
+                  <span className="break-words">Ordered: {item.quantity_ordered}</span>
+                  <span className="break-words">Unit: {formatCurrency(item.unit_price)}</span>
+                  <span className="break-words">Received: {item.quantity_received}</span>
+                  <span className="break-words">{formatCurrency(item.total_price)}</span>
                 </div>
               ))}
             </div>

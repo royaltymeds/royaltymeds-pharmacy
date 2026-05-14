@@ -6,6 +6,7 @@ import {
   Supplier,
   RestockRequest,
   SupplierProduct,
+  RestockItem,
   CreateRestockRequestInput,
   CreateSupplierInput,
   UpdateSupplierInput,
@@ -636,7 +637,7 @@ export async function rejectRestockRequest(
 
 export async function updateRestockRequestStatus(
   requestId: string,
-  status: 'requested' | 'linked_to_po' | 'received' | 'cancelled',
+  status: 'requested' | 'linked_to_po' | 'received' | 'cancelled' | 'on_hold',
   updatedBy: string,
   notes?: string
 ): Promise<{ data: RestockRequest | null; error: string | null }> {
@@ -658,6 +659,9 @@ export async function updateRestockRequestStatus(
     // Set timestamp based on status
     if (status === 'received') {
       updates.actual_delivery_date = new Date().toISOString().split('T')[0];
+    }
+    if (status === 'on_hold') {
+      updates.purchase_order_id = null;
     }
 
     const { error: updateError } = await supabase
@@ -690,6 +694,303 @@ export async function updateRestockRequestStatus(
     return { data: normalizeRestockRequestPharmacist(data), error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to update restock request status' };
+  }
+}
+
+
+type HeldRestockItem = RestockItem & {
+  restock_request?: Pick<RestockRequest, 'supplier_id' | 'pharmacist_id'>;
+};
+
+async function recalculateRestockRequestTotal(supabase: ReturnType<typeof getServiceRoleClient>, requestId: string) {
+  const { data: activeItems } = await supabase
+    .from('restock_items')
+    .select('total_price')
+    .eq('restock_request_id', requestId)
+    .eq('hold_status', 'active');
+
+  const total = (activeItems || []).reduce((sum, item) => sum + Number(item.total_price || 0), 0);
+  await supabase
+    .from('restock_requests')
+    .update({ total_amount: total, updated_at: new Date().toISOString() })
+    .eq('id', requestId);
+
+  return total;
+}
+
+async function addHeldItemToPurchaseOrder(
+  supabase: ReturnType<typeof getServiceRoleClient>,
+  purchaseOrderId: string,
+  requestId: string,
+  item: HeldRestockItem,
+  now: string
+) {
+  const { data: existing } = await supabase
+    .from('purchase_order_items')
+    .select('*')
+    .eq('purchase_order_id', purchaseOrderId)
+    .eq('product_id', item.product_id)
+    .eq('product_type', item.product_type)
+    .eq('unit_price', item.unit_price)
+    .maybeSingle();
+
+  if (existing) {
+    const quantityOrdered = Number(existing.quantity_ordered || 0) + Number(item.quantity_requested || 0);
+    const totalPrice = Number(existing.total_price || 0) + Number(item.total_price || 0);
+    const { error } = await supabase
+      .from('purchase_order_items')
+      .update({
+        quantity_ordered: quantityOrdered,
+        total_price: totalPrice,
+        notes: [existing.notes, item.notes, 'Released from hold'].filter(Boolean).join(' | '),
+        updated_at: now,
+      })
+      .eq('id', existing.id);
+    if (error) return { error: error.message, purchaseOrderItemId: null };
+    return { error: null, purchaseOrderItemId: existing.id };
+  }
+
+  const { data: inserted, error } = await supabase
+    .from('purchase_order_items')
+    .insert({
+      purchase_order_id: purchaseOrderId,
+      restock_request_id: requestId,
+      restock_item_id: item.id,
+      product_id: item.product_id,
+      product_type: item.product_type,
+      product_name: item.product_name,
+      quantity_ordered: item.quantity_requested,
+      quantity_received: 0,
+      unit_price: item.unit_price,
+      total_price: item.total_price,
+      notes: [item.notes, 'Released from hold'].filter(Boolean).join(' | '),
+    })
+    .select('id')
+    .single();
+
+  if (error) return { error: error.message, purchaseOrderItemId: null };
+  return { error: null, purchaseOrderItemId: inserted?.id || null };
+}
+
+export async function putRestockRequestOnHold(
+  requestId: string,
+  updatedBy: string,
+  notes?: string
+): Promise<{ data: RestockRequest | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const now = new Date().toISOString();
+
+    const { data: request, error: requestError } = await supabase
+      .from('restock_requests')
+      .select('status, purchase_order_id')
+      .eq('id', requestId)
+      .single();
+    if (requestError) return { data: null, error: requestError.message };
+
+    if (request.purchase_order_id) return { data: null, error: 'Remove the request from its purchase order before putting it on hold.' };
+
+    const { error: itemError } = await supabase
+      .from('restock_items')
+      .update({ hold_status: 'on_hold', held_at: now, held_by: updatedBy, hold_notes: notes, updated_at: now })
+      .eq('restock_request_id', requestId);
+    if (itemError) return { data: null, error: itemError.message };
+
+    const { error: updateError } = await supabase
+      .from('restock_requests')
+      .update({ status: 'on_hold', purchase_order_id: null, updated_at: now })
+      .eq('id', requestId);
+    if (updateError) return { data: null, error: updateError.message };
+
+    await supabase.from('restock_history').insert([{ restock_request_id: requestId, action: 'put_on_hold', old_status: request.status, new_status: 'on_hold', changed_by: updatedBy, notes }]);
+
+    const { data, error } = await supabase.from('restock_requests').select(RESTOCK_REQUEST_SELECT).eq('id', requestId).single();
+    if (error) return { data: null, error: error.message };
+    return { data: normalizeRestockRequestPharmacist(data), error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to put restock request on hold' };
+  }
+}
+
+export async function putRestockItemOnHold(
+  itemId: string,
+  updatedBy: string,
+  notes?: string
+): Promise<{ data: RestockItem | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const now = new Date().toISOString();
+
+    const { data: item, error: itemFetchError } = await supabase
+      .from('restock_items')
+      .select('*')
+      .eq('id', itemId)
+      .single();
+    if (itemFetchError) return { data: null, error: itemFetchError.message };
+    if (!item.restock_request_id) return { data: null, error: 'This item is already orphaned or on hold.' };
+    if (item.purchase_order_item_id) return { data: null, error: 'Remove the item from its purchase order before putting it on hold.' };
+
+    const originalRequestId = item.restock_request_id;
+    const { error: updateError } = await supabase
+      .from('restock_items')
+      .update({
+        restock_request_id: null,
+        held_from_request_id: originalRequestId,
+        hold_status: 'on_hold',
+        held_at: now,
+        held_by: updatedBy,
+        hold_notes: notes,
+        purchase_order_item_id: null,
+        updated_at: now,
+      })
+      .eq('id', itemId);
+    if (updateError) return { data: null, error: updateError.message };
+
+    const remainingTotal = await recalculateRestockRequestTotal(supabase, originalRequestId);
+    if (remainingTotal === 0) {
+      await supabase
+        .from('restock_requests')
+        .update({ status: 'cancelled', updated_at: now })
+        .eq('id', originalRequestId);
+    }
+
+    await supabase.from('restock_history').insert([{ restock_request_id: originalRequestId, action: 'item_put_on_hold', changed_by: updatedBy, notes: [notes, `Held item ${item.product_name}`].filter(Boolean).join(' | ') }]);
+
+    const { data, error } = await supabase.from('restock_items').select('*').eq('id', itemId).single();
+    if (error) return { data: null, error: error.message };
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to put restock item on hold' };
+  }
+}
+
+export async function getHeldRestockItems(): Promise<{ data: HeldRestockItem[] | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const { data, error } = await supabase
+      .from('restock_items')
+      .select('*, restock_request:restock_requests!restock_items_held_from_request_id_fkey(supplier_id, pharmacist_id)')
+      .eq('hold_status', 'on_hold')
+      .is('restock_request_id', null)
+      .order('held_at', { ascending: false });
+    if (error) return { data: null, error: error.message };
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch held restock items' };
+  }
+}
+
+export async function releaseHeldRestockRequestToPurchaseOrder(
+  requestId: string,
+  purchaseOrderId: string,
+  updatedBy: string
+): Promise<{ data: RestockRequest | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const now = new Date().toISOString();
+
+    const { data: request, error: requestError } = await supabase
+      .from('restock_requests')
+      .select('*, items:restock_items(*)')
+      .eq('id', requestId)
+      .single();
+    if (requestError) return { data: null, error: requestError.message };
+    if (request.status !== 'on_hold') return { data: null, error: 'Only held requests can be released from hold.' };
+
+    const { data: purchaseOrder, error: poError } = await supabase
+      .from('purchase_orders')
+      .select('id, supplier_id, status, total_amount')
+      .eq('id', purchaseOrderId)
+      .single();
+    if (poError) return { data: null, error: poError.message };
+    if (purchaseOrder.supplier_id !== request.supplier_id) return { data: null, error: 'The selected purchase order must use the same supplier as the held request.' };
+    if (purchaseOrder.status !== 'open') return { data: null, error: 'Held requests can only be linked to open purchase orders.' };
+
+    let addedTotal = 0;
+    for (const item of request.items || []) {
+      const result = await addHeldItemToPurchaseOrder(supabase, purchaseOrderId, requestId, item, now);
+      if (result.error) return { data: null, error: result.error };
+      addedTotal += Number(item.total_price || 0);
+      await supabase
+        .from('restock_items')
+        .update({ hold_status: 'active', purchase_order_item_id: result.purchaseOrderItemId, held_at: null, held_by: null, hold_notes: null, updated_at: now })
+        .eq('id', item.id);
+    }
+
+    await supabase.from('purchase_orders').update({ total_amount: Number(purchaseOrder.total_amount || 0) + addedTotal, updated_at: now }).eq('id', purchaseOrderId);
+    await supabase.from('restock_requests').update({ status: 'linked_to_po', purchase_order_id: purchaseOrderId, updated_at: now }).eq('id', requestId);
+    await supabase.from('restock_history').insert([{ restock_request_id: requestId, action: 'released_from_hold', old_status: 'on_hold', new_status: 'linked_to_po', changed_by: updatedBy, notes: `Linked to purchase order ${purchaseOrderId}` }]);
+
+    const { data, error } = await supabase.from('restock_requests').select(RESTOCK_REQUEST_SELECT).eq('id', requestId).single();
+    if (error) return { data: null, error: error.message };
+    return { data: normalizeRestockRequestPharmacist(data), error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to release held request' };
+  }
+}
+
+export async function releaseHeldRestockItemToPurchaseOrder(
+  itemId: string,
+  purchaseOrderId: string,
+  updatedBy: string
+): Promise<{ data: RestockRequest | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const now = new Date().toISOString();
+
+    const { data: item, error: itemError } = await supabase
+      .from('restock_items')
+      .select('*, restock_request:restock_requests!restock_items_held_from_request_id_fkey(supplier_id, pharmacist_id)')
+      .eq('id', itemId)
+      .single();
+    if (itemError) return { data: null, error: itemError.message };
+    if (item.hold_status !== 'on_hold' || item.restock_request_id) return { data: null, error: 'Only orphaned held items can be released this way.' };
+
+    const { data: purchaseOrder, error: poError } = await supabase
+      .from('purchase_orders')
+      .select('id, supplier_id, status, total_amount')
+      .eq('id', purchaseOrderId)
+      .single();
+    if (poError) return { data: null, error: poError.message };
+    if (purchaseOrder.status !== 'open') return { data: null, error: 'Held items can only be linked to open purchase orders.' };
+
+    const supplierId = item.restock_request?.supplier_id || purchaseOrder.supplier_id;
+    if (purchaseOrder.supplier_id !== supplierId) return { data: null, error: 'The selected purchase order must use the held item supplier.' };
+
+    const { data: requestData, error: requestError } = await supabase
+      .from('restock_requests')
+      .insert({
+        request_number: generateRestockWorkflowNumber('RR'),
+        supplier_id: supplierId,
+        pharmacist_id: item.restock_request?.pharmacist_id || updatedBy,
+        purchase_order_id: purchaseOrderId,
+        status: 'linked_to_po',
+        total_amount: item.total_price,
+      })
+      .select()
+      .single();
+    if (requestError) return { data: null, error: requestError.message };
+
+    const result = await addHeldItemToPurchaseOrder(supabase, purchaseOrderId, requestData.id, item, now);
+    if (result.error) {
+      await supabase.from('restock_requests').delete().eq('id', requestData.id);
+      return { data: null, error: result.error };
+    }
+
+    const { error: releaseError } = await supabase
+      .from('restock_items')
+      .update({ restock_request_id: requestData.id, hold_status: 'active', purchase_order_item_id: result.purchaseOrderItemId, held_at: null, held_by: null, hold_notes: null, updated_at: now })
+      .eq('id', itemId);
+    if (releaseError) return { data: null, error: releaseError.message };
+
+    await supabase.from('purchase_orders').update({ total_amount: Number(purchaseOrder.total_amount || 0) + Number(item.total_price || 0), updated_at: now }).eq('id', purchaseOrderId);
+    await supabase.from('restock_history').insert([{ restock_request_id: requestData.id, action: 'held_item_released', old_status: 'on_hold', new_status: 'linked_to_po', changed_by: updatedBy, notes: `System-generated request for held item ${item.product_name}` }]);
+
+    const { data, error } = await supabase.from('restock_requests').select(RESTOCK_REQUEST_SELECT).eq('id', requestData.id).single();
+    if (error) return { data: null, error: error.message };
+    return { data: normalizeRestockRequestPharmacist(data), error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to release held item' };
   }
 }
 
@@ -906,7 +1207,8 @@ async function attachRequestToOpenPurchaseOrder(supabase: ReturnType<typeof getS
   const { data: items, error: itemsError } = await supabase
     .from('restock_items')
     .select('*')
-    .eq('restock_request_id', requestId);
+    .eq('restock_request_id', requestId)
+    .eq('hold_status', 'active');
   if (itemsError || !items?.length) return;
 
   for (const item of items) {
