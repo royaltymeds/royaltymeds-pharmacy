@@ -1,3 +1,1 @@
 1. automated restock emails should send PO's, emails should only be sent when there is an open PO for each supplier (THIS HAS TO BE DONE ON SUPABASE, NOT IN OUR NODE PROJECT)
-2. send emails at 9 AM EST instead of 8 AM EST
-3. check cron job/edge function design against manual purchase order workflow
