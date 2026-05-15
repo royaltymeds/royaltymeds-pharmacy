@@ -7,3 +7,5 @@
 4. convert the new restock order page into a modal with the same design as the page (the modal should be a replica of the page), when the new restock order button is used it should open the modal instead of the page
 
 5. purchase order details modal needs a button for printing the purchase order and one for downloading the purchase order as pdf
+
+6. in the bulk upload modal for linking items in supplies management, add a section that explains the required format for csv files, the user should leave only the columns that they intend to map in the file and should not include commas in names and numbers
