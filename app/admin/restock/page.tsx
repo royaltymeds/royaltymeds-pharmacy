@@ -54,7 +54,7 @@ export default async function RestockPage() {
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <h3 className="font-semibold text-blue-900">Purchase-order driven workflow</h3>
         <p className="mt-1 text-sm text-blue-700">
-          Restock requests no longer require approval. Requests queue under each supplier, are added to open supplier purchase orders automatically, and are received from the purchase order.
+          Restock requests queued under each supplier, are added to open supplier purchase orders automatically, and are received from the purchase order.
         </p>
       </div>
 
