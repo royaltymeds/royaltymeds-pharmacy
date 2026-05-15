@@ -1,0 +1,3 @@
+1. the ability to hold items should be present in purchase order details modal
+
+2. restock management tabs, request history tab does not need to count requests. upcoming scheduled re-orders tab should only count reorders that have a scheduled PO already generated. purchase orders tab only needs to count open and placed orders. tabs under the purchase orders tab, received and cancelled don't need to show a count, only open, placed and on hold tabs should display a count.
