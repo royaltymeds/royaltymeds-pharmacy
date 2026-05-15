@@ -285,34 +285,107 @@ export async function deleteSupplier(supplierId: string): Promise<{ error: strin
 // SUPPLIER PRODUCTS OPERATIONS
 // ============================================================================
 
-export async function createSupplierProduct(
+type SupplierProductUpsertRow = {
+  supplier_id: string;
+  product_id: string;
+  product_type: CreateSupplierProductInput['product_type'];
+  product_name?: string;
+  is_inventory_item: boolean;
+  supplier_sku?: string;
+  supplier_unit_price: number;
+  minimum_order_quantity: number;
+  reorder_frequency_id?: string;
+  notes?: string;
+  is_active: boolean;
+};
+
+function normalizeSupplierProductInput(input: CreateSupplierProductInput): SupplierProductUpsertRow {
+  return {
+    supplier_id: input.supplier_id,
+    product_id: input.product_id,
+    product_type: input.product_type,
+    product_name: input.product_name,
+    is_inventory_item: input.is_inventory_item ?? true,
+    supplier_sku: input.supplier_sku,
+    supplier_unit_price: input.supplier_unit_price,
+    minimum_order_quantity: input.minimum_order_quantity || 1,
+    reorder_frequency_id: input.reorder_frequency_id,
+    notes: input.notes,
+    is_active: true,
+  };
+}
+
+function getSupplierProductLinkKey(row: SupplierProductUpsertRow | SupplierProduct): string {
+  const normalizedName = row.product_name?.trim().toLowerCase();
+  const identifier = row.is_inventory_item === false && normalizedName ? `name:${normalizedName}` : `id:${row.product_id}`;
+  return `${row.supplier_id}|${row.product_type}|${identifier}`;
+}
+
+async function upsertSupplierProductLink(
+  supabase: ReturnType<typeof getServiceRoleClient>,
   input: CreateSupplierProductInput
 ): Promise<{ data: SupplierProduct | null; error: string | null }> {
-  try {
-    const supabase = getServiceRoleClient();
+  const row = normalizeSupplierProductInput(input);
+  const existingByProductId = row.product_id
+    ? await supabase
+        .from('supplier_products')
+        .select('id')
+        .eq('supplier_id', row.supplier_id)
+        .eq('product_id', row.product_id)
+        .eq('product_type', row.product_type)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null, error: null };
 
+  if (existingByProductId.error) return { data: null, error: existingByProductId.error.message };
+
+  let existingId = existingByProductId.data?.id;
+
+  if (!existingId && row.is_inventory_item === false && row.product_name?.trim()) {
+    const existingByName = await supabase
+      .from('supplier_products')
+      .select('id')
+      .eq('supplier_id', row.supplier_id)
+      .eq('product_type', row.product_type)
+      .eq('is_inventory_item', false)
+      .ilike('product_name', row.product_name.trim())
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingByName.error) return { data: null, error: existingByName.error.message };
+    existingId = existingByName.data?.id;
+  }
+
+  if (existingId) {
     const { data, error } = await supabase
       .from('supplier_products')
-      .insert([
-        {
-          supplier_id: input.supplier_id,
-          product_id: input.product_id,
-          product_type: input.product_type,
-          product_name: input.product_name,
-          is_inventory_item: input.is_inventory_item ?? true,
-          supplier_sku: input.supplier_sku,
-          supplier_unit_price: input.supplier_unit_price,
-          minimum_order_quantity: input.minimum_order_quantity || 1,
-          reorder_frequency_id: input.reorder_frequency_id,
-          notes: input.notes,
-          is_active: true,
-        },
-      ])
+      .update(row)
+      .eq('id', existingId)
       .select()
       .single();
 
     if (error) return { data: null, error: error.message };
     return { data, error: null };
+  }
+
+  const { data, error } = await supabase
+    .from('supplier_products')
+    .insert([row])
+    .select()
+    .single();
+
+  if (error) return { data: null, error: error.message };
+  return { data, error: null };
+}
+
+export async function createSupplierProduct(
+  input: CreateSupplierProductInput
+): Promise<{ data: SupplierProduct | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    return await upsertSupplierProductLink(supabase, input);
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to create supplier product' };
   }
@@ -325,26 +398,25 @@ export async function createSupplierProductsBulk(
   try {
     if (inputs.length === 0) return { data: [], error: null };
     const supabase = getServiceRoleClient();
+    const dedupedInputs = Array.from(
+      inputs
+        .map(normalizeSupplierProductInput)
+        .reduce<Map<string, SupplierProductUpsertRow>>((rowsByLink, row) => {
+          rowsByLink.set(getSupplierProductLinkKey(row), row);
+          return rowsByLink;
+        }, new Map())
+        .values()
+    );
 
-    const { data, error } = await supabase
-      .from('supplier_products')
-      .insert(inputs.map((input) => ({
-        supplier_id: input.supplier_id,
-        product_id: input.product_id,
-        product_type: input.product_type,
-        product_name: input.product_name,
-        is_inventory_item: input.is_inventory_item ?? true,
-        supplier_sku: input.supplier_sku,
-        supplier_unit_price: input.supplier_unit_price,
-        minimum_order_quantity: input.minimum_order_quantity || 1,
-        reorder_frequency_id: input.reorder_frequency_id,
-        notes: input.notes,
-        is_active: true,
-      })))
-      .select();
+    const savedProducts: SupplierProduct[] = [];
 
-    if (error) return { data: null, error: error.message };
-    return { data, error: null };
+    for (const input of dedupedInputs) {
+      const { data, error } = await upsertSupplierProductLink(supabase, input);
+      if (error) return { data: null, error };
+      if (data) savedProducts.push(data);
+    }
+
+    return { data: savedProducts, error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to bulk link supplier products' };
   }
