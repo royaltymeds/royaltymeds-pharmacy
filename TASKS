@@ -1,3 +1,0 @@
-1. in supplier management, we need to separate bulk upload feature and add item from each other, so one button should be used to open a modal for linking one item to multiple suppliers, and the other button for bulk upload/linking should be for uploading from the spreadsheet (the functionality is already there for both, but right now they are both in the same modal, we just need to separate them)
-
-2. the modals in the restock workflow, when the number of items are a lot they seem to push the modal off the screen (especially the PO modals), so that the top and bottom of the modal are off the screen, that should not happen, the modals' vertical height should always be confined within the screen
