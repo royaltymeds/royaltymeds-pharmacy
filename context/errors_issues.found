@@ -1,1 +1,2 @@
 1. on the new restock order page, the supplier list dropdown is appearing above the input/selector box sometimes depending on screen zoom or size, it should appear below it instead at all times
+2. when uploading bulk items via the bulk upload/linking modal in the suppliers management page, after clicking the button to link we need something to show us the status of the upload, it should prevent us from doing anything else in the modal until the upates are completed

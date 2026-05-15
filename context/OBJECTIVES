@@ -1,3 +1,5 @@
 1. send automated emails for expected delivery dates on POs
 2. build a non admin pharmacist role, and a non pharmacist staff role that still has access to pharmacist portal, but is not able to process prescriptions (not able to dispense but able to manage orders, inventory items and do restock management)
 3. use a cron job to handle missed due dates for POs when scheduled reorders pass their date with open POs not placed
+
+*. enable vercel deployment
