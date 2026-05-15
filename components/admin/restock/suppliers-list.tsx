@@ -41,6 +41,7 @@ export function SuppliersList() {
   const [selectedSupplierForProduct, setSelectedSupplierForProduct] = useState<Supplier | null>(null);
   const [productSource, setProductSource] = useState<'inventory' | 'non_inventory'>('inventory');
   const [showItemSupplierModal, setShowItemSupplierModal] = useState(false);
+  const [showBulkItemSupplierModal, setShowBulkItemSupplierModal] = useState(false);
   const [selectedSupplierIdsForItem, setSelectedSupplierIdsForItem] = useState<string[]>([]);
   const [samePriceForSelectedSuppliers, setSamePriceForSelectedSuppliers] = useState(true);
   const [itemSupplierSource, setItemSupplierSource] = useState<'inventory' | 'non_inventory'>('inventory');
@@ -284,6 +285,25 @@ export function SuppliersList() {
     });
   };
 
+  const resetItemSupplierState = () => {
+    setItemSupplierSource('inventory');
+    setBulkImportRows([]);
+    setBulkImportColumns([]);
+    setSelectedSupplierIdsForItem([]);
+    setSupplierPriceOverrides({});
+    setItemSupplierFormData({
+      supplier_id: '',
+      product_id: '',
+      product_type: 'otc',
+      product_name: '',
+      is_inventory_item: true,
+      supplier_sku: '',
+      supplier_unit_price: 0,
+      minimum_order_quantity: 1,
+      notes: '',
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -341,9 +361,9 @@ export function SuppliersList() {
 
   const handleBulkSupplierItemImport = async () => {
     setError(null);
-    const supplierIds = selectedSupplierIdsForItem.length > 0 ? selectedSupplierIdsForItem : [itemSupplierFormData.supplier_id].filter(Boolean);
+    const supplierIds = [itemSupplierFormData.supplier_id].filter(Boolean);
     if (supplierIds.length === 0) {
-      setError('Select at least one supplier before importing items.');
+      setError('Select a supplier before importing items.');
       return;
     }
     if (!bulkImportColumnMap.productName || !bulkImportColumnMap.unitPrice) {
@@ -388,7 +408,7 @@ export function SuppliersList() {
       await Promise.all(supplierIds.map((supplierId) => loadSupplierProductsForSupplier(supplierId)));
       setBulkImportRows([]);
       setBulkImportColumns([]);
-      setShowItemSupplierModal(false);
+      setShowBulkItemSupplierModal(false);
     }
     setActionLoading(false);
   };
@@ -426,22 +446,7 @@ export function SuppliersList() {
 
       await Promise.all(supplierIds.map((supplierId) => loadSupplierProductsForSupplier(supplierId)));
       setShowItemSupplierModal(false);
-      setItemSupplierSource('inventory');
-      setBulkImportRows([]);
-      setBulkImportColumns([]);
-      setSelectedSupplierIdsForItem([]);
-      setSupplierPriceOverrides({});
-      setItemSupplierFormData({
-        supplier_id: '',
-        product_id: '',
-        product_type: 'otc',
-        product_name: '',
-        is_inventory_item: true,
-        supplier_sku: '',
-        supplier_unit_price: 0,
-        minimum_order_quantity: 1,
-        notes: '',
-      });
+      resetItemSupplierState();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to link supplier to item');
     }
@@ -563,7 +568,14 @@ export function SuppliersList() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
             >
               <Link2 className="w-4 h-4" />
-              Bulk Link Items
+              Link Item to Suppliers
+            </button>
+            <button
+              onClick={() => setShowBulkItemSupplierModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
+            >
+              <Upload className="w-4 h-4" />
+              Bulk Upload/Link Items
             </button>
           </div>
         </div>
@@ -1056,7 +1068,7 @@ export function SuppliersList() {
                   <select
                     value={itemSupplierFormData.product_id}
                     onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_id: e.target.value })}
-                    required={bulkImportRows.length === 0}
+                    required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   >
                     <option value="">-- Choose an item --</option>
@@ -1073,23 +1085,9 @@ export function SuppliersList() {
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Non-Inventory Item Name *</label>
-                  <input type="text" value={itemSupplierFormData.product_name} onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_name: e.target.value })} required={bulkImportRows.length === 0} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="e.g., Packaging Labels" />
+                  <input type="text" value={itemSupplierFormData.product_name} onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_name: e.target.value })} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="e.g., Packaging Labels" />
                 </div>
               )}
-
-              <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-blue-900"><Upload className="h-4 w-4" /> Spreadsheet bulk upload</div>
-                <p className="mt-1 text-xs text-blue-800">Upload CSV/TSV rows to create and link many inventory or non-inventory items to the selected supplier(s).</p>
-                <input type="file" accept=".csv,.tsv,.txt,.xls,.xlsx" onChange={(e) => e.target.files?.[0]?.text().then(parseBulkSupplierItems)} className="mt-2 block w-full text-sm" />
-                {bulkImportColumns.length > 0 && (
-                  <div className="mt-3 grid gap-2 md:grid-cols-3">
-                    {([['productName','Product Name *'],['productType','Product Type'],['unitPrice','Unit Cost *'],['supplierSku','Supplier SKU'],['minimumOrderQuantity','MOQ'],['notes','Notes']] as const).map(([key,label]) => (
-                      <label key={key} className="text-xs font-medium text-blue-900">{label}<select value={bulkImportColumnMap[key]} onChange={(e) => setBulkImportColumnMap({ ...bulkImportColumnMap, [key]: e.target.value })} className="mt-1 w-full rounded border border-blue-200 bg-white px-2 py-1 text-gray-900"><option value="">Do not map</option>{bulkImportColumns.map((column) => <option key={column} value={column}>{column}</option>)}</select></label>
-                    ))}
-                    <button type="button" onClick={handleBulkSupplierItemImport} disabled={actionLoading} className="self-end rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300">Import & Link {bulkImportRows.length} Rows</button>
-                  </div>
-                )}
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Suppliers *</label>
@@ -1188,6 +1186,87 @@ export function SuppliersList() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showBulkItemSupplierModal && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Upload className="w-5 h-5 text-indigo-600" />
+                Bulk Upload & Link Items
+              </h2>
+              <button onClick={() => setShowBulkItemSupplierModal(false)} className="p-1 hover:bg-gray-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Default Item Type</label>
+                  <select
+                    value={itemSupplierFormData.product_type}
+                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: e.target.value as 'otc' | 'prescription' })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  >
+                    <option value="otc">OTC</option>
+                    <option value="prescription">Prescription</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Default Unit Cost (fallback)</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    value={Number.isNaN(itemSupplierFormData.supplier_unit_price) ? '' : itemSupplierFormData.supplier_unit_price}
+                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
+                <select
+                  value={itemSupplierFormData.supplier_id}
+                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_id: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                >
+                  <option value="">-- Choose a supplier --</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">Bulk upload links all rows in this file to the selected supplier.</p>
+              </div>
+
+              <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-indigo-900"><Upload className="h-4 w-4" /> Spreadsheet bulk upload</div>
+                <p className="mt-1 text-xs text-indigo-800">Upload CSV/TSV rows to create and link many items to the selected supplier.</p>
+                <input type="file" accept=".csv,.tsv,.txt,.xls,.xlsx" onChange={(e) => e.target.files?.[0]?.text().then(parseBulkSupplierItems)} className="mt-2 block w-full text-sm" />
+                {bulkImportColumns.length > 0 && (
+                  <div className="mt-3 grid gap-2 md:grid-cols-3">
+                    {([['productName','Product Name *'],['productType','Product Type'],['unitPrice','Unit Cost *'],['supplierSku','Supplier SKU'],['minimumOrderQuantity','MOQ'],['notes','Notes']] as const).map(([key,label]) => (
+                      <label key={key} className="text-xs font-medium text-indigo-900">{label}<select value={bulkImportColumnMap[key]} onChange={(e) => setBulkImportColumnMap({ ...bulkImportColumnMap, [key]: e.target.value })} className="mt-1 w-full rounded border border-indigo-200 bg-white px-2 py-1 text-gray-900"><option value="">Do not map</option>{bulkImportColumns.map((column) => <option key={column} value={column}>{column}</option>)}</select></label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <button type="button" onClick={handleBulkSupplierItemImport} disabled={actionLoading} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:bg-gray-300">
+                  {actionLoading ? 'Importing...' : `Import & Link ${bulkImportRows.length} Rows`}
+                </button>
+                <button type="button" onClick={() => setShowBulkItemSupplierModal(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
