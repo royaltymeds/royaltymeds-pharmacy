@@ -5,3 +5,5 @@
 3. add a search box to each restock management tab that displays a dropdown with requests from that tab that contain the search term being searched for (should update while typing)
 
 4. convert the new restock order page into a modal with the same design as the page (the modal should be a replica of the page), when the new restock order button is used it should open the modal instead of the page
+
+5. purchase order details modal needs a button for printing the purchase order and one for downloading the purchase order as pdf
