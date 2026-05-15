@@ -3,3 +3,5 @@
 2. restock management tabs, request history tab does not need to count requests. upcoming scheduled re-orders tab should only count reorders that have a scheduled PO already generated. purchase orders tab only needs to count open and placed orders. tabs under the purchase orders tab, received and cancelled don't need to show a count, only open, placed and on hold tabs should display a count.
 
 3. add a search box to each restock management tab that displays a dropdown with requests from that tab that contain the search term being searched for (should update while typing)
+
+4. convert the new restock order page into a modal with the same design as the page (the modal should be a replica of the page), when the new restock order button is used it should open the modal instead of the page
