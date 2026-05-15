@@ -1,1 +1,1 @@
-1. automated restock emails should send PO's, emails should only be sent when there is an open PO for each supplier (THIS HAS TO BE DONE ON SUPABASE, NOT IN OUR NODE PROJECT)
+1. send automated emails for expected delivery dates on POs
