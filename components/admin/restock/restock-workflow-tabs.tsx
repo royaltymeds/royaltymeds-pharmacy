@@ -759,8 +759,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       </div>
 
       {showPoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <form onSubmit={handleCreatePurchaseOrder} className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <form onSubmit={handleCreatePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Generate Purchase Order</h2>
               <button type="button" onClick={() => setShowPoModal(false)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
@@ -876,8 +876,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
 
       {placingPurchaseOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <form onSubmit={handlePlacePurchaseOrder} className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <form onSubmit={handlePlacePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Place {placingPurchaseOrder.po_number}</h2>
               <button type="button" onClick={() => setPlacingPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
@@ -904,8 +904,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       )}
 
       {editingPurchaseOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <form onSubmit={handleEditPurchaseOrder} className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <form onSubmit={handleEditPurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Edit {editingPurchaseOrder.po_number}</h2>
@@ -913,7 +913,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               </div>
               <button type="button" onClick={() => setEditingPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
             </div>
-            <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+            <div className="max-h-[calc(100vh-16rem)] space-y-3 overflow-y-auto pr-1">
               {editItems.map((item, index) => (
                 <div key={item.itemId || index} className="rounded-lg border border-gray-200 p-4">
                   <div className="grid gap-3 md:grid-cols-4">
@@ -1016,8 +1016,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       )}
 
       {receivingPurchaseOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <form onSubmit={handleReceivePurchaseOrder} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <form onSubmit={handleReceivePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Receive {receivingPurchaseOrder.po_number}</h2>
@@ -1025,7 +1025,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               </div>
               <button type="button" onClick={() => setReceivingPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
             </div>
-            <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+            <div className="max-h-[calc(100vh-16rem)] space-y-3 overflow-y-auto pr-1">
               {receiveItems.map((item, index) => (
                 <div key={item.itemId} className="rounded-lg border border-gray-200 p-4">
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1088,8 +1088,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
 
       {selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 {selectedRequestSupplier && <button type="button" onClick={() => setSelectedRequest(null)} className="mb-1 text-sm font-medium text-blue-700 hover:text-blue-800">← Back to {selectedRequestSupplier.supplierName} requests</button>}
@@ -1140,8 +1140,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       )}
 
       {selectedRequestSupplier && !selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">{selectedRequestSupplier.supplierName} {selectedRequestSupplier.mode === 'current' ? 'current requests' : 'request history'}</h2>
@@ -1170,8 +1170,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       )}
 
       {selectedPurchaseOrderSupplier && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">{selectedPurchaseOrderSupplier.supplierName} {selectedPurchaseOrderSupplier.status} purchase orders</h2>
@@ -1209,8 +1209,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
 
       {releaseTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <form onSubmit={handleReleaseFromHold} className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <form onSubmit={handleReleaseFromHold} className="max-h-[calc(100vh-3rem)] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Release from hold</h2>
@@ -1256,8 +1256,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       />
 
       {selectedPurchaseOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">{selectedPurchaseOrder.po_number}</h2>
               <button type="button" onClick={() => setSelectedPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
