@@ -557,7 +557,7 @@ export function SuppliersList() {
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-gray-900">All Suppliers</h2>
+          <h2 className="text-lg font-semibold text-gray-900 align-top">All Suppliers</h2>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={handleOpenCreate}
@@ -619,7 +619,7 @@ export function SuppliersList() {
               <section key={supplier.id} className="px-6 py-4 transition-colors hover:bg-gray-50">
                 <button type="button" onClick={() => toggleSupplierExpanded(supplier.id)} className="flex w-full items-start justify-between gap-3 text-left">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900">{supplier.name}</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 align-top">{supplier.name}</h3>
                     <p className="mt-1 text-xs text-gray-500">{supplier.contact_person || supplier.email || supplier.phone || 'No primary contact'}</p>
                     <p className="mt-2 text-sm text-gray-600">{linkedItemCount} linked item(s) · Lead time {supplier.lead_time_days} days</p>
                   </div>
@@ -630,12 +630,12 @@ export function SuppliersList() {
                 {isExpanded && (
                   <div className="mt-4 space-y-4 rounded-lg border border-gray-200 bg-white p-4">
                     <dl className="grid gap-3 text-sm md:grid-cols-3">
-                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Email</dt><dd className="mt-1 text-gray-900">{supplier.email || 'Not provided'}</dd></div>
-                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Phone</dt><dd className="mt-1 text-gray-900">{supplier.phone || 'Not provided'}</dd></div>
-                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Minimum order</dt><dd className="mt-1 text-gray-900">${Number(supplier.minimum_order_amount).toFixed(2)}</dd></div>
-                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Payment terms</dt><dd className="mt-1 text-gray-900">{supplier.payment_terms || 'Not provided'}</dd></div>
-                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">City</dt><dd className="mt-1 text-gray-900">{supplier.city || 'Not provided'}</dd></div>
-                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Address</dt><dd className="mt-1 text-gray-900">{supplier.address || 'Not provided'}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Email</dt><dd className="mt-1 text-gray-900 align-top">{supplier.email || 'Not provided'}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Phone</dt><dd className="mt-1 text-gray-900 align-top">{supplier.phone || 'Not provided'}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Minimum order</dt><dd className="mt-1 text-gray-900 align-top">${Number(supplier.minimum_order_amount).toFixed(2)}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Payment terms</dt><dd className="mt-1 text-gray-900 align-top">{supplier.payment_terms || 'Not provided'}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">City</dt><dd className="mt-1 text-gray-900 align-top">{supplier.city || 'Not provided'}</dd></div>
+                      <div><dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Address</dt><dd className="mt-1 text-gray-900 align-top">{supplier.address || 'Not provided'}</dd></div>
                     </dl>
                     <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-900">
                       <p className="font-semibold uppercase tracking-wide text-blue-700">Re-order Schedule</p>
@@ -672,7 +672,7 @@ export function SuppliersList() {
           <div className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">{selectedSupplierDetails.name} linked items</h2>
+                <h2 className="text-xl font-semibold text-gray-900 align-top">{selectedSupplierDetails.name} linked items</h2>
                 <p className="text-sm text-gray-600">Page {supplierItemsPage} of {selectedSupplierItemsTotalPages} · {filteredSelectedSupplierProducts.length} shown of {selectedSupplierProducts.length} linked item(s)</p>
               </div>
               <button onClick={() => setSelectedSupplierDetails(null)} className="p-1 hover:bg-gray-100 rounded">
@@ -711,7 +711,7 @@ export function SuppliersList() {
                     <div key={product.id} className="rounded-lg border border-gray-200 p-4">
                       <button type="button" onClick={() => setExpandedSupplierProductId(isExpanded ? null : product.id)} className="flex w-full items-center justify-between gap-3 text-left">
                         <div>
-                          <h3 className="text-sm font-semibold text-gray-900">{product.product_name || product.product_id}</h3>
+                          <h3 className="text-sm font-semibold text-gray-900 align-top">{product.product_name || product.product_id}</h3>
                           <p className="mt-1 text-xs text-gray-600">
                             <span className="uppercase">{product.product_type}</span> · {product.is_inventory_item === false ? 'Non-Inventory' : 'Inventory'} · SKU {product.supplier_sku || 'not set'} · Unit {Number(product.supplier_unit_price || 0).toFixed(2)} · Min {product.minimum_order_quantity || 1}
                           </p>
@@ -727,7 +727,7 @@ export function SuppliersList() {
                                 type="text"
                                 value={product.product_name || ''}
                                 onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { product_name: e.target.value })}
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                               />
                             </label>
                             <label className="text-xs font-medium uppercase tracking-wide text-gray-500">SKU
@@ -735,7 +735,7 @@ export function SuppliersList() {
                                 type="text"
                                 value={product.supplier_sku || ''}
                                 onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_sku: e.target.value })}
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                               />
                             </label>
                             <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost
@@ -745,7 +745,7 @@ export function SuppliersList() {
                                 pattern="[0-9]*[.]?[0-9]*"
                                 value={Number.isNaN(product.supplier_unit_price) ? '' : product.supplier_unit_price}
                                 onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                               />
                             </label>
                             <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Min Qty
@@ -755,7 +755,7 @@ export function SuppliersList() {
                                 pattern="[0-9]*"
                                 value={Number.isNaN(product.minimum_order_quantity) ? '' : product.minimum_order_quantity}
                                 onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                               />
                             </label>
                             <div className="flex items-end gap-2">
@@ -768,7 +768,7 @@ export function SuppliersList() {
                               value={product.notes || ''}
                               onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { notes: e.target.value })}
                               rows={2}
-                              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                             />
                           </label>
                           <p className="mt-2 text-xs text-gray-500">{getProductDescription(product.product_id, product.product_type) || 'No inventory description available.'}</p>
@@ -794,7 +794,7 @@ export function SuppliersList() {
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 align-top">
                 {editingId ? 'Edit Supplier' : 'Add New Supplier'}
               </h2>
               <button
@@ -816,7 +816,7 @@ export function SuppliersList() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
 
@@ -828,7 +828,7 @@ export function SuppliersList() {
                     type="text"
                     value={formData.contact_person}
                     onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
 
@@ -840,7 +840,7 @@ export function SuppliersList() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
 
@@ -852,7 +852,7 @@ export function SuppliersList() {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
 
@@ -864,7 +864,7 @@ export function SuppliersList() {
                     type="text"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
 
@@ -876,7 +876,7 @@ export function SuppliersList() {
                     type="text"
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
 
@@ -889,7 +889,7 @@ export function SuppliersList() {
                     value={formData.payment_terms}
                     onChange={(e) => setFormData({ ...formData, payment_terms: e.target.value })}
                     placeholder="e.g., Net 30"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
 
@@ -903,7 +903,7 @@ export function SuppliersList() {
                     pattern="[0-9]*"
                     value={Number.isNaN(formData.lead_time_days) ? '' : formData.lead_time_days}
                     onChange={(e) => setFormData({ ...formData, lead_time_days: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
 
@@ -917,7 +917,7 @@ export function SuppliersList() {
                     pattern="[0-9]*[.]?[0-9]*"
                     value={Number.isNaN(formData.minimum_order_amount) ? '' : formData.minimum_order_amount}
                     onChange={(e) => setFormData({ ...formData, minimum_order_amount: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
 
@@ -929,7 +929,7 @@ export function SuppliersList() {
                       <select
                         value={formData.reorder_schedule_type || ''}
                         onChange={(e) => setFormData({ ...formData, reorder_schedule_type: e.target.value as CreateSupplierInput['reorder_schedule_type'] })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                       >
                         <option value="">No schedule</option>
                         <option value="daily">Daily</option>
@@ -947,7 +947,7 @@ export function SuppliersList() {
                         type="date"
                         value={formData.reorder_schedule_start_date || ''}
                         onChange={(e) => setFormData({ ...formData, reorder_schedule_start_date: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                       />
                     </div>
 
@@ -966,7 +966,7 @@ export function SuppliersList() {
                           })
                         }
                         placeholder="YYYY-MM-DD, YYYY-MM-DD"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                       />
                       <p className="mt-1 text-xs text-gray-500">Use this for custom schedules. Separate multiple selected dates with commas.</p>
                     </div>
@@ -988,7 +988,7 @@ export function SuppliersList() {
                         value={formData.reorder_schedule_notes || ''}
                         onChange={(e) => setFormData({ ...formData, reorder_schedule_notes: e.target.value })}
                         placeholder="e.g., Call supplier one week before monthly order"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                       />
                     </div>
                   </div>
@@ -1002,7 +1002,7 @@ export function SuppliersList() {
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
               </div>
@@ -1047,7 +1047,7 @@ export function SuppliersList() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Item Source *</label>
-                  <select value={itemSupplierSource} onChange={(e) => { const source = e.target.value as 'inventory' | 'non_inventory'; setItemSupplierSource(source); setItemSupplierFormData({ ...itemSupplierFormData, is_inventory_item: source === 'inventory', product_id: '', product_name: '' }); }} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                  <select value={itemSupplierSource} onChange={(e) => { const source = e.target.value as 'inventory' | 'non_inventory'; setItemSupplierSource(source); setItemSupplierFormData({ ...itemSupplierFormData, is_inventory_item: source === 'inventory', product_id: '', product_name: '' }); }} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600">
                     <option value="inventory">Inventory Item</option>
                     <option value="non_inventory">Non-Inventory Item</option>
                   </select>
@@ -1057,7 +1057,7 @@ export function SuppliersList() {
                   <select
                     value={itemSupplierFormData.product_type}
                     onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: e.target.value as 'otc' | 'prescription', product_id: '', product_name: '' })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                   >
                     <option value="otc">OTC</option>
                     <option value="prescription">Prescription</option>
@@ -1072,7 +1072,7 @@ export function SuppliersList() {
                     value={itemSupplierFormData.product_id}
                     onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_id: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                   >
                     <option value="">-- Choose an item --</option>
                     {getProductOptions(itemSupplierFormData.product_type).map((product) => (
@@ -1088,7 +1088,7 @@ export function SuppliersList() {
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Non-Inventory Item Name *</label>
-                  <input type="text" value={itemSupplierFormData.product_name} onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_name: e.target.value })} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="e.g., Packaging Labels" />
+                  <input type="text" value={itemSupplierFormData.product_name} onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_name: e.target.value })} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600" placeholder="e.g., Packaging Labels" />
                 </div>
               )}
 
@@ -1137,7 +1137,7 @@ export function SuppliersList() {
                         pattern="[0-9]*[.]?[0-9]*"
                         value={Number.isNaN(supplierPriceOverrides[supplierId]) ? '' : supplierPriceOverrides[supplierId] ?? itemSupplierFormData.supplier_unit_price}
                         onChange={(e) => setSupplierPriceOverrides({ ...supplierPriceOverrides, [supplierId]: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
-                        className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                       />
                     </label>
                   ))}
@@ -1151,7 +1151,7 @@ export function SuppliersList() {
                     type="text"
                     value={itemSupplierFormData.supplier_sku}
                     onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_sku: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
                 <div>
@@ -1163,7 +1163,7 @@ export function SuppliersList() {
                     value={Number.isNaN(itemSupplierFormData.supplier_unit_price) ? '' : itemSupplierFormData.supplier_unit_price}
                     onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
               </div>
@@ -1176,7 +1176,7 @@ export function SuppliersList() {
                   pattern="[0-9]*"
                   value={Number.isNaN(itemSupplierFormData.minimum_order_quantity) ? '' : itemSupplierFormData.minimum_order_quantity}
                   onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                 />
               </div>
 
@@ -1220,7 +1220,7 @@ export function SuppliersList() {
                   <select
                     value={itemSupplierFormData.product_type}
                     onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: e.target.value as 'otc' | 'prescription' })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-indigo-600"
                   >
                     <option value="otc">OTC</option>
                     <option value="prescription">Prescription</option>
@@ -1234,7 +1234,7 @@ export function SuppliersList() {
                     pattern="[0-9]*[.]?[0-9]*"
                     value={Number.isNaN(itemSupplierFormData.supplier_unit_price) ? '' : itemSupplierFormData.supplier_unit_price}
                     onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-indigo-600"
                   />
                 </div>
               </div>
@@ -1244,7 +1244,7 @@ export function SuppliersList() {
                 <select
                   value={itemSupplierFormData.supplier_id}
                   onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_id: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-indigo-600"
                 >
                   <option value="">-- Choose a supplier --</option>
                   {suppliers.map((supplier) => (
@@ -1263,7 +1263,7 @@ export function SuppliersList() {
                 {bulkImportColumns.length > 0 && (
                   <div className="mt-3 grid gap-2 md:grid-cols-3">
                     {([['productName','Product Name *'],['productType','Product Type'],['unitPrice','Unit Cost *'],['supplierSku','Supplier SKU'],['minimumOrderQuantity','MOQ'],['notes','Notes']] as const).map(([key,label]) => (
-                      <label key={key} className="text-xs font-medium text-indigo-900">{label}<select value={bulkImportColumnMap[key]} onChange={(e) => setBulkImportColumnMap({ ...bulkImportColumnMap, [key]: e.target.value })} className="mt-1 w-full rounded border border-indigo-200 bg-white px-2 py-1 text-gray-900"><option value="">Do not map</option>{bulkImportColumns.map((column) => <option key={column} value={column}>{column}</option>)}</select></label>
+                      <label key={key} className="text-xs font-medium text-indigo-900">{label}<select value={bulkImportColumnMap[key]} onChange={(e) => setBulkImportColumnMap({ ...bulkImportColumnMap, [key]: e.target.value })} className="mt-1 w-full rounded border border-indigo-200 bg-white px-2 py-1 text-gray-900 align-top"><option value="">Do not map</option>{bulkImportColumns.map((column) => <option key={column} value={column}>{column}</option>)}</select></label>
                     ))}
                   </div>
                 )}
@@ -1326,7 +1326,7 @@ export function SuppliersList() {
                       is_inventory_item: source === 'inventory',
                     });
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                 >
                   <option value="inventory">Inventory Item</option>
                   <option value="non_inventory">Non-Inventory Item</option>
@@ -1345,7 +1345,7 @@ export function SuppliersList() {
                       product_name: '',
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                 >
                   <option value="otc">OTC</option>
                   <option value="prescription">Prescription</option>
@@ -1359,7 +1359,7 @@ export function SuppliersList() {
                     value={productFormData.product_id}
                     onChange={(e) => setProductFormData({ ...productFormData, product_id: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   >
                     <option value="">-- Choose an inventory item --</option>
                     {getProductOptions(productFormData.product_type).map((product) => (
@@ -1382,7 +1382,7 @@ export function SuppliersList() {
                     value={productFormData.product_name}
                     onChange={(e) => setProductFormData({ ...productFormData, product_name: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                     placeholder="e.g., Packaging Labels"
                   />
                 </div>
@@ -1395,7 +1395,7 @@ export function SuppliersList() {
                     type="text"
                     value={productFormData.supplier_sku}
                     onChange={(e) => setProductFormData({ ...productFormData, supplier_sku: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                     placeholder="Optional"
                   />
                 </div>
@@ -1410,7 +1410,7 @@ export function SuppliersList() {
                       setProductFormData({ ...productFormData, supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })
                     }
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
               </div>
@@ -1425,7 +1425,7 @@ export function SuppliersList() {
                   onChange={(e) =>
                     setProductFormData({ ...productFormData, minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                 />
               </div>
 
@@ -1435,7 +1435,7 @@ export function SuppliersList() {
                   rows={3}
                   value={productFormData.notes}
                   onChange={(e) => setProductFormData({ ...productFormData, notes: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                 />
               </div>
 

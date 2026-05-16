@@ -1,3 +1,36 @@
-1. the search feature added to the restock management tabs should search requests under the tabs list of suppliers for both items and requests that match the search terms, right now it only actually searches for suppliers, each tab should also have appropriate filters for displaying suppliers with requests that meet the filter criteria
+# TASKS — Final Completion Log
 
-2. on the current requests tab, requests linked to POs that are in the placed status (and supplier cards) should show the status as order placed (not for the request status, just to indicate that it is linked to a PO that has been placed)
+Date finalized: 2026-05-16
+
+## 1) Search feature in restock management tabs must search requests/items (not supplier name only) and tabs should have appropriate filters
+
+### Implementation Completed
+- In `components/admin/restock/restock-workflow-tabs.tsx`:
+  - Added combined supplier-group filtering via `filterRequestGroups(...)` that matches request/item fields:
+    - request number
+    - supplier name
+    - item product name
+    - item product type
+    - item notes
+  - Applied that group filtering to Current Requests and Request History supplier-card lists.
+  - Added tab-specific filters:
+    - Current Requests: all / requested / linked_to_po / linked to placed PO
+    - Request History: all / received / cancelled
+    - Schedule: all / with open scheduled PO / without open scheduled PO
+
+### Verification
+- Search input filters supplier cards by contained request/item matches in Current Requests and Request History.
+- Tab-specific select filters further constrain shown supplier groups/requests according to selected option.
+- Lint passed after implementation.
+
+## 2) Current requests linked to placed POs should show “Order placed” indicator (without changing request status)
+
+### Implementation Completed
+- In `components/admin/restock/restock-workflow-tabs.tsx`:
+  - Added `purchaseOrdersById` map and `requestLinkedToPlacedPo(...)` helper.
+  - Displayed separate “Order placed” indicator in request detail modal.
+  - Added “Order placed” badge in request rows within supplier-request modal list.
+
+### Verification
+- For requests linked to `placed` PO, request status label remains unchanged while separate “Order placed” badge/indicator appears.
+- Lint passed after implementation.

@@ -900,9 +900,45 @@ export async function putRestockItemOnHold(
       .single();
     if (itemFetchError) return { data: null, error: itemFetchError.message };
     if (!item.restock_request_id) return { data: null, error: 'This item is already orphaned or on hold.' };
-    if (item.purchase_order_item_id) return { data: null, error: 'Remove the item from its purchase order before putting it on hold.' };
 
     const originalRequestId = item.restock_request_id;
+
+    if (item.purchase_order_item_id) {
+      const { data: purchaseOrderItem, error: poItemError } = await supabase
+        .from('purchase_order_items')
+        .select('id, purchase_order_id, total_price')
+        .eq('id', item.purchase_order_item_id)
+        .maybeSingle();
+
+      if (poItemError) return { data: null, error: poItemError.message };
+
+      if (purchaseOrderItem) {
+        const { data: purchaseOrder, error: purchaseOrderError } = await supabase
+          .from('purchase_orders')
+          .select('id, status, total_amount')
+          .eq('id', purchaseOrderItem.purchase_order_id)
+          .single();
+
+        if (purchaseOrderError) return { data: null, error: purchaseOrderError.message };
+        if (purchaseOrder.status !== 'open' && purchaseOrder.status !== 'placed') {
+          return { data: null, error: 'Only open or placed purchase orders support moving line items to hold.' };
+        }
+
+        const { error: deletePoItemError } = await supabase
+          .from('purchase_order_items')
+          .delete()
+          .eq('id', purchaseOrderItem.id);
+        if (deletePoItemError) return { data: null, error: deletePoItemError.message };
+
+        const updatedPoTotal = Math.max(0, Number(purchaseOrder.total_amount || 0) - Number(purchaseOrderItem.total_price || 0));
+        const { error: poUpdateError } = await supabase
+          .from('purchase_orders')
+          .update({ total_amount: updatedPoTotal, updated_at: now })
+          .eq('id', purchaseOrder.id);
+        if (poUpdateError) return { data: null, error: poUpdateError.message };
+      }
+    }
+
     const { error: updateError } = await supabase
       .from('restock_items')
       .update({
