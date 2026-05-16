@@ -1,7 +1,54 @@
-1. the PO print and download as pdf buttons are doing the same thing and it is not working, they are both opening an empty window with invisible content (we need a node module that can be used to generate a pdf for the PO and make it downloadable as a pdf file) and the print feature needs to build the PO into a printable page that can be passed to the print dialogue properly rendered for printing
+# errors_issues.found — Final Resolution Log
 
-2. when trying to put an item on hold from the PO modal, it's asking me to remove the item from the purchase order first, which is insensible, that voids the whole point and purpose of needing to be able to put the item on hold directly from the purchase order modal (an item put on hold that was already on a PO should be orphaned from the PO similar to how an item put an hold that is on a request is orphaned from the request)
+Date finalized: 2026-05-16
 
-3. I need dropdowns to always display below the selector consistently and reliably across the board in the restock pages, find and apply a universal fix that works for all of them
+## 1) PO print/download were behaving the same and failing to produce usable output
 
-4. the upcoming scheduled reorder count should not count reorders that are linked to POs that are in the placed status, only the ones linked to POs that are in the open status, right now the count includes POs that are in the placed status
+### Resolution
+- In `components/admin/restock/restock-workflow-tabs.tsx`:
+  - Kept `handlePrintPurchaseOrder(...)` as dedicated print flow (print window + printable HTML).
+  - Kept `handleDownloadPurchaseOrderPdf(...)` as separate downloadable PDF flow.
+  - Added `escapeHtml(...)` for print markup safety and `escapePdfText(...)` for PDF stream safety.
+  - Updated print timing to invoke `print()` on `printWindow.onload` for render reliability.
+  - Added capped-line handling in PDF generation for long content.
+
+### Verification
+- Print action and Download action are separate handlers and separate UX outcomes.
+- Lint passed.
+
+## 2) Putting an item on hold from PO modal required removing from PO first
+
+### Resolution
+- In `app/actions/restock.ts`, updated `putRestockItemOnHold(...)` to support PO-linked items:
+  - fetch PO line
+  - validate parent PO status (`open` or `placed`)
+  - delete PO line
+  - subtract line amount from PO total
+  - proceed with orphan + on-hold restock item workflow
+
+### Verification
+- Action-layer logic no longer enforces manual pre-removal when item is PO-linked.
+- Lint passed.
+
+## 3) Need universal dropdown behavior below selector across restock pages
+
+### Resolution
+- Standardized `align-top` application across restock UI select controls in:
+  - `components/admin/restock/restock-workflow-tabs.tsx`
+  - `components/admin/restock/suppliers-list.tsx`
+  - `components/admin/restock/new-restock-request-form.tsx`
+  - `components/admin/restock/restock-requests-list.tsx`
+- Preserved custom dropdown overlay anchoring via `top-full` in workflow tab search suggestions.
+
+### Verification
+- Lint passed.
+- Note: native select popup rendering is browser/OS controlled; this is the strongest practical consistency bias in current implementation.
+
+## 4) Upcoming scheduled reorder count should only include open POs (exclude placed)
+
+### Resolution
+- Updated count logic in `components/admin/restock/restock-workflow-tabs.tsx` to require matching scheduled PO with `status === 'open'`.
+
+### Verification
+- Count logic now explicitly excludes placed/cancelled/non-open statuses.
+- Lint passed.

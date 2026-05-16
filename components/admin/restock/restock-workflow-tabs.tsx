@@ -70,6 +70,19 @@ function formatDate(value?: string | null) {
   return new Date(`${value}T00:00:00`).toLocaleDateString();
 }
 
+function escapePdfText(value: string) {
+  return value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function getRestockStatusClasses(status: RestockRequest['status']) {
   switch (status) {
     case 'requested':
@@ -138,6 +151,9 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [releaseTarget, setReleaseTarget] = useState<{ kind: 'request' | 'item'; id: string; supplierId: string; label: string } | null>(null);
   const [releasePurchaseOrderId, setReleasePurchaseOrderId] = useState('');
   const [tabSearchTerm, setTabSearchTerm] = useState('');
+  const [requestTabFilter, setRequestTabFilter] = useState<'all' | 'requested' | 'linked_to_po' | 'linked_po_placed'>('all');
+  const [requestHistoryTabFilter, setRequestHistoryTabFilter] = useState<'all' | 'received' | 'cancelled'>('all');
+  const [scheduleTabFilter, setScheduleTabFilter] = useState<'all' | 'with_open_po' | 'without_open_po'>('all');
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -174,6 +190,17 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       return groups;
     }, {});
   }, [purchaseOrders]);
+
+
+  const purchaseOrdersById = useMemo(() => purchaseOrders.reduce<Record<string, PurchaseOrder>>((acc, po) => {
+    acc[po.id] = po;
+    return acc;
+  }, {}), [purchaseOrders]);
+
+  const requestLinkedToPlacedPo = useCallback((request: RestockRequest) => {
+    if (!request.purchase_order_id) return false;
+    return purchaseOrdersById[request.purchase_order_id]?.status === 'placed';
+  }, [purchaseOrdersById]);
 
   const currentRequests = useMemo(() => requests.filter((request) => request.status === 'requested' || request.status === 'linked_to_po'), [requests]);
   const heldRequests = useMemo(() => requests.filter((request) => request.status === 'on_hold'), [requests]);
@@ -398,7 +425,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
   const confirmCancelPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
     setPendingConfirmation({
-      title: `Cancel ${purchaseOrder.po_number}?`,
+      title: `Cancel ${escapeHtml(purchaseOrder.po_number)}?`,
       message: purchaseOrder.source === 'manual' ? 'This manual purchase order will be cancelled.' : 'Linked requests will return to requested status.',
       confirmLabel: 'Cancel PO',
       onConfirm: () => void handleCancelPurchaseOrder(purchaseOrder),
@@ -542,7 +569,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const getPurchaseOrderDetailHtml = (purchaseOrder: PurchaseOrder) => {
     const rows = (purchaseOrder.items || []).map((item) => `
       <tr>
-        <td style="padding:8px;border:1px solid #ddd;">${item.product_name}</td>
+        <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(item.product_name)}</td>
         <td style="padding:8px;border:1px solid #ddd;text-align:right;">${item.quantity_ordered}</td>
         <td style="padding:8px;border:1px solid #ddd;text-align:right;">${formatCurrency(item.unit_price)}</td>
         <td style="padding:8px;border:1px solid #ddd;text-align:right;">${item.quantity_received}</td>
@@ -550,10 +577,10 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       </tr>
     `).join('');
 
-    return `<!doctype html><html><head><meta charset="utf-8" /><title>${purchaseOrder.po_number}</title></head>
+    return `<!doctype html><html><head><meta charset="utf-8" /><title>${escapeHtml(purchaseOrder.po_number)}</title></head>
       <body style="font-family:Arial,sans-serif;padding:24px;">
-        <h1 style="margin:0 0 8px 0;">Purchase Order ${purchaseOrder.po_number}</h1>
-        <p style="margin:0 0 4px 0;">Supplier: ${purchaseOrder.supplier?.name || 'Unknown supplier'}</p>
+        <h1 style="margin:0 0 8px 0;">Purchase Order ${escapeHtml(purchaseOrder.po_number)}</h1>
+        <p style="margin:0 0 4px 0;">Supplier: ${escapeHtml(purchaseOrder.supplier?.name || 'Unknown supplier')}</p>
         <p style="margin:0 0 4px 0;">Status: ${purchaseOrder.status.replace(/_/g, ' ')}</p>
         <p style="margin:0 0 16px 0;">Total: ${formatCurrency(purchaseOrder.total_amount)}</p>
         <table style="width:100%;border-collapse:collapse;">
@@ -573,12 +600,66 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     printWindow.document.write(getPurchaseOrderDetailHtml(purchaseOrder));
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
   };
 
   const handleDownloadPurchaseOrderPdf = (purchaseOrder: PurchaseOrder) => {
-    handlePrintPurchaseOrder(purchaseOrder);
-    toast.message('Print dialog opened. Choose "Save as PDF" to download the purchase order.');
+    const lines = [
+      `Purchase Order ${escapeHtml(purchaseOrder.po_number)}`,
+      `Supplier: ${escapeHtml(purchaseOrder.supplier?.name || 'Unknown supplier')}`,
+      `Status: ${purchaseOrder.status.replace(/_/g, ' ')}`,
+      `Reorder date: ${formatDate(purchaseOrder.reorder_date)}`,
+      `Expected delivery: ${formatDate(purchaseOrder.expected_delivery_date)}`,
+      '',
+      'Items:',
+      ...(purchaseOrder.items || []).map((item, idx) => `${idx + 1}. ${escapeHtml(item.product_name)} | Qty ${item.quantity_ordered} | Unit ${formatCurrency(item.unit_price)} | Total ${formatCurrency(item.total_price)}`),
+      '',
+      `PO Total: ${formatCurrency(purchaseOrder.total_amount)}`,
+    ];
+
+    const maxVisibleLines = 44;
+    const cappedLines = lines.length > maxVisibleLines
+      ? [...lines.slice(0, maxVisibleLines - 1), `... ${lines.length - (maxVisibleLines - 1)} more line(s). Use Print for full layout.`]
+      : lines;
+
+    const contentLines = cappedLines
+      .map((line, index) => `BT /F1 11 Tf 50 ${770 - (index * 16)} Td (${escapePdfText(line)}) Tj ET`)
+      .join('\n');
+    const stream = `${contentLines}\n`;
+    const objects = [
+      '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
+      '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
+      '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj',
+      '4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj',
+      `5 0 obj << /Length ${stream.length} >> stream\n${stream}endstream endobj`,
+    ];
+
+    let pdf = '%PDF-1.4\n';
+    const offsets: number[] = [0];
+    for (const obj of objects) {
+      offsets.push(pdf.length);
+      pdf += `${obj}\n`;
+    }
+    const xrefStart = pdf.length;
+    pdf += `xref\n0 ${objects.length + 1}\n`;
+    pdf += '0000000000 65535 f \n';
+    for (let i = 1; i <= objects.length; i += 1) {
+      pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+    }
+    pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+
+    const blob = new Blob([pdf], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${escapeHtml(purchaseOrder.po_number)}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    toast.success('Purchase order PDF downloaded.');
   };
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
@@ -593,7 +674,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
           po.source === 'scheduled'
           && po.supplier_id === item.supplier.id
           && po.reorder_date === item.next_reorder_date
-          && po.status !== 'cancelled')
+          && po.status === 'open')
       ).length,
     },
     { key: 'purchase_orders', label: 'Purchase Orders', count: purchaseOrders.filter((po) => po.status === 'open' || po.status === 'placed').length },
@@ -614,6 +695,31 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const selectedPurchaseOrderSupplierTotalPages = selectedPurchaseOrderSupplier ? Math.max(1, Math.ceil(selectedPurchaseOrderSupplier.purchaseOrders.length / PAGE_SIZE)) : 1;
   const selectedPurchaseOrderSupplierPurchaseOrders = selectedPurchaseOrderSupplier ? selectedPurchaseOrderSupplier.purchaseOrders.slice((purchaseOrderSupplierPage - 1) * PAGE_SIZE, purchaseOrderSupplierPage * PAGE_SIZE) : [];
   const normalizedTabSearch = tabSearchTerm.trim().toLowerCase();
+
+  const filterRequestGroups = useCallback((groups: Record<string, { supplierName: string; requests: RestockRequest[] }>, mode: 'current' | 'history') => Object.entries(groups).flatMap(([supplierId, group]) => {
+    const filteredRequests = group.requests.filter((request) => {
+      const matchesSearch = !normalizedTabSearch || [request.request_number, request.supplier?.name, ...(request.items || []).flatMap((item) => [item.product_name, item.product_type, item.notes])]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedTabSearch));
+      if (!matchesSearch) return false;
+
+      if (mode === 'current') {
+        if (requestTabFilter === 'requested') return request.status === 'requested';
+        if (requestTabFilter === 'linked_to_po') return request.status === 'linked_to_po';
+        if (requestTabFilter === 'linked_po_placed') return requestLinkedToPlacedPo(request);
+      }
+
+      if (mode === 'history') {
+        if (requestHistoryTabFilter === 'received') return request.status === 'received';
+        if (requestHistoryTabFilter === 'cancelled') return request.status === 'cancelled';
+      }
+
+      return true;
+    });
+
+    return filteredRequests.length > 0 ? [[supplierId, { ...group, requests: filteredRequests }] as const] : [];
+  }), [normalizedTabSearch, requestHistoryTabFilter, requestLinkedToPlacedPo, requestTabFilter]);
+
 
   const requestSearchMatches = useMemo(() => currentRequests.filter((request) => {
     if (!normalizedTabSearch) return false;
@@ -694,7 +800,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             value={tabSearchTerm}
             onChange={(event) => setTabSearchTerm(event.target.value)}
             placeholder="Search this tab..."
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm align-top focus:outline-none align-top focus:ring-2 focus:ring-green-600"
           />
           {normalizedTabSearch && (
             <div className="absolute left-4 right-4 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
@@ -730,6 +836,32 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
           )}
         </div>
 
+
+        <div className="border-b border-gray-200 px-4 py-3">
+          {activeTab === 'requests' && (
+            <select value={requestTabFilter} onChange={(event) => setRequestTabFilter(event.target.value as 'all' | 'requested' | 'linked_to_po' | 'linked_po_placed')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 sm:w-auto">
+              <option value="all">All current request statuses</option>
+              <option value="requested">Requested only</option>
+              <option value="linked_to_po">Linked to PO only</option>
+              <option value="linked_po_placed">Linked to placed PO only</option>
+            </select>
+          )}
+          {activeTab === 'request_history' && (
+            <select value={requestHistoryTabFilter} onChange={(event) => setRequestHistoryTabFilter(event.target.value as 'all' | 'received' | 'cancelled')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 sm:w-auto">
+              <option value="all">All historical statuses</option>
+              <option value="received">Received only</option>
+              <option value="cancelled">Cancelled only</option>
+            </select>
+          )}
+          {activeTab === 'schedule' && (
+            <select value={scheduleTabFilter} onChange={(event) => setScheduleTabFilter(event.target.value as 'all' | 'with_open_po' | 'without_open_po')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 sm:w-auto">
+              <option value="all">All scheduled suppliers</option>
+              <option value="with_open_po">With open scheduled PO</option>
+              <option value="without_open_po">Without open scheduled PO</option>
+            </select>
+          )}
+        </div>
+
         {error && <div className="m-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
         {loading ? (
@@ -744,7 +876,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 {Object.keys(requestsBySupplier).length === 0 ? (
                   <EmptyState icon={Package} title="No current restock requests" subtitle="Submitted restock requests will appear grouped by supplier." />
                 ) : (
-                  Object.entries(requestsBySupplier).map(([supplierId, group]) => {
+                  filterRequestGroups(requestsBySupplier, 'current').map(([supplierId, group]) => {
                     const openPurchaseOrder = openPurchaseOrdersBySupplier[supplierId];
 
                     return (
@@ -773,7 +905,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 {Object.keys(requestHistoryBySupplier).length === 0 ? (
                   <EmptyState icon={ClipboardList} title="No request history yet" subtitle="Received and cancelled supplier requests will appear here after they leave active PO queues." />
                 ) : (
-                  Object.entries(requestHistoryBySupplier).map(([supplierId, group]) => (
+                  filterRequestGroups(requestHistoryBySupplier, 'history').map(([supplierId, group]) => (
                     <button key={supplierId} type="button" onClick={() => openRequestSupplierModal(supplierId, group, 'history')} className="w-full rounded-lg border border-gray-200 bg-gray-50 p-4 text-left hover:bg-gray-100">
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -793,7 +925,11 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 {upcomingReorders.length === 0 ? (
                   <EmptyState icon={CalendarDays} title="No suppliers available" subtitle="Add suppliers and configure schedules from Manage Suppliers." />
                 ) : (
-                  upcomingReorders.map((item) => {
+                  upcomingReorders.filter((item) => {
+                    if (scheduleTabFilter === 'with_open_po') return !!openPurchaseOrdersBySupplier[item.supplier.id];
+                    if (scheduleTabFilter === 'without_open_po') return !openPurchaseOrdersBySupplier[item.supplier.id];
+                    return true;
+                  }).map((item) => {
                     const openPurchaseOrder = openPurchaseOrdersBySupplier[item.supplier.id];
                     const isExpanded = expandedScheduleSupplierId === item.supplier.id;
 
@@ -914,7 +1050,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                   onChange={(event) => { setPoForm({ ...poForm, supplier_id: event.target.value }); setManualPoItems([]); setSupplierProductSearch(''); setSupplierProductPage(1); void loadSupplierProductsForPo(event.target.value); }}
                   required
                   disabled={poFormLocked}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 align-top focus:outline-none focus:ring-2 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                 >
                   <option value="">Select supplier</option>
                   {upcomingReorders.map((item) => (
@@ -930,7 +1066,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                   onChange={(event) => setPoForm({ ...poForm, reorder_date: event.target.value, is_custom_reorder_date: true })}
                   required
                   disabled={poFormLocked}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 align-top focus:outline-none focus:ring-2 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                 />
               </div>
               {!poFormLocked && (
@@ -939,7 +1075,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                   <select
                     value={poForm.source}
                     onChange={(event) => setPoForm({ ...poForm, source: event.target.value as 'manual' | 'scheduled', is_custom_reorder_date: event.target.value === 'manual' })}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   >
                     <option value="manual">Manual - do not auto-link requests</option>
                     <option value="scheduled">Scheduled/request queue - auto-link current requests</option>
@@ -960,7 +1096,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                     value={supplierProductSearch}
                     onChange={(event) => { setSupplierProductSearch(event.target.value); setSupplierProductPage(1); }}
                     placeholder="Search supplier items"
-                    className="mt-3 w-full rounded-lg border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="mt-3 w-full rounded-lg border border-blue-200 px-3 py-2 text-sm focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                   />
                   <div className="mt-3 max-h-40 space-y-2 overflow-y-auto rounded-lg bg-white p-2">
                     {supplierProducts.length === 0 ? (
@@ -999,7 +1135,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                   value={poForm.notes}
                   onChange={(event) => setPoForm({ ...poForm, notes: event.target.value })}
                   rows={3}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                 />
               </div>
             </div>
@@ -1065,7 +1201,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                         value={item.product_name}
                         onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, product_name: event.target.value } : currentItem))}
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                       />
                     </div>
                     <div>
@@ -1077,7 +1213,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                         value={Number.isNaN(item.quantity_ordered) ? '' : item.quantity_ordered}
                         onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: event.target.value === '' ? Number.NaN : Math.max(1, parseInt(event.target.value, 10)) } : currentItem))}
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                       />
                     </div>
                     <div>
@@ -1089,7 +1225,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                         value={Number.isNaN(item.unit_price) ? '' : item.unit_price}
                         onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: event.target.value === '' ? Number.NaN : parseFloat(event.target.value) } : currentItem))}
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                       />
                     </div>
                   </div>
@@ -1111,7 +1247,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 value={supplierProductSearch}
                 onChange={(event) => { setSupplierProductSearch(event.target.value); setSupplierProductPage(1); }}
                 placeholder="Search supplier items"
-                className="mt-3 w-full rounded-lg border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="mt-3 w-full rounded-lg border border-blue-200 px-3 py-2 text-sm focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
               />
               <div className="mt-3 max-h-40 space-y-2 overflow-y-auto rounded-lg bg-white p-2">
                 {supplierProducts.length === 0 ? (
@@ -1141,7 +1277,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 value={editNotes}
                 onChange={(event) => setEditNotes(event.target.value)}
                 rows={3}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
               />
             </div>
             <div className="mt-6 flex gap-3">
@@ -1209,7 +1345,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                           received: Number.isFinite(quantityReceived) && quantityReceived > 0,
                         };
                       }))}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 align-top focus:outline-none focus:ring-2 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                     />
                   </div>
                 </div>
@@ -1241,7 +1377,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             <div className="grid gap-3 rounded-lg bg-gray-50 p-4 text-sm md:grid-cols-2">
               <div><span className="text-gray-500">Supplier</span><p className="font-medium text-gray-900">{selectedRequest.supplier?.name || 'Unknown'}</p></div>
               <div><span className="text-gray-500">Submitted by</span><p className="font-medium text-gray-900">{selectedRequest.pharmacist?.full_name || selectedRequest.pharmacist?.email || 'Unknown user'}</p></div>
-              <div><span className="text-gray-500">Status</span><p className="font-medium text-gray-900">{selectedRequest.status.replace(/_/g, ' ')}</p></div>
+              <div><span className="text-gray-500">Status</span><p className="font-medium text-gray-900">{selectedRequest.status.replace(/_/g, ' ')}</p>{requestLinkedToPlacedPo(selectedRequest) && <p className="mt-1 text-xs font-semibold text-purple-700">Order placed</p>}</div>
               <div><span className="text-gray-500">Total</span><p className="font-medium text-gray-900">{formatCurrency(selectedRequest.total_amount)}</p></div>
               <div><span className="text-gray-500">Requested</span><p className="font-medium text-gray-900">{new Date(selectedRequest.created_at).toLocaleString()}</p></div>
               {selectedRequest.actual_delivery_date && <div><span className="text-gray-500">Received</span><p className="font-medium text-gray-900">{formatDate(selectedRequest.actual_delivery_date)}</p></div>}
@@ -1294,7 +1430,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               {selectedRequestSupplierRequests.map((request) => (
                 <button key={request.id} type="button" onClick={() => setSelectedRequest(request)} className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50">
                   <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2"><span className="break-words font-semibold text-gray-900">{request.request_number}</span><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getRestockStatusClasses(request.status)}`}>{request.status.replace(/_/g, ' ')}</span></div>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2"><span className="break-words font-semibold text-gray-900">{request.request_number}</span><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getRestockStatusClasses(request.status)}`}>{request.status.replace(/_/g, ' ')}</span>{requestLinkedToPlacedPo(request) && <span className="rounded-full border border-purple-200 bg-purple-50 px-2 py-1 text-xs font-semibold text-purple-700">Order placed</span>}</div>
                     <p className="mt-1 break-words text-sm text-gray-600">{(request.items || []).length} item(s) · {formatCurrency(request.total_amount)} · Submitted by {request.pharmacist?.full_name || request.pharmacist?.email || 'Unknown user'} · Requested {new Date(request.created_at).toLocaleDateString()}</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-gray-400" />

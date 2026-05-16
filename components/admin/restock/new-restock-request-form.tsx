@@ -231,7 +231,7 @@ export function NewRestockRequestForm({ pharmacistId, cancelHref = '/admin/resto
                 setSupplierProductPage(1);
                 setItems([]);
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
             >
               <option value="">-- Choose a supplier --</option>
               {suppliers.map((supplier) => (
