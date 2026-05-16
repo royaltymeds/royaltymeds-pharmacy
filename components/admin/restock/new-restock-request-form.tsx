@@ -24,9 +24,13 @@ interface RestockItem {
 
 interface NewRestockRequestFormProps {
   pharmacistId: string;
+  cancelHref?: string;
+  onCancel?: () => void;
+  onSubmitted?: (requestId?: string) => void;
+  redirectOnSuccess?: boolean;
 }
 
-export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormProps) {
+export function NewRestockRequestForm({ pharmacistId, cancelHref = '/admin/restock', onCancel, onSubmitted, redirectOnSuccess = true }: NewRestockRequestFormProps) {
   const router = useRouter();
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -163,8 +167,11 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
       setSuccess(true);
       toast.success('Restock order submitted. Email notifications use your configured notification settings.');
       setTimeout(() => {
-        router.push(`/admin/restock/${data?.id}`);
-        router.refresh();
+        if (onSubmitted) onSubmitted(data?.id);
+        if (redirectOnSuccess) {
+          router.push(`/admin/restock/${data?.id}`);
+          router.refresh();
+        }
       }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create restock request');
@@ -383,12 +390,18 @@ export function NewRestockRequestForm({ pharmacistId }: NewRestockRequestFormPro
           {loading && <Loader className="w-4 h-4 animate-spin" />}
           Submit Restock Order
         </button>
-        <Link
-          href="/admin/restock"
-          className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
-        >
-          Cancel
-        </Link>
+        {onCancel ? (
+          <button type="button" onClick={onCancel} className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">
+            Cancel
+          </button>
+        ) : (
+          <Link
+            href={cancelHref}
+            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+          >
+            Cancel
+          </Link>
+        )}
       </div>
     </form>
   );
