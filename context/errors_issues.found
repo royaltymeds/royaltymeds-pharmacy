@@ -3,3 +3,5 @@
 2. when trying to put an item on hold from the PO modal, it's asking me to remove the item from the purchase order first, which is insensible, that voids the whole point and purpose of needing to be able to put the item on hold directly from the purchase order modal (an item put on hold that was already on a PO should be orphaned from the PO similar to how an item put an hold that is on a request is orphaned from the request)
 
 3. I need dropdowns to always display below the selector consistently and reliably across the board in the restock pages, find and apply a universal fix that works for all of them
+
+4. the upcoming scheduled reorder count should not count reorders that are linked to POs that are in the placed status, only the ones linked to POs that are in the open status, right now the count includes POs that are in the placed status
