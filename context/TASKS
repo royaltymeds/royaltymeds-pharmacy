@@ -1,1 +1,3 @@
 1. the search feature added to the restock management tabs should search requests under the tabs list of suppliers for both items and requests that match the search terms, right now it only actually searches for suppliers, each tab should also have appropriate filters for displaying suppliers with requests that meet the filter criteria
+
+2. on the current requests tab, requests linked to POs that are in the placed status (and supplier cards) should show the status as order placed (not for the request status, just to indicate that it is linked to a PO that has been placed)
