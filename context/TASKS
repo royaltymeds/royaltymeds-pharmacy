@@ -1,1 +1,1 @@
-1. the search feature added to the restock management tabs should search requests under the tabs list of suppliers for both items and requests that match the search terms, right now it only actually searchs for suppliers
+1. the search feature added to the restock management tabs should search requests under the tabs list of suppliers for both items and requests that match the search terms, right now it only actually searches for suppliers, each tab should also have appropriate filters for displaying suppliers with requests that meet the filter criteria

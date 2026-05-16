@@ -1,3 +1,5 @@
 1. the PO print and download as pdf buttons are doing the same thing and it is not working, they are both opening an empty window with invisible content (we need a node module that can be used to generate a pdf for the PO and make it downloadable as a pdf file) and the print feature needs to build the PO into a printable page that can be passed to the print dialogue properly rendered for printing
 
 2. when trying to put an item on hold from the PO modal, it's asking me to remove the item from the purchase order first, which is insensible, that voids the whole point and purpose of needing to be able to put the item on hold directly from the purchase order modal (an item put on hold that was already on a PO should be orphaned from the PO similar to how an item put an hold that is on a request is orphaned from the request)
+
+3. I need dropdowns to always display below the selector consistently and reliably across the board in the restock pages, find and apply a universal fix that works for all of them
