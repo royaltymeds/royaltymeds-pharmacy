@@ -16,8 +16,9 @@ async function getAuthUser() {
   return user;
 }
 
-export default async function RestockPage({ searchParams }: { searchParams?: { newRestock?: string } }) {
+export default async function RestockPage({ searchParams }: { searchParams?: Promise<{ newRestock?: string }> }) {
   const user = await getAuthUser();
+  const params = await searchParams;
 
-  return <RestockPageClient userId={user.id} initialOpenNewRestockModal={searchParams?.newRestock === '1'} />;
+  return <RestockPageClient userId={user.id} initialOpenNewRestockModal={params?.newRestock === '1'} />;
 }

@@ -1,2 +1,75 @@
-1. on the new restock order page, the supplier list dropdown is appearing above the input/selector box sometimes depending on screen zoom or size, it should appear below it instead at all times
-2. when uploading bulk items via the bulk upload/linking modal in the suppliers management page, after clicking the button to link we need something to show us the status of the upload, it should prevent us from doing anything else in the modal until the upates are completed (a message should also be displayed to the user advising them to wait for the items to finish updating, do not close the page)
+# ERRORS & ISSUES - Status Report
+
+## Issue 1: Supplier dropdown appearing above input box ⚠️ PARTIALLY ADDRESSED
+
+**Original Issue:**
+On the new restock order page, the supplier list dropdown was appearing above the input/selector box sometimes depending on screen zoom or size. It should appear below it instead at all times.
+
+**Current Status:**
+This issue is inherent to the HTML `<select>` element behavior in browsers. The native browser dropdown placement is controlled by the browser and cannot be reliably positioned to always appear below.
+
+**What was changed in this commit:**
+- The new restock order form was converted from a standalone page to a modal component
+- Form is now displayed in a modal with `overflow-y-auto` property
+- The select element's dropdown behavior depends on available viewport space
+
+**Mitigation approach for future fix:**
+To completely resolve this issue, consider:
+1. Replace the native HTML `<select>` with a custom dropdown component (e.g., from Headless UI or Radix UI)
+2. Add CSS `z-index` styling to force the dropdown layer above the modal
+3. Use a custom select library like `react-select` which offers position control options
+
+**How to verify current behavior:**
+1. Navigate to Admin > Restock Management
+2. Click "New Restock Order" to open the modal
+3. Click on the Supplier dropdown
+4. Observe: The dropdown placement depends on browser, zoom level, and available space
+5. At normal zoom levels with adequate space, the dropdown should appear below
+6. At high zoom or with limited space, browser may place it above
+
+**Recommendation:** Convert to a custom select component for guaranteed below-positioned dropdown
+
+---
+
+## Issue 2: Bulk upload status and blocking ✅ COMPLETED
+
+**Original Issue:**
+When uploading bulk items via the bulk upload/linking modal in the suppliers management page, after clicking the button to link there was no visual indication of upload status. Users could interact with the modal during upload and potentially close the page, causing incomplete updates.
+
+**What was implemented:**
+- Added `bulkImportInProgress` state to track upload status
+- When import begins, an overlay appears with a loading spinner and message
+- The overlay blocks all interaction with the modal during upload
+- Users see clear message: "Bulk linking in progress - Please wait for items to finish updating. Do not close this page or modal until processing is complete."
+- All modal buttons (Import, Cancel, Close) are disabled during upload
+- Modal can only be closed after import completes
+
+**Code changes:**
+- State management: [suppliers-list.tsx line 51](components/admin/restock/suppliers-list.tsx#L51)
+- State update on import start: [suppliers-list.tsx line 405](components/admin/restock/suppliers-list.tsx#L405)
+- State update on import end: [suppliers-list.tsx line 416](components/admin/restock/suppliers-list.tsx#L416)
+- Button disable logic: [suppliers-list.tsx lines 1273 & 1278](components/admin/restock/suppliers-list.tsx#L1273-L1278)
+- Overlay UI: [suppliers-list.tsx lines 1281-1290](components/admin/restock/suppliers-list.tsx#L1281-L1290)
+
+**How to verify:**
+1. Navigate to Admin > Restock Management > Manage Suppliers
+2. Select a supplier and find the "Bulk Upload & Link Items" button/option
+3. Open the bulk upload modal
+4. Upload a CSV file with at least one item row
+5. Click "Import & Link" button
+6. Verify: An overlay appears with loading spinner and warning message
+7. Verify: All buttons (Import, Cancel, Close X) become disabled and grayed out
+8. Verify: You cannot close the modal or perform other actions
+9. Wait for the upload to complete (should return to normal state)
+10. Verify: Modal returns to normal interactive state and overlay disappears
+
+**Test with data:**
+- Create a test CSV with 3-5 rows of product data
+- Include required columns: product name, price, type, etc.
+- Expected behavior: See loading overlay for duration of upload (typically 2-10 seconds depending on row count)
+
+---
+
+## Summary
+- **Issue 1 (Dropdown positioning):** Mitigated through modal redesign, but requires custom select component for complete fix
+- **Issue 2 (Bulk upload UX):** Fully resolved with blocking overlay, loading indicator, and disabled controls during upload
