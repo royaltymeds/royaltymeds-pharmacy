@@ -48,6 +48,7 @@ export function SuppliersList() {
   const [bulkImportRows, setBulkImportRows] = useState<Record<string, string>[]>([]);
   const [bulkImportColumns, setBulkImportColumns] = useState<string[]>([]);
   const [bulkImportColumnMap, setBulkImportColumnMap] = useState({ productName: '', productType: '', unitPrice: '', supplierSku: '', minimumOrderQuantity: '', notes: '' });
+  const [bulkImportInProgress, setBulkImportInProgress] = useState(false);
   const [supplierPriceOverrides, setSupplierPriceOverrides] = useState<Record<string, number>>({});
   const [itemSupplierFormData, setItemSupplierFormData] = useState<CreateSupplierProductInput>({
     supplier_id: '',
@@ -401,6 +402,7 @@ export function SuppliersList() {
     }
 
     setActionLoading(true);
+    setBulkImportInProgress(true);
     const { error } = await createSupplierProductsBulk(payloads);
     if (error) {
       setError(error);
@@ -410,6 +412,7 @@ export function SuppliersList() {
       setBulkImportColumns([]);
       setShowBulkItemSupplierModal(false);
     }
+    setBulkImportInProgress(false);
     setActionLoading(false);
   };
 
@@ -1192,17 +1195,25 @@ export function SuppliersList() {
 
       {showBulkItemSupplierModal && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <Upload className="w-5 h-5 text-indigo-600" />
                 Bulk Upload & Link Items
               </h2>
-              <button onClick={() => setShowBulkItemSupplierModal(false)} className="p-1 hover:bg-gray-100 rounded">
+              <button onClick={() => { if (!bulkImportInProgress) setShowBulkItemSupplierModal(false); }} disabled={bulkImportInProgress} className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-4">
+              <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-900">
+                <p className="font-semibold">CSV format requirements</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-xs">
+                  <li>Keep only the columns you intend to map before uploading.</li>
+                  <li>Do not include commas in names or numbers.</li>
+                  <li>Use a clean header row with clear column names.</li>
+                </ul>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Default Item Type</label>
@@ -1259,14 +1270,23 @@ export function SuppliersList() {
               </div>
 
               <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button type="button" onClick={handleBulkSupplierItemImport} disabled={actionLoading} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:bg-gray-300">
+                <button type="button" onClick={handleBulkSupplierItemImport} disabled={actionLoading || bulkImportInProgress} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:bg-gray-300">
                   {actionLoading ? 'Importing...' : `Import & Link ${bulkImportRows.length} Rows`}
                 </button>
-                <button type="button" onClick={() => setShowBulkItemSupplierModal(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">
+                <button type="button" onClick={() => { if (!bulkImportInProgress) setShowBulkItemSupplierModal(false); }} disabled={bulkImportInProgress} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
                   Cancel
                 </button>
               </div>
             </div>
+            {bulkImportInProgress && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/85 p-6">
+                <div className="max-w-md rounded-lg border border-amber-200 bg-amber-50 p-4 text-center">
+                  <Loader className="mx-auto mb-2 h-6 w-6 animate-spin text-amber-700" />
+                  <p className="font-semibold text-amber-900">Bulk linking in progress</p>
+                  <p className="mt-1 text-sm text-amber-800">Please wait for items to finish updating. Do not close this page or modal until processing is complete.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
