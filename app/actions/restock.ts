@@ -771,7 +771,7 @@ export async function updateRestockRequestStatus(
 
 
 type HeldRestockItem = RestockItem & {
-  restock_request?: Pick<RestockRequest, 'supplier_id' | 'pharmacist_id'>;
+  restock_request?: Pick<RestockRequest, 'supplier_id' | 'pharmacist_id' | 'supplier'>;
 };
 
 async function recalculateRestockRequestTotal(supabase: ReturnType<typeof getServiceRoleClient>, requestId: string) {
@@ -977,7 +977,7 @@ export async function getHeldRestockItems(): Promise<{ data: HeldRestockItem[] |
     const supabase = getServiceRoleClient();
     const { data, error } = await supabase
       .from('restock_items')
-      .select('*, restock_request:restock_requests!restock_items_held_from_request_id_fkey(supplier_id, pharmacist_id)')
+      .select('*, restock_request:restock_requests!restock_items_held_from_request_id_fkey(supplier_id, pharmacist_id, supplier:suppliers(id, name))')
       .eq('hold_status', 'on_hold')
       .is('restock_request_id', null)
       .order('held_at', { ascending: false });
@@ -1048,7 +1048,7 @@ export async function releaseHeldRestockItemToPurchaseOrder(
 
     const { data: item, error: itemError } = await supabase
       .from('restock_items')
-      .select('*, restock_request:restock_requests!restock_items_held_from_request_id_fkey(supplier_id, pharmacist_id)')
+      .select('*, restock_request:restock_requests!restock_items_held_from_request_id_fkey(supplier_id, pharmacist_id, supplier:suppliers(id, name))')
       .eq('id', itemId)
       .single();
     if (itemError) return { data: null, error: itemError.message };
