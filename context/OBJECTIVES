@@ -3,3 +3,4 @@
 3. use a cron job to handle missed due dates for POs when scheduled reorders pass their date with open POs not placed or add a feature to merge missed reorders into next reorder<active>
 4. find a more reliable way to keep track of next reorder date in the schema
 5. a password reset feature and functionality is needed for users
+6. add cron job for recommended PO generation for suppliers with upcoming reorder dates
