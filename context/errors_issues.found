@@ -1,2 +1,0 @@
-1. dropdown lists are still appearing above the input box instead of below item
-2. print purchase order does not work, we get an error that says unable to open print dialogue, also the print purchase order button should either generate a pdf then pass it to the print dialogue, or build an html page with the PO details then pass it to the print dialogue
