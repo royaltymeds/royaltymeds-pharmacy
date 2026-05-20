@@ -592,23 +592,57 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   };
 
   const handlePrintPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1024,height=900');
-    if (!printWindow) {
-      toast.error('Unable to open print window. Please check your browser popup settings.');
-      return;
-    }
-    try {
-      printWindow.document.open();
-      printWindow.document.write(getPurchaseOrderDetailHtml(purchaseOrder));
-      printWindow.document.close();
-      printWindow.focus();
-      // Use setTimeout to ensure document is fully rendered before printing
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(iframe);
+
+    const cleanup = () => {
       setTimeout(() => {
-        printWindow.print();
-      }, 100);
-    } catch (error) {
+        iframe.remove();
+      }, 300);
+    };
+
+    let printAttempted = false;
+    const triggerPrint = () => {
+      if (printAttempted) return;
+      printAttempted = true;
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        toast.success('Print dialog opened.');
+      } catch {
+        toast.error('Failed to print purchase order.');
+      } finally {
+        cleanup();
+      }
+    };
+
+    try {
+      const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!printDocument) {
+        cleanup();
+        toast.error('Unable to initialize print document.');
+        return;
+      }
+
+      iframe.onload = () => {
+        triggerPrint();
+      };
+
+      printDocument.open();
+      printDocument.write(getPurchaseOrderDetailHtml(purchaseOrder));
+      printDocument.close();
+
+      setTimeout(triggerPrint, 250);
+    } catch {
+      cleanup();
       toast.error('Failed to print purchase order.');
-      printWindow.close();
     }
   };
 
@@ -905,6 +939,9 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                               {openPurchaseOrder && (
                                 <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">linked to {openPurchaseOrder.po_number}</span>
                               )}
+                              {group.requests.some((request) => requestLinkedToPlacedPo(request)) && (
+                                <span className="rounded-full border border-purple-200 bg-purple-50 px-2 py-1 text-xs font-semibold text-purple-700">Order placed</span>
+                              )}
                             </div>
                             <p className="mt-1 text-sm text-gray-600">{group.requests.length} current request(s) · {formatCurrency(group.requests.reduce((sum, request) => sum + Number(request.total_amount || 0), 0))}</p>
                           </div>
@@ -1019,7 +1056,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div className="min-w-0">
                               <h3 className="break-words font-semibold text-amber-950">Held item {item.product_name}</h3>
-                              <p className="mt-1 break-words text-sm text-amber-800">Qty {item.quantity_requested} · Unit {formatCurrency(item.unit_price)} · Total {formatCurrency(item.total_price)}</p>
+                              <p className="mt-1 break-words text-sm text-amber-800">Supplier: {item.supplier?.name || 'Unknown supplier'} · Qty {item.quantity_requested} · Unit {formatCurrency(item.unit_price)} · Total {formatCurrency(item.total_price)}</p>
                             </div>
                             <button type="button" onClick={() => openReleaseHeldItem(item)} className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700">Create request and link to PO</button>
                           </div>
@@ -1054,7 +1091,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {showPoModal && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
-          <form onSubmit={handleCreatePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+          <form onSubmit={handleCreatePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Generate Purchase Order</h2>
               <button type="button" onClick={() => setShowPoModal(false)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
@@ -1171,7 +1208,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {placingPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
-          <form onSubmit={handlePlacePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+          <form onSubmit={handlePlacePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Place {placingPurchaseOrder.po_number}</h2>
               <button type="button" onClick={() => setPlacingPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
@@ -1199,7 +1236,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {editingPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
-          <form onSubmit={handleEditPurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+          <form onSubmit={handleEditPurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Edit {editingPurchaseOrder.po_number}</h2>
@@ -1311,7 +1348,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {receivingPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
-          <form onSubmit={handleReceivePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+          <form onSubmit={handleReceivePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Receive {receivingPurchaseOrder.po_number}</h2>
@@ -1383,7 +1420,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
-          <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 {selectedRequestSupplier && <button type="button" onClick={() => setSelectedRequest(null)} className="mb-1 text-sm font-medium text-blue-700 hover:text-blue-800">← Back to {selectedRequestSupplier.supplierName} requests</button>}
@@ -1435,7 +1472,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {selectedRequestSupplier && !selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
-          <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">{selectedRequestSupplier.supplierName} {selectedRequestSupplier.mode === 'current' ? 'current requests' : 'request history'}</h2>
@@ -1504,7 +1541,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {releaseTarget && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
-          <form onSubmit={handleReleaseFromHold} className="max-h-[calc(100vh-3rem)] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+          <form onSubmit={handleReleaseFromHold} className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Release from hold</h2>
@@ -1551,7 +1588,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
       {selectedPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
-          <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">{selectedPurchaseOrder.po_number}</h2>
               <button type="button" onClick={() => setSelectedPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>

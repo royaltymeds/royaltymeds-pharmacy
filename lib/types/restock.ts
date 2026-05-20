@@ -77,6 +77,7 @@ export interface RestockItem {
   notes?: string;
   created_at: string;
   updated_at: string;
+  supplier?: Supplier;
 }
 
 export interface RestockRequest {
