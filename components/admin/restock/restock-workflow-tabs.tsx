@@ -21,7 +21,7 @@ import { PurchaseOrder, RestockItem, RestockRequest, SupplierProduct, UpcomingRe
 import { CalendarDays, ChevronDown, ChevronRight, ClipboardList, Download, Edit2, Loader, Package, Printer, Send, Truck, XCircle, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmationModal } from './confirmation-modal';
-import { CustomSelect, type SelectOption } from './CustomSelect';
+import { CustomSelect } from './CustomSelect';
 
 interface RestockWorkflowTabsProps {
   userId: string;

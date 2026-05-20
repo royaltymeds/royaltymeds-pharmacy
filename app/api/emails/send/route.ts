@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing Supabase configuration');
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey);
+}
 
 // Initialize SMTP transporter with Gmail/Google Workspace
 const transporter = nodemailer.createTransport({
@@ -130,6 +136,7 @@ function generateEmailTemplate(type: string, data: Record<string, any>): { html:
 // POST: Send email
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabase();
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
