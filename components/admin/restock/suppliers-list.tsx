@@ -752,10 +752,10 @@ export function SuppliersList() {
                             <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Min Qty
                               <input
                                 type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
+                                inputMode="decimal"
+                                pattern="[0-9]*[.]?[0-9]*"
                                 value={Number.isNaN(product.minimum_order_quantity) ? '' : product.minimum_order_quantity}
-                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
+                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { minimum_order_quantity: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
                                 className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                               />
                             </label>
@@ -900,10 +900,10 @@ export function SuppliersList() {
                   </label>
                   <input
                     type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
                     value={Number.isNaN(formData.lead_time_days) ? '' : formData.lead_time_days}
-                    onChange={(e) => setFormData({ ...formData, lead_time_days: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
+                    onChange={(e) => setFormData({ ...formData, lead_time_days: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
@@ -1178,10 +1178,10 @@ export function SuppliersList() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Quantity</label>
                 <input
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
                   value={Number.isNaN(itemSupplierFormData.minimum_order_quantity) ? '' : itemSupplierFormData.minimum_order_quantity}
-                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })}
+                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, minimum_order_quantity: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                 />
               </div>
@@ -1427,11 +1427,11 @@ export function SuppliersList() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Quantity</label>
                 <input
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
                   value={Number.isNaN(productFormData.minimum_order_quantity) ? '' : productFormData.minimum_order_quantity}
                   onChange={(e) =>
-                    setProductFormData({ ...productFormData, minimum_order_quantity: e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10) })
+                    setProductFormData({ ...productFormData, minimum_order_quantity: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                 />
