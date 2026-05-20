@@ -335,10 +335,10 @@ export function NewRestockRequestForm({ pharmacistId, cancelHref = '/admin/resto
                   <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
                   <input
                     type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
                     value={Number.isNaN(item.quantity_requested) ? '' : item.quantity_requested}
-                    onChange={(e) => updateItemQuantity(item.temporary_id!, e.target.value === '' ? Number.NaN : parseInt(e.target.value, 10))}
+                    onChange={(e) => updateItemQuantity(item.temporary_id!, e.target.value === '' ? Number.NaN : parseFloat(e.target.value))}
                     className="w-full px-2 py-2 border border-gray-300 rounded text-sm"
                   />
                 </div>

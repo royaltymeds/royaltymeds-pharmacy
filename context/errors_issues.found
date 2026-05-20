@@ -1,1 +1,31 @@
-1. the restock management pages input boxes intended for numbers (all inputs for restock management that require numerical inputs, even if the field is a text field) are not accepting decimals, this is a flaw, decimal input should be allowed
+1. RESOLVED — Restock management numeric inputs now accept decimal values, with explicit coverage for price inputs.
+
+What was fixed
+- Updated restock-management UI numeric text inputs that were previously integer-only (using `inputMode="numeric"`, integer-only patterns, and/or `parseInt`) to decimal-capable behavior.
+- Inputs now consistently allow decimal entry via:
+  - `inputMode="decimal"`
+  - `pattern="[0-9]*[.]?[0-9]*"`
+  - `parseFloat(...)` instead of `parseInt(...)` in related `onChange` handlers.
+
+Price-field coverage (explicit)
+- Supplier product editor "Unit Cost" now supports decimals.
+- Supplier creation/edit "Minimum Order Amount" supports decimals.
+- Inventory item-to-supplier "Supplier Unit Price" supports decimals (single and bulk supplier assignment flows).
+- Purchase-order flows now support decimals for "Unit Cost" in both generated-manual PO item rows and edit-PO item rows.
+
+Where this was applied
+- `components/admin/restock/new-restock-request-form.tsx`
+- `components/admin/restock/suppliers-list.tsx`
+- `components/admin/restock/restock-workflow-tabs.tsx`
+
+How to verify truthful resolution
+1) Start the app and navigate to Admin → Restock flows.
+2) In each updated price input, type decimal values such as `12.50`, `0.99`, and `103.275`.
+3) Confirm:
+   - The input accepts decimal points while typing.
+   - The decimal portion is preserved after blur/focus changes.
+   - Saved values render with expected currency formatting where applicable.
+4) Save/update records and reopen the same screens to ensure decimal values persist.
+
+Command-line verification performed
+- Verified price input handlers in restock files use decimal entry + `parseFloat`.
