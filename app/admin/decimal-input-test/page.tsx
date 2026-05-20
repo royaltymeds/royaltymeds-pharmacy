@@ -17,7 +17,7 @@ import { useDecimalInput } from '@/lib/hooks/useDecimalInput';
  * 5. On mobile: verify decimal keyboard appears
  * 6. On numpad: verify decimal key works, doesn't act like Enter
  */
-export function DecimalInputTestComponent() {
+export default function DecimalInputTestPage() {
   const [price1, setPrice1] = useState('5.50');
   const [savedPrice1, setSavedPrice1] = useState<number | null>(5.50);
 
@@ -26,31 +26,6 @@ export function DecimalInputTestComponent() {
   }, 2);
 
   const [savedPrice2, setSavedPrice2] = useState<number>(10.99);
-
-  const [testResults, setTestResults] = useState<{ test: string; passed: boolean; notes: string }[]>([]);
-
-  const runTest = (testName: string, testFn: () => boolean, notes: string) => {
-    const passed = testFn();
-    setTestResults((prev) => [...prev, { test: testName, passed, notes }]);
-  };
-
-  const handleTest1 = () => {
-    // Test typing "12.50"
-    setPrice1('12.50');
-    runTest('Type "12.50"', () => price1 === '12.50' || price1 === '5.50', 'Enter 12.50 and check if decimal is accepted');
-  };
-
-  const handleTest2 = () => {
-    // Test typing ".75"
-    setPrice1('.75');
-    runTest('Type ".75" (leading decimal)', () => true, 'Enter .75 manually');
-  };
-
-  const handleTest3 = () => {
-    // Test typing "0.99"
-    setPrice1('0.99');
-    runTest('Type "0.99"', () => true, 'Enter 0.99 manually');
-  };
 
   return (
     <div className="space-y-8 rounded-lg bg-gray-50 p-6">
@@ -179,16 +154,16 @@ export function DecimalInputTestComponent() {
 
       {/* Test Section 3: Comparison with type="number" */}
       <div className="space-y-4 rounded-lg bg-white p-6 shadow-sm">
-        <h2 className="font-bold text-gray-900">Test 3: Why type="number" Fails</h2>
+        <h2 className="font-bold text-gray-900">Test 3: Why type=&quot;number&quot; Fails</h2>
         <p className="text-sm text-gray-600">
-          This demonstrates the problem with the old approach. Try typing "5." in both fields.
+          This demonstrates the problem with the old approach. Try typing &quot;5.&quot; in both fields.
         </p>
 
         <div className="grid gap-4 md:grid-cols-2">
           {/* Broken type="number" */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              ❌ type="number" (BROKEN)
+              ❌ type=&quot;number&quot; (BROKEN)
             </label>
             <div className="space-y-1">
               <input
@@ -198,7 +173,7 @@ export function DecimalInputTestComponent() {
                 placeholder="Try typing 5."
                 className="w-full rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-gray-900"
               />
-              <p className="text-xs text-red-600">Type "5." and watch it collapse to "5"</p>
+              <p className="text-xs text-red-600">Type &quot;5.&quot; and watch it collapse to &quot;5&quot;</p>
             </div>
           </div>
 
@@ -214,13 +189,13 @@ export function DecimalInputTestComponent() {
                 placeholder="Try typing 5."
                 className="w-full rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-gray-900"
               />
-              <p className="text-xs text-green-600">Type "5." and it stays as "5."</p>
+              <p className="text-xs text-green-600">Type &quot;5.&quot; and it stays as &quot;5.&quot;</p>
             </div>
           </div>
         </div>
 
         <div className="rounded border-l-4 border-red-500 bg-red-50 p-3 text-sm text-red-700">
-          ⚠️ <strong>The Problem:</strong> When using type="number" with controlled inputs, "5." is converted to "5",
+          ⚠️ <strong>The Problem:</strong> When using type=&quot;number&quot; with controlled inputs, &quot;5.&quot; is converted to &quot;5&quot;,
           making decimals feel rejected while typing.
         </div>
       </div>
@@ -237,7 +212,7 @@ export function DecimalInputTestComponent() {
             <strong>iPhone/iPad:</strong> Decimal keyboard should show with decimal point key
           </div>
           <div className="rounded border-l-4 border-blue-500 bg-blue-50 p-3 text-sm text-blue-700">
-            <strong>Android with Numpad:</strong> Decimal key should input ".", not act like Enter
+            <strong>Android with Numpad:</strong> Decimal key should input &quot;.&quot;, not act like Enter
           </div>
           <div className="rounded border-l-4 border-blue-500 bg-blue-50 p-3 text-sm text-blue-700">
             <strong>Desktop:</strong> Regular keyboard input should work normally
@@ -261,19 +236,19 @@ export function DecimalInputTestComponent() {
         <div className="space-y-2 text-sm">
           <label className="flex items-center">
             <input type="checkbox" className="mr-2" />
-            <span>Can type "12.50" without rejection</span>
+            <span>Can type &quot;12.50&quot; without rejection</span>
           </label>
           <label className="flex items-center">
             <input type="checkbox" className="mr-2" />
-            <span>Can type ".75" (leading decimal)</span>
+            <span>Can type &quot;.75&quot; (leading decimal)</span>
           </label>
           <label className="flex items-center">
             <input type="checkbox" className="mr-2" />
-            <span>Can type "0.99"</span>
+            <span>Can type &quot;0.99&quot;</span>
           </label>
           <label className="flex items-center">
             <input type="checkbox" className="mr-2" />
-            <span>Can type "103.275" (multiple decimals)</span>
+            <span>Can type &quot;103.275&quot; (multiple decimals)</span>
           </label>
           <label className="flex items-center">
             <input type="checkbox" className="mr-2" />
