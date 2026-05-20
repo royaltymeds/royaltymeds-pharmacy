@@ -9,6 +9,7 @@ import { Supplier, SupplierProduct } from '@/lib/types/restock';
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { X, Plus, Loader, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { CustomSelect } from './CustomSelect';
 
 const SUPPLIER_PRODUCT_PAGE_SIZE = 15;
 
@@ -221,26 +222,24 @@ export function NewRestockRequestForm({ pharmacistId, cancelHref = '/admin/resto
             <label htmlFor="supplier" className="block text-sm font-medium text-gray-700 mb-2">
               Supplier *
             </label>
-            <select
-              id="supplier"
+            <CustomSelect
               value={selectedSupplier?.id || ''}
-              onChange={(e) => {
-                const supplier = suppliers.find((s) => s.id === e.target.value);
+              onChange={(value) => {
+                const supplier = suppliers.find((s) => s.id === value);
                 setSelectedSupplier(supplier || null);
                 setSupplierProductSearch('');
                 setSupplierProductPage(1);
                 setItems([]);
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
-            >
-              <option value="">-- Choose a supplier --</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                  {supplier.lead_time_days && ` (${supplier.lead_time_days} days)`}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: '-- Choose a supplier --' },
+                ...suppliers.map((supplier) => ({
+                  value: supplier.id,
+                  label: `${supplier.name}${supplier.lead_time_days ? ` (${supplier.lead_time_days} days)` : ''}`,
+                })),
+              ]}
+              placeholder="-- Choose a supplier --"
+            />
           </div>
 
           {selectedSupplier && (

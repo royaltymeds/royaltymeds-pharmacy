@@ -8,6 +8,7 @@ import { ChevronRight, CheckCircle, XCircle, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { notifyBrowser } from '@/lib/client-notifications';
+import { CustomSelect } from './CustomSelect';
 import type { RealtimePostgresInsertPayload } from '@supabase/supabase-js';
 
 export function RestockRequestsList() {
@@ -78,17 +79,17 @@ export function RestockRequestsList() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">All Restock Orders</h2>
           <div className="flex gap-2">
-            <select
+            <CustomSelect
               value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none align-top focus:ring-2 focus:ring-green-600"
-            >
-              <option value="">All Status</option>
-              <option value="requested">Requested</option>
-              <option value="linked_to_po">Linked to PO</option>
-              <option value="received">Received</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+              onChange={(value) => setFilter(value)}
+              options={[
+                { value: '', label: 'All Status' },
+                { value: 'requested', label: 'Requested' },
+                { value: 'linked_to_po', label: 'Linked to PO' },
+                { value: 'received', label: 'Received' },
+                { value: 'cancelled', label: 'Cancelled' },
+              ]}
+            />
           </div>
         </div>
       </div>

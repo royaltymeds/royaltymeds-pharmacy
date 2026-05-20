@@ -17,6 +17,7 @@ import { Supplier, CreateSupplierInput, CreateSupplierProductInput, SupplierProd
 import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { Plus, Edit2, Trash2, AlertCircle, Loader, X, Link2, Pill, Upload, ChevronRight, ChevronDown } from 'lucide-react';
 import { ConfirmationModal } from './confirmation-modal';
+import { CustomSelect } from './CustomSelect';
 
 const SUPPLIER_ITEMS_PAGE_SIZE = 20;
 
@@ -926,19 +927,19 @@ export function SuppliersList() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Type</label>
-                      <select
+                      <CustomSelect
                         value={formData.reorder_schedule_type || ''}
-                        onChange={(e) => setFormData({ ...formData, reorder_schedule_type: e.target.value as CreateSupplierInput['reorder_schedule_type'] })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
-                      >
-                        <option value="">No schedule</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="bi_weekly">Bi-weekly (every two weeks)</option>
-                        <option value="three_weeks">Every 3 weeks</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="custom">Custom dates</option>
-                      </select>
+                        onChange={(value) => setFormData({ ...formData, reorder_schedule_type: value as CreateSupplierInput['reorder_schedule_type'] })}
+                        options={[
+                          { value: '', label: 'No schedule' },
+                          { value: 'daily', label: 'Daily' },
+                          { value: 'weekly', label: 'Weekly' },
+                          { value: 'bi_weekly', label: 'Bi-weekly (every two weeks)' },
+                          { value: 'three_weeks', label: 'Every 3 weeks' },
+                          { value: 'monthly', label: 'Monthly' },
+                          { value: 'custom', label: 'Custom dates' },
+                        ]}
+                      />
                     </div>
 
                     <div>
@@ -1047,38 +1048,43 @@ export function SuppliersList() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Item Source *</label>
-                  <select value={itemSupplierSource} onChange={(e) => { const source = e.target.value as 'inventory' | 'non_inventory'; setItemSupplierSource(source); setItemSupplierFormData({ ...itemSupplierFormData, is_inventory_item: source === 'inventory', product_id: '', product_name: '' }); }} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600">
-                    <option value="inventory">Inventory Item</option>
-                    <option value="non_inventory">Non-Inventory Item</option>
-                  </select>
+                  <CustomSelect
+                    value={itemSupplierSource}
+                    onChange={(value) => {
+                      const source = value as 'inventory' | 'non_inventory';
+                      setItemSupplierSource(source);
+                      setItemSupplierFormData({ ...itemSupplierFormData, is_inventory_item: source === 'inventory', product_id: '', product_name: '' });
+                    }}
+                    options={[
+                      { value: 'inventory', label: 'Inventory Item' },
+                      { value: 'non_inventory', label: 'Non-Inventory Item' },
+                    ]}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Item Type *</label>
-                  <select
+                  <CustomSelect
                     value={itemSupplierFormData.product_type}
-                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: e.target.value as 'otc' | 'prescription', product_id: '', product_name: '' })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
-                  >
-                    <option value="otc">OTC</option>
-                    <option value="prescription">Prescription</option>
-                  </select>
+                    onChange={(value) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: value as 'otc' | 'prescription', product_id: '', product_name: '' })}
+                    options={[
+                      { value: 'otc', label: 'OTC' },
+                      { value: 'prescription', label: 'Prescription' },
+                    ]}
+                  />
                 </div>
               </div>
 
               {itemSupplierSource === 'inventory' ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Item *</label>
-                  <select
+                  <CustomSelect
                     value={itemSupplierFormData.product_id}
-                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_id: e.target.value })}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
-                  >
-                    <option value="">-- Choose an item --</option>
-                    {getProductOptions(itemSupplierFormData.product_type).map((product) => (
-                      <option key={product.id} value={product.id}>{product.name}</option>
-                    ))}
-                  </select>
+                    onChange={(value) => setItemSupplierFormData({ ...itemSupplierFormData, product_id: value })}
+                    options={[
+                      { value: '', label: '-- Choose an item --' },
+                      ...getProductOptions(itemSupplierFormData.product_type).map((product) => ({ value: product.id, label: product.name })),
+                    ]}
+                  />
                   {itemSupplierFormData.product_id && (
                     <p className="mt-2 rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
                       {getProductDescription(itemSupplierFormData.product_id, itemSupplierFormData.product_type) || 'No item description saved. Use the item name/description to clarify package size when unit cost is per package.'}
@@ -1217,14 +1223,14 @@ export function SuppliersList() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Default Item Type</label>
-                  <select
+                  <CustomSelect
                     value={itemSupplierFormData.product_type}
-                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: e.target.value as 'otc' | 'prescription' })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-indigo-600"
-                  >
-                    <option value="otc">OTC</option>
-                    <option value="prescription">Prescription</option>
-                  </select>
+                    onChange={(value) => setItemSupplierFormData({ ...itemSupplierFormData, product_type: value as 'otc' | 'prescription' })}
+                    options={[
+                      { value: 'otc', label: 'OTC' },
+                      { value: 'prescription', label: 'Prescription' },
+                    ]}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Default Unit Cost (fallback)</label>
@@ -1241,18 +1247,14 @@ export function SuppliersList() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
-                <select
+                <CustomSelect
                   value={itemSupplierFormData.supplier_id}
-                  onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_id: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-indigo-600"
-                >
-                  <option value="">-- Choose a supplier --</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_id: value })}
+                  options={[
+                    { value: '', label: '-- Choose a supplier --' },
+                    ...suppliers.map((supplier) => ({ value: supplier.id, label: supplier.name })),
+                  ]}
+                />
                 <p className="mt-1 text-xs text-gray-500">Bulk upload links all rows in this file to the selected supplier.</p>
               </div>
 
@@ -1263,7 +1265,13 @@ export function SuppliersList() {
                 {bulkImportColumns.length > 0 && (
                   <div className="mt-3 grid gap-2 md:grid-cols-3">
                     {([['productName','Product Name *'],['productType','Product Type'],['unitPrice','Unit Cost *'],['supplierSku','Supplier SKU'],['minimumOrderQuantity','MOQ'],['notes','Notes']] as const).map(([key,label]) => (
-                      <label key={key} className="text-xs font-medium text-indigo-900">{label}<select value={bulkImportColumnMap[key]} onChange={(e) => setBulkImportColumnMap({ ...bulkImportColumnMap, [key]: e.target.value })} className="mt-1 w-full rounded border border-indigo-200 bg-white px-2 py-1 text-gray-900 align-top"><option value="">Do not map</option>{bulkImportColumns.map((column) => <option key={column} value={column}>{column}</option>)}</select></label>
+                      <label key={key} className="text-xs font-medium text-indigo-900">
+                        {label}
+                        <CustomSelect
+                          value={bulkImportColumnMap[key]}
+                          onChange={(value) => setBulkImportColumnMap({ ...bulkImportColumnMap, [key]: value })}
+                          options={[\n                            { value: '', label: 'Do not map' },\n                            ...bulkImportColumns.map((column) => ({ value: column, label: column })),\n                          ]}\n                          className=\"mt-1 w-full\"\n                        />
+                      </label>
                     ))}
                   </div>
                 )}
@@ -1314,10 +1322,10 @@ export function SuppliersList() {
             <form onSubmit={handleSubmitProduct} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Item Source *</label>
-                <select
+                <CustomSelect
                   value={productSource}
-                  onChange={(e) => {
-                    const source = e.target.value as 'inventory' | 'non_inventory';
+                  onChange={(value) => {
+                    const source = value as 'inventory' | 'non_inventory';
                     setProductSource(source);
                     setProductFormData({
                       ...productFormData,
@@ -1326,48 +1334,43 @@ export function SuppliersList() {
                       is_inventory_item: source === 'inventory',
                     });
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
-                >
-                  <option value="inventory">Inventory Item</option>
-                  <option value="non_inventory">Non-Inventory Item</option>
-                </select>
+                  options={[
+                    { value: 'inventory', label: 'Inventory Item' },
+                    { value: 'non_inventory', label: 'Non-Inventory Item' },
+                  ]}
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Item Type *</label>
-                <select
+                <CustomSelect
                   value={productFormData.product_type}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setProductFormData({
                       ...productFormData,
-                      product_type: e.target.value as 'otc' | 'prescription',
+                      product_type: value as 'otc' | 'prescription',
                       product_id: '',
                       product_name: '',
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
-                >
-                  <option value="otc">OTC</option>
-                  <option value="prescription">Prescription</option>
-                </select>
+                  options={[
+                    { value: 'otc', label: 'OTC' },
+                    { value: 'prescription', label: 'Prescription' },
+                  ]}
+                />
               </div>
 
               {productSource === 'inventory' ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Inventory Item *</label>
-                  <select
+                  <CustomSelect
                     value={productFormData.product_id}
-                    onChange={(e) => setProductFormData({ ...productFormData, product_id: e.target.value })}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
-                  >
-                    <option value="">-- Choose an inventory item --</option>
-                    {getProductOptions(productFormData.product_type).map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => setProductFormData({ ...productFormData, product_id: value })}
+                    options={[
+                      { value: '', label: '-- Choose an inventory item --' },
+                      ...getProductOptions(productFormData.product_type).map((product) => ({ value: product.id, label: product.name })),
+                    ]}
+                  />
                   {productFormData.product_id && (
                     <p className="mt-2 rounded-lg bg-green-50 p-3 text-xs text-green-800">
                       {getProductDescription(productFormData.product_id, productFormData.product_type) || 'No item description saved. Use item names/descriptions to differentiate package sizes when unit cost is per package.'}

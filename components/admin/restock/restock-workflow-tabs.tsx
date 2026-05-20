@@ -21,6 +21,7 @@ import { PurchaseOrder, RestockItem, RestockRequest, SupplierProduct, UpcomingRe
 import { CalendarDays, ChevronDown, ChevronRight, ClipboardList, Download, Edit2, Loader, Package, Printer, Send, Truck, XCircle, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmationModal } from './confirmation-modal';
+import { CustomSelect, type SelectOption } from './CustomSelect';
 
 interface RestockWorkflowTabsProps {
   userId: string;
@@ -593,16 +594,22 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const handlePrintPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
     const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1024,height=900');
     if (!printWindow) {
-      toast.error('Unable to open print window.');
+      toast.error('Unable to open print window. Please check your browser popup settings.');
       return;
     }
-    printWindow.document.open();
-    printWindow.document.write(getPurchaseOrderDetailHtml(purchaseOrder));
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.onload = () => {
-      printWindow.print();
-    };
+    try {
+      printWindow.document.open();
+      printWindow.document.write(getPurchaseOrderDetailHtml(purchaseOrder));
+      printWindow.document.close();
+      printWindow.focus();
+      // Use setTimeout to ensure document is fully rendered before printing
+      setTimeout(() => {
+        printWindow.print();
+      }, 100);
+    } catch (error) {
+      toast.error('Failed to print purchase order.');
+      printWindow.close();
+    }
   };
 
   const handleDownloadPurchaseOrderPdf = (purchaseOrder: PurchaseOrder) => {
@@ -795,7 +802,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             Unscheduled Purchase Order
           </button>
         </div>
-        <div className="relative border-b border-gray-200 px-4 py-3">
+        <div className="relative px-4 py-3">
           <input
             value={tabSearchTerm}
             onChange={(event) => setTabSearchTerm(event.target.value)}
@@ -803,7 +810,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm align-top focus:outline-none align-top focus:ring-2 focus:ring-green-600"
           />
           {normalizedTabSearch && (
-            <div className="absolute left-4 right-4 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+            <div className="absolute left-4 right-4 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
               {activeTab === 'requests' && (
                 requestSearchMatches.length > 0 ? requestSearchMatches.map((request) => (
                   <button key={request.id} type="button" onClick={() => setSelectedRequest(request)} className="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-gray-50">
@@ -835,30 +842,40 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             </div>
           )}
         </div>
-
-
         <div className="border-b border-gray-200 px-4 py-3">
           {activeTab === 'requests' && (
-            <select value={requestTabFilter} onChange={(event) => setRequestTabFilter(event.target.value as 'all' | 'requested' | 'linked_to_po' | 'linked_po_placed')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 sm:w-auto">
-              <option value="all">All current request statuses</option>
-              <option value="requested">Requested only</option>
-              <option value="linked_to_po">Linked to PO only</option>
-              <option value="linked_po_placed">Linked to placed PO only</option>
-            </select>
+            <CustomSelect
+              value={requestTabFilter}
+              onChange={(value) => setRequestTabFilter(value as 'all' | 'requested' | 'linked_to_po' | 'linked_po_placed')}
+              options={[
+                { value: 'all', label: 'All current request statuses' },
+                { value: 'requested', label: 'Requested only' },
+                { value: 'linked_to_po', label: 'Linked to PO only' },
+                { value: 'linked_po_placed', label: 'Linked to placed PO only' },
+              ]}
+            />
           )}
           {activeTab === 'request_history' && (
-            <select value={requestHistoryTabFilter} onChange={(event) => setRequestHistoryTabFilter(event.target.value as 'all' | 'received' | 'cancelled')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 sm:w-auto">
-              <option value="all">All historical statuses</option>
-              <option value="received">Received only</option>
-              <option value="cancelled">Cancelled only</option>
-            </select>
+            <CustomSelect
+              value={requestHistoryTabFilter}
+              onChange={(value) => setRequestHistoryTabFilter(value as 'all' | 'received' | 'cancelled')}
+              options={[
+                { value: 'all', label: 'All historical statuses' },
+                { value: 'received', label: 'Received only' },
+                { value: 'cancelled', label: 'Cancelled only' },
+              ]}
+            />
           )}
           {activeTab === 'schedule' && (
-            <select value={scheduleTabFilter} onChange={(event) => setScheduleTabFilter(event.target.value as 'all' | 'with_open_po' | 'without_open_po')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 sm:w-auto">
-              <option value="all">All scheduled suppliers</option>
-              <option value="with_open_po">With open scheduled PO</option>
-              <option value="without_open_po">Without open scheduled PO</option>
-            </select>
+            <CustomSelect
+              value={scheduleTabFilter}
+              onChange={(value) => setScheduleTabFilter(value as 'all' | 'with_open_po' | 'without_open_po')}
+              options={[
+                { value: 'all', label: 'All scheduled suppliers' },
+                { value: 'with_open_po', label: 'With open scheduled PO' },
+                { value: 'without_open_po', label: 'Without open scheduled PO' },
+              ]}
+            />
           )}
         </div>
 
