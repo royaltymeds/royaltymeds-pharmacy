@@ -173,7 +173,10 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     setRequests(requestResult.data || []);
     setUpcomingReorders(scheduleResult.data || []);
     setPurchaseOrders(poResult.data || []);
-    setHeldItems(heldItemResult.data || []);
+    setHeldItems((heldItemResult.data || []).map((item) => ({
+      ...item,
+      supplier: item.supplier || item.restock_request?.supplier,
+    })));
     setLoading(false);
   }, []);
 
@@ -398,7 +401,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   };
 
   const openReleaseHeldItem = (item: RestockItem) => {
-    const supplierId = requests.find((request) => request.id === item.held_from_request_id)?.supplier_id || '';
+    const supplierId = item.supplier?.id || requests.find((request) => request.id === item.held_from_request_id)?.supplier_id || '';
     const firstOpenPo = purchaseOrders.find((po) => po.status === 'open' && po.supplier_id === supplierId);
     setReleaseTarget({ kind: 'item', id: item.id, supplierId, label: item.product_name });
     setReleasePurchaseOrderId(firstOpenPo?.id || '');
@@ -1594,6 +1597,11 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               <button type="button" onClick={() => setSelectedPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
             </div>
             <p className="text-sm text-gray-600">{selectedPurchaseOrder.supplier?.name} · {selectedPurchaseOrder.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Status: {selectedPurchaseOrder.status} · Total {formatCurrency(selectedPurchaseOrder.total_amount)}</p>
+            {selectedPurchaseOrder.notes && (
+              <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                <span className="font-semibold">PO Notes:</span> {selectedPurchaseOrder.notes}
+              </div>
+            )}
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               <button type="button" onClick={() => handlePrintPurchaseOrder(selectedPurchaseOrder)} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
                 <Printer className="h-4 w-4" />

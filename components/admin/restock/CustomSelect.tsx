@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 export interface SelectOption {
@@ -25,8 +25,6 @@ export function CustomSelect({
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -44,32 +42,11 @@ export function CustomSelect({
     }
   }, [isOpen]);
 
-  // Ensure dropdown stays visible below button
-  useEffect(() => {
-    if (isOpen && buttonRef.current && dropdownRef.current) {
-      const buttonRect = buttonRef.current.getBoundingClientRect();
-      const dropdownRect = dropdownRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-
-      // Check if dropdown goes below viewport
-      if (buttonRect.bottom + dropdownRect.height > viewportHeight - 20) {
-        // Position above instead
-        dropdownRef.current.style.top = 'auto';
-        dropdownRef.current.style.bottom = '100%';
-        dropdownRef.current.style.marginBottom = '0.25rem';
-      } else {
-        // Position below (default)
-        dropdownRef.current.style.bottom = 'auto';
-        dropdownRef.current.style.top = '100%';
-        dropdownRef.current.style.marginBottom = '0';
-      }
-    }
-  }, [isOpen]);
+  const dropdownReserveSpace = useMemo(() => (isOpen ? Math.min(options.length * 40, 256) + 8 : 0), [isOpen, options.length]);
 
   return (
-    <div className={`relative inline-block ${className}`} ref={containerRef}>
+    <div className={`relative inline-block ${className}`} ref={containerRef} style={{ marginBottom: dropdownReserveSpace }}>
       <button
-        ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-600 w-full sm:w-auto"
@@ -83,9 +60,7 @@ export function CustomSelect({
 
       {isOpen && (
         <div
-          ref={dropdownRef}
-          className="absolute left-0 z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg sm:w-auto sm:min-w-64"
-          style={{ top: '100%', marginTop: '0.25rem' }}
+          className="absolute left-0 top-full z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg sm:w-auto sm:min-w-64"
         >
           {options.map((option) => (
             <button
