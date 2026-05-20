@@ -3,8 +3,8 @@
 import React from 'react';
 
 interface DecimalInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'> {
-  value: string | number;
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange' | 'onBlur'> {
+  value: string | number | undefined;
   onChange: (value: string) => void;
   onBlur?: (value: number | null) => void;
   precision?: number;
