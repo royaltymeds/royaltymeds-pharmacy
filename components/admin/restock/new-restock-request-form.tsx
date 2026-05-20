@@ -10,6 +10,7 @@ import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { X, Plus, Loader, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomSelect } from './CustomSelect';
+import { DecimalInput } from '@/components/DecimalInput';
 
 const SUPPLIER_PRODUCT_PAGE_SIZE = 15;
 
@@ -333,11 +334,10 @@ export function NewRestockRequestForm({ pharmacistId, cancelHref = '/admin/resto
 
                 <div className="w-32">
                   <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
-                  <input
-                    type="number"
-                    step="any"
+                  <DecimalInput
                     value={Number.isNaN(item.quantity_requested) ? '' : item.quantity_requested}
-                    onChange={(e) => updateItemQuantity(item.temporary_id!, e.target.value === '' ? Number.NaN : parseFloat(e.target.value))}
+                    onChange={() => {}}
+                    onBlur={(value) => updateItemQuantity(item.temporary_id!, value === null ? Number.NaN : value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded text-sm"
                   />
                 </div>

@@ -4,7 +4,7 @@ import React from 'react';
 
 interface DecimalInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'> {
-  value: string;
+  value: string | number;
   onChange: (value: string) => void;
   onBlur?: (value: number | null) => void;
   precision?: number;
@@ -42,11 +42,21 @@ interface DecimalInputProps
  */
 export const DecimalInput = React.forwardRef<HTMLInputElement, DecimalInputProps>(
   ({ value, onChange, onBlur, precision, allowNegative = true, className = '', ...props }, ref) => {
+    const [displayValue, setDisplayValue] = React.useState(String(value ?? ""));
+    const [isFocused, setIsFocused] = React.useState(false);
+
+    React.useEffect(() => {
+      if (!isFocused) {
+        setDisplayValue(String(value ?? ""));
+      }
+    }, [value, isFocused]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
 
       // Allow empty input
       if (newValue === '') {
+        setDisplayValue('');
         onChange('');
         return;
       }
@@ -63,6 +73,7 @@ export const DecimalInput = React.forwardRef<HTMLInputElement, DecimalInputProps
         : /^(\d+\.?\d*|\.\d+)$/;
 
       if (pattern.test(newValue)) {
+        setDisplayValue(newValue);
         onChange(newValue);
       }
       // If pattern doesn't match, silently reject (don't update state)
@@ -71,7 +82,7 @@ export const DecimalInput = React.forwardRef<HTMLInputElement, DecimalInputProps
     const handleBlur = () => {
       if (!onBlur) return;
 
-      const trimmedValue = value.trim();
+      const trimmedValue = displayValue.trim();
 
       if (trimmedValue === '' || trimmedValue === '-') {
         onBlur(null);
@@ -100,9 +111,10 @@ export const DecimalInput = React.forwardRef<HTMLInputElement, DecimalInputProps
         ref={ref}
         type="text"
         inputMode="decimal"
-        value={value}
+        value={displayValue}
         onChange={handleChange}
-        onBlur={handleBlur}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => { setIsFocused(false); handleBlur(); }}
         className={className}
         {...props}
       />
