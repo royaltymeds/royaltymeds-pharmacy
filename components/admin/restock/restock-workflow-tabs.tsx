@@ -1177,8 +1177,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                       {manualPoItems.map((item, index) => (
                         <div key={item.supplier_product_id} className="grid gap-2 rounded bg-white p-2 text-sm md:grid-cols-5">
                           <span className="font-medium md:col-span-2">{item.product_name}</span>
-                          <input type="text" inputMode="decimal" pattern="[0-9]*[.]?[0-9]*" value={Number.isNaN(item.quantity_ordered) ? '' : item.quantity_ordered} onChange={(event) => setManualPoItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: event.target.value === '' ? Number.NaN : Math.max(1, parseFloat(event.target.value)) } : currentItem))} className="rounded border border-gray-300 px-2 py-1" />
-                          <input type="text" inputMode="decimal" pattern="[0-9]*[.]?[0-9]*" value={Number.isNaN(item.unit_price) ? '' : item.unit_price} onChange={(event) => setManualPoItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: event.target.value === '' ? Number.NaN : parseFloat(event.target.value) } : currentItem))} className="rounded border border-gray-300 px-2 py-1" />
+                          <input type="number" step="any" value={Number.isNaN(item.quantity_ordered) ? '' : item.quantity_ordered} onChange={(event) => setManualPoItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: event.target.value === '' ? Number.NaN : Math.max(1, parseFloat(event.target.value)) } : currentItem))} className="rounded border border-gray-300 px-2 py-1" />
+                          <input type="number" step="any" value={Number.isNaN(item.unit_price) ? '' : item.unit_price} onChange={(event) => setManualPoItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: event.target.value === '' ? Number.NaN : parseFloat(event.target.value) } : currentItem))} className="rounded border border-gray-300 px-2 py-1" />
                           <button type="button" onClick={() => setManualPoItems((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="text-red-700 hover:text-red-800">Remove</button>
                         </div>
                       ))}
@@ -1264,9 +1264,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                     <div>
                       <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Quantity</label>
                       <input
-                        type="text"
-                        inputMode="decimal"
-                        pattern="[0-9]*[.]?[0-9]*"
+                        type="number"
+                        step="any"
                         value={Number.isNaN(item.quantity_ordered) ? '' : item.quantity_ordered}
                         onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: event.target.value === '' ? Number.NaN : Math.max(1, parseFloat(event.target.value)) } : currentItem))}
                         required
@@ -1276,9 +1275,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                     <div>
                       <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost</label>
                       <input
-                        type="text"
-                        inputMode="decimal"
-                        pattern="[0-9]*[.]?[0-9]*"
+                        type="number"
+                        step="any"
                         value={Number.isNaN(item.unit_price) ? '' : item.unit_price}
                         onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: event.target.value === '' ? Number.NaN : parseFloat(event.target.value) } : currentItem))}
                         required

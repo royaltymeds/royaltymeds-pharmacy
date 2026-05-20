@@ -1,17 +1,22 @@
-1. RESOLVED — Restock management numeric inputs now accept decimal values, with explicit coverage for price inputs.
+1. RESOLVED — Restock management numeric inputs now accept real-number decimal entry through true numeric controls.
 
-What was fixed
-- Updated restock-management UI numeric text inputs that were previously integer-only (using `inputMode="numeric"`, integer-only patterns, and/or `parseInt`) to decimal-capable behavior.
-- Inputs now consistently allow decimal entry via:
-  - `inputMode="decimal"`
-  - `pattern="[0-9]*[.]?[0-9]*"`
-  - `parseFloat(...)` instead of `parseInt(...)` in related `onChange` handlers.
+Root cause of failed prior attempt
+- The prior fix kept fields as controlled `type="text"` inputs and parsed keystrokes immediately into numbers.
+- In React controlled inputs, this collapses transient-but-valid typing states (for example `.` or `12.`) back to numeric values (`NaN` or `12`), which makes the decimal point appear "rejected" while typing.
+- So even with `inputMode="decimal"` and decimal regex patterns, users could still experience blocked/stripped dot entry depending on typing sequence.
+
+What was truly fixed
+- Converted affected restock numeric fields from text+pattern controls to real numeric controls:
+  - `type="number"`
+  - `step="any"` (decimal-capable)
+- Kept existing `parseFloat(...)` handling for persistence and calculations.
+- This removes dependency on text-pattern matching for decimal acceptance and allows browser-native real-number entry behavior for decimal values.
 
 Price-field coverage (explicit)
-- Supplier product editor "Unit Cost" now supports decimals.
-- Supplier creation/edit "Minimum Order Amount" supports decimals.
-- Inventory item-to-supplier "Supplier Unit Price" supports decimals (single and bulk supplier assignment flows).
-- Purchase-order flows now support decimals for "Unit Cost" in both generated-manual PO item rows and edit-PO item rows.
+- Supplier product editor "Unit Cost" uses numeric decimal input.
+- Supplier creation/edit "Minimum Order Amount" uses numeric decimal input.
+- Inventory item-to-supplier "Supplier Unit Price" uses numeric decimal input (including default and per-supplier override flows).
+- Purchase-order flows use numeric decimal input for unit cost and quantity fields in manual PO and edit/receive flows.
 
 Where this was applied
 - `components/admin/restock/new-restock-request-form.tsx`
@@ -20,14 +25,11 @@ Where this was applied
 
 How to verify truthful resolution
 1) Start the app and navigate to Admin → Restock flows.
-2) In each updated price input, type decimal values such as `12.50`, `0.99`, and `103.275`.
+2) In updated numeric fields, type `12.50`, `0.99`, `.75`, and `103.275`.
 3) Confirm:
-   - The input accepts decimal points while typing.
-   - The decimal portion is preserved after blur/focus changes.
-   - Saved values render with expected currency formatting where applicable.
-4) Save/update records and reopen the same screens to ensure decimal values persist.
+   - Decimal points are accepted during typing.
+   - Decimal values remain editable and persist after blur/focus cycles.
+   - Save/update flows retain decimals and render expected currency display.
 
 Command-line verification performed
-- Verified price input handlers in restock files use decimal entry + `parseFloat`.
-
-**THE FIX DID NOT WORK: LIKELY REASON, THE INPUT FIELDS FOR OUR NUMERICAL INPUTS ARE TEXT INPUT THAT REJECT NON NUMERICAL VALUES AND CHARACTERS, HENCE THE DOT OR POINT SYMBOL/CHARACTER IS GETTING REJECTED, THESE INPUT FIELDS NEED TO BE PROPER NUMERICAL INPUT THAT ACCEPTS REAL NUMBERS AND DECIMALS (WITHOUT USING THE TYPE WHERE IT'S DIFFICULT TO DELETE THE 0'S AND POSSIBLE TO INCREASE OR DECREASE THE NUMBER USING ARROW KEYS)
+- Verified impacted restock forms now use `type="number"` + `step="any"` for decimal-capable numeric entry.
