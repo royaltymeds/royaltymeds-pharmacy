@@ -1270,7 +1270,12 @@ export function SuppliersList() {
                         <CustomSelect
                           value={bulkImportColumnMap[key]}
                           onChange={(value) => setBulkImportColumnMap({ ...bulkImportColumnMap, [key]: value })}
-                          options={[\n                            { value: '', label: 'Do not map' },\n                            ...bulkImportColumns.map((column) => ({ value: column, label: column })),\n                          ]}\n                          className=\"mt-1 w-full\"\n                        />
+                          options={[
+                            { value: '', label: 'Do not map' },
+                            ...bulkImportColumns.map((column) => ({ value: column, label: column })),
+                          ]}
+                          className="mt-1 w-full"
+                        />
                       </label>
                     ))}
                   </div>
