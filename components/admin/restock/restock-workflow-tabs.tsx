@@ -22,6 +22,7 @@ import { CalendarDays, ChevronDown, ChevronRight, ClipboardList, Download, Edit2
 import { toast } from 'sonner';
 import { ConfirmationModal } from './confirmation-modal';
 import { CustomSelect } from './CustomSelect';
+import { DecimalInput } from '@/components/DecimalInput';
 
 interface RestockWorkflowTabsProps {
   userId: string;
@@ -1177,8 +1178,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                       {manualPoItems.map((item, index) => (
                         <div key={item.supplier_product_id} className="grid gap-2 rounded bg-white p-2 text-sm md:grid-cols-5">
                           <span className="font-medium md:col-span-2">{item.product_name}</span>
-                          <input type="number" step="any" value={Number.isNaN(item.quantity_ordered) ? '' : item.quantity_ordered} onChange={(event) => setManualPoItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: event.target.value === '' ? Number.NaN : Math.max(1, parseFloat(event.target.value)) } : currentItem))} className="rounded border border-gray-300 px-2 py-1" />
-                          <input type="number" step="any" value={Number.isNaN(item.unit_price) ? '' : item.unit_price} onChange={(event) => setManualPoItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: event.target.value === '' ? Number.NaN : parseFloat(event.target.value) } : currentItem))} className="rounded border border-gray-300 px-2 py-1" />
+                          <DecimalInput value={Number.isNaN(item.quantity_ordered) ? '' : item.quantity_ordered} onChange={() => {}} onBlur={(value) => setManualPoItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: value === null ? Number.NaN : Math.max(1, value) } : currentItem))} className="rounded border border-gray-300 px-2 py-1" />
+                          <DecimalInput value={Number.isNaN(item.unit_price) ? '' : item.unit_price} onChange={() => {}} onBlur={(value) => setManualPoItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: value === null ? Number.NaN : value } : currentItem))} className="rounded border border-gray-300 px-2 py-1" />
                           <button type="button" onClick={() => setManualPoItems((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="text-red-700 hover:text-red-800">Remove</button>
                         </div>
                       ))}
@@ -1263,22 +1264,20 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Quantity</label>
-                      <input
-                        type="number"
-                        step="any"
+                      <DecimalInput
                         value={Number.isNaN(item.quantity_ordered) ? '' : item.quantity_ordered}
-                        onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: event.target.value === '' ? Number.NaN : Math.max(1, parseFloat(event.target.value)) } : currentItem))}
+                        onChange={() => {}}
+                        onBlur={(value) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: value === null ? Number.NaN : Math.max(1, value) } : currentItem))}
                         required
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                       />
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost</label>
-                      <input
-                        type="number"
-                        step="any"
+                      <DecimalInput
                         value={Number.isNaN(item.unit_price) ? '' : item.unit_price}
-                        onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: event.target.value === '' ? Number.NaN : parseFloat(event.target.value) } : currentItem))}
+                        onChange={() => {}}
+                        onBlur={(value) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: value === null ? Number.NaN : value } : currentItem))}
                         required
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                       />

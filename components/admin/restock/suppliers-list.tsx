@@ -18,6 +18,7 @@ import { OTCDrug, PrescriptionDrug } from '@/lib/types/inventory';
 import { Plus, Edit2, Trash2, AlertCircle, Loader, X, Link2, Pill, Upload, ChevronRight, ChevronDown } from 'lucide-react';
 import { ConfirmationModal } from './confirmation-modal';
 import { CustomSelect } from './CustomSelect';
+import { DecimalInput } from '@/components/DecimalInput';
 
 const SUPPLIER_ITEMS_PAGE_SIZE = 20;
 
@@ -740,20 +741,18 @@ export function SuppliersList() {
                               />
                             </label>
                             <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost
-                              <input
-                                type="number"
-                                step="any"
+                              <DecimalInput
                                 value={Number.isNaN(product.supplier_unit_price) ? '' : product.supplier_unit_price}
-                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                                onChange={() => {}}
+                                onBlur={(value) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_unit_price: value === null ? Number.NaN : value })}
                                 className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                               />
                             </label>
                             <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Min Qty
-                              <input
-                                type="number"
-                                step="any"
+                              <DecimalInput
                                 value={Number.isNaN(product.minimum_order_quantity) ? '' : product.minimum_order_quantity}
-                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { minimum_order_quantity: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                                onChange={() => {}}
+                                onBlur={(value) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { minimum_order_quantity: value === null ? Number.NaN : value })}
                                 className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                               />
                             </label>
@@ -896,11 +895,10 @@ export function SuppliersList() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Lead Time (days)
                   </label>
-                  <input
-                    type="number"
-                    step="any"
+                  <DecimalInput
                     value={Number.isNaN(formData.lead_time_days) ? '' : formData.lead_time_days}
-                    onChange={(e) => setFormData({ ...formData, lead_time_days: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                    onChange={() => {}}
+                    onBlur={(value) => setFormData({ ...formData, lead_time_days: value === null ? Number.NaN : value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
@@ -909,11 +907,10 @@ export function SuppliersList() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Minimum Order Amount
                   </label>
-                  <input
-                    type="number"
-                    step="any"
+                  <DecimalInput
                     value={Number.isNaN(formData.minimum_order_amount) ? '' : formData.minimum_order_amount}
-                    onChange={(e) => setFormData({ ...formData, minimum_order_amount: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                    onChange={() => {}}
+                    onBlur={(value) => setFormData({ ...formData, minimum_order_amount: value === null ? Number.NaN : value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
                   />
                 </div>
@@ -1133,11 +1130,10 @@ export function SuppliersList() {
                   {selectedSupplierIdsForItem.map((supplierId) => (
                     <label key={supplierId} className="grid grid-cols-2 items-center gap-3 text-sm">
                       <span className="font-medium text-blue-900">{suppliers.find((supplier) => supplier.id === supplierId)?.name}</span>
-                      <input
-                        type="number"
-                        step="any"
+                      <DecimalInput
                         value={Number.isNaN(supplierPriceOverrides[supplierId]) ? '' : supplierPriceOverrides[supplierId] ?? itemSupplierFormData.supplier_unit_price}
-                        onChange={(e) => setSupplierPriceOverrides({ ...supplierPriceOverrides, [supplierId]: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                        onChange={() => {}}
+                        onBlur={(value) => setSupplierPriceOverrides({ ...supplierPriceOverrides, [supplierId]: value === null ? Number.NaN : value })}
                         className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                       />
                     </label>
@@ -1157,11 +1153,10 @@ export function SuppliersList() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unit Cost (usually per package) *</label>
-                  <input
-                    type="number"
-                    step="any"
+                  <DecimalInput
                     value={Number.isNaN(itemSupplierFormData.supplier_unit_price) ? '' : itemSupplierFormData.supplier_unit_price}
-                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                    onChange={() => {}}
+                    onBlur={(value) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_unit_price: value === null ? Number.NaN : value })}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
                   />
@@ -1228,11 +1223,10 @@ export function SuppliersList() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Default Unit Cost (fallback)</label>
-                  <input
-                    type="number"
-                    step="any"
+                  <DecimalInput
                     value={Number.isNaN(itemSupplierFormData.supplier_unit_price) ? '' : itemSupplierFormData.supplier_unit_price}
-                    onChange={(e) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })}
+                    onChange={() => {}}
+                    onBlur={(value) => setItemSupplierFormData({ ...itemSupplierFormData, supplier_unit_price: value === null ? Number.NaN : value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-indigo-600"
                   />
                 </div>
@@ -1402,12 +1396,11 @@ export function SuppliersList() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unit Cost (usually per package) *</label>
-                  <input
-                    type="number"
-                    step="any"
+                  <DecimalInput
                     value={Number.isNaN(productFormData.supplier_unit_price) ? '' : productFormData.supplier_unit_price}
-                    onChange={(e) =>
-                      setProductFormData({ ...productFormData, supplier_unit_price: e.target.value === '' ? Number.NaN : parseFloat(e.target.value) })
+                    onChange={() => {}}
+                    onBlur={(value) =>
+                      setProductFormData({ ...productFormData, supplier_unit_price: value === null ? Number.NaN : value })
                     }
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none align-top focus:ring-2 focus:ring-green-600"
