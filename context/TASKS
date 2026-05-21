@@ -1,3 +1,5 @@
 1. add the ability to edit current requests, that is items on current requests in restock management the same way we are able to edit items on purchase orders (requests should only be able to be editted if not linked to a PO)
 
 2. in restock management, make the unscheduled purchase order button hide on mobile, that is in mobile view and in desktop portrait view
+
+3. in the restock management tabs, the search feature, it works, but I want it to also use a dropdown to show the requests that match results, when restock requestsn(not supplier lookup) match search terms (there is a difference between showing the requests themselves that match the results and the supplier they are under)
