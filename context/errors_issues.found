@@ -1,0 +1,1 @@
+1. in restock management tabs, the counts on the tabs that depend on dates, seem to be using UTC, they should actually use EST fixed (no daylight savings, no EDT)
