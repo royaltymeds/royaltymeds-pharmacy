@@ -3,3 +3,4 @@
 3. find a more reliable way to keep track of next reorder date in the schema
 4. a password reset feature and functionality is needed for users
 5. add cron job for recommended PO generation for suppliers with upcoming reorder dates
+6. optimize PO pdf downloads (currently not downloading/generating multi-page pdf)
