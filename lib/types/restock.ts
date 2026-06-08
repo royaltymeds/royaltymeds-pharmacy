@@ -242,6 +242,21 @@ export interface CreatePurchaseOrderInput {
   }[];
 }
 
+export interface UpdateRestockRequestItemInput {
+  itemId?: string;
+  product_id: string;
+  product_type: 'otc' | 'prescription';
+  product_name: string;
+  quantity_requested: number;
+  unit_price: number;
+  notes?: string;
+}
+
+export interface UpdateRestockRequestInput {
+  items: UpdateRestockRequestItemInput[];
+  notes?: string;
+}
+
 export interface UpdatePurchaseOrderItemInput {
   itemId?: string;
   restock_request_id?: string;

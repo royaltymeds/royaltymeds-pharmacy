@@ -6,6 +6,7 @@ import {
   getPurchaseOrders,
   placePurchaseOrder,
   updatePurchaseOrder,
+  updateRestockRequest,
   getRestockRequests,
   getSupplierProducts,
   updateRestockRequestStatus,
@@ -133,6 +134,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [placingPurchaseOrder, setPlacingPurchaseOrder] = useState<PurchaseOrder | null>(null);
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
   const [editingPurchaseOrder, setEditingPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [editingRestockRequest, setEditingRestockRequest] = useState<RestockRequest | null>(null);
   const [editItems, setEditItems] = useState<EditFormItem[]>([]);
   const [editNotes, setEditNotes] = useState('');
   const [receiveItems, setReceiveItems] = useState<ReceiveFormItem[]>([]);
@@ -475,6 +477,27 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     })));
   };
 
+  const canEditRestockRequest = (request: RestockRequest) => !request.purchase_order_id && (request.status === 'requested' || request.status === 'on_hold');
+
+  const openEditRestockRequestModal = (request: RestockRequest) => {
+    if (!canEditRestockRequest(request)) return;
+    setEditingRestockRequest(request);
+    setEditNotes('');
+    setSupplierProductSearch('');
+    setSupplierProductPage(1);
+    void loadSupplierProductsForPo(request.supplier_id);
+    setEditItems((request.items || []).map((item) => ({
+      itemId: item.id,
+      restock_item_id: item.id,
+      product_id: item.product_id,
+      product_type: item.product_type,
+      product_name: item.product_name,
+      quantity_ordered: item.quantity_requested,
+      unit_price: item.unit_price,
+      notes: item.notes,
+    })));
+  };
+
   const addManualPoItem = (product: SupplierProduct) => {
     if (manualPoItems.some((item) => item.supplier_product_id === product.id)) return;
     setManualPoItems((current) => [
@@ -533,6 +556,39 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       toast.success('Purchase order and linked restock request items updated.');
       setEditingPurchaseOrder(null);
       setEditItems([]);
+      await loadData();
+    }
+    setActionLoading(false);
+  };
+
+  const handleEditRestockRequest = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editingRestockRequest) return;
+    setActionLoading(true);
+    const { error: editError, data } = await updateRestockRequest(
+      editingRestockRequest.id,
+      {
+        items: editItems.map(({ itemId, product_id, product_type, product_name, quantity_ordered, unit_price, notes }) => ({
+          itemId,
+          product_id,
+          product_type,
+          product_name,
+          quantity_requested: quantity_ordered,
+          unit_price,
+          notes,
+        })),
+        notes: editNotes,
+      },
+      userId
+    );
+    if (editError) {
+      setError(editError);
+      toast.error(editError);
+    } else {
+      toast.success('Restock request items updated.');
+      setEditingRestockRequest(null);
+      setEditItems([]);
+      if (data) setSelectedRequest(data);
       await loadData();
     }
     setActionLoading(false);
@@ -766,19 +822,39 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   }), [normalizedTabSearch, requestHistoryTabFilter, requestLinkedToPlacedPo, requestTabFilter]);
 
 
-  const requestSearchMatches = useMemo(() => currentRequests.filter((request) => {
+  const requestMatchesTabSearch = useCallback((request: RestockRequest) => {
     if (!normalizedTabSearch) return false;
-    return [request.request_number, request.supplier?.name, request.pharmacist?.full_name, request.pharmacist?.email]
+    return [
+      request.request_number,
+      request.pharmacist?.full_name,
+      request.pharmacist?.email,
+      ...(request.items || []).flatMap((item) => [item.product_name, item.product_type, item.notes, item.product_id]),
+    ]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(normalizedTabSearch));
-  }).slice(0, 8), [currentRequests, normalizedTabSearch]);
+  }, [normalizedTabSearch]);
+
+  const getRequestSearchSummary = (request: RestockRequest) => {
+    const matchingItem = (request.items || []).find((item) => [item.product_name, item.product_type, item.notes, item.product_id]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(normalizedTabSearch)));
+    return matchingItem ? `${matchingItem.product_name} · Qty ${matchingItem.quantity_requested}` : `${request.supplier?.name || 'Unknown supplier'} · ${request.status.replace(/_/g, ' ')}`;
+  };
+
+  const requestSearchMatches = useMemo(() => currentRequests.filter((request) => {
+    if (!requestMatchesTabSearch(request)) return false;
+    if (requestTabFilter === 'requested') return request.status === 'requested';
+    if (requestTabFilter === 'linked_to_po') return request.status === 'linked_to_po';
+    if (requestTabFilter === 'linked_po_placed') return requestLinkedToPlacedPo(request);
+    return true;
+  }).slice(0, 8), [currentRequests, requestLinkedToPlacedPo, requestMatchesTabSearch, requestTabFilter]);
 
   const requestHistorySearchMatches = useMemo(() => requestHistory.filter((request) => {
-    if (!normalizedTabSearch) return false;
-    return [request.request_number, request.supplier?.name, request.pharmacist?.full_name, request.pharmacist?.email]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(normalizedTabSearch));
-  }).slice(0, 8), [requestHistory, normalizedTabSearch]);
+    if (!requestMatchesTabSearch(request)) return false;
+    if (requestHistoryTabFilter === 'received') return request.status === 'received';
+    if (requestHistoryTabFilter === 'cancelled') return request.status === 'cancelled';
+    return true;
+  }).slice(0, 8), [requestHistory, requestHistoryTabFilter, requestMatchesTabSearch]);
 
   const scheduleSearchMatches = useMemo(() => upcomingReorders.filter((item) => {
     if (!normalizedTabSearch) return false;
@@ -813,6 +889,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       const updated = purchaseOrdersByStatusAndSupplier[current.status][current.supplierId];
       return updated ? { ...current, supplierName: updated.supplierName, purchaseOrders: updated.purchaseOrders } : null;
     });
+    setEditingRestockRequest((current) => current ? requests.find((request) => request.id === current.id) || current : null);
   }, [purchaseOrders, purchaseOrdersByStatusAndSupplier, requestHistoryBySupplier, requests, requestsBySupplier]);
 
   return (
@@ -834,7 +911,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
           </div>
           <button
             onClick={() => openPurchaseOrderModal()}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="hidden items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 xl:inline-flex"
           >
             <ClipboardList className="h-4 w-4" />
             Unscheduled Purchase Order
@@ -852,14 +929,14 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               {activeTab === 'requests' && (
                 requestSearchMatches.length > 0 ? requestSearchMatches.map((request) => (
                   <button key={request.id} type="button" onClick={() => setSelectedRequest(request)} className="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-gray-50">
-                    {request.request_number} · {request.supplier?.name || 'Unknown supplier'}
+                    <span className="font-medium">{request.request_number}</span><span className="mt-0.5 block text-xs text-gray-500">{getRequestSearchSummary(request)}</span>
                   </button>
                 )) : <p className="px-3 py-2 text-sm text-gray-500">No matching requests.</p>
               )}
               {activeTab === 'request_history' && (
                 requestHistorySearchMatches.length > 0 ? requestHistorySearchMatches.map((request) => (
                   <button key={request.id} type="button" onClick={() => setSelectedRequest(request)} className="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-gray-50">
-                    {request.request_number} · {request.supplier?.name || 'Unknown supplier'}
+                    <span className="font-medium">{request.request_number}</span><span className="mt-0.5 block text-xs text-gray-500">{getRequestSearchSummary(request)}</span>
                   </button>
                 )) : <p className="px-3 py-2 text-sm text-gray-500">No matching historical requests.</p>
               )}
@@ -1346,6 +1423,105 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
         </div>
       )}
 
+
+      {editingRestockRequest && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+          <form onSubmit={handleEditRestockRequest} className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Edit {editingRestockRequest.request_number}</h2>
+                <p className="text-sm text-gray-600">Only requests with no linked purchase order can be edited here. Linked requests must be edited from their purchase order.</p>
+              </div>
+              <button type="button" onClick={() => setEditingRestockRequest(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
+            </div>
+            <div className="max-h-[calc(100vh-16rem)] space-y-3 overflow-y-auto pr-1">
+              {editItems.map((item, index) => (
+                <div key={item.itemId || index} className="rounded-lg border border-gray-200 p-4">
+                  <div className="grid gap-3 md:grid-cols-4">
+                    <div className="md:col-span-2">
+                      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Item Name</label>
+                      <input
+                        type="text"
+                        value={item.product_name}
+                        onChange={(event) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, product_name: event.target.value } : currentItem))}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-green-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Quantity</label>
+                      <DecimalInput
+                        value={Number.isNaN(item.quantity_ordered) ? '' : item.quantity_ordered}
+                        onChange={() => {}}
+                        onBlur={(value) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, quantity_ordered: value === null ? Number.NaN : Math.max(1, value) } : currentItem))}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-green-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost</label>
+                      <DecimalInput
+                        value={Number.isNaN(item.unit_price) ? '' : item.unit_price}
+                        onChange={() => {}}
+                        onBlur={(value) => setEditItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, unit_price: value === null ? Number.NaN : Math.max(0, value) } : currentItem))}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none align-top focus:ring-2 focus:ring-green-600"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditItems((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                    className="mt-3 text-sm font-medium text-red-700 hover:text-red-800"
+                  >
+                    Remove line
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 rounded-lg border border-green-100 bg-green-50 p-4">
+              <h3 className="font-semibold text-green-900">Add linked supplier items</h3>
+              <p className="text-sm text-green-800">Choose active products linked to {editingRestockRequest.supplier?.name || 'this supplier'}.</p>
+              <input
+                type="search"
+                value={supplierProductSearch}
+                onChange={(event) => { setSupplierProductSearch(event.target.value); setSupplierProductPage(1); }}
+                placeholder="Search supplier items"
+                className="mt-3 w-full rounded-lg border border-green-200 px-3 py-2 text-sm focus:outline-none align-top focus:ring-2 focus:ring-green-600"
+              />
+              <div className="mt-3 max-h-40 space-y-2 overflow-y-auto rounded-lg bg-white p-2">
+                {supplierProducts.length === 0 ? (
+                  <p className="p-2 text-sm text-gray-500">No active products are linked to this supplier.</p>
+                ) : filteredSupplierProducts.length === 0 ? (
+                  <p className="p-2 text-sm text-gray-500">No linked supplier products match your search.</p>
+                ) : paginatedSupplierProducts.map((product) => {
+                  const alreadyAdded = editItems.some((item) => item.product_id === product.product_id && item.product_type === product.product_type);
+                  return (
+                    <button key={product.id} type="button" onClick={() => addProductToEditPurchaseOrder(product)} disabled={alreadyAdded} className="flex w-full items-center justify-between rounded border border-gray-200 p-2 text-left text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400">
+                      <span>{product.product_name || product.product_id}</span>
+                      <span>{alreadyAdded ? 'Added' : formatCurrency(product.supplier_unit_price)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex items-center justify-between text-sm text-green-900">
+                <button type="button" onClick={() => setSupplierProductPage((page) => Math.max(1, page - 1))} disabled={supplierProductPage === 1} className="rounded border border-green-200 px-2 py-1 font-semibold disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
+                <span>Page {supplierProductPage} of {supplierProductTotalPages} · 15 per page</span>
+                <button type="button" onClick={() => setSupplierProductPage((page) => Math.min(supplierProductTotalPages, page + 1))} disabled={supplierProductPage === supplierProductTotalPages} className="rounded border border-green-200 px-2 py-1 font-semibold disabled:cursor-not-allowed disabled:opacity-50">Next</button>
+              </div>
+            </div>
+            <div className="mt-6 flex gap-3">
+              <button type="submit" disabled={actionLoading || editItems.length === 0} className="flex-1 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:bg-gray-300">
+                {actionLoading ? 'Saving...' : 'Save Request Changes'}
+              </button>
+              <button type="button" onClick={() => setEditingRestockRequest(null)} className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {receivingPurchaseOrder && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
           <form onSubmit={handleReceivePurchaseOrder} className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
@@ -1451,6 +1627,11 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 </div>
               ))}
             </div>
+            {canEditRestockRequest(selectedRequest) && (
+              <button type="button" onClick={() => openEditRestockRequestModal(selectedRequest)} disabled={actionLoading} className="mt-4 w-full rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:bg-gray-300">
+                <Edit2 className="mr-2 inline h-4 w-4" /> Edit Request Items
+              </button>
+            )}
             {selectedRequest.status === 'requested' && (
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 <button type="button" onClick={() => handlePutRequestOnHold(selectedRequest)} disabled={actionLoading} className="w-full rounded-lg border border-orange-200 px-4 py-2 font-semibold text-orange-700 hover:bg-orange-50 disabled:bg-gray-100">

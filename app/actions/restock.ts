@@ -15,6 +15,7 @@ import {
   RestockNotificationSettings,
   UpdateRestockNotificationSettingsInput,
   UpdatePurchaseOrderInput,
+  UpdateRestockRequestInput,
 } from '@/lib/types/restock';
 import { generateRestockWorkflowNumber } from '@/lib/restock-number';
 
@@ -608,6 +609,124 @@ export async function getRestockRequestById(
     return { data: normalizeRestockRequestPharmacist(data), error: null };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch restock request' };
+  }
+}
+
+export async function updateRestockRequest(
+  requestId: string,
+  input: UpdateRestockRequestInput,
+  updatedBy: string
+): Promise<{ data: RestockRequest | null; error: string | null }> {
+  try {
+    const supabase = getServiceRoleClient();
+    const now = new Date().toISOString();
+
+    if (input.items.length === 0) {
+      return { data: null, error: 'A restock request must include at least one item.' };
+    }
+
+    const invalidItem = input.items.find(
+      (item) => !item.product_id || !item.product_name.trim() || !Number.isFinite(item.quantity_requested) || item.quantity_requested < 1 || !Number.isFinite(item.unit_price) || item.unit_price < 0
+    );
+    if (invalidItem) {
+      return { data: null, error: 'Each restock item needs a product, name, quantity of at least 1, and non-negative unit price.' };
+    }
+
+    const { data: request, error: requestError } = await supabase
+      .from('restock_requests')
+      .select('id, status, purchase_order_id')
+      .eq('id', requestId)
+      .single();
+
+    if (requestError) return { data: null, error: requestError.message };
+    if (request.purchase_order_id) {
+      return { data: null, error: 'Restock requests linked to a purchase order cannot be edited from Current Requests. Edit the purchase order instead.' };
+    }
+    if (request.status !== 'requested' && request.status !== 'on_hold') {
+      return { data: null, error: 'Only requested or on-hold restock requests that are not linked to a purchase order can be edited.' };
+    }
+
+    const { data: currentItems, error: currentItemsError } = await supabase
+      .from('restock_items')
+      .select('id')
+      .eq('restock_request_id', requestId);
+    if (currentItemsError) return { data: null, error: currentItemsError.message };
+
+    const submittedIds = input.items.map((item) => item.itemId).filter(Boolean) as string[];
+    const currentIds = (currentItems || []).map((item) => item.id);
+    const unknownSubmittedId = submittedIds.find((itemId) => !currentIds.includes(itemId));
+    if (unknownSubmittedId) {
+      return { data: null, error: 'One or more submitted restock items do not belong to this request.' };
+    }
+
+    const removedIds = currentIds.filter((itemId) => !submittedIds.includes(itemId));
+    if (removedIds.length > 0) {
+      const { error: deleteError } = await supabase.from('restock_items').delete().in('id', removedIds);
+      if (deleteError) return { data: null, error: deleteError.message };
+    }
+
+    for (const item of input.items) {
+      const quantityRequested = Math.max(1, item.quantity_requested);
+      const unitPrice = Math.max(0, item.unit_price);
+      const totalPrice = quantityRequested * unitPrice;
+      const row = {
+        product_id: item.product_id,
+        product_type: item.product_type,
+        product_name: item.product_name.trim(),
+        quantity_requested: quantityRequested,
+        unit_price: unitPrice,
+        total_price: totalPrice,
+        notes: item.notes || null,
+        updated_at: now,
+      };
+
+      if (item.itemId) {
+        const { error: updateError } = await supabase
+          .from('restock_items')
+          .update(row)
+          .eq('id', item.itemId)
+          .eq('restock_request_id', requestId);
+        if (updateError) return { data: null, error: updateError.message };
+      } else {
+        const { error: insertError } = await supabase.from('restock_items').insert({
+          ...row,
+          restock_request_id: requestId,
+          quantity_received: 0,
+          hold_status: request.status === 'on_hold' ? 'on_hold' : 'active',
+        });
+        if (insertError) return { data: null, error: insertError.message };
+      }
+    }
+
+    const totalAmount = input.items.reduce((sum, item) => sum + Math.max(1, item.quantity_requested) * Math.max(0, item.unit_price), 0);
+    const { error: updateRequestError } = await supabase
+      .from('restock_requests')
+      .update({ total_amount: totalAmount, updated_at: now })
+      .eq('id', requestId)
+      .is('purchase_order_id', null);
+    if (updateRequestError) return { data: null, error: updateRequestError.message };
+
+    await supabase.from('restock_history').insert([
+      {
+        restock_request_id: requestId,
+        action: 'items_updated',
+        old_status: request.status,
+        new_status: request.status,
+        changed_by: updatedBy,
+        notes: `Updated ${input.items.length} restock request item(s).`,
+      },
+    ]);
+
+    const { data, error } = await supabase
+      .from('restock_requests')
+      .select(RESTOCK_REQUEST_SELECT)
+      .eq('id', requestId)
+      .single();
+
+    if (error) return { data: null, error: error.message };
+    return { data: normalizeRestockRequestPharmacist(data), error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to update restock request' };
   }
 }
 
