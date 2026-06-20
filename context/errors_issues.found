@@ -1,1 +1,137 @@
-1. the logic for the partially received feature is slightly flawed, the logic is correct when partially receiving and leaving the PO in the placed status, however when partially receiving but changing the status to received, it does not mean that all the items were received, only what was input as received was received so that impartial amount is the amount that should still show as received even if when asked in the modal we opt to mark the PO as received
+# Errors / Issues Found
+
+## 1. Purchase order partial receipt can overstate received quantities when the user marks the PO as received
+
+### Problem statement
+The current partially received purchase order flow behaves correctly when the pharmacist saves a partial receipt and leaves the PO in the `placed` status. However, it is flawed when the pharmacist enters partial quantities and then chooses the modal option that marks the PO as `received`.
+
+In that path, marking the PO as `received` should only close the purchase order workflow. It should **not** imply every ordered unit arrived. The item-level received quantities must remain exactly the cumulative quantities the pharmacist entered for this receiving pass. Any shorted / missing units should stay unreceived in the historical item totals, even though the PO status is closed as `received`.
+
+### Schema references
+Relevant columns from `public/current_schemaReference.sql`:
+
+- `purchase_orders.status` supports `open`, `placed`, `received`, and `cancelled`.
+- `purchase_orders.received_at` records when the PO is closed as received.
+- `purchase_order_items.quantity_ordered` is the ordered quantity.
+- `purchase_order_items.quantity_received` is the actual received quantity and must remain non-negative.
+- `restock_items.quantity_requested` and `restock_items.quantity_received` mirror allocated receipt quantities back to the originating restock request items.
+- `restock_requests.status` supports `requested`, `linked_to_po`, `received`, `cancelled`, and `on_hold`.
+
+### Current code behavior to verify before changing
+- UI receive modal builds a cumulative `quantity_received` payload from the existing received quantity plus the pass quantity for partial mode.
+- UI complete mode currently treats every line as fully received by setting `quantity_received` to the ordered quantity.
+- Server action validates that each incoming `purchase_order_items.quantity_received` value is cumulative, non-negative, cannot decrease, and cannot exceed `quantity_ordered`.
+- Server action closes the PO as `received` when the requested status is `received` unless the caller explicitly uses partial receiving mode and not all lines are fully received.
+- Server action distributes received PO item quantities into linked `restock_items.quantity_received` and only marks a `restock_request` as `received` when all of its restock items are fully received.
+
+### Desired behavior
+- If the pharmacist enters partial quantities and chooses to keep the PO placed, keep current behavior: persist the entered cumulative quantities and leave `purchase_orders.status = 'placed'`.
+- If the pharmacist enters partial quantities and chooses to mark the PO received anyway, persist the same entered cumulative quantities and set `purchase_orders.status = 'received'` with `received_at` populated.
+- Do not auto-fill unreceived item quantities merely because the PO status is closed.
+- Do not mark linked restock requests as `received` unless their linked `restock_items.quantity_received >= quantity_requested` for all items.
+- Preserve auditability: closed short shipments should show the actual received totals and remaining unreceived quantities at item/detail level.
+
+---
+
+# Resolution Plan
+
+## Phase 1 — Reproduce and isolate the receiving-mode bug
+**Goal:** Confirm the exact UI-to-server payload that causes received quantities to be inflated.
+
+1. Inspect `components/admin/restock/restock-workflow-tabs.tsx` around the receive modal and `submitReceivePurchaseOrder`.
+2. Confirm that the partial-save path sends cumulative received quantities based on user input.
+3. Confirm that the modal's “complete receiving” / close-PO path currently sends `quantity_ordered` for every item, which overwrites the actual short-receipt amounts.
+4. Inspect `app/actions/restock.ts` `updatePurchaseOrderStatus` to confirm it accepts cumulative item quantities and can already close a PO as `received` without requiring every line to be fully received when the caller does not force partial mode.
+5. Record the intended mode names before coding, for example:
+   - `partial`: save entered quantities and keep PO `placed` when not fully received.
+   - `received`: save entered quantities and close PO as `received` even if not fully received.
+   - Avoid using a mode name such as `complete` for short-receipt closure because it implies full item receipt.
+
+**Completion criteria:** The implementer knows which client-side branch inflates quantities and which server behavior can be reused or needs a small naming/guard adjustment.
+
+## Phase 2 — Fix receive modal payload semantics
+**Goal:** Ensure both partial-save and close-as-received paths submit actual pharmacist-entered receipt quantities, not implied full quantities.
+
+1. Update the receive modal submit helper so the item update calculation is shared and always means: `previouslyReceived + enteredPassQuantity`, clamped between the previous total and `quantityOrdered`.
+2. Change the close-PO button handler to submit the calculated actual quantities rather than `quantityOrdered` for every row.
+3. Rename the UI mode from `complete` to a clearer semantic such as `close` or `received` if needed, and update button copy to avoid implying all remaining quantities will be received.
+4. Update the modal warning text to explain the distinction:
+   - Save partial receipt = PO remains placed.
+   - Mark PO received = PO closes, but only entered quantities are recorded as received.
+5. Keep existing validation that prevents negative, decreasing, or over-ordered cumulative received totals.
+
+**Completion criteria:** Closing a shorted PO no longer changes line-level `quantity_received` values to `quantity_ordered` unless the pharmacist actually entered the full remaining quantities.
+
+## Phase 3 — Harden server-side status and restock allocation behavior
+**Goal:** Make the server action resilient even if a future UI sends a misleading mode.
+
+1. Review `updatePurchaseOrderStatus` receiving mode handling and align mode names with the corrected UI semantics.
+2. Preserve the existing ability to keep a short receipt as `placed` when the caller explicitly requests partial mode.
+3. Preserve the ability to close a short receipt as `received` while keeping item quantities as provided.
+4. Ensure `received_at` is set when the PO status becomes `received`, even if some quantities remain short.
+5. Ensure linked `restock_items.quantity_received` values are allocated from actual PO item received quantities only.
+6. Ensure linked `restock_requests` become `received` only when every linked restock item is fully received; otherwise they should remain `linked_to_po` or the existing appropriate non-received state.
+7. Add a defensive comment or helper naming that makes clear: PO status `received` is workflow closure, not proof that all item quantities were received.
+
+**Completion criteria:** The server action cannot accidentally infer full receipt from status alone; item quantities remain the source of truth for actual receipts.
+
+## Phase 4 — Add regression coverage
+**Goal:** Lock in the corrected short-shipment behavior.
+
+1. Add or update tests around the receive payload helper if one exists or can be extracted cheaply.
+2. Add a server-action-level regression test if the project has an established test harness for actions; otherwise document a manual QA scenario in the closest existing restock docs.
+3. Minimum scenario to cover:
+   - PO line ordered quantity = 10, previously received = 0.
+   - Pharmacist enters 4 received.
+   - Pharmacist chooses “mark PO received” / close PO.
+   - Expected `purchase_order_items.quantity_received = 4`.
+   - Expected `purchase_orders.status = 'received'` and `received_at` is populated.
+   - Expected linked restock request is not marked `received` unless all its restock items are fully received.
+4. Add a second cumulative scenario:
+   - Previously received = 3, ordered = 10.
+   - Current pass entered = 2.
+   - Closing the PO records cumulative received = 5, not 10.
+
+**Completion criteria:** Regression coverage or documented QA proves shorted quantities are retained when the PO is closed.
+
+## Phase 5 — Manual QA and release checks
+**Goal:** Verify the end-to-end pharmacist workflow without changing unrelated restock behavior.
+
+1. Run typecheck / lint / build checks used by the repo.
+2. In the admin restock UI, create or use a placed PO with at least one line where the received amount is less than ordered.
+3. Test “save partial” and confirm:
+   - PO remains in the placed/active PO area.
+   - Line item shows actual received and remaining quantities.
+4. Test “mark received” after entering partial quantities and confirm:
+   - PO moves to received/history.
+   - Line item still shows actual received and remaining quantities.
+   - Restock request status only changes to `received` when all quantities are fully received.
+5. Confirm no unrelated flows changed:
+   - Open-to-placed PO transition.
+   - Full receipt where all quantities are entered.
+   - Cancellation behavior.
+   - On-hold restock request behavior.
+
+**Completion criteria:** The bug is fixed in the UI and persisted data, and the restock workflow continues to match the schema and existing role/security guidance.
+
+---
+
+# Completion Notes
+
+## Phase 4 completion
+Regression coverage has been added for the shared receive-quantity calculation. The tests cover the core short-shipment scenarios from this plan:
+
+- Ordered quantity 10, previously received 0, current pass 4, closed PO path records 4.
+- Ordered quantity 10, previously received 3, current pass 2, closed PO path records 5.
+- Entered pass quantities are clamped so cumulative received quantity cannot exceed ordered quantity.
+- Lines not marked as received in the current pass preserve their previous cumulative quantity.
+
+## Phase 5 completion
+Release checks completed for this pass:
+
+- `npm test`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build`
+
+Manual browser QA still requires a live authenticated admin session and representative restock data. The implemented automated coverage verifies the quantity-calculation regression, while the build, lint, and typecheck verify the updated admin restock UI and server action compile successfully.

@@ -1766,7 +1766,7 @@ export async function updatePurchaseOrder(
   }
 }
 
-type PurchaseOrderReceivingMode = 'partial' | 'complete';
+type PurchaseOrderReceivingMode = 'partial' | 'close';
 
 export async function updatePurchaseOrderStatus(
   purchaseOrderId: string,
@@ -1777,7 +1777,7 @@ export async function updatePurchaseOrderStatus(
   try {
     const supabase = getServiceRoleClient();
     const now = new Date().toISOString();
-    const receivingMode = options?.receivingMode || (status === 'received' ? 'complete' : undefined);
+    const receivingMode = options?.receivingMode || (status === 'received' ? 'close' : undefined);
 
     const { data: currentPoItems, error: currentItemsError } = await supabase
       .from('purchase_order_items')
@@ -1823,6 +1823,8 @@ export async function updatePurchaseOrderStatus(
 
     const poItemIds = (poItems || []).map((item) => item.id);
     const isFullyReceived = (poItems || []).length > 0 && (poItems || []).every((item) => Number(item.quantity_received || 0) >= Number(item.quantity_ordered || 0));
+    // A PO can be closed as received after a short shipment. Item-level
+    // quantity_received values remain the source of truth for actual receipt.
     const nextStatus = status === 'received' && receivingMode === 'partial' && !isFullyReceived ? 'placed' : status;
 
     const updates: Record<string, any> = { status: nextStatus, updated_at: now };

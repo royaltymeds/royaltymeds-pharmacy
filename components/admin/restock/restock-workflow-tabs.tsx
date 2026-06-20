@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { ConfirmationModal } from './confirmation-modal';
 import { CustomSelect } from './CustomSelect';
 import { DecimalInput } from '@/components/DecimalInput';
+import { calculateCumulativeReceivedQuantity } from '@/lib/utils/restock-receiving';
 
 interface RestockWorkflowTabsProps {
   userId: string;
@@ -665,22 +666,20 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     })));
   };
 
-  const submitReceivePurchaseOrder = async (mode: 'partial' | 'complete') => {
+  const submitReceivePurchaseOrder = async (mode: 'partial' | 'close') => {
     if (!receivingPurchaseOrder) return;
 
     setActionLoading(true);
     const itemUpdates = receiveItems.map((item) => ({
       itemId: item.itemId,
-      quantity_received: mode === 'complete'
-        ? item.quantityOrdered
-        : Math.min(item.quantityOrdered, item.previouslyReceived + (item.received ? Math.min(item.remainingQuantity, Math.max(0, Number.isFinite(item.quantityReceived) ? item.quantityReceived : 0)) : 0)),
+      quantity_received: calculateCumulativeReceivedQuantity(item),
     }));
     const { error: receiveError } = await updatePurchaseOrderStatus(receivingPurchaseOrder.id, 'received', itemUpdates, { receivingMode: mode });
     if (receiveError) {
       setError(receiveError);
       toast.error(receiveError);
     } else {
-      toast.success(mode === 'partial' ? 'Partial receipt saved. Purchase order remains placed.' : 'Purchase order receiving completed and linked restock requests updated.');
+      toast.success(mode === 'partial' ? 'Partial receipt saved. Purchase order remains placed.' : 'Purchase order closed as received with entered quantities recorded.');
       setShowPartialReceivePrompt(false);
       setPendingConfirmation(null);
       setReceivingPurchaseOrder(null);
@@ -695,8 +694,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     if (!receivingPurchaseOrder) return;
 
     const hasRemainingAfterThisReceipt = receiveItems.some((item) => {
-      const passQuantity = item.received ? Math.min(item.remainingQuantity, Math.max(0, Number.isFinite(item.quantityReceived) ? item.quantityReceived : 0)) : 0;
-      return item.previouslyReceived + passQuantity < item.quantityOrdered;
+      return calculateCumulativeReceivedQuantity(item) < item.quantityOrdered;
     });
 
     if (hasRemainingAfterThisReceipt) {
@@ -704,7 +702,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       return;
     }
 
-    await submitReceivePurchaseOrder('complete');
+    await submitReceivePurchaseOrder('close');
   };
 
   const getPurchaseOrderDetailHtml = (purchaseOrder: PurchaseOrder) => {
@@ -1616,7 +1614,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Receive {receivingPurchaseOrder.po_number}</h2>
-                <p className="text-sm text-gray-600">Enter quantities received in this pass. If quantities remain outstanding, you can save a partial receipt and keep the PO placed.</p>
+                <p className="text-sm text-gray-600">Enter quantities received in this pass. If quantities remain outstanding, you can save a partial receipt and keep the PO placed, or close the PO with only the entered quantities recorded.</p>
               </div>
               <button type="button" onClick={() => setReceivingPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
             </div>
@@ -1672,7 +1670,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             </div>
             <div className="mt-6 flex gap-3">
               <button type="submit" disabled={actionLoading} className="flex-1 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:bg-gray-300">
-                {actionLoading ? 'Saving...' : 'Complete Receiving'}
+                {actionLoading ? 'Saving...' : 'Record Receiving'}
               </button>
               <button type="button" onClick={() => setReceivingPurchaseOrder(null)} className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">
                 Cancel
@@ -1858,17 +1856,17 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <h2 className="text-xl font-semibold text-gray-900">Save partial purchase order receipt?</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Some ordered quantities are still outstanding for {receivingPurchaseOrder.po_number}. Save a partial receipt to keep this PO placed with received quantities recorded, or complete receiving to mark all remaining quantities as received now.
+              Some ordered quantities are still outstanding for {receivingPurchaseOrder.po_number}. Save a partial receipt to keep this PO placed, or mark the PO received to close it with only the entered quantities recorded.
             </p>
             <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Partial receipts stay in the Placed tab and show remaining quantities until the PO is fully received.
+              Marking the PO received closes the workflow; it does not automatically mark missing quantities as received.
             </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <button type="button" onClick={() => void submitReceivePurchaseOrder('partial')} disabled={actionLoading} className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:bg-gray-300">
                 {actionLoading ? 'Saving...' : 'Yes, save partial'}
               </button>
-              <button type="button" onClick={() => void submitReceivePurchaseOrder('complete')} disabled={actionLoading} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-gray-300">
-                {actionLoading ? 'Saving...' : 'No, complete receiving'}
+              <button type="button" onClick={() => void submitReceivePurchaseOrder('close')} disabled={actionLoading} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-gray-300">
+                {actionLoading ? 'Saving...' : 'Mark PO received'}
               </button>
               <button type="button" onClick={() => setShowPartialReceivePrompt(false)} disabled={actionLoading} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:bg-gray-100">
                 Cancel
