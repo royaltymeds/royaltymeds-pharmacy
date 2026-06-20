@@ -1,3 +1,9 @@
 1. in restock management tabs, the counts on the tabs that depend on dates, seem to be using UTC, they should actually use EST fixed (no daylight savings, no EDT) - this might had already been done, verify if it is already implemented, if so then skip this and indicate same
 
 2. when editing current restock requests, the edit request items modal opens with the wrong z index, it should be on top of all the other modals, but it ends up being at the very base/bottom in the z index
+
+3. PO's aren't displaying the PO notes anywhere where PO details are shown
+
+4. the 'edit request items' button is too wide, the width needs to fit to text and not span to section nor flex
+
+5. the PO pdf download feature, it only generates a single page PDF it needs to support multi page pdf generation for POs that are longer than one page (currently it adds a note at end of the single page to indicate use the print feature instead, that isn't the behaviour we want)
