@@ -4,3 +4,5 @@
 4. a password reset feature and functionality is needed for users
 5. add cron job for recommended PO generation for suppliers with upcoming reorder dates
 6. optimize PO pdf downloads (currently not downloading/generating multi-page pdf)
+7. suppliers page needs to load faster (too many requests are made to populate the page, they need to be consolidated and prefetched)
+8. add the search feature to the suppliers page
