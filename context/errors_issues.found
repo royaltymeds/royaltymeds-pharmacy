@@ -1,9 +1,273 @@
-1. in restock management tabs, the counts on the tabs that depend on dates, seem to be using UTC, they should actually use EST fixed (no daylight savings, no EDT) - this might had already been done, verify if it is already implemented, if so then skip this and indicate same
+# Restock Management + Purchase Order Issue Plan
 
-2. when editing current restock requests, the edit request items modal opens with the wrong z index, it should be on top of all the other modals, but it ends up being at the very base/bottom in the z index
+Updated: 2026-06-20
+Owner: AI implementation assistant
+Directive context reviewed:
+- `context/ai_prompt_pretext.command` as the required substitute for missing `context.memory`; this is the guideline source for architecture, security, UI/modal conventions, and coding/development preferences.
+- `context/restock_workflow_full_remediation_plan/PHASED_IMPLEMENTATION_PLAN.md` for proof-oriented phased delivery, final closure logging, and verification expectations.
+- `context/restock_workflow_full_remediation_plan/ACCEPTANCE_MATRIX.md` for restock/PO validation style.
+- `context/IMPLEMENTATION_PLAN.md`, `context/PHASE_0_DISCOVERY.md`, and `context/PHASE_6_QA_REGRESSION.md` for current restock workflow history.
 
-3. PO's aren't displaying the PO notes anywhere where PO details are shown
+Guideline source decision: `context.memory` is not present in this checkout, so `context/ai_prompt_pretext.command` is used in its place for all coding/development preferences in this plan.
 
-4. the 'edit request items' button is too wide, the width needs to fit to text and not span to section nor flex
+## Global Development Guidelines Applied
 
-5. the PO pdf download feature, it only generates a single page PDF it needs to support multi page pdf generation for POs that are longer than one page (currently it adds a note at end of the single page to indicate use the print feature instead, that isn't the behaviour we want)
+1. Make behavior changes in code, not documentation-only, when an issue describes broken UI or output behavior.
+2. Keep each phase small enough for one implementation pass.
+3. Prefer existing restock components, actions, and types over duplicate logic.
+4. Preserve Supabase/RLS boundaries; do not bypass RLS in public/client flows.
+5. Use existing modal pattern: fixed viewport overlay, backdrop blur, high z-index, viewport-constrained content, scroll inside the modal body.
+6. After each phase, update this file with:
+   - exact issue(s) addressed,
+   - files/functions changed,
+   - what changed,
+   - how to truthfully verify the resolution,
+   - any residual risks or manual QA requirements.
+7. Run at least a targeted structural check for each phase, and run lint/build in the final verification phase.
+
+---
+
+## Issue Inventory and Initial Analysis
+
+### ISSUE-01 — Date-dependent tab counts must use fixed EST, not UTC or daylight-saving EDT
+
+Original report:
+> In restock management tabs, the counts on the tabs that depend on dates seem to be using UTC. They should actually use EST fixed (no daylight savings, no EDT). This might have already been done; verify if it is already implemented, if so then skip this and indicate same.
+
+Initial code findings:
+- `lib/restock-number.ts` uses `Intl.DateTimeFormat(... timeZone: 'America/New_York')`, which is Eastern time but observes daylight saving time. This is not fixed EST.
+- `components/admin/restock/restock-workflow-tabs.tsx` formats date-only strings via `new Date(`${value}T00:00:00`).toLocaleDateString()`, which depends on the runtime/browser local timezone.
+- Upcoming Scheduled Re-orders count compares date-only strings (`po.reorder_date === item.next_reorder_date`) and therefore may not itself shift by timezone if both values are normalized as `YYYY-MM-DD`, but all date-derived display/helpers and any generated current-date defaults need a fixed-EST audit before claiming this issue is already resolved.
+
+Status: planned; do not skip yet. Verification must prove fixed-EST behavior at date boundaries and during daylight-saving months.
+
+### ISSUE-02 — Edit Request Items modal layers under other modals
+
+Original report:
+> When editing current restock requests, the edit request items modal opens with the wrong z index. It should be on top of all the other modals, but it ends up being at the very base/bottom in the z index.
+
+Initial code findings:
+- Restock modals generally use `fixed inset-0 z-50`.
+- The edit request flow is launched from the request details modal and therefore needs a stacked modal layer above the request details layer, not the same or lower z-index.
+- Resolution should define explicit modal z-index tiers for base modal vs nested edit modal rather than relying on render order.
+
+Status: planned.
+
+### ISSUE-03 — PO notes are missing wherever PO details are shown
+
+Original report:
+> PO's aren't displaying the PO notes anywhere where PO details are shown.
+
+Initial code findings:
+- The selected PO detail modal currently displays `selectedPurchaseOrder.notes` as a PO Notes callout.
+- The print/PDF document flows and PO list/group detail surfaces must be audited because the issue says "anywhere where PO details are shown," not only the selected PO modal.
+- Resolution should make PO notes visible in every PO detail surface, including selected PO modal, supplier PO list cards/details, print output, and PDF output.
+
+Status: partially present; planned audit and completion.
+
+### ISSUE-04 — Edit Request Items button width should fit text
+
+Original report:
+> The 'edit request items' button is too wide, the width needs to fit to text and not span to section nor flex.
+
+Initial code findings:
+- The selected request detail modal renders the button with `w-full`, causing it to span the full section width.
+- Resolution is likely a small UI class change to inline-flex / fit-content sizing.
+
+Status: planned.
+
+### ISSUE-05 — PO PDF download must support multi-page PDFs
+
+Original report:
+> The PO pdf download feature only generates a single page PDF. It needs to support multi page pdf generation for POs that are longer than one page. Currently it adds a note at end of the single page to indicate use the print feature instead; that isn't the behaviour we want.
+
+Initial code findings:
+- `handleDownloadPurchaseOrderPdf` caps output at 44 visible lines and appends a "Use Print" truncation note.
+- The PDF object tree currently creates exactly one page (`/Count 1` with a single page object).
+- Resolution must remove truncation and generate as many PDF pages as needed for all PO lines and notes.
+
+Status: planned.
+
+---
+
+# Phased Implementation Plan
+
+## Phase 1 — Fixed-EST Date Audit and Date Helper Remediation
+
+Phase status: completed 2026-06-20.
+
+### Scope
+- ISSUE-01 only.
+
+### Implementation tasks
+1. Add or reuse a central fixed-EST date helper for restock date-only handling. Fixed EST means UTC-05:00 all year, not `America/New_York` when EDT applies.
+2. Audit restock tab counts and date defaults that depend on the current date or date-only parsing.
+3. Replace timezone-sensitive `new Date('YYYY-MM-DDT00:00:00')` display/default logic in restock count/display paths with fixed-EST-safe helpers.
+4. Verify whether the tab count comparison itself is already safe string comparison. If safe, document that part as already implemented and limit code changes to unsafe helpers/defaults.
+
+### Single-pass exit criteria
+- All restock date-only display and current-date defaults touched by tab/count workflows are deterministic in fixed EST.
+- If a specific count did not need code changes, this file states exactly why.
+
+### Truthful verification after completion
+- Programmatic unit/helper check around summer and winter dates:
+  - `2026-07-01T04:30:00Z` should resolve to fixed EST date `2026-06-30`, not EDT date `2026-07-01`.
+  - `2026-01-01T04:30:00Z` should resolve to fixed EST date `2025-12-31`.
+- Structural check for no remaining timezone-sensitive restock date formatting in relevant code paths.
+- Manual UI smoke: open Restock Management and confirm date labels/counts match fixed EST expectations for seeded/simulated date data.
+
+### Completion log
+- Completed in `lib/restock-number.ts` and `components/admin/restock/restock-workflow-tabs.tsx`.
+- Replaced daylight-saving-sensitive Eastern numbering logic with a fixed UTC-05:00 EST offset for generated restock/PO workflow identifiers.
+- Added fixed-EST helpers for date defaults and request timestamp display in restock workflows.
+- Confirmed the Upcoming Scheduled Re-orders tab count compares normalized `YYYY-MM-DD` strings for `po.reorder_date === item.next_reorder_date`; that specific count comparison was already date-string-safe, while adjacent date display/default code needed remediation.
+- Verification performed: `node - <<'NODE' ... NODE` confirmed `2026-07-01T04:30:00Z -> 2026-06-30` and `2026-01-01T04:30:00Z -> 2025-12-31`; `rg -n "getFixedEstDateString|formatFixedEstDate|America/New_York" components/admin/restock/restock-workflow-tabs.tsx lib/restock-number.ts` confirmed fixed-EST helper usage and removal of `America/New_York` from the restock number helper.
+
+---
+
+## Phase 2 — Modal Stacking and Edit Button Width Fix
+
+Phase status: completed 2026-06-20.
+
+### Scope
+- ISSUE-02.
+- ISSUE-04.
+
+### Implementation tasks
+1. Define z-index tiers for restock modal overlays, for example:
+   - base details modals: existing `z-50`,
+   - nested edit modals: higher explicit tier such as `z-[70]` or `z-[80]`.
+2. Apply the higher tier to the Edit Request Items modal overlay and ensure its backdrop/content appears above the selected request modal.
+3. Change the Edit Request Items button from full-width block styling to content-fit styling (`inline-flex`, no `w-full`, text-sized alignment).
+4. Confirm the change does not affect mobile tap target usability.
+
+### Single-pass exit criteria
+- Clicking Edit Request Items from a selected request visibly opens the edit modal above the request detail modal.
+- The button width fits its text/icon rather than spanning the section.
+
+### Truthful verification after completion
+- Structural check for the edit modal overlay z-index and button class.
+- Manual UI smoke:
+  1. Open `/admin/restock`.
+  2. Open a current request detail modal.
+  3. Click **Edit Request Items**.
+  4. Confirm the edit modal is on top and interactive.
+  5. Confirm the button is only as wide as its content before opening.
+
+### Completion log
+- Completed in `components/admin/restock/restock-workflow-tabs.tsx`.
+- Raised the nested Edit Request Items modal to `z-[80]` with a slightly stronger backdrop so it stacks above base `z-50` restock detail modals.
+- Changed the Edit Request Items CTA from full-width (`w-full`) to text-sized `inline-flex` button styling.
+- Verification performed: `rg -n "z-\[80\]|inline-flex items-center gap-2 rounded-lg bg-green-600" components/admin/restock/restock-workflow-tabs.tsx` confirmed both structural changes. Manual browser smoke is still recommended with authenticated restock data to confirm actual stacking interaction.
+
+---
+
+## Phase 3 — PO Notes Everywhere PO Details Are Shown
+
+Phase status: completed 2026-06-20.
+
+### Scope
+- ISSUE-03.
+
+### Implementation tasks
+1. Inventory every PO details surface in restock workflow code:
+   - selected PO modal,
+   - supplier PO group/list rows,
+   - print output,
+   - PDF output,
+   - edit/place/receive PO surfaces when they show PO details.
+2. Ensure PO notes render consistently when present and are omitted cleanly when blank.
+3. Include PO notes in generated print HTML.
+4. Include PO notes in generated PDF content, including multi-page continuation from Phase 4 if implemented in the same pass or after Phase 4 if sequencing demands.
+
+### Single-pass exit criteria
+- Any user-facing PO detail view/output includes PO notes if the PO has notes.
+- No blank "PO Notes" label appears for POs without notes.
+
+### Truthful verification after completion
+- Structural check for `purchaseOrder.notes` / `selectedPurchaseOrder.notes` usage in all PO details/output paths.
+- Manual UI smoke with one PO that has notes:
+  1. View the PO in the PO tab/list/detail modal.
+  2. Open print preview.
+  3. Download PDF.
+  4. Confirm notes are visible in all three places.
+
+### Completion log
+- Completed in `components/admin/restock/restock-workflow-tabs.tsx`.
+- Kept existing selected PO modal notes display and added PO notes to supplier PO list cards.
+- Added PO notes to print HTML and PDF content generation so exported PO detail outputs include the same notes.
+- Added notes to PO search matching to make noted POs discoverable from the PO tab search.
+- Verification performed: `rg -n "PO Notes:|purchaseOrder.notes|po.notes|selectedPurchaseOrder.notes" components/admin/restock/restock-workflow-tabs.tsx` confirmed notes appear in UI, print, PDF, and search paths. Manual browser smoke is still recommended with a PO that has notes.
+
+---
+
+## Phase 4 — Multi-page PO PDF Generation
+
+Phase status: completed 2026-06-20.
+
+### Scope
+- ISSUE-05.
+
+### Implementation tasks
+1. Replace the current single-page/capped PDF generator with a multi-page generator.
+2. Remove the truncation line that tells users to use print for the full layout.
+3. Paginate PO content across pages based on line height and page margins.
+4. Generate a valid PDF page tree with one page object per page and all page content streams referenced correctly.
+5. Include PO notes, supplier/status/date metadata, all line items, totals, and page numbers.
+6. Keep the print handler separate from the PDF handler.
+
+### Single-pass exit criteria
+- A PO with more lines than one page downloads as a valid multi-page PDF.
+- No PO item lines are omitted.
+- No "Use Print" truncation message remains.
+
+### Truthful verification after completion
+- Programmatic structural checks:
+  - no `maxVisibleLines` cap remains in the PDF handler,
+  - PDF `/Count` reflects generated page count,
+  - handler constructs multiple page objects when content exceeds one page.
+- Manual UI smoke:
+  1. Use or seed a PO with enough items to exceed one page.
+  2. Click **Download as PDF**.
+  3. Open the PDF and confirm multiple pages, all items, notes, total, and page numbers are present.
+
+### Completion log
+- Completed in `components/admin/restock/restock-workflow-tabs.tsx`.
+- Removed the single-page `maxVisibleLines`/`Use Print` truncation path.
+- Added line wrapping, per-page slicing, dynamic `/Pages /Kids` generation, dynamic `/Count ${pages.length}`, individual page/content objects, and page numbers.
+- Included PO notes and every PO line in the downloadable PDF content source before pagination.
+- Verification performed: `! rg -n "maxVisibleLines|Use Print for full layout|/Count 1" components/admin/restock/restock-workflow-tabs.tsx` confirmed the old cap/truncation/single-page count are gone; `rg -n "wrapPdfLine|/Count \${pages.length\}|Page \${pageIndex \+ 1} of \${pages.length}" components/admin/restock/restock-workflow-tabs.tsx` confirmed the new pagination structure. Manual PDF-open smoke is still recommended with a long PO.
+
+---
+
+## Phase 5 — Focused Regression and Final Closure Log
+
+Phase status: completed 2026-06-20.
+
+### Scope
+- All issues.
+
+### Implementation tasks
+1. Run targeted structural checks for touched restock code.
+2. Run `npm run lint`.
+3. Run `npm run build` unless environment limitations prevent it.
+4. Perform manual smoke QA for:
+   - fixed-EST date display/count behavior,
+   - nested edit modal stacking,
+   - text-fit edit button,
+   - PO notes in every PO detail/output surface,
+   - multi-page PDF download.
+5. Rewrite each issue's completion log in this file with exact changed files, verification commands, manual verification notes, and residual risks.
+
+### Single-pass exit criteria
+- Every issue is marked resolved or explicitly blocked with a truthful reason.
+- This file becomes the authoritative issue resolution/verification record.
+
+### Truthful verification after completion
+- Final commands and manual QA steps are listed under each issue completion log.
+- Any skipped item has evidence explaining why it was already implemented or not applicable.
+
+### Completion log
+- Completed final programmatic checks.
+- Verification performed: `npx tsc --noEmit --pretty false`, `npm run lint`, and `npm run build` all completed successfully.
+- Residual manual QA recommended before release: authenticated browser checks for nested modal stacking, PO notes visibility in all live PO surfaces, and opening a downloaded multi-page PO PDF with a long PO fixture.

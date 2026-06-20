@@ -34,6 +34,7 @@ type PurchaseOrderStatusFilter = PurchaseOrder['status'] | 'on_hold';
 
 const PAGE_SIZE = 5;
 const ITEM_SELECTOR_PAGE_SIZE = 15;
+const FIXED_EST_OFFSET_MS = 5 * 60 * 60 * 1000;
 
 type ManualPoItem = {
   supplier_product_id: string;
@@ -70,7 +71,27 @@ function formatCurrency(value: number | null | undefined) {
 
 function formatDate(value?: string | null) {
   if (!value) return 'Not scheduled';
-  return new Date(`${value}T00:00:00`).toLocaleDateString();
+  const [year, month, day] = value.split('-').map(Number);
+  if (!year || !month || !day) return 'Not scheduled';
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en-US', { timeZone: 'UTC' });
+}
+
+function getFixedEstDateString(date: Date = new Date()) {
+  return new Date(date.getTime() - FIXED_EST_OFFSET_MS).toISOString().split('T')[0];
+}
+
+function formatFixedEstDateTime(value?: string | null) {
+  if (!value) return 'Not available';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+  return new Date(date.getTime() - FIXED_EST_OFFSET_MS).toLocaleString('en-US', { timeZone: 'UTC' });
+}
+
+function formatFixedEstDate(value?: string | null) {
+  if (!value) return 'Not available';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+  return new Date(date.getTime() - FIXED_EST_OFFSET_MS).toLocaleDateString('en-US', { timeZone: 'UTC' });
 }
 
 function escapePdfText(value: string) {
@@ -84,6 +105,30 @@ function escapeHtml(value: string) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function wrapPdfLine(line: string, maxChars: number) {
+  if (line.length <= maxChars) return [line];
+  const words = line.split(' ');
+  const wrapped: string[] = [];
+  let current = '';
+
+  for (const word of words) {
+    if (!current) {
+      current = word;
+      continue;
+    }
+
+    if (`${current} ${word}`.length <= maxChars) {
+      current = `${current} ${word}`;
+    } else {
+      wrapped.push(current);
+      current = word;
+    }
+  }
+
+  if (current) wrapped.push(current);
+  return wrapped.flatMap((wrappedLine) => wrappedLine.length <= maxChars ? [wrappedLine] : wrappedLine.match(new RegExp(`.{1,${maxChars}}`, 'g')) || []);
 }
 
 function getRestockStatusClasses(status: RestockRequest['status']) {
@@ -282,7 +327,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const openPurchaseOrderModal = (supplierId?: string, reorderDate?: string | null, lockFields = false) => {
     setPoForm({
       supplier_id: supplierId || '',
-      reorder_date: reorderDate || new Date().toISOString().split('T')[0],
+      reorder_date: reorderDate || getFixedEstDateString(),
       is_custom_reorder_date: !reorderDate,
       source: lockFields ? 'scheduled' : 'manual',
       notes: '',
@@ -643,6 +688,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
         <h1 style="margin:0 0 8px 0;">Purchase Order ${escapeHtml(purchaseOrder.po_number)}</h1>
         <p style="margin:0 0 4px 0;">Supplier: ${escapeHtml(purchaseOrder.supplier?.name || 'Unknown supplier')}</p>
         <p style="margin:0 0 4px 0;">Status: ${purchaseOrder.status.replace(/_/g, ' ')}</p>
+        ${purchaseOrder.notes ? `<p style="margin:0 0 16px 0;padding:10px;border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a8a;"><strong>PO Notes:</strong> ${escapeHtml(purchaseOrder.notes)}</p>` : ''}
         <p style="margin:0 0 16px 0;">Total: ${formatCurrency(purchaseOrder.total_amount)}</p>
         <table style="width:100%;border-collapse:collapse;">
           <thead><tr><th style="padding:8px;border:1px solid #ddd;text-align:left;">Item</th><th style="padding:8px;border:1px solid #ddd;">Qty</th><th style="padding:8px;border:1px solid #ddd;">Unit</th><th style="padding:8px;border:1px solid #ddd;">Received</th><th style="padding:8px;border:1px solid #ddd;">Line Total</th></tr></thead>
@@ -708,33 +754,40 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
   const handleDownloadPurchaseOrderPdf = (purchaseOrder: PurchaseOrder) => {
     const lines = [
-      `Purchase Order ${escapeHtml(purchaseOrder.po_number)}`,
-      `Supplier: ${escapeHtml(purchaseOrder.supplier?.name || 'Unknown supplier')}`,
+      `Purchase Order ${purchaseOrder.po_number}`,
+      `Supplier: ${purchaseOrder.supplier?.name || 'Unknown supplier'}`,
       `Status: ${purchaseOrder.status.replace(/_/g, ' ')}`,
       `Reorder date: ${formatDate(purchaseOrder.reorder_date)}`,
       `Expected delivery: ${formatDate(purchaseOrder.expected_delivery_date)}`,
+      ...(purchaseOrder.notes ? ['', `PO Notes: ${purchaseOrder.notes}`] : []),
       '',
       'Items:',
-      ...(purchaseOrder.items || []).map((item, idx) => `${idx + 1}. ${escapeHtml(item.product_name)} | Qty ${item.quantity_ordered} | Unit ${formatCurrency(item.unit_price)} | Total ${formatCurrency(item.total_price)}`),
+      ...(purchaseOrder.items || []).map((item, idx) => `${idx + 1}. ${item.product_name} | Qty ${item.quantity_ordered} | Unit ${formatCurrency(item.unit_price)} | Total ${formatCurrency(item.total_price)}`),
       '',
       `PO Total: ${formatCurrency(purchaseOrder.total_amount)}`,
-    ];
+    ].flatMap((line) => wrapPdfLine(line, 92));
 
-    const maxVisibleLines = 44;
-    const cappedLines = lines.length > maxVisibleLines
-      ? [...lines.slice(0, maxVisibleLines - 1), `... ${lines.length - (maxVisibleLines - 1)} more line(s). Use Print for full layout.`]
-      : lines;
-
-    const contentLines = cappedLines
-      .map((line, index) => `BT /F1 11 Tf 50 ${770 - (index * 16)} Td (${escapePdfText(line)}) Tj ET`)
-      .join('\n');
-    const stream = `${contentLines}\n`;
+    const linesPerPage = 44;
+    const pages = Array.from({ length: Math.max(1, Math.ceil(lines.length / linesPerPage)) }, (_, index) => lines.slice(index * linesPerPage, (index + 1) * linesPerPage));
+    const pageObjectStart = 3;
+    const fontObjectNumber = pageObjectStart + (pages.length * 2);
+    const pageObjects = pages.map((_, index) => pageObjectStart + (index * 2));
+    const contentObjects = pages.map((_, index) => pageObjectStart + (index * 2) + 1);
     const objects = [
       '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
-      '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
-      '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj',
-      '4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj',
-      `5 0 obj << /Length ${stream.length} >> stream\n${stream}endstream endobj`,
+      `2 0 obj << /Type /Pages /Kids [${pageObjects.map((objectNumber) => `${objectNumber} 0 R`).join(' ')}] /Count ${pages.length} >> endobj`,
+      ...pages.flatMap((pageLines, pageIndex) => {
+        const contentLines = [
+          ...pageLines.map((line, lineIndex) => `BT /F1 11 Tf 50 ${770 - (lineIndex * 16)} Td (${escapePdfText(line)}) Tj ET`),
+          `BT /F1 9 Tf 500 24 Td (Page ${pageIndex + 1} of ${pages.length}) Tj ET`,
+        ].join('\n');
+        const stream = `${contentLines}\n`;
+        return [
+          `${pageObjects[pageIndex]} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ${fontObjectNumber} 0 R >> >> /Contents ${contentObjects[pageIndex]} 0 R >> endobj`,
+          `${contentObjects[pageIndex]} 0 obj << /Length ${stream.length} >> stream\n${stream}endstream endobj`,
+        ];
+      }),
+      `${fontObjectNumber} 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj`,
     ];
 
     let pdf = '%PDF-1.4\n';
@@ -867,7 +920,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
     .filter((po) => po.status === activePurchaseOrderStatus)
     .filter((po) => {
       if (!normalizedTabSearch) return false;
-      return [po.po_number, po.supplier?.name, po.status, po.source]
+      return [po.po_number, po.supplier?.name, po.status, po.source, po.notes]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(normalizedTabSearch));
     }).slice(0, 8), [activePurchaseOrderStatus, normalizedTabSearch, purchaseOrders]);
@@ -1425,7 +1478,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
 
 
       {editingRestockRequest && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
+        <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/30 p-4 py-6 backdrop-blur-sm sm:items-center">
           <form onSubmit={handleEditRestockRequest} className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -1609,7 +1662,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               <div><span className="text-gray-500">Submitted by</span><p className="font-medium text-gray-900">{selectedRequest.pharmacist?.full_name || selectedRequest.pharmacist?.email || 'Unknown user'}</p></div>
               <div><span className="text-gray-500">Status</span><p className="font-medium text-gray-900">{selectedRequest.status.replace(/_/g, ' ')}</p>{requestLinkedToPlacedPo(selectedRequest) && <p className="mt-1 text-xs font-semibold text-purple-700">Order placed</p>}</div>
               <div><span className="text-gray-500">Total</span><p className="font-medium text-gray-900">{formatCurrency(selectedRequest.total_amount)}</p></div>
-              <div><span className="text-gray-500">Requested</span><p className="font-medium text-gray-900">{new Date(selectedRequest.created_at).toLocaleString()}</p></div>
+              <div><span className="text-gray-500">Requested</span><p className="font-medium text-gray-900">{formatFixedEstDateTime(selectedRequest.created_at)}</p></div>
               {selectedRequest.actual_delivery_date && <div><span className="text-gray-500">Received</span><p className="font-medium text-gray-900">{formatDate(selectedRequest.actual_delivery_date)}</p></div>}
             </div>
             <div className="mt-4 divide-y rounded-lg border border-gray-200">
@@ -1628,8 +1681,8 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               ))}
             </div>
             {canEditRestockRequest(selectedRequest) && (
-              <button type="button" onClick={() => openEditRestockRequestModal(selectedRequest)} disabled={actionLoading} className="mt-4 w-full rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:bg-gray-300">
-                <Edit2 className="mr-2 inline h-4 w-4" /> Edit Request Items
+              <button type="button" onClick={() => openEditRestockRequestModal(selectedRequest)} disabled={actionLoading} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:bg-gray-300">
+                <Edit2 className="h-4 w-4" /> Edit Request Items
               </button>
             )}
             {selectedRequest.status === 'requested' && (
@@ -1666,7 +1719,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                 <button key={request.id} type="button" onClick={() => setSelectedRequest(request)} className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50">
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 flex-wrap items-center gap-2"><span className="break-words font-semibold text-gray-900">{request.request_number}</span><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getRestockStatusClasses(request.status)}`}>{request.status.replace(/_/g, ' ')}</span>{requestLinkedToPlacedPo(request) && <span className="rounded-full border border-purple-200 bg-purple-50 px-2 py-1 text-xs font-semibold text-purple-700">Order placed</span>}</div>
-                    <p className="mt-1 break-words text-sm text-gray-600">{(request.items || []).length} item(s) · {formatCurrency(request.total_amount)} · Submitted by {request.pharmacist?.full_name || request.pharmacist?.email || 'Unknown user'} · Requested {new Date(request.created_at).toLocaleDateString()}</p>
+                    <p className="mt-1 break-words text-sm text-gray-600">{(request.items || []).length} item(s) · {formatCurrency(request.total_amount)} · Submitted by {request.pharmacist?.full_name || request.pharmacist?.email || 'Unknown user'} · Requested {formatFixedEstDate(request.created_at)}</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-gray-400" />
                 </button>
@@ -1698,6 +1751,11 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 flex-wrap items-center gap-2"><h3 className="break-words font-semibold text-gray-900">{po.po_number}</h3><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getPurchaseOrderStatusClasses(po.status)}`}>{po.status}</span></div>
                       <p className="mt-1 break-words text-sm text-gray-600">{po.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Re-order date {formatDate(po.reorder_date)} · Expected delivery {formatDate(po.expected_delivery_date)} · {(po.items || []).length} line item(s) · {formatCurrency(po.total_amount)}</p>
+                      {po.notes && (
+                        <p className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                          <span className="font-semibold">PO Notes:</span> {po.notes}
+                        </p>
+                      )}
                     </div>
                     {(po.status === 'open' || po.status === 'placed') && (
                       <div className="flex flex-wrap gap-2">
