@@ -4,24 +4,13 @@
  * Example: RR-TUEJAN12-103055-042
  */
 export function generateRestockWorkflowNumber(prefix: 'RR' | 'PO', date: Date = new Date()): string {
-  const easternParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York',
-    weekday: 'short',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).formatToParts(date);
-  const part = (type: Intl.DateTimeFormatPartTypes) => easternParts.find((item) => item.type === type)?.value || '';
-
-  const dayOfWeek = part('weekday').toUpperCase();
-  const month = part('month').toUpperCase();
-  const dayOfMonth = part('day').padStart(2, '0');
-  const hours = part('hour').padStart(2, '0');
-  const minutes = part('minute').padStart(2, '0');
-  const seconds = part('second').padStart(2, '0');
+  const fixedEstDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+  const dayOfWeek = fixedEstDate.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }).toUpperCase();
+  const month = fixedEstDate.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
+  const dayOfMonth = String(fixedEstDate.getUTCDate()).padStart(2, '0');
+  const hours = String(fixedEstDate.getUTCHours()).padStart(2, '0');
+  const minutes = String(fixedEstDate.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(fixedEstDate.getUTCSeconds()).padStart(2, '0');
   const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
 
   return `${prefix}-${dayOfWeek}${month}${dayOfMonth}-${hours}${minutes}${seconds}-${milliseconds}`;
