@@ -61,6 +61,8 @@ type ReceiveFormItem = {
   itemId: string;
   productName: string;
   quantityOrdered: number;
+  previouslyReceived: number;
+  remainingQuantity: number;
   quantityReceived: number;
   received: boolean;
 };
@@ -163,6 +165,16 @@ function getPurchaseOrderStatusClasses(status: PurchaseOrder['status']) {
   }
 }
 
+function getPurchaseOrderReceivingSummary(purchaseOrder: PurchaseOrder) {
+  const items = purchaseOrder.items || [];
+  const totalOrdered = items.reduce((sum, item) => sum + Number(item.quantity_ordered || 0), 0);
+  const totalReceived = items.reduce((sum, item) => sum + Number(item.quantity_received || 0), 0);
+  const totalRemaining = Math.max(0, totalOrdered - totalReceived);
+  const isPartiallyReceived = purchaseOrder.status === 'placed' && totalReceived > 0 && totalRemaining > 0;
+
+  return { totalOrdered, totalReceived, totalRemaining, isPartiallyReceived };
+}
+
 export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('requests');
   const [requests, setRequests] = useState<RestockRequest[]>([]);
@@ -183,6 +195,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
   const [editItems, setEditItems] = useState<EditFormItem[]>([]);
   const [editNotes, setEditNotes] = useState('');
   const [receiveItems, setReceiveItems] = useState<ReceiveFormItem[]>([]);
+  const [showPartialReceivePrompt, setShowPartialReceivePrompt] = useState(false);
   const [focusedPurchaseOrderId, setFocusedPurchaseOrderId] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<RestockRequest | null>(null);
   const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null);
@@ -645,31 +658,53 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
       itemId: item.id,
       productName: item.product_name,
       quantityOrdered: item.quantity_ordered,
-      quantityReceived: item.quantity_ordered,
-      received: true,
+      previouslyReceived: Number(item.quantity_received || 0),
+      remainingQuantity: Math.max(0, Number(item.quantity_ordered || 0) - Number(item.quantity_received || 0)),
+      quantityReceived: Math.max(0, Number(item.quantity_ordered || 0) - Number(item.quantity_received || 0)),
+      received: Number(item.quantity_received || 0) < Number(item.quantity_ordered || 0),
     })));
+  };
+
+  const submitReceivePurchaseOrder = async (mode: 'partial' | 'complete') => {
+    if (!receivingPurchaseOrder) return;
+
+    setActionLoading(true);
+    const itemUpdates = receiveItems.map((item) => ({
+      itemId: item.itemId,
+      quantity_received: mode === 'complete'
+        ? item.quantityOrdered
+        : Math.min(item.quantityOrdered, item.previouslyReceived + (item.received ? Math.min(item.remainingQuantity, Math.max(0, Number.isFinite(item.quantityReceived) ? item.quantityReceived : 0)) : 0)),
+    }));
+    const { error: receiveError } = await updatePurchaseOrderStatus(receivingPurchaseOrder.id, 'received', itemUpdates, { receivingMode: mode });
+    if (receiveError) {
+      setError(receiveError);
+      toast.error(receiveError);
+    } else {
+      toast.success(mode === 'partial' ? 'Partial receipt saved. Purchase order remains placed.' : 'Purchase order receiving completed and linked restock requests updated.');
+      setShowPartialReceivePrompt(false);
+      setPendingConfirmation(null);
+      setReceivingPurchaseOrder(null);
+      setReceiveItems([]);
+      await loadData();
+    }
+    setActionLoading(false);
   };
 
   const handleReceivePurchaseOrder = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!receivingPurchaseOrder) return;
 
-    setActionLoading(true);
-    const itemUpdates = receiveItems.map((item) => ({
-      itemId: item.itemId,
-      quantity_received: item.received ? Math.min(item.quantityOrdered, Math.max(0, Number.isFinite(item.quantityReceived) ? item.quantityReceived : 0)) : 0,
-    }));
-    const { error: receiveError } = await updatePurchaseOrderStatus(receivingPurchaseOrder.id, 'received', itemUpdates);
-    if (receiveError) {
-      setError(receiveError);
-      toast.error(receiveError);
-    } else {
-      toast.success('Purchase order receiving saved and linked restock requests updated.');
-      setReceivingPurchaseOrder(null);
-      setReceiveItems([]);
-      await loadData();
+    const hasRemainingAfterThisReceipt = receiveItems.some((item) => {
+      const passQuantity = item.received ? Math.min(item.remainingQuantity, Math.max(0, Number.isFinite(item.quantityReceived) ? item.quantityReceived : 0)) : 0;
+      return item.previouslyReceived + passQuantity < item.quantityOrdered;
+    });
+
+    if (hasRemainingAfterThisReceipt) {
+      setShowPartialReceivePrompt(true);
+      return;
     }
-    setActionLoading(false);
+
+    await submitReceivePurchaseOrder('complete');
   };
 
   const getPurchaseOrderDetailHtml = (purchaseOrder: PurchaseOrder) => {
@@ -1581,7 +1616,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Receive {receivingPurchaseOrder.po_number}</h2>
-                <p className="text-sm text-gray-600">Mark each line item as received or not received before completing the purchase order.</p>
+                <p className="text-sm text-gray-600">Enter quantities received in this pass. If quantities remain outstanding, you can save a partial receipt and keep the PO placed.</p>
               </div>
               <button type="button" onClick={() => setReceivingPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
             </div>
@@ -1591,16 +1626,17 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="font-medium text-gray-900">{item.productName}</p>
-                      <p className="text-sm text-gray-600">Ordered: {item.quantityOrdered}</p>
+                      <p className="text-sm text-gray-600">Ordered: {item.quantityOrdered} · Previously received: {item.previouslyReceived} · Remaining: {item.remainingQuantity}</p>
                     </div>
                     <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                       <input
                         type="checkbox"
                         checked={item.received}
+                        disabled={item.remainingQuantity === 0}
                         onChange={(event) => setReceiveItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? {
                           ...currentItem,
                           received: event.target.checked,
-                          quantityReceived: event.target.checked ? currentItem.quantityReceived || currentItem.quantityOrdered : 0,
+                          quantityReceived: event.target.checked ? currentItem.quantityReceived || currentItem.remainingQuantity : 0,
                         } : currentItem))}
                         className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-600"
                       />
@@ -1614,13 +1650,13 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                       inputMode="decimal"
                       pattern="[0-9]*[.]?[0-9]*"
                       value={Number.isNaN(item.quantityReceived) ? '' : item.quantityReceived}
-                      disabled={!item.received}
+                      disabled={!item.received || item.remainingQuantity === 0}
                       onChange={(event) => setReceiveItems((current) => current.map((currentItem, itemIndex) => {
                         if (itemIndex !== index) return currentItem;
 
                         const quantityReceived = event.target.value === ''
                           ? Number.NaN
-                          : Math.min(currentItem.quantityOrdered, Math.max(0, Number(event.target.value)));
+                          : Math.min(currentItem.remainingQuantity, Math.max(0, Number(event.target.value)));
 
                         return {
                           ...currentItem,
@@ -1745,12 +1781,14 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
               <button type="button" onClick={() => setSelectedPurchaseOrderSupplier(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
             </div>
             <div className="divide-y rounded-lg border border-gray-200">
-              {selectedPurchaseOrderSupplierPurchaseOrders.map((po) => (
+              {selectedPurchaseOrderSupplierPurchaseOrders.map((po) => {
+                const receivingSummary = getPurchaseOrderReceivingSummary(po);
+                return (
                 <div key={po.id} onClick={() => setSelectedPurchaseOrder(po)} className={`cursor-pointer p-4 hover:bg-gray-50 ${focusedPurchaseOrderId === po.id ? 'bg-blue-50/40' : ''}`}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 flex-wrap items-center gap-2"><h3 className="break-words font-semibold text-gray-900">{po.po_number}</h3><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getPurchaseOrderStatusClasses(po.status)}`}>{po.status}</span></div>
-                      <p className="mt-1 break-words text-sm text-gray-600">{po.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Re-order date {formatDate(po.reorder_date)} · Expected delivery {formatDate(po.expected_delivery_date)} · {(po.items || []).length} line item(s) · {formatCurrency(po.total_amount)}</p>
+                      <div className="flex min-w-0 flex-wrap items-center gap-2"><h3 className="break-words font-semibold text-gray-900">{po.po_number}</h3><span className={`rounded-full border px-2 py-1 text-xs font-medium ${getPurchaseOrderStatusClasses(po.status)}`}>{po.status}</span>{receivingSummary.isPartiallyReceived && <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">Partially received</span>}</div>
+                      <p className="mt-1 break-words text-sm text-gray-600">{po.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Re-order date {formatDate(po.reorder_date)} · Expected delivery {formatDate(po.expected_delivery_date)} · {(po.items || []).length} line item(s) · {formatCurrency(po.total_amount)} · Received {receivingSummary.totalReceived}/{receivingSummary.totalOrdered} · Remaining {receivingSummary.totalRemaining}</p>
                       {po.notes && (
                         <p className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
                           <span className="font-semibold">PO Notes:</span> {po.notes}
@@ -1766,7 +1804,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                     )}
                   </div>
                 </div>
-              ))}
+              );})}
             </div>
             <div className="mt-4 flex items-center justify-between">
               <button type="button" onClick={() => setPurchaseOrderSupplierPage((page) => Math.max(1, page - 1))} disabled={purchaseOrderSupplierPage === 1} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
@@ -1815,6 +1853,31 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
         </div>
       )}
 
+      {showPartialReceivePrompt && receivingPurchaseOrder && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="text-xl font-semibold text-gray-900">Save partial purchase order receipt?</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Some ordered quantities are still outstanding for {receivingPurchaseOrder.po_number}. Save a partial receipt to keep this PO placed with received quantities recorded, or complete receiving to mark all remaining quantities as received now.
+            </p>
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              Partial receipts stay in the Placed tab and show remaining quantities until the PO is fully received.
+            </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <button type="button" onClick={() => void submitReceivePurchaseOrder('partial')} disabled={actionLoading} className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:bg-gray-300">
+                {actionLoading ? 'Saving...' : 'Yes, save partial'}
+              </button>
+              <button type="button" onClick={() => void submitReceivePurchaseOrder('complete')} disabled={actionLoading} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-gray-300">
+                {actionLoading ? 'Saving...' : 'No, complete receiving'}
+              </button>
+              <button type="button" onClick={() => setShowPartialReceivePrompt(false)} disabled={actionLoading} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:bg-gray-100">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ConfirmationModal
         isOpen={!!pendingConfirmation}
         title={pendingConfirmation?.title || ''}
@@ -1829,10 +1892,13 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 p-4 py-6 backdrop-blur-sm sm:items-center">
           <div className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">{selectedPurchaseOrder.po_number}</h2>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">{selectedPurchaseOrder.po_number}</h2>
+                {getPurchaseOrderReceivingSummary(selectedPurchaseOrder).isPartiallyReceived && <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">Partially received</span>}
+              </div>
               <button type="button" onClick={() => setSelectedPurchaseOrder(null)} className="rounded p-1 hover:bg-gray-100"><XCircle className="h-5 w-5" /></button>
             </div>
-            <p className="text-sm text-gray-600">{selectedPurchaseOrder.supplier?.name} · {selectedPurchaseOrder.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Status: {selectedPurchaseOrder.status} · Total {formatCurrency(selectedPurchaseOrder.total_amount)}</p>
+            <p className="text-sm text-gray-600">{selectedPurchaseOrder.supplier?.name} · {selectedPurchaseOrder.source === 'manual' ? 'Manual PO' : 'Scheduled PO'} · Status: {selectedPurchaseOrder.status} · Total {formatCurrency(selectedPurchaseOrder.total_amount)} · Received {getPurchaseOrderReceivingSummary(selectedPurchaseOrder).totalReceived}/{getPurchaseOrderReceivingSummary(selectedPurchaseOrder).totalOrdered} · Remaining {getPurchaseOrderReceivingSummary(selectedPurchaseOrder).totalRemaining}</p>
             {selectedPurchaseOrder.notes && (
               <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
                 <span className="font-semibold">PO Notes:</span> {selectedPurchaseOrder.notes}
@@ -1855,6 +1921,7 @@ export function RestockWorkflowTabs({ userId }: RestockWorkflowTabsProps) {
                   <span className="break-words">Ordered: {item.quantity_ordered}</span>
                   <span className="break-words">Unit: {formatCurrency(item.unit_price)}</span>
                   <span className="break-words">Received: {item.quantity_received}</span>
+                  <span className="break-words">Remaining: {Math.max(0, Number(item.quantity_ordered || 0) - Number(item.quantity_received || 0))}</span>
                   <span className="break-words">{formatCurrency(item.total_price)}</span>
                   {(selectedPurchaseOrder.status === 'open' || selectedPurchaseOrder.status === 'placed') && item.restock_item_id && (
                     <button

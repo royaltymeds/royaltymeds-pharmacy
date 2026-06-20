@@ -1766,77 +1766,121 @@ export async function updatePurchaseOrder(
   }
 }
 
+type PurchaseOrderReceivingMode = 'partial' | 'complete';
+
 export async function updatePurchaseOrderStatus(
   purchaseOrderId: string,
   status: 'open' | 'placed' | 'received' | 'cancelled',
-  itemUpdates?: { itemId: string; quantity_received: number }[]
+  itemUpdates?: { itemId: string; quantity_received: number }[],
+  options?: { receivingMode?: PurchaseOrderReceivingMode }
 ): Promise<{ data: import('@/lib/types/restock').PurchaseOrder | null; error: string | null }> {
   try {
     const supabase = getServiceRoleClient();
+    const now = new Date().toISOString();
+    const receivingMode = options?.receivingMode || (status === 'received' ? 'complete' : undefined);
 
+    const { data: currentPoItems, error: currentItemsError } = await supabase
+      .from('purchase_order_items')
+      .select('*')
+      .eq('purchase_order_id', purchaseOrderId);
+    if (currentItemsError) return { data: null, error: currentItemsError.message };
+
+    const currentPoItemById = new Map((currentPoItems || []).map((item) => [item.id, item]));
     for (const update of itemUpdates || []) {
-      await supabase
-        .from('purchase_order_items')
-        .update({ quantity_received: update.quantity_received, updated_at: new Date().toISOString() })
-        .eq('id', update.itemId);
+      const poItem = currentPoItemById.get(update.itemId);
+      if (!poItem) return { data: null, error: 'One or more received line items do not belong to this purchase order.' };
+
+      const quantityReceived = Number(update.quantity_received);
+      const previouslyReceived = Number(poItem.quantity_received || 0);
+      const quantityOrdered = Number(poItem.quantity_ordered || 0);
+
+      if (!Number.isFinite(quantityReceived) || quantityReceived < 0) {
+        return { data: null, error: 'Received quantities must be valid non-negative numbers.' };
+      }
+
+      if (quantityReceived < previouslyReceived) {
+        return { data: null, error: 'Received quantities cannot be reduced while receiving a purchase order.' };
+      }
+
+      if (quantityReceived > quantityOrdered) {
+        return { data: null, error: 'Received quantities cannot exceed ordered quantities.' };
+      }
     }
 
-    const updates: Record<string, any> = { status, updated_at: new Date().toISOString() };
-    if (status === 'placed') updates.placed_at = new Date().toISOString();
-    if (status === 'received') updates.received_at = new Date().toISOString();
-    if (status === 'cancelled') updates.cancelled_at = new Date().toISOString();
+    for (const update of itemUpdates || []) {
+      const { error } = await supabase
+        .from('purchase_order_items')
+        .update({ quantity_received: update.quantity_received, updated_at: now })
+        .eq('id', update.itemId);
+      if (error) return { data: null, error: error.message };
+    }
+
+    const { data: poItems, error: poItemsError } = await supabase
+      .from('purchase_order_items')
+      .select('*')
+      .eq('purchase_order_id', purchaseOrderId);
+    if (poItemsError) return { data: null, error: poItemsError.message };
+
+    const poItemIds = (poItems || []).map((item) => item.id);
+    const isFullyReceived = (poItems || []).length > 0 && (poItems || []).every((item) => Number(item.quantity_received || 0) >= Number(item.quantity_ordered || 0));
+    const nextStatus = status === 'received' && receivingMode === 'partial' && !isFullyReceived ? 'placed' : status;
+
+    const updates: Record<string, any> = { status: nextStatus, updated_at: now };
+    if (nextStatus === 'placed' && status === 'placed') updates.placed_at = now;
+    if (nextStatus === 'received') updates.received_at = now;
+    if (nextStatus === 'cancelled') updates.cancelled_at = now;
 
     const { error: updateError } = await supabase.from('purchase_orders').update(updates).eq('id', purchaseOrderId);
     if (updateError) return { data: null, error: updateError.message };
 
-    const { data: poItems } = await supabase
-      .from('purchase_order_items')
-      .select('*')
-      .eq('purchase_order_id', purchaseOrderId);
-
-    if (status === 'received') {
-      const poItemIds = (poItems || []).map((item) => item.id);
+    if ((status === 'received' || nextStatus === 'received') && poItemIds.length > 0) {
       const receivedByPoItemId = new Map((poItems || []).map((item) => [item.id, Number(item.quantity_received || 0)]));
 
-      if (poItemIds.length > 0) {
-        const { data: linkedRestockItems } = await supabase
+      const { data: linkedRestockItems, error: linkedRestockItemsError } = await supabase
+        .from('restock_items')
+        .select('id, restock_request_id, purchase_order_item_id, quantity_requested, created_at')
+        .in('purchase_order_item_id', poItemIds)
+        .order('created_at', { ascending: true });
+      if (linkedRestockItemsError) return { data: null, error: linkedRestockItemsError.message };
+
+      const remainingByPoItemId = new Map(receivedByPoItemId);
+      for (const restockItem of linkedRestockItems || []) {
+        const remaining = remainingByPoItemId.get(restockItem.purchase_order_item_id) || 0;
+        const quantityReceived = Math.min(Number(restockItem.quantity_requested || 0), remaining);
+        remainingByPoItemId.set(restockItem.purchase_order_item_id, Math.max(0, remaining - quantityReceived));
+        const { error } = await supabase
           .from('restock_items')
-          .select('id, restock_request_id, purchase_order_item_id, quantity_requested, created_at')
-          .in('purchase_order_item_id', poItemIds)
-          .order('created_at', { ascending: true });
+          .update({ quantity_received: quantityReceived, updated_at: now })
+          .eq('id', restockItem.id);
+        if (error) return { data: null, error: error.message };
+      }
 
-        const remainingByPoItemId = new Map(receivedByPoItemId);
-        for (const restockItem of linkedRestockItems || []) {
-          const remaining = remainingByPoItemId.get(restockItem.purchase_order_item_id) || 0;
-          const quantityReceived = Math.min(Number(restockItem.quantity_requested || 0), remaining);
-          remainingByPoItemId.set(restockItem.purchase_order_item_id, Math.max(0, remaining - quantityReceived));
-          await supabase
-            .from('restock_items')
-            .update({ quantity_received: quantityReceived, updated_at: new Date().toISOString() })
-            .eq('id', restockItem.id);
-        }
+      const requestIds = Array.from(new Set((linkedRestockItems || []).map((item) => item.restock_request_id).filter(Boolean)));
+      for (const requestId of requestIds) {
+        const { data: requestItems, error: requestItemsError } = await supabase
+          .from('restock_items')
+          .select('quantity_requested, quantity_received')
+          .eq('restock_request_id', requestId);
+        if (requestItemsError) return { data: null, error: requestItemsError.message };
 
-        const requestIds = Array.from(new Set((linkedRestockItems || []).map((item) => item.restock_request_id).filter(Boolean)));
-        for (const requestId of requestIds) {
-          const { data: requestItems } = await supabase
-            .from('restock_items')
-            .select('quantity_received')
-            .eq('restock_request_id', requestId);
-          const anyReceived = (requestItems || []).some((item) => Number(item.quantity_received || 0) > 0);
-          await supabase
+        const requestFullyReceived = (requestItems || []).length > 0 && (requestItems || []).every((item) => Number(item.quantity_received || 0) >= Number(item.quantity_requested || 0));
+        if (requestFullyReceived) {
+          const { error } = await supabase
             .from('restock_requests')
-            .update({
-              status: anyReceived ? 'received' : 'cancelled',
-              actual_delivery_date: anyReceived ? toDateOnly(new Date()) : null,
-              updated_at: new Date().toISOString(),
-            })
+            .update({ status: 'received', actual_delivery_date: toDateOnly(new Date()), updated_at: now })
             .eq('id', requestId);
+          if (error) return { data: null, error: error.message };
+        } else if (nextStatus === 'placed') {
+          const { error } = await supabase
+            .from('restock_requests')
+            .update({ status: 'linked_to_po', actual_delivery_date: null, updated_at: now })
+            .eq('id', requestId);
+          if (error) return { data: null, error: error.message };
         }
       }
     }
 
     if (status === 'cancelled') {
-      const poItemIds = (poItems || []).map((item) => item.id);
       if (poItemIds.length > 0) {
         const { data: linkedRestockItems } = await supabase
           .from('restock_items')
@@ -1847,7 +1891,7 @@ export async function updatePurchaseOrderStatus(
         if (requestIds.length > 0) {
           await supabase
             .from('restock_requests')
-            .update({ status: 'requested', purchase_order_id: null, updated_at: new Date().toISOString() })
+            .update({ status: 'requested', purchase_order_id: null, updated_at: now })
             .in('id', requestIds);
         }
 
@@ -1855,7 +1899,7 @@ export async function updatePurchaseOrderStatus(
         if (restockItemIds.length > 0) {
           await supabase
             .from('restock_items')
-            .update({ purchase_order_item_id: null, updated_at: new Date().toISOString() })
+            .update({ purchase_order_item_id: null, updated_at: now })
             .in('id', restockItemIds);
         }
       }
