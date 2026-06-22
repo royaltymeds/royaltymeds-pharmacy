@@ -8,3 +8,4 @@
 8. add the search feature to the suppliers page
 9. add SKU search to new restock request page with automatic item selection
 10. group held requests/POs by supplier
+11. Link restock management to inventory management and add feature for auto updating inventory
