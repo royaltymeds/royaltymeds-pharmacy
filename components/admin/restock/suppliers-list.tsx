@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   getSuppliers,
   createSupplier,
@@ -21,6 +21,84 @@ import { CustomSelect } from './CustomSelect';
 import { DecimalInput } from '@/components/DecimalInput';
 
 const SUPPLIER_ITEMS_PAGE_SIZE = 20;
+const GLOBAL_ITEM_SEARCH_MIN_LENGTH = 2;
+
+type SupplierProductSearchResult = {
+  supplier: Supplier;
+  product: SupplierProduct;
+};
+
+type SupplierProductEditorProps = {
+  product: SupplierProduct;
+  actionLoading: boolean;
+  description: string;
+  onDraftChange: (updates: Partial<SupplierProduct>) => void;
+  onSave: () => void;
+  onUnlink?: () => void;
+};
+
+function SupplierProductEditor({
+  product,
+  actionLoading,
+  description,
+  onDraftChange,
+  onSave,
+  onUnlink,
+}: SupplierProductEditorProps) {
+  return (
+    <div className="mt-4 border-t border-gray-200 pt-4">
+      <div className="grid gap-3 md:grid-cols-6">
+        <label className="md:col-span-2 text-xs font-medium uppercase tracking-wide text-gray-500">Item Name
+          <input
+            type="text"
+            value={product.product_name || ''}
+            onChange={(e) => onDraftChange({ product_name: e.target.value })}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
+          />
+        </label>
+        <label className="text-xs font-medium uppercase tracking-wide text-gray-500">SKU
+          <input
+            type="text"
+            value={product.supplier_sku || ''}
+            onChange={(e) => onDraftChange({ supplier_sku: e.target.value })}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
+          />
+        </label>
+        <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost
+          <DecimalInput
+            value={Number.isNaN(product.supplier_unit_price) ? '' : product.supplier_unit_price}
+            onChange={() => {}}
+            onBlur={(value) => onDraftChange({ supplier_unit_price: value === null ? Number.NaN : value })}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
+          />
+        </label>
+        <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Min Qty
+          <DecimalInput
+            value={Number.isNaN(product.minimum_order_quantity) ? '' : product.minimum_order_quantity}
+            onChange={() => {}}
+            onBlur={(value) => onDraftChange({ minimum_order_quantity: value === null ? Number.NaN : value })}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
+          />
+        </label>
+        <div className="flex items-end gap-2">
+          <button type="button" onClick={onSave} disabled={actionLoading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300">Save</button>
+          {onUnlink && (
+            <button type="button" onClick={onUnlink} disabled={actionLoading} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100">Unlink</button>
+          )}
+        </div>
+      </div>
+      <label className="mt-3 block text-xs font-medium uppercase tracking-wide text-gray-500">Notes
+        <textarea
+          value={product.notes || ''}
+          onChange={(e) => onDraftChange({ notes: e.target.value })}
+          rows={2}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
+        />
+      </label>
+      <p className="mt-2 text-xs text-gray-500">{description || 'No inventory description available.'}</p>
+    </div>
+  );
+}
 
 export function SuppliersList() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -37,6 +115,9 @@ export function SuppliersList() {
   const [supplierItemsPage, setSupplierItemsPage] = useState(1);
   const [supplierItemsSearch, setSupplierItemsSearch] = useState('');
   const [expandedSupplierProductId, setExpandedSupplierProductId] = useState<string | null>(null);
+  const [globalItemSearch, setGlobalItemSearch] = useState('');
+  const [isGlobalItemSearchOpen, setIsGlobalItemSearchOpen] = useState(false);
+  const [selectedGlobalSupplierProduct, setSelectedGlobalSupplierProduct] = useState<SupplierProductSearchResult | null>(null);
   const [pendingConfirmation, setPendingConfirmation] = useState<{ title: string; message: string; confirmLabel: string; onConfirm: () => void } | null>(null);
 
   const [showProductModal, setShowProductModal] = useState(false);
@@ -106,6 +187,29 @@ export function SuppliersList() {
     const products = getProductOptions(productType);
     return products.find((product) => product.id === productId)?.description || '';
   };
+
+  const formatSupplierProductSearchText = useCallback((supplier: Supplier, product: SupplierProduct) =>
+    [
+      product.product_name,
+      product.product_id,
+      product.product_type,
+      product.supplier_sku,
+      product.supplier_unit_price,
+      product.minimum_order_quantity,
+      product.notes,
+      product.is_inventory_item === false ? 'non-inventory non inventory' : 'inventory',
+      supplier.name,
+      supplier.city,
+      supplier.contact_person,
+      supplier.email,
+      supplier.phone,
+      supplier.notes,
+    ]
+      .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
+      .join(' ')
+      .toLowerCase(), []);
+
+  const formatCurrency = (value: number | string | undefined) => Number(value || 0).toFixed(2);
 
   const resolveProductName = (productId: string, productType: 'otc' | 'prescription') => {
     const products = getProductOptions(productType);
@@ -538,6 +642,9 @@ export function SuppliersList() {
       setError(error);
     } else {
       await loadSupplierProductsForSupplier(supplierId);
+      if (selectedGlobalSupplierProduct?.product.id === supplierProductId) {
+        setSelectedGlobalSupplierProduct(null);
+      }
     }
 
     setActionLoading(false);
@@ -553,6 +660,33 @@ export function SuppliersList() {
   });
   const selectedSupplierItemsTotalPages = Math.max(1, Math.ceil(filteredSelectedSupplierProducts.length / SUPPLIER_ITEMS_PAGE_SIZE));
   const paginatedSelectedSupplierProducts = filteredSelectedSupplierProducts.slice((supplierItemsPage - 1) * SUPPLIER_ITEMS_PAGE_SIZE, supplierItemsPage * SUPPLIER_ITEMS_PAGE_SIZE);
+  const allSupplierProductSearchResults = useMemo<SupplierProductSearchResult[]>(
+    () =>
+      suppliers
+        .filter((supplier) => supplier.is_active !== false)
+        .flatMap((supplier) =>
+          (supplierProductsMap[supplier.id] || [])
+            .filter((product) => product.is_active !== false)
+            .map((product) => ({ supplier, product }))
+        ),
+    [suppliers, supplierProductsMap]
+  );
+  const normalizedGlobalItemSearch = globalItemSearch.trim().toLowerCase();
+  const globalItemSearchMatches = useMemo(
+    () => {
+      if (normalizedGlobalItemSearch.length < GLOBAL_ITEM_SEARCH_MIN_LENGTH) return [];
+      return allSupplierProductSearchResults.filter(({ supplier, product }) => formatSupplierProductSearchText(supplier, product).includes(normalizedGlobalItemSearch));
+    },
+    [allSupplierProductSearchResults, formatSupplierProductSearchText, normalizedGlobalItemSearch]
+  );
+  const selectedGlobalSupplierProductCurrent = selectedGlobalSupplierProduct
+    ? {
+        supplier: selectedGlobalSupplierProduct.supplier,
+        product:
+          (supplierProductsMap[selectedGlobalSupplierProduct.supplier.id] || []).find((product) => product.id === selectedGlobalSupplierProduct.product.id) ||
+          selectedGlobalSupplierProduct.product,
+      }
+    : null;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg">
@@ -593,6 +727,68 @@ export function SuppliersList() {
           <p className="text-red-700 text-sm">{error}</p>
         </div>
       )}
+
+      <div className="px-6 py-4 border-b border-gray-100">
+        <div className="max-w-3xl">
+          <label className="block text-sm font-semibold text-gray-900">Search linked supplier items</label>
+          <p className="mt-1 text-xs text-gray-500">
+            Search by item name, supplier, SKU, type, cost, minimum quantity, or notes. Select a supplier-specific match to edit it.
+          </p>
+          <div className="relative mt-3">
+            <input
+              type="search"
+              value={globalItemSearch}
+              onChange={(event) => {
+                setGlobalItemSearch(event.target.value);
+                setIsGlobalItemSearchOpen(event.target.value.trim().length >= GLOBAL_ITEM_SEARCH_MIN_LENGTH);
+              }}
+              onFocus={() => setIsGlobalItemSearchOpen(normalizedGlobalItemSearch.length >= GLOBAL_ITEM_SEARCH_MIN_LENGTH)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') setIsGlobalItemSearchOpen(false);
+              }}
+              placeholder="Search items across all suppliers..."
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+            />
+            {isGlobalItemSearchOpen && normalizedGlobalItemSearch.length >= GLOBAL_ITEM_SEARCH_MIN_LENGTH && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                {globalItemSearchMatches.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {globalItemSearchMatches.map(({ supplier, product }) => (
+                      <button
+                        key={`${supplier.id}-${product.id}`}
+                        type="button"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          setSelectedGlobalSupplierProduct({ supplier, product });
+                          setGlobalItemSearch(product.product_name || product.product_id);
+                          setIsGlobalItemSearchOpen(false);
+                        }}
+                        className="block w-full px-4 py-3 text-left transition hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{product.product_name || product.product_id}</p>
+                            <p className="mt-1 text-xs text-gray-600">
+                              Supplier: <span className="font-semibold text-blue-700">{supplier.name}</span>
+                            </p>
+                            {product.notes && <p className="mt-1 line-clamp-2 text-xs text-gray-500">{product.notes}</p>}
+                          </div>
+                          <div className="text-xs text-gray-600 sm:text-right">
+                            <p><span className="uppercase">{product.product_type}</span> · {product.is_inventory_item === false ? 'Non-Inventory' : 'Inventory'}</p>
+                            <p>SKU {product.supplier_sku || 'not set'} · Unit ${formatCurrency(product.supplier_unit_price)} · Min {product.minimum_order_quantity || 1}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="px-4 py-6 text-center text-sm text-gray-500">No linked supplier items match this search.</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Content */}
       {loading ? (
@@ -722,55 +918,14 @@ export function SuppliersList() {
                       </button>
 
                       {isExpanded && (
-                        <div className="mt-4 border-t border-gray-200 pt-4">
-                          <div className="grid gap-3 md:grid-cols-6">
-                            <label className="md:col-span-2 text-xs font-medium uppercase tracking-wide text-gray-500">Item Name
-                              <input
-                                type="text"
-                                value={product.product_name || ''}
-                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { product_name: e.target.value })}
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
-                              />
-                            </label>
-                            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">SKU
-                              <input
-                                type="text"
-                                value={product.supplier_sku || ''}
-                                onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_sku: e.target.value })}
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
-                              />
-                            </label>
-                            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Unit Cost
-                              <DecimalInput
-                                value={Number.isNaN(product.supplier_unit_price) ? '' : product.supplier_unit_price}
-                                onChange={() => {}}
-                                onBlur={(value) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { supplier_unit_price: value === null ? Number.NaN : value })}
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
-                              />
-                            </label>
-                            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Min Qty
-                              <DecimalInput
-                                value={Number.isNaN(product.minimum_order_quantity) ? '' : product.minimum_order_quantity}
-                                onChange={() => {}}
-                                onBlur={(value) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { minimum_order_quantity: value === null ? Number.NaN : value })}
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
-                              />
-                            </label>
-                            <div className="flex items-end gap-2">
-                              <button type="button" onClick={() => handleSaveSupplierProduct(selectedSupplierDetails.id, product)} disabled={actionLoading} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300">Save</button>
-                              <button type="button" onClick={() => confirmDeleteSupplierProduct(selectedSupplierDetails.id, product.id)} disabled={actionLoading} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:bg-gray-100">Unlink</button>
-                            </div>
-                          </div>
-                          <label className="mt-3 block text-xs font-medium uppercase tracking-wide text-gray-500">Notes
-                            <textarea
-                              value={product.notes || ''}
-                              onChange={(e) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, { notes: e.target.value })}
-                              rows={2}
-                              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal normal-case tracking-normal text-gray-900 focus:outline-none align-top focus:ring-2 focus:ring-blue-600"
-                            />
-                          </label>
-                          <p className="mt-2 text-xs text-gray-500">{getProductDescription(product.product_id, product.product_type) || 'No inventory description available.'}</p>
-                        </div>
+                        <SupplierProductEditor
+                          product={product}
+                          actionLoading={actionLoading}
+                          description={getProductDescription(product.product_id, product.product_type)}
+                          onDraftChange={(updates) => updateSupplierProductDraft(selectedSupplierDetails.id, product.id, updates)}
+                          onSave={() => handleSaveSupplierProduct(selectedSupplierDetails.id, product)}
+                          onUnlink={() => confirmDeleteSupplierProduct(selectedSupplierDetails.id, product.id)}
+                        />
                       )}
                     </div>
                   );
@@ -783,6 +938,44 @@ export function SuppliersList() {
               <span className="text-sm text-gray-600">Showing {paginatedSelectedSupplierProducts.length} item(s), 20 per page</span>
               <button type="button" onClick={() => setSupplierItemsPage((page) => Math.min(selectedSupplierItemsTotalPages, page + 1))} disabled={supplierItemsPage === selectedSupplierItemsTotalPages} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">Next</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {selectedGlobalSupplierProductCurrent && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="mb-6 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Edit linked supplier item</p>
+                <h2 className="mt-1 text-xl font-semibold text-gray-900 align-top">
+                  {selectedGlobalSupplierProductCurrent.product.product_name || selectedGlobalSupplierProductCurrent.product.product_id}
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  Supplier: <span className="font-semibold text-gray-900">{selectedGlobalSupplierProductCurrent.supplier.name}</span> ·{' '}
+                  <span className="uppercase">{selectedGlobalSupplierProductCurrent.product.product_type}</span> ·{' '}
+                  {selectedGlobalSupplierProductCurrent.product.is_inventory_item === false ? 'Non-Inventory' : 'Inventory'}
+                </p>
+              </div>
+              <button type="button" onClick={() => setSelectedGlobalSupplierProduct(null)} className="p-1 hover:bg-gray-100 rounded">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <SupplierProductEditor
+              product={selectedGlobalSupplierProductCurrent.product}
+              actionLoading={actionLoading}
+              description={getProductDescription(selectedGlobalSupplierProductCurrent.product.product_id, selectedGlobalSupplierProductCurrent.product.product_type)}
+              onDraftChange={(updates) =>
+                updateSupplierProductDraft(
+                  selectedGlobalSupplierProductCurrent.supplier.id,
+                  selectedGlobalSupplierProductCurrent.product.id,
+                  updates
+                )
+              }
+              onSave={() => handleSaveSupplierProduct(selectedGlobalSupplierProductCurrent.supplier.id, selectedGlobalSupplierProductCurrent.product)}
+              onUnlink={() => confirmDeleteSupplierProduct(selectedGlobalSupplierProductCurrent.supplier.id, selectedGlobalSupplierProductCurrent.product.id)}
+            />
           </div>
         </div>
       )}
