@@ -1,1 +1,1 @@
-1. there seems to be an issue with holding items on a PO, the option only appears on some items
+1. items added to an unscheduled PO don't have the ability to be held for some reason, the hold item button does not appear on those items
