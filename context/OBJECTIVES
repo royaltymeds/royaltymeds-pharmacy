@@ -7,3 +7,4 @@
 7. suppliers page needs to load faster (too many requests are made to populate the page, they need to be consolidated and prefetched)
 8. add the search feature to the suppliers page
 9. add SKU search to new restock request page with automatic item selection
+10. group held requests/POs by supplier
