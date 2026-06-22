@@ -1,1 +1,27 @@
 1. add a search item feature to the manage suppliers page in restock management, it should allow us to search for items based on item name and other item attributes/fields, it should bring up a dropdown with matches from any suppliers if multiple suppliers match it should show the item from each supplier along with supplier name, when the item is selected from the dropdown a modal should open that allows editing the item (similar to how the item is edited in the view linked items modal for each supplier)
+
+Implementation progress for task 1:
+
+- [x] Phase 1 — Reusable edit surface extraction completed.
+  - What was done: Extracted the linked supplier item edit fields into `SupplierProductEditor` in `components/admin/restock/suppliers-list.tsx`, then reused it inside the existing supplier-specific “View linked items” modal.
+  - Truthful verification: In code, verify the existing expanded linked-item row renders `<SupplierProductEditor ... />` and still passes item name, SKU, unit cost, minimum quantity, notes, save, and unlink handlers. Manually verify by opening Admin → Restock → Suppliers → View linked items, expanding an item, editing fields, saving, and unlinking if needed.
+
+- [x] Phase 2 — Global supplier item search state and matching logic completed.
+  - What was done: Added global search state, selected-result state, memoized flattening of active suppliers/products, and matching across item name, product id, product type, SKU, price, minimum quantity, notes, inventory/non-inventory label, supplier name, supplier city/contact/email/phone, and supplier notes.
+  - Truthful verification: In code, verify `allSupplierProductSearchResults` and `globalItemSearchMatches` in `components/admin/restock/suppliers-list.tsx`. Manually verify searches by item name, SKU, type, notes, numeric price/minimum quantity, and supplier name return expected supplier-specific rows.
+
+- [x] Phase 3 — Search UI and dropdown interaction completed.
+  - What was done: Added a “Search linked supplier items” panel to the Manage Suppliers page with an anchored custom dropdown below the input, scrollable unbounded result list, no-match messaging, Escape-to-close behavior, and supplier-specific result rows showing item name, supplier name, type, inventory label, SKU, unit cost, minimum quantity, and notes snippet.
+  - Truthful verification: In code, verify the search panel and dropdown are rendered above the supplier list in `components/admin/restock/suppliers-list.tsx` and use `absolute left-0 right-0 top-full`. Manually verify a two-or-more-character query opens the dropdown below the input, selecting a row closes the dropdown, and duplicate item matches from different suppliers are distinguishable by supplier name.
+
+- [x] Phase 4 — Global selected item edit modal completed.
+  - What was done: Added a selected-result edit modal that opens from the global dropdown and reuses `SupplierProductEditor` with the existing `updateSupplierProductDraft`, `handleSaveSupplierProduct`, and `confirmDeleteSupplierProduct` flows for the exact supplier/product row.
+  - Truthful verification: In code, verify `selectedGlobalSupplierProductCurrent` drives the modal and that save/unlink handlers use the selected supplier id plus selected product id. Manually verify search → select result → edit SKU/price/minimum quantity/notes → save → reopen the supplier-specific linked-items modal and confirm refreshed values.
+
+- [x] Phase 5 — Data freshness and edge-case hardening completed.
+  - What was done: Search results ignore inactive suppliers/products, tolerate missing item names by falling back to product ids, render all matches in a scrollable dropdown, preserve modal state from the latest `supplierProductsMap` row, close the global edit modal if the selected item is unlinked through the confirmation flow, and use existing error state for save/unlink failures.
+  - Truthful verification: In code, verify active filters, fallback labels, scrollable unbounded match rendering, refreshed selected-product lookup, and selected-modal close on unlink. Manually verify empty query/no-match states, one-character query behavior, missing optional fields, and post-save search result refresh.
+
+- [x] Phase 6 — Final validation/documentation completed for this implementation pass.
+  - What was done: Updated this TASKS file with phase-by-phase completion notes and concrete verification steps. Ran targeted validation commands listed in the final agent response.
+  - Truthful verification: Confirm this TASKS file contains completed phase entries and run the commands reported in the final response, especially targeted lint for `components/admin/restock/suppliers-list.tsx`.
