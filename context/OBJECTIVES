@@ -9,4 +9,4 @@
 9. add SKU search to new restock request page with automatic item selection <active>
 10. group held requests/POs by supplier
 11. Link restock management to inventory management and add feature for auto updating inventory
-12. when saving an item a success toast is needed
+12. when saving an item a success toast is needed, the save button should be disabled until a change is made to the item attributes (current user inputs don't match against database fetched results)
